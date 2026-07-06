@@ -1,0 +1,239 @@
+import { Redirect, useRouter } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, Switch, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/src/auth/AuthContext';
+import { fetchBranches } from '@/src/api/branches';
+import { enrollMember } from '@/src/api/members';
+import { fetchPlans } from '@/src/api/plans';
+import { BranchPicker } from '@/src/components/BranchPicker';
+import { DateField } from '@/src/components/DateField';
+import { PhotoPickerField } from '@/src/components/PhotoPickerField';
+import { PlanPickerField } from '@/src/components/PlanPickerField';
+import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
+import { ErrorBanner, Field, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { useTheme } from '@/src/context/PreferencesContext';
+import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
+import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
+import { useThemedStyles } from '@/src/theme/useThemedStyles';
+import { PAYMENT_METHODS } from '@/src/constants/payments';
+import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
+import { isOfflineQueued } from '@/src/offline/types';
+import { todayString } from '@/src/utils/date';
+import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
+import type { EnrollPayload, PlanRow } from '@/src/types/api';
+
+function planPrice(plan: PlanRow): number {
+  return Number(plan.price) || 0;
+}
+
+export default function EnrollScreen() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { token, user } = useAuth();
+
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [planId, setPlanId] = useState<number | null>(null);
+  const [startDate, setStartDate] = useState(todayString());
+  const [amount, setAmount] = useState('');
+  const [paymentDate, setPaymentDate] = useState(todayString());
+  const [method, setMethod] = useState<(typeof PAYMENT_METHODS)[number]>('Cash');
+  const [skipPayment, setSkipPayment] = useState(false);
+  const [branchId, setBranchId] = useState<number | null>(null);
+  const [photoDataUrl, setPhotoDataUrl] = useState('');
+  const [photoPreview, setPhotoPreview] = useState('');
+  const [photoProcessing, setPhotoProcessing] = useState(false);
+  const [error, setError] = useState('');
+  const { colors: c } = useTheme();
+  const { t } = useTranslation();
+  const styles = useThemedStyles((colors) => ({
+    content: { padding: 16, paddingBottom: 40 },
+    hint: { color: colors.dim, fontSize: 14, marginTop: 4 },
+    switchRow: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      justifyContent: 'space-between' as const,
+      marginTop: 16,
+      paddingVertical: 8,
+    },
+    switchLabel: { color: colors.text, fontSize: 15, flex: 1, marginRight: 12 },
+  }));
+  const canEnroll = Boolean(user && hasGymPortalAccess(user.role));
+  const owner = isGymOwner(user?.role);
+  const { readOnly } = useGymReadOnly();
+  const flashSaved = useSaveFlash();
+  const flashOffline = useOfflineFlash();
+
+  const plansQuery = useQuery({
+    queryKey: ['plans'],
+    queryFn: () => fetchPlans(token!),
+    enabled: Boolean(token && canEnroll),
+  });
+
+  const branchesQuery = useQuery({
+    queryKey: ['branches'],
+    queryFn: () => fetchBranches(token!),
+    enabled: Boolean(token && owner),
+  });
+
+  const plans = plansQuery.data ?? [];
+  const branches = branchesQuery.data?.branches ?? [];
+  const showBranchPicker = owner && branches.filter((b) => b.is_active !== false).length > 1;
+  const selectedPlan = plans.find((p) => p.id === planId) ?? null;
+
+  useEffect(() => {
+    if (!showBranchPicker || branchId != null) return;
+    const active = branches.filter((b) => b.is_active !== false);
+    const preferred = active.find((b) => b.is_default) ?? active[0];
+    if (preferred) setBranchId(preferred.id);
+  }, [branches, showBranchPicker, branchId]);
+
+  useEffect(() => {
+    if (selectedPlan && !skipPayment) {
+      setAmount(String(planPrice(selectedPlan)));
+    }
+  }, [selectedPlan, skipPayment]);
+
+  const buildPayload = (): EnrollPayload => {
+    if (!planId) throw new Error('Select a plan.');
+    return {
+      name: name.trim(),
+      phone: phone.trim(),
+      plan_id: planId,
+      start_date: startDate.trim(),
+      skip_payment: skipPayment,
+      ...(skipPayment
+        ? {}
+        : {
+            amount: Number(amount),
+            date: paymentDate.trim(),
+            method,
+          }),
+      ...(showBranchPicker && branchId ? { branch_id: branchId } : {}),
+      ...(photoDataUrl ? { photo: photoDataUrl } : {}),
+    };
+  };
+
+  const mutation = useOfflineMutation({
+    jobType: 'enroll',
+    mutationFn: (payload: EnrollPayload) => enrollMember(token!, payload),
+    onSuccess: (data) => {
+      if (isOfflineQueued(data)) {
+        flashOffline();
+        queryClient.invalidateQueries({ queryKey: ['members'] });
+        router.replace('/(tabs)/members');
+        return;
+      }
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      flashSaved('flash.enrolled');
+      router.replace(`/member/${data.member.id}`);
+    },
+    onError: (e: Error) => setError(e.message),
+  });
+
+  const canSubmit = useMemo(() => {
+    if (!name.trim() || !phone.trim() || !planId || !/^\d{4}-\d{2}-\d{2}$/.test(startDate)) return false;
+    if (skipPayment) return true;
+    if (showBranchPicker && !branchId) return false;
+    return Number(amount) > 0 && /^\d{4}-\d{2}-\d{2}$/.test(paymentDate);
+  }, [name, phone, planId, startDate, skipPayment, amount, paymentDate, showBranchPicker, branchId]);
+
+  if (!canEnroll) {
+    return <Redirect href="/login" />;
+  }
+
+  if (readOnly) {
+    return (
+      <Screen>
+        <View style={{ padding: 16 }}>
+          <Text style={{ color: c.muted, fontSize: 15, lineHeight: 22 }}>{t('common.readOnly')}</Text>
+        </View>
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <ErrorBanner message={error} />
+
+          <Label>{t('forms.name')}</Label>
+          <Field value={name} onChangeText={setName} placeholder={t('forms.memberName')} autoCapitalize="words" />
+
+          <Label>{t('forms.phone')}</Label>
+          <Field
+            value={phone}
+            onChangeText={setPhone}
+            placeholder={t('forms.phonePlaceholder')}
+            keyboardType="phone-pad"
+            autoCapitalize="none"
+          />
+
+          <PhotoPickerField
+            previewUri={photoPreview}
+            onChange={(dataUrl, preview) => {
+              setPhotoDataUrl(dataUrl);
+              setPhotoPreview(preview);
+            }}
+            processing={photoProcessing}
+            setProcessing={setPhotoProcessing}
+          />
+
+          {showBranchPicker ? (
+            <BranchPicker branches={branches} value={branchId} onChange={setBranchId} />
+          ) : null}
+
+          <Label>{t('forms.plan')}</Label>
+          {plansQuery.isLoading ? (
+            <Text style={styles.hint}>{t('forms.loadingPlans')}</Text>
+          ) : plans.length === 0 ? (
+            <Text style={styles.hint}>{t('forms.noPlans')}</Text>
+          ) : (
+            <PlanPickerField plans={plans} value={planId} onChange={setPlanId} />
+          )}
+
+          <Label>{t('forms.startDate')}</Label>
+          <DateField value={startDate} onChange={setStartDate} />
+
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>{t('forms.enrollWithoutPayment')}</Text>
+            <Switch
+              value={skipPayment}
+              onValueChange={setSkipPayment}
+              trackColor={{ false: c.border, true: c.accent }}
+            />
+          </View>
+
+          {!skipPayment ? (
+            <>
+              <Label>{t('forms.amount')}</Label>
+              <Field value={amount} onChangeText={setAmount} keyboardType="decimal-pad" autoCapitalize="none" />
+
+              <Label>{t('forms.paymentDate')}</Label>
+              <DateField value={paymentDate} onChange={setPaymentDate} />
+
+              <PaymentMethodPicker value={method} onChange={setMethod} />
+            </>
+          ) : null}
+
+          <PrimaryButton
+            label={t('screens.enroll')}
+            onPress={() => {
+              setError('');
+              mutation.mutate(buildPayload());
+            }}
+            loading={mutation.isPending || photoProcessing}
+            disabled={!canSubmit || photoProcessing}
+          />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </Screen>
+  );
+}

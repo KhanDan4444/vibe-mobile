@@ -1,0 +1,70 @@
+{
+  "expo": {
+    "name": "VibeSaaS",
+    "slug": "vibe-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "vibemobile",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "com.vibesaas.mobile",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Allow VibeSaaS to access photos for member profile pictures."
+      }
+    },
+    "android": {
+      "package": "com.vibesaas.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "androidNavigationBar": {
+      "backgroundColor": "#1e293b",
+      "barStyle": "light-content"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow VibeSaaS to access photos for member profile pictures."
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ],
+      "expo-localization",
+      "@react-native-community/datetimepicker"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "dca0fab5-ba7a-4e9e-8d26-a28303f7f16a"
+      }
+    },
+    "owner": "danielxo44"
+  }
+}

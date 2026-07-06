@@ -1,0 +1,135 @@
+import { Redirect, useRouter } from 'expo-router';
+import { useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  RefreshControl,
+  Text,
+  View,
+} from 'react-native';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { useAuth } from '@/src/auth/AuthContext';
+import { fetchMemberSms } from '@/src/api/memberSms';
+import { BranchFilterBar } from '@/src/components/BranchFilterBar';
+import { FilterPickerButton } from '@/src/components/FilterPickerButton';
+import { useBranchScope } from '@/src/context/BranchContext';
+import { useTheme } from '@/src/context/PreferencesContext';
+import { useThemedStyles } from '@/src/theme/useThemedStyles';
+import { formatDisplayDateTime } from '@/src/utils/date';
+import { SMS_TYPE_FILTER_KEYS, formatSmsType } from '@/src/utils/smsLabels';
+import { useTranslation } from 'react-i18next';
+import { isGymOwner } from '@/src/utils/roles';
+import type { MemberSmsRow } from '@/src/types/api';
+
+type SmsFilter = (typeof SMS_TYPE_FILTER_KEYS)[number]['value'];
+
+function SmsItem({ row, onPress }: { row: MemberSmsRow; onPress: () => void }) {
+  const styles = useThemedStyles((c) => ({
+    card: {
+      backgroundColor: c.card,
+      borderRadius: 12,
+      padding: 14,
+      marginBottom: 10,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    cardHeader: { flexDirection: 'row' as const, justifyContent: 'space-between' as const, gap: 8 },
+    member: { flex: 1, fontSize: 15, fontWeight: '600' as const, color: c.text },
+    time: { fontSize: 11, color: c.dim },
+    type: { marginTop: 6, fontSize: 13, color: c.muted },
+    phone: { marginTop: 4, fontSize: 13, color: c.text },
+    branch: { marginTop: 4, fontSize: 12, color: c.dim },
+  }));
+
+  return (
+    <Pressable style={styles.card} onPress={onPress}>
+      <View style={styles.cardHeader}>
+        <Text style={styles.member}>{row.member_name}</Text>
+        <Text style={styles.time}>{formatDisplayDateTime(row.sent_at)}</Text>
+      </View>
+      <Text style={styles.type}>{formatSmsType(row.message_type)}</Text>
+      <Text style={styles.phone}>{row.recipient_phone || row.member_phone || '—'}</Text>
+      {row.branch_name ? <Text style={styles.branch}>{row.branch_name}</Text> : null}
+    </Pressable>
+  );
+}
+
+export default function MessagesScreen() {
+  const router = useRouter();
+  const { token, user } = useAuth();
+  const { selectedBranchId } = useBranchScope();
+  const { colors: c } = useTheme();
+  const { t } = useTranslation();
+  const styles = useThemedStyles((colors) => ({
+    container: { flex: 1, backgroundColor: colors.bg },
+    filters: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 },
+    list: { padding: 16, paddingBottom: 24 },
+    empty: { textAlign: 'center' as const, color: colors.dim, marginTop: 40, fontSize: 15 },
+  }));
+
+  const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
+  const [typeFilter, setTypeFilter] = useState<SmsFilter>('all');
+  const canViewMessages = Boolean(user && isGymOwner(user.role));
+
+  const query = useInfiniteQuery({
+    queryKey: ['member-sms', typeFilter, branchKey],
+    queryFn: ({ pageParam = 1 }) =>
+      fetchMemberSms(token!, {
+        page: pageParam,
+        limit: 25,
+        type: typeFilter,
+        ...(selectedBranchId !== 'all' ? { branch_id: selectedBranchId } : {}),
+      }),
+    initialPageParam: 1,
+    getNextPageParam: (last) => (last.page < last.totalPages ? last.page + 1 : undefined),
+    enabled: Boolean(token && canViewMessages),
+  });
+
+  const typeOptions = SMS_TYPE_FILTER_KEYS.map((f) => ({ value: f.value, label: t(f.labelKey) }));
+
+  const items = query.data?.pages.flatMap((p) => p.items) ?? [];
+
+  if (!canViewMessages) {
+    return <Redirect href="/(tabs)/more" />;
+  }
+
+  return (
+    <View style={styles.container}>
+      <BranchFilterBar />
+      <View style={styles.filters}>
+        <FilterPickerButton
+          label={t('messages.filterLabel')}
+          sheetTitle={t('messages.filterLabel')}
+          value={typeFilter}
+          onChange={setTypeFilter}
+          options={typeOptions}
+        />
+      </View>
+
+      {query.isLoading ? (
+        <ActivityIndicator style={{ marginTop: 40 }} color={c.accentText} />
+      ) : (
+        <FlatList
+          data={items}
+          keyExtractor={(item) => String(item.id)}
+          renderItem={({ item }) => (
+            <SmsItem row={item} onPress={() => router.push(`/member/${item.member_id}`)} />
+          )}
+          contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl refreshing={query.isRefetching} onRefresh={() => query.refetch()} tintColor={c.accentText} />
+          }
+          onEndReached={() => {
+            if (query.hasNextPage && !query.isFetchingNextPage) query.fetchNextPage();
+          }}
+          onEndReachedThreshold={0.4}
+          ListEmptyComponent={<Text style={styles.empty}>{t('messages.empty')}</Text>}
+          ListFooterComponent={
+            query.isFetchingNextPage ? <ActivityIndicator color={c.accentText} style={{ marginVertical: 16 }} /> : null
+          }
+        />
+      )}
+    </View>
+  );
+}

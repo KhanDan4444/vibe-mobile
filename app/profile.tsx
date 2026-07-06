@@ -1,0 +1,142 @@
+import { Redirect, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text } from 'react-native';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { useAuth } from '@/src/auth/AuthContext';
+import { fetchGymProfile, updateGymProfile } from '@/src/api/profile';
+import { ErrorBanner, Field, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { useTheme } from '@/src/context/PreferencesContext';
+import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
+import { isOfflineQueued } from '@/src/offline/types';
+import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
+import { isGymOwner } from '@/src/utils/roles';
+import type { UpdateProfilePayload } from '@/src/types/api';
+
+export default function ProfileScreen() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const { token, user, subscription, updateGymName } = useAuth();
+  const { colors: c } = useTheme();
+  const { t } = useTranslation();
+
+  const [gymName, setGymName] = useState('');
+  const [ownerName, setOwnerName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
+  const [error, setError] = useState('');
+  const flashSaved = useSaveFlash();
+  const flashOffline = useOfflineFlash();
+  const canEditProfile = Boolean(user && isGymOwner(user.role));
+
+  const profileQuery = useQuery({
+    queryKey: ['gym-profile'],
+    queryFn: () => fetchGymProfile(token!),
+    enabled: Boolean(token && canEditProfile),
+  });
+
+  useEffect(() => {
+    if (!profileQuery.data) return;
+    setGymName(profileQuery.data.gym.name);
+    setOwnerName(profileQuery.data.gym.owner_name);
+    setPhone(profileQuery.data.gym.phone || '');
+    setEmail(profileQuery.data.user.email || '');
+    setUsername(profileQuery.data.user.username || '');
+  }, [profileQuery.data]);
+
+  const mutation = useOfflineMutation({
+    jobType: 'update-profile',
+    mutationFn: (payload: UpdateProfilePayload) => updateGymProfile(token!, payload),
+    onSuccess: async (data) => {
+      if (isOfflineQueued(data)) {
+        flashOffline();
+        router.back();
+        return;
+      }
+      await updateGymName(gymName.trim());
+      queryClient.invalidateQueries({ queryKey: ['gym-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      flashSaved();
+      router.back();
+    },
+    onError: (e: Error) => setError(e.message),
+  });
+
+  if (!canEditProfile) {
+    return <Redirect href="/(tabs)/more" />;
+  }
+
+  if (subscription?.readOnly) {
+    return (
+      <Screen>
+        <Text style={[styles.readOnly, { color: c.muted }]}>{t('common.readOnly')}</Text>
+      </Screen>
+    );
+  }
+
+  if (profileQuery.isLoading) {
+    return (
+      <Screen>
+        <Text style={[styles.readOnly, { color: c.muted }]}>{t('common.loading')}</Text>
+      </Screen>
+    );
+  }
+
+  const canSubmit = gymName.trim().length > 0 && ownerName.trim().length > 0;
+
+  return (
+    <Screen>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <ErrorBanner message={error} />
+
+          <Text style={[styles.section, { color: c.muted }]}>Gym</Text>
+          <Label>Gym name</Label>
+          <Field value={gymName} onChangeText={setGymName} autoCapitalize="words" />
+
+          <Label>Owner name</Label>
+          <Field value={ownerName} onChangeText={setOwnerName} autoCapitalize="words" />
+
+          <Label>Phone</Label>
+          <Field value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+
+          <Text style={[styles.section, { color: c.muted }]}>Login</Text>
+          <Label>Email</Label>
+          <Field value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
+
+          <Label>Username</Label>
+          <Field value={username} onChangeText={setUsername} autoCapitalize="none" />
+
+          <PrimaryButton
+            label={t('common.save')}
+            onPress={() => {
+              setError('');
+              mutation.mutate({
+                gym_name: gymName.trim(),
+                name: ownerName.trim(),
+                phone: phone.trim() || undefined,
+                email: email.trim() || undefined,
+                username: username.trim() || undefined,
+              });
+            }}
+            loading={mutation.isPending}
+            disabled={!canSubmit}
+          />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  content: { padding: 16, paddingBottom: 40 },
+  section: {
+    marginTop: 16,
+    marginBottom: 4,
+    fontSize: 13,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  readOnly: { padding: 16, fontSize: 15, lineHeight: 22 },
+});
