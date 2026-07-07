@@ -52,7 +52,12 @@ export function BranchProvider({ children }: { children: React.ReactNode }) {
   const branchReadOnly = Boolean(owner && selectedBranch && selectedBranch.is_active === false);
 
   useEffect(() => {
-    if (!owner || !user?.gym_id) return;
+    if (!token || !user) {
+      setSelectedBranchIdState('all');
+      setHydrated(true);
+      return;
+    }
+    if (!owner || !user.gym_id) return;
     (async () => {
       try {
         const stored = await AsyncStorage.getItem(`${STORAGE_KEY}:${user.gym_id}`);

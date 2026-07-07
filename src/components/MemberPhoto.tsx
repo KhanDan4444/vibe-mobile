@@ -9,9 +9,11 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { fetchMemberPhotoDataUri } from '@/src/utils/memberPhoto';
+import { memberPhotoBustQueryKey } from '@/src/utils/memberPhotoCache';
 
 export function MemberPhoto({
   memberId,
@@ -29,6 +31,12 @@ export function MemberPhoto({
   expandable?: boolean;
 }) {
   const { colors: c } = useTheme();
+  const { data: cacheBust = 0 } = useQuery<number>({
+    queryKey: memberPhotoBustQueryKey(memberId),
+    queryFn: () => 0,
+    initialData: 0,
+    staleTime: Infinity,
+  });
   const [src, setSrc] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -87,7 +95,7 @@ export function MemberPhoto({
     setLoading(true);
     (async () => {
       try {
-        const dataUri = await fetchMemberPhotoDataUri(memberId, token);
+        const dataUri = await fetchMemberPhotoDataUri(memberId, token, cacheBust);
         if (cancelled) return;
         if (!dataUri) {
           setFailed(true);
@@ -104,7 +112,7 @@ export function MemberPhoto({
     return () => {
       cancelled = true;
     };
-  }, [memberId, token, hasPhoto]);
+  }, [memberId, token, hasPhoto, cacheBust]);
 
   const shellStyle = { width: size, height: size, borderRadius: size / 2 };
   const canExpand = expandable && Boolean(src) && !failed;

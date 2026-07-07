@@ -21,9 +21,11 @@ import { MemberPhoto } from '@/src/components/MemberPhoto';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
 import { BranchFilterBar } from '@/src/components/BranchFilterBar';
 import { RevenueFiltersSheet } from '@/src/components/RevenueFiltersSheet';
+import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { PAYMENT_METHODS, paymentMethodBadgeStyle } from '@/src/constants/payments';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
+import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { formatDisplayDate } from '@/src/utils/date';
@@ -59,6 +61,7 @@ function PaymentRowItem({
   token,
   owner,
   readOnly,
+  multiColumn,
   onOpenMember,
   onEdit,
 }: {
@@ -66,6 +69,7 @@ function PaymentRowItem({
   token: string;
   owner: boolean;
   readOnly: boolean;
+  multiColumn?: boolean;
   onOpenMember: () => void;
   onEdit: () => void;
 }) {
@@ -82,6 +86,7 @@ function PaymentRowItem({
       borderWidth: 1,
       borderColor: colors.border,
     },
+    rowColumn: { flex: 1, marginBottom: 0 },
     avatar: { marginRight: 12 },
     rowBody: { flex: 1, minWidth: 0, marginRight: 8 },
     memberName: { fontSize: 15, fontWeight: '600' as const, color: colors.text },
@@ -105,7 +110,7 @@ function PaymentRowItem({
       : [];
 
   return (
-    <Pressable style={styles.row} onPress={onOpenMember}>
+    <Pressable style={[styles.row, multiColumn && styles.rowColumn]} onPress={onOpenMember}>
       <View style={styles.avatar}>
         <MemberPhoto
           memberId={payment.member_id}
@@ -281,12 +286,13 @@ export default function RevenueScreen() {
     attentionTitle: { color: colors.text, fontSize: 15, fontWeight: '700' as const },
     attentionLink: { color: colors.accentText, fontSize: 13, fontWeight: '600' as const },
     attentionList: { paddingRight: 8 },
-    list: { paddingHorizontal: 16, paddingBottom: 28 },
+    list: { paddingBottom: 28 },
     emptyWrap: { alignItems: 'center' as const, paddingTop: 48, gap: 12 },
     empty: { textAlign: 'center' as const, color: colors.dim, fontSize: 15 },
   }));
   const owner = isGymOwner(user?.role);
   const { readOnly } = useGymReadOnly();
+  const { listColumns, pagePadding } = useResponsiveLayout();
   const { selectedBranchId, showBranchFilter } = useBranchScope();
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
 
@@ -491,17 +497,21 @@ export default function RevenueScreen() {
   );
 
   return (
+    <TabScreenFrame>
     <View style={styles.container}>
-      <BranchFilterBar />
+      <BranchFilterBar horizontalPadding={pagePadding} />
 
       {query.isLoading && !query.data ? (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, paddingHorizontal: pagePadding }}>
           {listHeader}
           <ActivityIndicator style={{ marginTop: 32 }} color={c.accentText} />
         </View>
       ) : (
         <FlatList
+          key={`revenue-cols-${listColumns}`}
           data={payments}
+          numColumns={listColumns}
+          columnWrapperStyle={listColumns > 1 ? { gap: 10 } : undefined}
           keyExtractor={(item) => String(item.id)}
           ListHeaderComponent={listHeader}
           renderItem={({ item }) => (
@@ -510,11 +520,12 @@ export default function RevenueScreen() {
               token={token!}
               owner={owner}
               readOnly={readOnly}
+              multiColumn={listColumns > 1}
               onOpenMember={() => router.push(`/member/${item.member_id}`)}
               onEdit={() => openEdit(item)}
             />
           )}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingHorizontal: pagePadding }]}
           refreshControl={<RefreshControl refreshing={query.isRefetching} onRefresh={() => query.refetch()} tintColor={c.accentText} />}
           onEndReached={() => {
             if (query.hasNextPage && !query.isFetchingNextPage) query.fetchNextPage();
@@ -575,5 +586,6 @@ export default function RevenueScreen() {
         />
       </BottomSheet>
     </View>
+    </TabScreenFrame>
   );
 }

@@ -9,6 +9,7 @@ import React, {
 import { fetchGymSubscription, loginRequest } from '@/src/api/auth';
 import { apiRequest } from '@/src/api/client';
 import { clearStoredGymName, clearStoredToken, getStoredGymName, getStoredToken, setStoredGymName, setStoredToken } from '@/src/auth/storage';
+import { clearSessionCache } from '@/src/query/clearSessionCache';
 import type { AuthUser, LoginResponse } from '@/src/types/api';
 import { isTokenExpired, userFromToken } from '@/src/utils/jwt';
 
@@ -34,6 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const logout = useCallback(async () => {
+    await clearSessionCache();
     await clearStoredToken();
     await clearStoredGymName();
     setToken(null);
@@ -61,6 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const login = useCallback(async (identifier: string, password: string, rememberMe = true) => {
+    await clearSessionCache();
     const data = await loginRequest(identifier, password, rememberMe);
     await setStoredToken(data.token);
     const name = data.subscription?.gymName ?? null;

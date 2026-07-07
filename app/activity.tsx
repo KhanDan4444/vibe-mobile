@@ -12,8 +12,10 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { fetchActivityLogs } from '@/src/api/activity';
 import { BranchFilterBar } from '@/src/components/BranchFilterBar';
 import { FilterPickerButton } from '@/src/components/FilterPickerButton';
+import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useTheme } from '@/src/context/PreferencesContext';
+import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { formatDisplayDateTime } from '@/src/utils/date';
 import { formatAuditAction, formatAuditDetails, formatActorRole } from '@/src/utils/activityLabels';
@@ -29,7 +31,7 @@ const ACTOR_OPTION_KEYS: { value: ActorFilter; labelKey: string }[] = [
   { value: 'owner', labelKey: 'activity.ownerOnly' },
 ];
 
-function ActivityItem({ entry }: { entry: ActivityLogRow }) {
+function ActivityItem({ entry, multiColumn }: { entry: ActivityLogRow; multiColumn?: boolean }) {
   const styles = useThemedStyles((c) => ({
     card: {
       backgroundColor: c.card,
@@ -39,6 +41,7 @@ function ActivityItem({ entry }: { entry: ActivityLogRow }) {
       borderWidth: 1,
       borderColor: c.border,
     },
+    cardColumn: { flex: 1, marginBottom: 0 },
     cardHeader: { flexDirection: 'row' as const, justifyContent: 'space-between' as const, gap: 8 },
     action: { flex: 1, fontSize: 15, fontWeight: '600' as const, color: c.text },
     time: { fontSize: 11, color: c.dim },
@@ -50,7 +53,7 @@ function ActivityItem({ entry }: { entry: ActivityLogRow }) {
   const details = formatAuditDetails(entry);
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, multiColumn && styles.cardColumn]}>
       <View style={styles.cardHeader}>
         <Text style={styles.action}>{formatAuditAction(entry.action)}</Text>
         <Text style={styles.time}>{formatDisplayDateTime(entry.created_at)}</Text>
@@ -70,10 +73,12 @@ export default function ActivityScreen() {
   const { selectedBranchId } = useBranchScope();
   const { colors: c } = useTheme();
   const { t } = useTranslation();
+  const { listColumns, pagePadding } = useResponsiveLayout();
   const styles = useThemedStyles((colors) => ({
     container: { flex: 1, backgroundColor: colors.bg },
-    filters: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 },
-    list: { padding: 16, paddingBottom: 24 },
+    filters: { paddingTop: 12, paddingBottom: 4 },
+    list: { paddingBottom: 24 },
+    columnWrap: { gap: 10 },
     empty: { textAlign: 'center' as const, color: colors.dim, marginTop: 40, fontSize: 15 },
   }));
 
@@ -104,9 +109,10 @@ export default function ActivityScreen() {
   }
 
   return (
+    <TabScreenFrame>
     <View style={styles.container}>
-      <BranchFilterBar />
-      <View style={styles.filters}>
+      <BranchFilterBar horizontalPadding={pagePadding} />
+      <View style={[styles.filters, { paddingHorizontal: pagePadding }]}>
         <FilterPickerButton
           label={t('activity.filterLabel')}
           sheetTitle={t('activity.filterLabel')}
@@ -120,10 +126,13 @@ export default function ActivityScreen() {
         <ActivityIndicator style={{ marginTop: 40 }} color={c.accentText} />
       ) : (
         <FlatList
+          key={`activity-cols-${listColumns}`}
           data={items}
+          numColumns={listColumns}
+          columnWrapperStyle={listColumns > 1 ? styles.columnWrap : undefined}
           keyExtractor={(item) => String(item.id)}
-          renderItem={({ item }) => <ActivityItem entry={item} />}
-          contentContainerStyle={styles.list}
+          renderItem={({ item }) => <ActivityItem entry={item} multiColumn={listColumns > 1} />}
+          contentContainerStyle={[styles.list, { paddingHorizontal: pagePadding }]}
           refreshControl={
             <RefreshControl refreshing={query.isRefetching} onRefresh={() => query.refetch()} tintColor={c.accentText} />
           }
@@ -138,5 +147,6 @@ export default function ActivityScreen() {
         />
       )}
     </View>
+    </TabScreenFrame>
   );
 }

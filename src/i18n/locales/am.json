@@ -387,6 +387,7 @@
     "creditHint": "የተጠቆመው መጠን ለያልተጠቀሙ ቀናት ክሬዲት ({{credit}} ETB) ያካትታል።",
     "termEndPreview": "አዲስ ጊዜ ያበቃል፡ {{date}}",
     "paymentDateHint": "ገንዘብ የተቀበሉበትን ቀን ይምረጡ (ዛሬ ወይም ከዛሬ በፊት)። ከጊዜ መጀመሪያ በኋላ መሆን አለበት።",
+    "dateRangeInvalid": "በዚህ ጊዜ ለዚህ መስክ ተቀባይነት ያለው ቀን የለም። የጊዜ መጀመሪያን ያስተካክሉ ወይም ክፍያ ሊመዘገብ በሚችል ቀን ይመለሱ።",
     "paymentSourceEnroll": "መዝግብ",
     "paymentSourceRenew": "ያድሱ",
     "paymentSourceChangePlan": "ዕቅድ ለውጥ",

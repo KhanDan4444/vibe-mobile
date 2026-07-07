@@ -1,5 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 
+export const QUERY_CACHE_STORAGE_KEY = 'vibe-query-cache';
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

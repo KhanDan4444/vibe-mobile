@@ -15,7 +15,7 @@ import { PreferencesProvider, useTheme } from '@/src/context/PreferencesContext'
 import { NotificationInboxProvider } from '@/src/notifications/NotificationInboxContext';
 import { NetworkProvider } from '@/src/offline/NetworkProvider';
 import { SubscriptionLockout } from '@/src/components/SubscriptionLockout';
-import { PERSISTED_QUERY_KEYS, queryClient } from '@/src/query/client';
+import { PERSISTED_QUERY_KEYS, queryClient, QUERY_CACHE_STORAGE_KEY } from '@/src/query/client';
 import { SystemChrome } from '@/src/theme/SystemChrome';
 import { useAppFonts } from '@/src/theme/useAppFonts';
 
@@ -25,7 +25,7 @@ if (__DEV__) {
   LogBox.ignoreLogs(['Unable to activate keep awake']);
 }
 
-const persister = createAsyncStoragePersister({ storage: AsyncStorage, key: 'vibe-query-cache' });
+const persister = createAsyncStoragePersister({ storage: AsyncStorage, key: QUERY_CACHE_STORAGE_KEY });
 
 export { ErrorBoundary } from 'expo-router';
 

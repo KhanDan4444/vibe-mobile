@@ -10,7 +10,9 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchBranches } from '@/src/api/branches';
+import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { useTheme } from '@/src/context/PreferencesContext';
+import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { isGymOwner } from '@/src/utils/roles';
@@ -19,10 +21,12 @@ import type { BranchRow } from '@/src/types/api';
 function BranchCard({
   branch,
   owner,
+  multiColumn,
   onEdit,
 }: {
   branch: BranchRow;
   owner: boolean;
+  multiColumn?: boolean;
   onEdit: () => void;
 }) {
   const styles = useThemedStyles((c) => ({
@@ -34,6 +38,7 @@ function BranchCard({
       borderWidth: 1,
       borderColor: c.border,
     },
+    cardColumn: { flex: 1, marginBottom: 0 },
     cardMain: { flex: 1 },
     name: { fontSize: 17, fontWeight: '700' as const, color: c.text },
     meta: { marginTop: 4, fontSize: 13, color: c.muted },
@@ -52,7 +57,7 @@ function BranchCard({
   }));
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, multiColumn && styles.cardColumn]}>
       <View style={styles.cardMain}>
         <Text style={styles.name}>
           {branch.name}
@@ -79,14 +84,15 @@ export default function BranchesScreen() {
   const { token, user, subscription } = useAuth();
   const { colors: c } = useTheme();
   const insets = useSafeAreaInsets();
+  const { listColumns, pagePadding, fabRight } = useResponsiveLayout();
   const fabBottom = 24 + insets.bottom;
   const styles = useThemedStyles((colors) => ({
     container: { flex: 1, backgroundColor: colors.bg },
-    list: { padding: 16, paddingBottom: 88 },
+    list: { paddingBottom: 88 },
+    columnWrap: { gap: 10 },
     empty: { textAlign: 'center' as const, color: colors.dim, marginTop: 40, fontSize: 15 },
     fab: {
       position: 'absolute' as const,
-      right: 20,
       width: 56,
       height: 56,
       borderRadius: 28,
@@ -118,21 +124,26 @@ export default function BranchesScreen() {
   }
 
   return (
+    <TabScreenFrame>
     <View style={styles.container}>
       {query.isLoading ? (
         <ActivityIndicator style={{ marginTop: 40 }} color={c.accentText} />
       ) : (
         <FlatList
+          key={`branches-cols-${listColumns}`}
           data={branches}
+          numColumns={listColumns}
+          columnWrapperStyle={listColumns > 1 ? styles.columnWrap : undefined}
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => (
             <BranchCard
               branch={item}
               owner={owner && !readOnly}
+              multiColumn={listColumns > 1}
               onEdit={() => router.push(`/branch/${item.id}/edit`)}
             />
           )}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingHorizontal: pagePadding, paddingTop: pagePadding }]}
           refreshControl={
             <RefreshControl refreshing={query.isRefetching} onRefresh={() => query.refetch()} tintColor={c.accentText} />
           }
@@ -141,10 +152,11 @@ export default function BranchesScreen() {
       )}
 
       {owner && !readOnly ? (
-        <Pressable style={[styles.fab, { bottom: fabBottom }]} onPress={() => router.push('/branch/new')}>
+        <Pressable style={[styles.fab, { right: fabRight, bottom: fabBottom }]} onPress={() => router.push('/branch/new')}>
           <Text style={styles.fabText}>+</Text>
         </Pressable>
       ) : null}
     </View>
+    </TabScreenFrame>
   );
 }

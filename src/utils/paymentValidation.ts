@@ -1,5 +1,7 @@
 import { formatDisplayDate, todayString, toDateString } from '@/src/utils/date';
 
+export { isoToLocalDate } from '@/src/utils/date';
+
 export function formatApiError(message: string): string {
   return message.replace(/^[a-zA-Z_.]+:\s*/, '');
 }
@@ -35,10 +37,4 @@ export function validateChangePlanPaymentFields({
     return { key: 'validation.paymentDateFuture' };
   }
   return null;
-}
-
-export function isoToLocalDate(iso: string): Date {
-  const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
-  if (parts) return new Date(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3]));
-  return new Date();
 }

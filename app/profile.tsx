@@ -1,12 +1,14 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchGymProfile, updateGymProfile } from '@/src/api/profile';
 import { ErrorBanner, Field, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { useTheme } from '@/src/context/PreferencesContext';
+import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { isOfflineQueued } from '@/src/offline/types';
 import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
@@ -19,6 +21,7 @@ export default function ProfileScreen() {
   const { token, user, subscription, updateGymName } = useAuth();
   const { colors: c } = useTheme();
   const { t } = useTranslation();
+  const { formMaxWidth, pagePadding } = useResponsiveLayout();
 
   const [gymName, setGymName] = useState('');
   const [ownerName, setOwnerName] = useState('');
@@ -87,8 +90,13 @@ export default function ProfileScreen() {
 
   return (
     <Screen>
+      <TabScreenFrame>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={[styles.content, { paddingHorizontal: pagePadding, alignItems: 'center' }]}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={{ width: '100%', maxWidth: formMaxWidth }}>
           <ErrorBanner message={error} />
 
           <Text style={[styles.section, { color: c.muted }]}>Gym</Text>
@@ -123,14 +131,16 @@ export default function ProfileScreen() {
             loading={mutation.isPending}
             disabled={!canSubmit}
           />
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      </TabScreenFrame>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 16, paddingBottom: 40 },
+  content: { paddingVertical: 16, paddingBottom: 40 },
   section: {
     marginTop: 16,
     marginBottom: 4,

@@ -14,7 +14,9 @@ import { deletePlan, fetchPlans } from '@/src/api/plans';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { ActionOverflowMenu } from '@/src/components/ActionOverflowMenu';
 import { ReadOnlyBanner } from '@/src/components/ReadOnlyBanner';
+import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
+import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useTranslation } from 'react-i18next';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
@@ -27,12 +29,14 @@ function PlanCard({
   readOnly,
   onEdit,
   onDelete,
+  multiColumn,
 }: {
   plan: PlanRow;
   owner: boolean;
   readOnly: boolean;
   onEdit: () => void;
   onDelete: () => void;
+  multiColumn?: boolean;
 }) {
   const { t } = useTranslation();
   const styles = useThemedStyles((c) => ({
@@ -43,6 +47,10 @@ function PlanCard({
       marginBottom: 10,
       borderWidth: 1,
       borderColor: c.border,
+    },
+    cardColumn: {
+      flex: 1,
+      marginBottom: 0,
     },
     headerRow: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 8 },
     cardMain: { flex: 1 },
@@ -62,7 +70,7 @@ function PlanCard({
       : [];
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, multiColumn && styles.cardColumn]}>
       <View style={styles.headerRow}>
         <View style={styles.cardMain}>
           <Text style={styles.name}>{plan.name}</Text>
@@ -100,11 +108,10 @@ export default function PlansScreen() {
       borderColor: 'rgba(251,191,36,0.35)',
     },
     bannerText: { color: '#fcd34d', fontSize: 13 },
-    list: { padding: 16, paddingBottom: 88 },
+    list: { paddingBottom: 88 },
     empty: { textAlign: 'center' as const, color: colors.dim, marginTop: 40, fontSize: 15 },
     fab: {
       position: 'absolute' as const,
-      right: 20,
       bottom: 24,
       width: 56,
       height: 56,
@@ -118,6 +125,8 @@ export default function PlansScreen() {
   }));
 
   const { readOnly } = useGymReadOnly();
+  const { listColumns, pagePadding, contentMaxWidth, width, isTablet } = useResponsiveLayout();
+  const fabRight = isTablet ? Math.max(pagePadding, (width - contentMaxWidth) / 2 + pagePadding) : 20;
   const owner = isGymOwner(user?.role);
   const canAccessPlans = Boolean(user && hasGymPortalAccess(user.role));
 
@@ -161,6 +170,7 @@ export default function PlansScreen() {
   const plans = query.data ?? [];
 
   return (
+    <TabScreenFrame>
     <View style={styles.container}>
       <ReadOnlyBanner />
 
@@ -168,18 +178,22 @@ export default function PlansScreen() {
         <ActivityIndicator style={{ marginTop: 40 }} color={c.accentText} />
       ) : (
         <FlatList
+          key={`plans-cols-${listColumns}`}
           data={plans}
+          numColumns={listColumns}
+          columnWrapperStyle={listColumns > 1 ? { gap: 10 } : undefined}
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => (
             <PlanCard
               plan={item}
               owner={owner}
               readOnly={readOnly}
+              multiColumn={listColumns > 1}
               onEdit={() => router.push(`/plan/${item.id}/edit`)}
               onDelete={() => confirmDelete(item)}
             />
           )}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingHorizontal: pagePadding }]}
           refreshControl={
             <RefreshControl refreshing={query.isRefetching} onRefresh={() => query.refetch()} tintColor={c.accentText} />
           }
@@ -188,10 +202,11 @@ export default function PlansScreen() {
       )}
 
       {owner && !readOnly ? (
-        <Pressable style={styles.fab} onPress={() => router.push('/plan/new')}>
+        <Pressable style={[styles.fab, { right: fabRight }]} onPress={() => router.push('/plan/new')}>
           <Text style={styles.fabText}>+</Text>
         </Pressable>
       ) : null}
     </View>
+    </TabScreenFrame>
   );
 }

@@ -14,7 +14,10 @@ import type { DashboardAlertMember } from '@/src/types/api';
 import { formatDisplayDate } from '@/src/utils/date';
 import { formatEtb } from '@/src/utils/formatMoney';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
+import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { isGymOwner, isGymStaff } from '@/src/utils/roles';
+import { ResponsiveContent } from '@/src/components/ResponsiveContent';
+import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 
 type StatFilter = 'due_soon' | 'expired' | 'unpaid';
 
@@ -116,6 +119,7 @@ export default function DashboardScreen() {
   const owner = isGymOwner(user?.role);
   const staffUser = isGymStaff(user?.role);
   const { readOnly } = useGymReadOnly();
+  const { statCardWidthPercent, isLargeTablet, isTablet, pagePadding } = useResponsiveLayout();
   const staffBranchLabel = staffUser
     ? user?.branch_name || (user?.branch_id ? `Branch #${user.branch_id}` : null)
     : null;
@@ -154,19 +158,72 @@ export default function DashboardScreen() {
     });
   };
 
-  const cardStyle = [styles.statCard, { backgroundColor: c.card, borderColor: c.border }];
+  const cardStyle = [
+    styles.statCard,
+    { width: statCardWidthPercent, backgroundColor: c.card, borderColor: c.border },
+  ];
   const valueStyle = [styles.statValue, { color: c.text }];
   const labelStyle = [styles.statLabel, { color: c.muted }];
   const alertMembers = (data?.alertMembers ?? []).slice(0, 5);
   const alertFilter = alertMembers.some((member) => member.status.toLowerCase() === 'expired') ? 'expired' : 'due_soon';
 
+  const summaryBlock = data ? (
+    <View style={[styles.summary, { backgroundColor: c.card, borderColor: c.border }]}>
+      <Pressable onPress={() => router.push('/(tabs)/revenue')}>
+        <Text style={[styles.summaryTitle, { color: c.muted }]}>{t('dashboard.thisMonth')}</Text>
+        <Text style={[styles.income, { color: c.accentText }]}>
+          {formatEtb(Number(data.monthlyIncome || 0))}
+        </Text>
+        {trendLabel ? <Text style={[styles.trend, { color: c.success }]}>{trendLabel}</Text> : null}
+        <Text style={[styles.muted, { color: c.dim }]}>
+          {t('dashboard.membersTotal', { count: data.totalMembers })}
+          {data.newMembersThisMonth != null
+            ? ` · ${t('dashboard.newThisMonth', { count: data.newMembersThisMonth })}`
+            : ''}
+        </Text>
+      </Pressable>
+      {owner ? <MiniBarChart data={data.revenueChart ?? []} showTypeSwitcher /> : null}
+    </View>
+  ) : null;
+
+  const attentionBlock =
+    data && owner ? (
+      <View style={[styles.alertCard, { backgroundColor: c.card, borderColor: c.border }]}>
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, { color: c.text }]}>{t('dashboard.attentionTitle')}</Text>
+          <Pressable onPress={() => goMembers(alertFilter)}>
+            <Text style={[styles.viewAll, { color: c.accentText }]}>{t('dashboard.viewAll')}</Text>
+          </Pressable>
+        </View>
+        {alertMembers.length ? (
+          alertMembers.map((member) => {
+            const status = member.status.toLowerCase();
+            const route = status === 'expired' || status === 'due soon' ? `/renew/${member.id}` : `/member/${member.id}`;
+            return (
+              <AlertMemberRow
+                key={member.id}
+                member={member}
+                colors={c}
+                onOpen={() => goMembers(filterForMemberStatus(member.status))}
+                onAction={readOnly ? undefined : () => router.push(route as never)}
+              />
+            );
+          })
+        ) : (
+          <Text style={[styles.muted, { color: c.dim }]}>{t('dashboard.noAttention')}</Text>
+        )}
+      </View>
+    ) : null;
+
   return (
+    <TabScreenFrame>
     <ScrollView
       style={[styles.container, { backgroundColor: c.bg }]}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, isTablet && styles.contentTablet]}
       refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={c.accentText} />}
     >
-      <Text style={[styles.gymName, { color: c.text }]}>{registeredGymName}</Text>
+      <ResponsiveContent style={{ paddingHorizontal: pagePadding }}>
+      <Text style={[styles.gymName, { color: c.text }, isTablet && styles.gymNameTablet]}>{registeredGymName}</Text>
       {staffBranchLabel ? (
         <Text style={[styles.branchLabel, { color: c.muted }]}>{t('branch.staffAt', { name: staffBranchLabel })}</Text>
       ) : null}
@@ -217,66 +274,37 @@ export default function DashboardScreen() {
       )}
 
       {data ? (
-        <View
-          style={[styles.summary, { backgroundColor: c.card, borderColor: c.border }]}
-        >
-          <Pressable onPress={() => router.push('/(tabs)/revenue')}>
-            <Text style={[styles.summaryTitle, { color: c.muted }]}>{t('dashboard.thisMonth')}</Text>
-            <Text style={[styles.income, { color: c.accentText }]}>
-              {formatEtb(Number(data.monthlyIncome || 0))}
-            </Text>
-            {trendLabel ? <Text style={[styles.trend, { color: c.success }]}>{trendLabel}</Text> : null}
-            <Text style={[styles.muted, { color: c.dim }]}>
-              {t('dashboard.membersTotal', { count: data.totalMembers })}
-              {data.newMembersThisMonth != null
-                ? ` · ${t('dashboard.newThisMonth', { count: data.newMembersThisMonth })}`
-                : ''}
-            </Text>
-          </Pressable>
-          {owner ? <MiniBarChart data={data.revenueChart ?? []} showTypeSwitcher /> : null}
-        </View>
-      ) : null}
-
-      {data && owner ? (
-        <View style={[styles.alertCard, { backgroundColor: c.card, borderColor: c.border }]}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: c.text }]}>{t('dashboard.attentionTitle')}</Text>
-            <Pressable onPress={() => goMembers(alertFilter)}>
-              <Text style={[styles.viewAll, { color: c.accentText }]}>{t('dashboard.viewAll')}</Text>
-            </Pressable>
+        isLargeTablet && owner ? (
+          <View style={styles.splitRow}>
+            <View style={styles.splitCol}>{summaryBlock}</View>
+            <View style={styles.splitCol}>{attentionBlock}</View>
           </View>
-          {alertMembers.length ? (
-            alertMembers.map((member) => {
-              const status = member.status.toLowerCase();
-              const route = status === 'expired' || status === 'due soon' ? `/renew/${member.id}` : `/member/${member.id}`;
-              return (
-                <AlertMemberRow
-                  key={member.id}
-                  member={member}
-                  colors={c}
-                  onOpen={() => goMembers(filterForMemberStatus(member.status))}
-                  onAction={readOnly ? undefined : () => router.push(route as never)}
-                />
-              );
-            })
-          ) : (
-            <Text style={[styles.muted, { color: c.dim }]}>{t('dashboard.noAttention')}</Text>
-          )}
-        </View>
+        ) : (
+          <>
+            {summaryBlock}
+            {attentionBlock}
+          </>
+        )
       ) : null}
 
       <ReadOnlyBanner />
+      </ResponsiveContent>
     </ScrollView>
+    </TabScreenFrame>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 20, paddingBottom: 40 },
+  content: { paddingBottom: 40 },
+  contentTablet: { flexGrow: 1 },
   gymName: {
     fontSize: 22,
     fontWeight: '700',
     marginBottom: 4,
+  },
+  gymNameTablet: {
+    fontSize: 26,
   },
   branchLabel: {
     fontSize: 14,
@@ -284,13 +312,19 @@ const styles = StyleSheet.create({
   },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   statCard: {
-    width: '47%',
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
   },
   statValue: { fontSize: 28, fontWeight: '700' },
   statLabel: { marginTop: 4, fontSize: 13 },
+  splitRow: {
+    flexDirection: 'row',
+    gap: 16,
+    marginTop: 24,
+    alignItems: 'flex-start',
+  },
+  splitCol: { flex: 1, minWidth: 0 },
   summary: {
     marginTop: 24,
     borderRadius: 12,
@@ -306,6 +340,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
+    flex: 1,
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
   sectionTitle: { fontSize: 16, fontWeight: '700' },

@@ -387,6 +387,7 @@
     "creditHint": "Suggested amount includes credit for unused days ({{credit}} ETB).",
     "termEndPreview": "New term ends: {{date}}",
     "paymentDateHint": "Use the date you collected money (today or earlier). Must be on or after the term start.",
+    "dateRangeInvalid": "No valid dates for this field right now. Adjust the term start or come back when payment can be recorded.",
     "paymentSourceEnroll": "Enroll",
     "paymentSourceRenew": "Renew",
     "paymentSourceChangePlan": "Plan change",

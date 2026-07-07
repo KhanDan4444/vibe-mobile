@@ -17,8 +17,11 @@ import { BranchFilterBar } from '@/src/components/BranchFilterBar';
 import { MiniBarChart } from '@/src/components/MiniBarChart';
 import { StatusBreakdown } from '@/src/components/StatusBreakdown';
 import { OptionPickerField } from '@/src/components/OptionPickerField';
+import { ResponsiveContent } from '@/src/components/ResponsiveContent';
+import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useTheme, usePreferences } from '@/src/context/PreferencesContext';
+import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { appTextStyle } from '@/src/theme/typography';
 import type { AppLanguage } from '@/src/i18n';
@@ -53,10 +56,10 @@ const REVENUE_PRESET_KEYS: { value: RevenuePreset; labelKey: string }[] = [
   { value: 'this_year', labelKey: 'revenue.periodThisYear' },
 ];
 
-function buildReportStyles(colors: ThemeColors) {
+function buildReportStyles(colors: ThemeColors, statCardWidthPercent: string) {
   return {
     container: { flex: 1, backgroundColor: colors.bg },
-    content: { padding: 16, paddingBottom: 40 },
+    content: { paddingBottom: 40 },
     pageTitle: { fontSize: 22, fontWeight: '700' as const, color: colors.text, marginTop: 4 },
     pageSub: { marginTop: 4, marginBottom: 8, fontSize: 14, color: colors.dim },
     sectionTitle: {
@@ -70,7 +73,7 @@ function buildReportStyles(colors: ThemeColors) {
     },
     statsRow: { flexDirection: 'row' as const, flexWrap: 'wrap' as const, gap: 8, marginTop: 16 },
     statBox: {
-      width: '47%' as const,
+      width: statCardWidthPercent as `${number}%`,
       flexGrow: 1,
       backgroundColor: colors.card,
       borderRadius: 10,
@@ -130,7 +133,8 @@ export default function ReportsScreen() {
   const { colors: c } = useTheme();
   const { language } = usePreferences();
   const { t } = useTranslation();
-  const styles = useThemedStyles(buildReportStyles);
+  const { pagePadding, statCardWidthPercent } = useResponsiveLayout();
+  const styles = useThemedStyles((colors) => buildReportStyles(colors, statCardWidthPercent));
   const [memberFilter, setMemberFilter] = useState<MemberFilter>('all');
   const [revenuePreset, setRevenuePreset] = useState<RevenuePreset>('this_month');
   const [exporting, setExporting] = useState<string | null>(null);
@@ -254,7 +258,9 @@ export default function ReportsScreen() {
   };
 
   return (
+    <TabScreenFrame>
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ResponsiveContent style={{ paddingHorizontal: pagePadding, paddingTop: pagePadding }}>
       <BranchFilterBar horizontalPadding={0} />
 
       <Text style={appTextStyle(language, styles.pageTitle)}>{t('reports.title')}</Text>
@@ -333,7 +339,9 @@ export default function ReportsScreen() {
           t={t}
         />
       </View>
+      </ResponsiveContent>
     </ScrollView>
+    </TabScreenFrame>
   );
 }
 

@@ -20,10 +20,12 @@ import { MemberPhoto } from '@/src/components/MemberPhoto';
 import { BranchFilterBar } from '@/src/components/BranchFilterBar';
 import { ReadOnlyBanner } from '@/src/components/ReadOnlyBanner';
 import { SortPicker } from '@/src/components/SortPicker';
+import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useTheme, usePreferences } from '@/src/context/PreferencesContext';
 import { appTextStyle } from '@/src/theme/typography';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
+import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import type { ThemeColors } from '@/src/theme/tokens';
 import { DEFAULT_MEMBER_SORT, MEMBER_SORT_OPTIONS, type MemberSortId } from '@/src/utils/listSort';
 import { isGymOwner } from '@/src/utils/roles';
@@ -97,16 +99,18 @@ function MemberRowItem({
   styles,
   showBranch,
   token,
+  multiColumn,
 }: {
   member: MemberRow;
   onPress: () => void;
   styles: ReturnType<typeof createStyles>;
   showBranch?: boolean;
   token: string;
+  multiColumn?: boolean;
 }) {
   const { t } = useTranslation();
   return (
-    <Pressable style={styles.row} onPress={onPress}>
+    <Pressable style={[styles.row, multiColumn && styles.rowColumn]} onPress={onPress}>
       <MemberPhoto
         memberId={member.id}
         name={member.name}
@@ -148,6 +152,8 @@ export default function MembersScreen() {
   const { language } = usePreferences();
   const { t } = useTranslation();
   const styles = createStyles(c);
+  const { listColumns, pagePadding, contentMaxWidth, width, isTablet } = useResponsiveLayout();
+  const fabRight = isTablet ? Math.max(pagePadding, (width - contentMaxWidth) / 2 + pagePadding) : 20;
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -219,10 +225,11 @@ export default function MembersScreen() {
   };
 
   return (
+    <TabScreenFrame>
     <View style={styles.container}>
-      <BranchFilterBar />
+      <BranchFilterBar horizontalPadding={pagePadding} />
       <ReadOnlyBanner />
-      <View style={styles.toolbar}>
+      <View style={[styles.toolbar, { paddingHorizontal: pagePadding }]}>
         <View style={styles.searchWrap}>
           <Ionicons name="search" size={18} color={c.dim} style={styles.searchIcon} />
           <TextInput
@@ -245,8 +252,8 @@ export default function MembersScreen() {
           ref={filterScrollRef}
           horizontal
           showsHorizontalScrollIndicator={false}
-          style={styles.filterScroll}
-          contentContainerStyle={styles.filters}
+          style={[styles.filterScroll, { marginHorizontal: -pagePadding }]}
+          contentContainerStyle={[styles.filters, { paddingHorizontal: pagePadding }]}
         >
           {FILTER_OPTIONS.map((option) => {
             const active = filter === option;
@@ -302,7 +309,10 @@ export default function MembersScreen() {
         <ActivityIndicator style={{ marginTop: 40 }} color={c.accentText} />
       ) : (
         <FlatList
+          key={`members-cols-${listColumns}`}
           data={members}
+          numColumns={listColumns}
+          columnWrapperStyle={listColumns > 1 ? styles.columnWrap : undefined}
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => (
             <MemberRowItem
@@ -310,10 +320,11 @@ export default function MembersScreen() {
               styles={styles}
               showBranch={showBranchColumn}
               token={token!}
+              multiColumn={listColumns > 1}
               onPress={() => router.push(`/member/${item.id}`)}
             />
           )}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingHorizontal: pagePadding }]}
           onEndReached={() => {
             if (query.hasNextPage && !query.isFetchingNextPage) query.fetchNextPage();
           }}
@@ -330,11 +341,12 @@ export default function MembersScreen() {
       )}
 
       {!readOnly ? (
-        <Pressable style={styles.fab} onPress={() => router.push('/enroll')}>
+        <Pressable style={[styles.fab, { right: fabRight }]} onPress={() => router.push('/enroll')}>
           <Text style={styles.fabText}>+</Text>
         </Pressable>
       ) : null}
     </View>
+    </TabScreenFrame>
   );
 }
 
@@ -342,7 +354,6 @@ function createStyles(c: ThemeColors) {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: c.bg },
     toolbar: {
-      paddingHorizontal: 16,
       paddingBottom: 10,
       gap: 10,
     },
@@ -370,7 +381,6 @@ function createStyles(c: ThemeColors) {
     filters: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: 16,
       paddingRight: 32,
       gap: 8,
     },
@@ -409,7 +419,8 @@ function createStyles(c: ThemeColors) {
       fontWeight: '800',
     },
     sortRow: { alignSelf: 'flex-start' },
-    list: { paddingHorizontal: 16, paddingBottom: 24 },
+    list: { paddingBottom: 24 },
+    columnWrap: { gap: 10 },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -422,6 +433,10 @@ function createStyles(c: ThemeColors) {
       borderColor: c.border,
       gap: 12,
     },
+    rowColumn: {
+      flex: 1,
+      marginBottom: 0,
+    },
     rowMain: { flex: 1, marginRight: 8 },
     name: { fontSize: 16, fontWeight: '600', color: c.text },
     phone: { marginTop: 4, fontSize: 13, color: c.muted },
@@ -433,7 +448,6 @@ function createStyles(c: ThemeColors) {
     empty: { textAlign: 'center', color: c.dim, marginTop: 40, fontSize: 15 },
     fab: {
       position: 'absolute',
-      right: 20,
       bottom: 24,
       width: 56,
       height: 56,

@@ -18,6 +18,12 @@ import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { isOfflineQueued } from '@/src/offline/types';
 import { todayString } from '@/src/utils/date';
 import { defaultRenewStartDate } from '@/src/utils/memberRenew';
+import {
+  boundsForPaymentOnTerm,
+  boundsForRenewStart,
+  clampPaymentToTerm,
+  type DateBounds,
+} from '@/src/utils/datePickerBounds';
 import { hasGymPortalAccess } from '@/src/utils/roles';
 import type { PlanRow, RenewPayload } from '@/src/types/api';
 
@@ -63,6 +69,8 @@ export default function RenewScreen() {
 
   const member = memberQuery.data;
   const plans = plansQuery.data ?? [];
+  const renewStartBounds: DateBounds = member ? boundsForRenewStart(member) : {};
+  const paymentBounds = boundsForPaymentOnTerm(startDate);
 
   useEffect(() => {
     if (member) {
@@ -147,13 +155,25 @@ export default function RenewScreen() {
           )}
 
           <Label>{t('forms.startDate')}</Label>
-          <DateField value={startDate} onChange={setStartDate} />
+          <DateField
+            value={startDate}
+            onChange={(v) => {
+              setStartDate(v);
+              setPaymentDate(clampPaymentToTerm(v, paymentDate));
+            }}
+            minimumDate={renewStartBounds.minimumDate}
+          />
 
           <Label>{t('forms.amount')}</Label>
           <Field value={amount} onChangeText={setAmount} keyboardType="decimal-pad" autoCapitalize="none" />
 
           <Label>{t('forms.paymentDate')}</Label>
-          <DateField value={paymentDate} onChange={setPaymentDate} />
+          <DateField
+            value={paymentDate}
+            onChange={setPaymentDate}
+            minimumDate={paymentBounds.minimumDate}
+            maximumDate={paymentBounds.maximumDate}
+          />
 
           <PaymentMethodPicker value={method} onChange={setMethod} />
 

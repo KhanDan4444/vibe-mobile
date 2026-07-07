@@ -22,9 +22,13 @@ import { formatDisplayDate, todayString, toDateString } from '@/src/utils/date';
 import { previewMemberTermEnd, suggestChangePlanAmount } from '@/src/utils/changePlan';
 import {
   formatApiError,
-  isoToLocalDate,
   validateChangePlanPaymentFields,
 } from '@/src/utils/paymentValidation';
+import {
+  boundsForPaymentOnTerm,
+  boundsForTermStartWithPayment,
+  paymentDateForTermStart,
+} from '@/src/utils/datePickerBounds';
 import { hasGymPortalAccess } from '@/src/utils/roles';
 import type { ChangePlanPayload } from '@/src/types/api';
 
@@ -125,8 +129,8 @@ export default function ChangePlanScreen() {
 
   const termStart = customTermStart ? startDate.trim() : toDateString(member?.start_date);
   const isSameTerm = Boolean(member && termStart === toDateString(member.start_date));
-  const paymentMinDate = termStart ? isoToLocalDate(termStart) : undefined;
-  const paymentMaxDate = isoToLocalDate(todayString());
+  const paymentBounds = boundsForPaymentOnTerm(termStart);
+  const customTermStartBounds = boundsForTermStartWithPayment();
   const hasChangePlanPaymentOnDate = (paymentsQuery.data ?? []).some(
     (p) => toDateString(p.date) === paymentDate && p.source === 'change_plan'
   );
@@ -135,6 +139,12 @@ export default function ChangePlanScreen() {
     customTermStart,
     startDate,
   });
+
+  const onTermStartChange = (value: string) => {
+    setStartDate(value);
+    setAmountEdited(false);
+    setPaymentDate(paymentDateForTermStart(value));
+  };
 
   const buildPayload = (): ChangePlanPayload => {
     if (!planId || !member) throw new Error('Select a plan.');
@@ -282,7 +292,11 @@ export default function ChangePlanScreen() {
                 </Text>
               ) : null}
               <Label>{t('forms.termStartDate')}</Label>
-              <DateField value={startDate} onChange={setStartDate} />
+              <DateField
+                value={startDate}
+                onChange={onTermStartChange}
+                maximumDate={customTermStartBounds.maximumDate}
+              />
               <Text style={styles.hint}>{t('forms.freshTermHint')}</Text>
             </>
           ) : null}
@@ -302,8 +316,8 @@ export default function ChangePlanScreen() {
           <DateField
             value={paymentDate}
             onChange={setPaymentDate}
-            minimumDate={paymentMinDate}
-            maximumDate={paymentMaxDate}
+            minimumDate={paymentBounds.minimumDate}
+            maximumDate={paymentBounds.maximumDate}
           />
           <Text style={styles.hint}>{t('forms.paymentDateHint')}</Text>
           {hasChangePlanPaymentOnDate ? (

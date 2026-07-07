@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
 import { ApiError } from '@/src/api/client';
 import { useTheme } from '@/src/context/PreferencesContext';
+import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { hasGymPortalAccess, isPlatformAdmin } from '@/src/utils/roles';
 import { API_BASE_URL } from '@/src/config/api';
 
@@ -21,6 +22,7 @@ export default function LoginScreen() {
   const { login, logout } = useAuth();
   const { colors: c } = useTheme();
   const { t } = useTranslation();
+  const { isTablet, formMaxWidth, pagePadding } = useResponsiveLayout();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -54,10 +56,16 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: c.bg }]}
+      style={[styles.container, { backgroundColor: c.bg, padding: pagePadding }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={isTablet ? 24 : 0}
     >
-      <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: c.card, borderColor: c.border, maxWidth: formMaxWidth, alignSelf: 'center', width: '100%' },
+        ]}
+      >
         <Text style={[styles.title, { color: c.text }]}>{t('app.name')}</Text>
         <Text style={[styles.subtitle, { color: c.muted }]}>{t('auth.subtitle')}</Text>
 
@@ -111,7 +119,9 @@ export default function LoginScreen() {
           </Pressable>
         </View>
 
-        <Text style={[styles.hint, { color: c.dim }]}>API: {API_BASE_URL}</Text>
+        {__DEV__ ? (
+          <Text style={[styles.hint, { color: c.dim }]}>API: {API_BASE_URL}</Text>
+        ) : null}
       </View>
     </KeyboardAvoidingView>
   );
@@ -121,7 +131,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    padding: 24,
   },
   card: {
     borderRadius: 16,

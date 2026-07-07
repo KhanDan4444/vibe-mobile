@@ -3,7 +3,10 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
+import { ResponsiveContent } from '@/src/components/ResponsiveContent';
+import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
+import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import type { AppLanguage } from '@/src/i18n';
 import { initialsFrom, roleSubtitle } from '@/src/utils/userDisplay';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
@@ -34,6 +37,7 @@ export default function AccountScreen() {
   const { colors: c } = useTheme();
   const { language, setLanguage, cycleTheme, theme } = usePreferences();
   const { t } = useTranslation();
+  const { isTablet, pagePadding } = useResponsiveLayout();
   const owner = isGymOwner(user?.role);
 
   if (!user || !hasGymPortalAccess(user.role)) {
@@ -54,7 +58,9 @@ export default function AccountScreen() {
   };
 
   return (
+    <TabScreenFrame>
     <ScrollView style={[styles.container, { backgroundColor: c.bg }]} contentContainerStyle={styles.content}>
+      <ResponsiveContent style={{ paddingHorizontal: pagePadding, paddingTop: pagePadding }}>
       <View style={[styles.profileCard, { backgroundColor: c.card, borderColor: c.border }]}>
         <View style={[styles.avatar, { backgroundColor: c.accent }]}>
           <Text style={styles.avatarText}>{initialsFrom(user.name, user.email, user.username)}</Text>
@@ -70,25 +76,33 @@ export default function AccountScreen() {
         </View>
       </View>
 
-      <Text style={[styles.section, { color: c.dim }]}>{t('account.preferences')}</Text>
-      <AccountRow icon={theme === 'dark' ? 'moon-outline' : 'sunny-outline'} label={t('profile.appearance')} value={themeLabel} onPress={cycleTheme} />
-      <AccountRow icon="language-outline" label={t('profile.language')} value={langLabel} onPress={toggleLanguage} />
+      <View style={[styles.menuGrid, isTablet && styles.menuGridTablet]}>
+        <View style={isTablet ? styles.menuColumn : undefined}>
+          <Text style={[styles.section, { color: c.dim }]}>{t('account.preferences')}</Text>
+          <AccountRow icon={theme === 'dark' ? 'moon-outline' : 'sunny-outline'} label={t('profile.appearance')} value={themeLabel} onPress={cycleTheme} />
+          <AccountRow icon="language-outline" label={t('profile.language')} value={langLabel} onPress={toggleLanguage} />
+        </View>
 
-      <Text style={[styles.section, { color: c.dim }]}>{t('account.security')}</Text>
-      {owner ? (
-        <AccountRow icon="storefront-outline" label={t('profile.gymProfile')} onPress={() => router.push('/profile')} />
-      ) : null}
-      <AccountRow icon="key-outline" label={t('profile.changePassword')} onPress={() => router.push('/change-password')} />
+        <View style={isTablet ? styles.menuColumn : undefined}>
+          <Text style={[styles.section, { color: c.dim }]}>{t('account.security')}</Text>
+          {owner ? (
+            <AccountRow icon="storefront-outline" label={t('profile.gymProfile')} onPress={() => router.push('/profile')} />
+          ) : null}
+          <AccountRow icon="key-outline" label={t('profile.changePassword')} onPress={() => router.push('/change-password')} />
 
-      <Text style={[styles.section, { color: c.dim }]}>{t('account.session')}</Text>
-      <AccountRow icon="log-out-outline" label={t('profile.signOut')} danger onPress={handleLogout} />
+          <Text style={[styles.section, { color: c.dim }]}>{t('account.session')}</Text>
+          <AccountRow icon="log-out-outline" label={t('profile.signOut')} danger onPress={handleLogout} />
+        </View>
+      </View>
+      </ResponsiveContent>
     </ScrollView>
+    </TabScreenFrame>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 16, paddingBottom: 40 },
+  content: { paddingBottom: 40 },
   profileCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -122,4 +136,7 @@ const styles = StyleSheet.create({
   rowIcon: { marginRight: 12 },
   rowLabel: { flex: 1, fontSize: 16, fontWeight: '600' },
   rowValue: { fontSize: 13, fontWeight: '700' },
+  menuGrid: { gap: 0 },
+  menuGridTablet: { flexDirection: 'row', gap: 20, alignItems: 'flex-start' },
+  menuColumn: { flex: 1, minWidth: 280 },
 });

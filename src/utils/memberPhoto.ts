@@ -12,9 +12,11 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
 /** Load a member photo through the authenticated API (RN Image headers are unreliable). */
 export async function fetchMemberPhotoDataUri(
   memberId: number,
-  token: string
+  token: string,
+  cacheBust = 0
 ): Promise<string | null> {
-  const res = await fetch(`${API_BASE_URL}/api/members/${memberId}/photo`, {
+  const query = cacheBust ? `?v=${encodeURIComponent(String(cacheBust))}` : '';
+  const res = await fetch(`${API_BASE_URL}/api/members/${memberId}/photo${query}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) return null;

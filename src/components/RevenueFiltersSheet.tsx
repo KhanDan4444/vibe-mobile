@@ -1,6 +1,7 @@
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { DateField } from '@/src/components/DateField';
+import { boundsForCustomRangeFrom, boundsForCustomRangeTo } from '@/src/utils/datePickerBounds';
 import { PAYMENT_METHODS } from '@/src/constants/payments';
 import { REVENUE_SORT_OPTIONS, type RevenueSortId } from '@/src/utils/listSort';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
@@ -44,6 +45,8 @@ export function RevenueFiltersSheet({
   canExport,
 }: Props) {
   const { colors: c } = useTheme();
+  const fromBounds = boundsForCustomRangeFrom(customTo);
+  const toBounds = boundsForCustomRangeTo(customFrom);
   const styles = useThemedStyles((c) => ({
     overlay: { flex: 1, justifyContent: 'flex-end' as const },
     backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.5)' },
@@ -175,10 +178,19 @@ export function RevenueFiltersSheet({
             {useCustomRange ? (
               <View style={styles.dateRow}>
                 <View style={{ flex: 1 }}>
-                  <DateField value={customFrom} onChange={onCustomFromChange} />
+                  <DateField
+                    value={customFrom}
+                    onChange={onCustomFromChange}
+                    maximumDate={fromBounds.maximumDate}
+                  />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <DateField value={customTo} onChange={onCustomToChange} />
+                  <DateField
+                    value={customTo}
+                    onChange={onCustomToChange}
+                    minimumDate={toBounds.minimumDate}
+                    maximumDate={toBounds.maximumDate}
+                  />
                 </View>
               </View>
             ) : null}

@@ -13,8 +13,11 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { deleteMember, fetchMember, fetchMemberPayments } from '@/src/api/members';
 import { MemberPhoto } from '@/src/components/MemberPhoto';
 import { MemberActionsBar } from '@/src/components/MemberActionsBar';
+import { ResponsiveContent } from '@/src/components/ResponsiveContent';
+import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
+import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import type { ThemeColors } from '@/src/theme/tokens';
 import { formatDisplayDate } from '@/src/utils/date';
@@ -42,7 +45,7 @@ function Row({ label, value, styles }: { label: string; value: string; styles: R
 function buildMemberStyles(c: ThemeColors) {
   return {
     container: { flex: 1, backgroundColor: c.bg },
-    content: { padding: 16, paddingBottom: 32 },
+    content: { paddingBottom: 32 },
     center: { flex: 1, backgroundColor: c.bg, alignItems: 'center' as const, justifyContent: 'center' as const, padding: 24 },
     card: {
       backgroundColor: c.card,
@@ -103,6 +106,7 @@ export default function MemberDetailScreen() {
   const { readOnly } = useGymReadOnly();
   const { colors: c } = useTheme();
   const { t } = useTranslation();
+  const { pagePadding, isLargeTablet } = useResponsiveLayout();
   const styles = useThemedStyles(buildMemberStyles);
   const canViewMember = Boolean(user && hasGymPortalAccess(user.role));
 
@@ -178,8 +182,11 @@ export default function MemberDetailScreen() {
   };
 
   return (
+    <TabScreenFrame>
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.card}>
+      <ResponsiveContent style={{ paddingHorizontal: pagePadding, paddingTop: pagePadding }}>
+      <View style={isLargeTablet ? { flexDirection: 'row', gap: 12, alignItems: 'flex-start' } : undefined}>
+      <View style={[styles.card, isLargeTablet && { flex: 1 }]}>
         <View style={styles.headerRow}>
           {token ? (
             <MemberPhoto
@@ -200,12 +207,13 @@ export default function MemberDetailScreen() {
         </View>
       </View>
 
-      <View style={styles.card}>
+      <View style={[styles.card, isLargeTablet && { flex: 1 }]}>
         <Text style={styles.sectionTitle}>{t('member.membership')}</Text>
         <Row label={t('member.plan')} value={member.plan_name || '—'} styles={styles} />
         <Row label={t('member.start')} value={formatDisplayDate(member.start_date)} styles={styles} />
         <Row label={t('member.end')} value={formatDisplayDate(member.end_date)} styles={styles} />
         {member.branch_name ? <Row label={t('member.branch')} value={member.branch_name} styles={styles} /> : null}
+      </View>
       </View>
 
       <MemberActionsBar
@@ -247,6 +255,8 @@ export default function MemberDetailScreen() {
           })
         )}
       </View>
+      </ResponsiveContent>
     </ScrollView>
+    </TabScreenFrame>
   );
 }

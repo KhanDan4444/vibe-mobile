@@ -1,8 +1,9 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text } from 'react-native';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
+import { fetchMember } from '@/src/api/members';
 import { deletePayment, updatePayment } from '@/src/api/payments';
 import { DateField } from '@/src/components/DateField';
 import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
@@ -11,6 +12,7 @@ import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useTranslation } from 'react-i18next';
 import { PAYMENT_METHODS, type PaymentMethod } from '@/src/constants/payments';
 import { todayString } from '@/src/utils/date';
+import { boundsForPaymentOnTerm } from '@/src/utils/datePickerBounds';
 import { isGymOwner } from '@/src/utils/roles';
 
 export default function EditPaymentScreen() {
@@ -53,6 +55,14 @@ export default function EditPaymentScreen() {
     deleteText: { color: colors.error, fontSize: 15, fontWeight: '600' as const },
   }));
   const canManagePayment = Boolean(user && isGymOwner(user.role));
+
+  const memberQuery = useQuery({
+    queryKey: ['member', memberId],
+    queryFn: () => fetchMember(token!, memberId),
+    enabled: Boolean(token && canManagePayment) && Number.isFinite(memberId),
+  });
+
+  const paymentBounds = boundsForPaymentOnTerm(memberQuery.data?.start_date);
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -120,7 +130,12 @@ export default function EditPaymentScreen() {
           <Field value={amount} onChangeText={setAmount} keyboardType="decimal-pad" />
 
           <Label>{t('forms.paymentDate')}</Label>
-          <DateField value={paymentDate} onChange={setPaymentDate} />
+          <DateField
+            value={paymentDate}
+            onChange={setPaymentDate}
+            minimumDate={paymentBounds.minimumDate}
+            maximumDate={paymentBounds.maximumDate}
+          />
 
           <PaymentMethodPicker value={method} onChange={setMethod} />
 

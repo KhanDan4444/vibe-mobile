@@ -3,7 +3,10 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
+import { ResponsiveContent } from '@/src/components/ResponsiveContent';
+import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { useTheme } from '@/src/context/PreferencesContext';
+import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { isGymOwner } from '@/src/utils/roles';
 
 type MenuItem = {
@@ -40,50 +43,72 @@ export default function MoreScreen() {
   const { user } = useAuth();
   const { colors: c } = useTheme();
   const { t } = useTranslation();
+  const { isTablet, pagePadding } = useResponsiveLayout();
   const owner = isGymOwner(user?.role);
 
   const items = MENU.filter((item) => !item.ownerOnly || owner);
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: c.bg }]} contentContainerStyle={styles.content}>
-      <Text style={[styles.hint, { color: c.dim }]}>{t('more.hint')}</Text>
+    <TabScreenFrame>
+      <ScrollView style={[styles.container, { backgroundColor: c.bg }]} contentContainerStyle={styles.content}>
+        <ResponsiveContent style={{ paddingHorizontal: pagePadding }}>
+          <Text style={[styles.hint, { color: c.dim }]}>{t('more.hint')}</Text>
 
-      {items.map((item) => (
-        <Pressable
-          key={item.route}
-          style={[styles.row, { backgroundColor: c.card, borderColor: c.border }]}
-          onPress={() => router.push(item.route as never)}
-        >
-          <Ionicons name={item.icon} size={22} color={c.muted} style={styles.rowIcon} />
-          <View style={styles.rowText}>
-            <Text style={[styles.rowLabel, { color: c.text }]}>{t(MENU_KEYS[item.labelKey])}</Text>
-            {item.subtitleKey ? (
-              <Text style={[styles.rowSub, { color: c.dim }]}>{t(MENU_KEYS[item.subtitleKey])}</Text>
-            ) : null}
+          <View style={[styles.menuGrid, isTablet && styles.menuGridTablet]}>
+            {items.map((item) => (
+              <Pressable
+                key={item.route}
+                style={[
+                  styles.row,
+                  { backgroundColor: c.card, borderColor: c.border },
+                  isTablet && styles.rowTablet,
+                ]}
+                onPress={() => router.push(item.route as never)}
+              >
+                <Ionicons name={item.icon} size={22} color={c.muted} style={styles.rowIcon} />
+                <View style={styles.rowText}>
+                  <Text style={[styles.rowLabel, { color: c.text }]}>{t(MENU_KEYS[item.labelKey])}</Text>
+                  {item.subtitleKey ? (
+                    <Text style={[styles.rowSub, { color: c.dim }]}>{t(MENU_KEYS[item.subtitleKey])}</Text>
+                  ) : null}
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={c.dim} />
+              </Pressable>
+            ))}
           </View>
-          <Ionicons name="chevron-forward" size={18} color={c.dim} />
-        </Pressable>
-      ))}
-    </ScrollView>
+        </ResponsiveContent>
+      </ScrollView>
+    </TabScreenFrame>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 16, paddingBottom: 40 },
+  content: { paddingBottom: 40, flexGrow: 1 },
   hint: {
     fontSize: 13,
     lineHeight: 20,
     marginBottom: 16,
     paddingHorizontal: 4,
   },
+  menuGrid: {
+    gap: 10,
+  },
+  menuGridTablet: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 12,
     padding: 14,
-    marginBottom: 10,
     borderWidth: 1,
+  },
+  rowTablet: {
+    width: '48.5%',
+    flexGrow: 1,
+    minWidth: 280,
   },
   rowIcon: { marginRight: 12 },
   rowText: { flex: 1 },

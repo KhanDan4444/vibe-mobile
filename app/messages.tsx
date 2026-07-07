@@ -13,8 +13,10 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { fetchMemberSms } from '@/src/api/memberSms';
 import { BranchFilterBar } from '@/src/components/BranchFilterBar';
 import { FilterPickerButton } from '@/src/components/FilterPickerButton';
+import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useTheme } from '@/src/context/PreferencesContext';
+import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { formatDisplayDateTime } from '@/src/utils/date';
 import { SMS_TYPE_FILTER_KEYS, formatSmsType } from '@/src/utils/smsLabels';
@@ -24,7 +26,7 @@ import type { MemberSmsRow } from '@/src/types/api';
 
 type SmsFilter = (typeof SMS_TYPE_FILTER_KEYS)[number]['value'];
 
-function SmsItem({ row, onPress }: { row: MemberSmsRow; onPress: () => void }) {
+function SmsItem({ row, multiColumn, onPress }: { row: MemberSmsRow; multiColumn?: boolean; onPress: () => void }) {
   const styles = useThemedStyles((c) => ({
     card: {
       backgroundColor: c.card,
@@ -34,6 +36,7 @@ function SmsItem({ row, onPress }: { row: MemberSmsRow; onPress: () => void }) {
       borderWidth: 1,
       borderColor: c.border,
     },
+    cardColumn: { flex: 1, marginBottom: 0 },
     cardHeader: { flexDirection: 'row' as const, justifyContent: 'space-between' as const, gap: 8 },
     member: { flex: 1, fontSize: 15, fontWeight: '600' as const, color: c.text },
     time: { fontSize: 11, color: c.dim },
@@ -43,7 +46,7 @@ function SmsItem({ row, onPress }: { row: MemberSmsRow; onPress: () => void }) {
   }));
 
   return (
-    <Pressable style={styles.card} onPress={onPress}>
+    <Pressable style={[styles.card, multiColumn && styles.cardColumn]} onPress={onPress}>
       <View style={styles.cardHeader}>
         <Text style={styles.member}>{row.member_name}</Text>
         <Text style={styles.time}>{formatDisplayDateTime(row.sent_at)}</Text>
@@ -61,10 +64,12 @@ export default function MessagesScreen() {
   const { selectedBranchId } = useBranchScope();
   const { colors: c } = useTheme();
   const { t } = useTranslation();
+  const { listColumns, pagePadding } = useResponsiveLayout();
   const styles = useThemedStyles((colors) => ({
     container: { flex: 1, backgroundColor: colors.bg },
-    filters: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4 },
-    list: { padding: 16, paddingBottom: 24 },
+    filters: { paddingTop: 12, paddingBottom: 4 },
+    list: { paddingBottom: 24 },
+    columnWrap: { gap: 10 },
     empty: { textAlign: 'center' as const, color: colors.dim, marginTop: 40, fontSize: 15 },
   }));
 
@@ -95,9 +100,10 @@ export default function MessagesScreen() {
   }
 
   return (
+    <TabScreenFrame>
     <View style={styles.container}>
-      <BranchFilterBar />
-      <View style={styles.filters}>
+      <BranchFilterBar horizontalPadding={pagePadding} />
+      <View style={[styles.filters, { paddingHorizontal: pagePadding }]}>
         <FilterPickerButton
           label={t('messages.filterLabel')}
           sheetTitle={t('messages.filterLabel')}
@@ -111,12 +117,15 @@ export default function MessagesScreen() {
         <ActivityIndicator style={{ marginTop: 40 }} color={c.accentText} />
       ) : (
         <FlatList
+          key={`sms-cols-${listColumns}`}
           data={items}
+          numColumns={listColumns}
+          columnWrapperStyle={listColumns > 1 ? styles.columnWrap : undefined}
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => (
-            <SmsItem row={item} onPress={() => router.push(`/member/${item.member_id}`)} />
+            <SmsItem row={item} multiColumn={listColumns > 1} onPress={() => router.push(`/member/${item.member_id}`)} />
           )}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingHorizontal: pagePadding }]}
           refreshControl={
             <RefreshControl refreshing={query.isRefetching} onRefresh={() => query.refetch()} tintColor={c.accentText} />
           }
@@ -131,5 +140,6 @@ export default function MessagesScreen() {
         />
       )}
     </View>
+    </TabScreenFrame>
   );
 }

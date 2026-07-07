@@ -10,6 +10,7 @@ import { OfflineBanner } from '@/src/components/OfflineBanner';
 import { TabSwipeShell } from '@/src/components/TabSwipeShell';
 import { useAuth } from '@/src/auth/AuthContext';
 import { useTheme } from '@/src/context/PreferencesContext';
+import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { hasGymPortalAccess } from '@/src/utils/roles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -34,8 +35,9 @@ export default function TabLayout() {
   const { colors: c } = useTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const { tabIconSize, isTablet } = useResponsiveLayout();
   const pathname = usePathname();
-  const tabBarBottom = Math.max(insets.bottom, 6);
+  const tabBarBottom = Math.max(insets.bottom, isTablet ? 10 : 6);
   const tabIndex = activeTabIndex(pathname);
 
   const goToTab = useCallback((nextIndex: number) => {
@@ -74,7 +76,7 @@ export default function TabLayout() {
               backgroundColor: c.tabBarBg,
               borderTopColor: c.tabBarBorder,
               paddingBottom: tabBarBottom,
-              height: 52 + tabBarBottom,
+              height: (isTablet ? 58 : 52) + tabBarBottom,
             },
             headerStyle: { backgroundColor: c.headerBg },
             headerTintColor: c.text,
@@ -86,35 +88,35 @@ export default function TabLayout() {
             name="index"
             options={{
               title: t('tabs.dashboard'),
-              tabBarIcon: ({ color }) => <Ionicons name="stats-chart" color={color} size={24} />,
+              tabBarIcon: ({ color }) => <Ionicons name="stats-chart" color={color} size={tabIconSize} />,
             }}
           />
           <Tabs.Screen
             name="members"
             options={{
               title: t('tabs.members'),
-              tabBarIcon: ({ color }) => <MembersTabIcon color={color} />,
+              tabBarIcon: ({ color }) => <MembersTabIcon color={color} size={tabIconSize} />,
             }}
           />
           <Tabs.Screen
             name="revenue"
             options={{
               title: t('tabs.revenue'),
-              tabBarIcon: ({ color }) => <Ionicons name="cash" color={color} size={24} />,
+              tabBarIcon: ({ color }) => <Ionicons name="cash" color={color} size={tabIconSize} />,
             }}
           />
           <Tabs.Screen
             name="plans"
             options={{
               title: t('tabs.plans'),
-              tabBarIcon: ({ color }) => <Ionicons name="barbell" color={color} size={24} />,
+              tabBarIcon: ({ color }) => <Ionicons name="barbell" color={color} size={tabIconSize} />,
             }}
           />
           <Tabs.Screen
             name="more"
             options={{
               title: t('tabs.more'),
-              tabBarIcon: ({ color }) => <Ionicons name="menu" color={color} size={24} />,
+              tabBarIcon: ({ color }) => <Ionicons name="menu" color={color} size={tabIconSize} />,
             }}
           />
         </Tabs>

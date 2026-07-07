@@ -17,6 +17,7 @@ import { PAYMENT_METHODS } from '@/src/constants/payments';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { isOfflineQueued } from '@/src/offline/types';
 import { todayString } from '@/src/utils/date';
+import { boundsForPaymentOnTerm } from '@/src/utils/datePickerBounds';
 import { hasGymPortalAccess } from '@/src/utils/roles';
 
 export default function PaymentScreen() {
@@ -53,6 +54,7 @@ export default function PaymentScreen() {
 
   const member = memberQuery.data;
   const plans = plansQuery.data ?? [];
+  const paymentBounds = boundsForPaymentOnTerm(member?.start_date);
 
   useEffect(() => {
     if (!member?.plan_id) return;
@@ -107,7 +109,12 @@ export default function PaymentScreen() {
           <Field value={amount} onChangeText={setAmount} keyboardType="decimal-pad" autoCapitalize="none" />
 
           <Label>{t('forms.paymentDate')}</Label>
-          <DateField value={paymentDate} onChange={setPaymentDate} />
+          <DateField
+            value={paymentDate}
+            onChange={setPaymentDate}
+            minimumDate={paymentBounds.minimumDate}
+            maximumDate={paymentBounds.maximumDate}
+          />
 
           <PaymentMethodPicker value={method} onChange={setMethod} />
 

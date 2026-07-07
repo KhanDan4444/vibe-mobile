@@ -248,6 +248,8 @@ export interface PaymentsListResponse extends PaginatedResponse<PaymentListRow> 
 export interface UpdateMemberPayload {
   name?: string;
   phone?: string;
+  branch_id?: number;
+  photo?: string | null;
 }
 
 export interface EnrollPayload {

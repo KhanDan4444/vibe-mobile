@@ -1,15 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { formStyles } from '@/src/components/Form';
-import { formatDisplayDate, dateToIso } from '@/src/utils/date';
+import { clampIsoDate, dateToIso, formatDisplayDate, isDateRangeValid, isoToLocalDate, toDateString } from '@/src/utils/date';
 
 function parseIsoDate(value: string): Date {
-  const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-  if (parts) return new Date(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3]));
-  return new Date();
+  return isoToLocalDate(value || todayFallback());
+}
+
+function todayFallback(): string {
+  return dateToIso(new Date());
 }
 
 export function DateField({
@@ -17,21 +19,39 @@ export function DateField({
   onChange,
   minimumDate,
   maximumDate,
+  disabled,
 }: {
   value: string;
   onChange: (isoDate: string) => void;
   minimumDate?: Date;
   maximumDate?: Date;
+  disabled?: boolean;
 }) {
   const { colors: c } = useTheme();
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const display = value ? formatDisplayDate(value) : t('forms.pickDate');
+
+  const rangeValid = isDateRangeValid(minimumDate, maximumDate);
+  const pickerDisabled = disabled || !rangeValid;
+
+  const clampedValue = useMemo(() => {
+    if (!value) return '';
+    if (!rangeValid) return toDateString(value);
+    return clampIsoDate(value, minimumDate, maximumDate);
+  }, [value, minimumDate, maximumDate, rangeValid]);
+
+  useEffect(() => {
+    if (!value || !rangeValid) return;
+    const next = clampIsoDate(value, minimumDate, maximumDate);
+    if (next !== toDateString(value)) onChange(next);
+  }, [value, minimumDate, maximumDate, rangeValid, onChange]);
+
+  const display = clampedValue ? formatDisplayDate(clampedValue) : t('forms.pickDate');
 
   const onPickerChange = (event: DateTimePickerEvent, date?: Date) => {
     if (Platform.OS === 'android') setOpen(false);
-    if (event.type === 'dismissed' || !date) return;
-    onChange(dateToIso(date));
+    if (event.type === 'dismissed' || !date || !rangeValid) return;
+    onChange(clampIsoDate(dateToIso(date), minimumDate, maximumDate));
   };
 
   return (
@@ -44,16 +64,26 @@ export function DateField({
             borderColor: c.inputBorder,
             justifyContent: 'center',
             minHeight: 48,
+            opacity: pickerDisabled ? 0.55 : 1,
           },
         ]}
-        onPress={() => setOpen(true)}
+        onPress={() => {
+          if (!pickerDisabled) setOpen(true);
+        }}
+        disabled={pickerDisabled}
         accessibilityRole="button"
+        accessibilityState={{ disabled: pickerDisabled }}
       >
-        <Text style={{ color: value ? c.text : c.dim, fontSize: 16 }}>{display}</Text>
+        <Text style={{ color: clampedValue ? c.text : c.dim, fontSize: 16 }}>{display}</Text>
       </Pressable>
-      {open ? (
+      {!rangeValid ? (
+        <Text style={{ color: c.warning, fontSize: 12, marginTop: 6, lineHeight: 17 }}>
+          {t('forms.dateRangeInvalid')}
+        </Text>
+      ) : null}
+      {open && rangeValid ? (
         <DateTimePicker
-          value={parseIsoDate(value || dateToIso(new Date()))}
+          value={parseIsoDate(clampedValue || todayFallback())}
           mode="date"
           display={Platform.OS === 'ios' ? 'spinner' : 'default'}
           onChange={onPickerChange}

@@ -13,7 +13,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchTeam, updateStaff } from '@/src/api/team';
 import { ActionOverflowMenu } from '@/src/components/ActionOverflowMenu';
+import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { useTheme } from '@/src/context/PreferencesContext';
+import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,10 +24,12 @@ import type { StaffRow } from '@/src/types/api';
 
 function StaffCard({
   member,
+  multiColumn,
   onEdit,
   onToggle,
 }: {
   member: StaffRow;
+  multiColumn?: boolean;
   onEdit: () => void;
   onToggle: () => void;
 }) {
@@ -39,6 +43,7 @@ function StaffCard({
       borderWidth: 1,
       borderColor: c.border,
     },
+    cardColumn: { flex: 1, marginBottom: 0 },
     headerRow: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 8 },
     cardMain: { flex: 1, marginBottom: 0 },
     name: { fontSize: 17, fontWeight: '700' as const, color: c.text },
@@ -68,7 +73,7 @@ function StaffCard({
   ];
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, multiColumn && styles.cardColumn]}>
       <View style={styles.headerRow}>
         <View style={styles.cardMain}>
           <Text style={styles.name}>{member.name}</Text>
@@ -91,11 +96,12 @@ export default function TeamScreen() {
   const { colors: c } = useTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const { listColumns, pagePadding, fabRight } = useResponsiveLayout();
   const fabBottom = 24 + insets.bottom;
   const styles = useThemedStyles((colors) => ({
     container: { flex: 1, backgroundColor: colors.bg },
     banner: {
-      margin: 16,
+      marginTop: 16,
       marginBottom: 0,
       backgroundColor: 'rgba(251,191,36,0.12)',
       borderRadius: 10,
@@ -104,11 +110,11 @@ export default function TeamScreen() {
       borderColor: 'rgba(251,191,36,0.35)',
     },
     bannerText: { color: '#fcd34d', fontSize: 13 },
-    list: { padding: 16, paddingBottom: 88 },
+    list: { paddingBottom: 88 },
+    columnWrap: { gap: 10 },
     empty: { textAlign: 'center' as const, color: colors.dim, marginTop: 40, fontSize: 15 },
     fab: {
       position: 'absolute' as const,
-      right: 20,
       width: 56,
       height: 56,
       borderRadius: 28,
@@ -158,9 +164,10 @@ export default function TeamScreen() {
   };
 
   return (
+    <TabScreenFrame>
     <View style={styles.container}>
       {readOnly ? (
-        <View style={styles.banner}>
+        <View style={[styles.banner, { marginHorizontal: pagePadding }]}>
           <Text style={styles.bannerText}>{t('common.readOnly')}</Text>
         </View>
       ) : null}
@@ -169,16 +176,20 @@ export default function TeamScreen() {
         <ActivityIndicator style={{ marginTop: 40 }} color={c.accentText} />
       ) : (
         <FlatList
+          key={`team-cols-${listColumns}`}
           data={staff}
+          numColumns={listColumns}
+          columnWrapperStyle={listColumns > 1 ? styles.columnWrap : undefined}
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => (
             <StaffCard
               member={item}
+              multiColumn={listColumns > 1}
               onEdit={() => router.push(`/team/${item.id}/edit`)}
               onToggle={() => toggleActive(item)}
             />
           )}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingHorizontal: pagePadding }]}
           refreshControl={
             <RefreshControl refreshing={query.isRefetching} onRefresh={() => query.refetch()} tintColor={c.accentText} />
           }
@@ -187,10 +198,11 @@ export default function TeamScreen() {
       )}
 
       {!readOnly ? (
-        <Pressable style={[styles.fab, { bottom: fabBottom }]} onPress={() => router.push('/team/new')}>
+        <Pressable style={[styles.fab, { right: fabRight, bottom: fabBottom }]} onPress={() => router.push('/team/new')}>
           <Text style={styles.fabText}>+</Text>
         </Pressable>
       ) : null}
     </View>
+    </TabScreenFrame>
   );
 }

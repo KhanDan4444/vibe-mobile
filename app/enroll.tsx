@@ -20,7 +20,13 @@ import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { PAYMENT_METHODS } from '@/src/constants/payments';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { isOfflineQueued } from '@/src/offline/types';
+import { bumpMemberPhotoCache } from '@/src/utils/memberPhotoCache';
 import { todayString } from '@/src/utils/date';
+import {
+  boundsForEnrollStart,
+  boundsForPaymentOnTerm,
+  clampPaymentToTerm,
+} from '@/src/utils/datePickerBounds';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
 import type { EnrollPayload, PlanRow } from '@/src/types/api';
 
@@ -82,6 +88,8 @@ export default function EnrollScreen() {
   const branches = branchesQuery.data?.branches ?? [];
   const showBranchPicker = owner && branches.filter((b) => b.is_active !== false).length > 1;
   const selectedPlan = plans.find((p) => p.id === planId) ?? null;
+  const enrollStartBounds = boundsForEnrollStart(skipPayment);
+  const paymentBounds = boundsForPaymentOnTerm(startDate);
 
   useEffect(() => {
     if (!showBranchPicker || branchId != null) return;
@@ -128,6 +136,9 @@ export default function EnrollScreen() {
       }
       queryClient.invalidateQueries({ queryKey: ['members'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      if (data.member.photo_url) {
+        bumpMemberPhotoCache(queryClient, data.member.id);
+      }
       flashSaved('flash.enrolled');
       router.replace(`/member/${data.member.id}`);
     },
@@ -200,7 +211,14 @@ export default function EnrollScreen() {
           )}
 
           <Label>{t('forms.startDate')}</Label>
-          <DateField value={startDate} onChange={setStartDate} />
+          <DateField
+            value={startDate}
+            onChange={(v) => {
+              setStartDate(v);
+              if (!skipPayment) setPaymentDate(clampPaymentToTerm(v, paymentDate));
+            }}
+            maximumDate={enrollStartBounds.maximumDate}
+          />
 
           <View style={styles.switchRow}>
             <Text style={styles.switchLabel}>{t('forms.enrollWithoutPayment')}</Text>
@@ -217,7 +235,12 @@ export default function EnrollScreen() {
               <Field value={amount} onChangeText={setAmount} keyboardType="decimal-pad" autoCapitalize="none" />
 
               <Label>{t('forms.paymentDate')}</Label>
-              <DateField value={paymentDate} onChange={setPaymentDate} />
+              <DateField
+                value={paymentDate}
+                onChange={setPaymentDate}
+                minimumDate={paymentBounds.minimumDate}
+                maximumDate={paymentBounds.maximumDate}
+              />
 
               <PaymentMethodPicker value={method} onChange={setMethod} />
             </>

@@ -7,7 +7,7 @@ import { fetchDashboard } from '@/src/api/dashboard';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useTheme } from '@/src/context/PreferencesContext';
 
-export function MembersTabIcon({ color }: { color: string }) {
+export function MembersTabIcon({ color, size = 24 }: { color: string; size?: number }) {
   const { token } = useAuth();
   const { selectedBranchId } = useBranchScope();
   const { colors: c } = useTheme();
@@ -29,7 +29,7 @@ export function MembersTabIcon({ color }: { color: string }) {
 
   return (
     <View style={styles.wrap}>
-      <Ionicons name="people" color={color} size={24} />
+      <Ionicons name="people" color={color} size={size} />
       {badgeCount > 0 ? (
         <View style={[styles.badge, { backgroundColor: c.error, borderColor: c.tabBarBg }]}>
           <Text style={styles.badgeText}>{badgeCount > 9 ? '9+' : badgeCount}</Text>

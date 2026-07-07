@@ -49,3 +49,28 @@ export function addDays(dateStr: string, days: number): string {
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
 }
+
+/** Parse YYYY-MM-DD as local midnight (no timezone drift). */
+export function isoToLocalDate(iso: string): Date {
+  const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(toDateString(iso));
+  if (parts) return new Date(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3]));
+  return new Date();
+}
+
+export function isDateRangeValid(min?: Date, max?: Date): boolean {
+  if (!min || !max) return true;
+  return min.getTime() <= max.getTime();
+}
+
+/** Keep an ISO date inside optional min/max (local calendar days). */
+export function clampIsoDate(iso: string, min?: Date, max?: Date): string {
+  const normalized = toDateString(iso);
+  if (!normalized) return todayString();
+  if (!isDateRangeValid(min, max)) {
+    return max ? dateToIso(max) : min ? dateToIso(min) : normalized;
+  }
+  let d = isoToLocalDate(normalized);
+  if (min && d < min) d = min;
+  if (max && d > max) d = max;
+  return dateToIso(d);
+}
