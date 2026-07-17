@@ -207,6 +207,9 @@
     "offline": "You are offline. Showing saved data.",
     "pending": "{{count}} change waiting to sync.",
     "pending_plural": "{{count}} changes waiting to sync.",
+    "failed": "{{count}} change failed to sync: {{error}}",
+    "failed_plural": "{{count}} changes failed to sync: {{error}}",
+    "failedGeneric": "Tap Sync to retry.",
     "syncNow": "Sync now",
     "saved": "Saved offline",
     "savedBody": "Your change will sync when you're back online."

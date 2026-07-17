@@ -4,25 +4,38 @@ import { useTheme } from '@/src/context/PreferencesContext';
 import { useNetwork } from '@/src/offline/NetworkProvider';
 
 export function OfflineBanner() {
-  const { isOnline, pendingCount, syncNow } = useNetwork();
+  const { isOnline, pendingCount, failedCount, lastError, syncNow } = useNetwork();
   const { colors: c, isDark } = useTheme();
   const { t } = useTranslation();
 
-  if (isOnline && pendingCount === 0) return null;
+  if (isOnline && pendingCount === 0 && failedCount === 0) return null;
 
   const offlineBg = isDark ? '#78350f' : '#fef3c7';
   const pendingBg = isDark ? '#1e3a8a' : '#dbeafe';
+  const failedBg = isDark ? '#7f1d1d' : '#fee2e2';
   const textColor = isDark ? '#fef3c7' : '#78350f';
   const pendingText = isDark ? '#dbeafe' : '#1e3a8a';
+  const failedText = isDark ? '#fecaca' : '#991b1b';
+
+  const showFailed = failedCount > 0 && isOnline;
+  const bg = !isOnline ? offlineBg : showFailed ? failedBg : pendingBg;
+  const color = !isOnline ? textColor : showFailed ? failedText : pendingText;
+
+  let message: string;
+  if (!isOnline) {
+    message = t('offline.offline');
+  } else if (showFailed) {
+    message = t('offline.failed', { count: failedCount, error: lastError || t('offline.failedGeneric') });
+  } else {
+    message = t('offline.pending', { count: pendingCount });
+  }
 
   return (
-    <View style={[styles.banner, !isOnline ? { backgroundColor: offlineBg } : { backgroundColor: pendingBg }]}>
-      <Text style={[styles.text, { color: !isOnline ? textColor : pendingText }]}>
-        {!isOnline
-          ? t('offline.offline')
-          : t('offline.pending', { count: pendingCount })}
+    <View style={[styles.banner, { backgroundColor: bg }]}>
+      <Text style={[styles.text, { color }]} numberOfLines={2}>
+        {message}
       </Text>
-      {isOnline && pendingCount > 0 ? (
+      {isOnline && (pendingCount > 0 || failedCount > 0) ? (
         <Pressable onPress={() => void syncNow()} style={styles.syncBtn}>
           <Text style={styles.syncText}>{t('offline.syncNow')}</Text>
         </Pressable>

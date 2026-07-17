@@ -207,6 +207,9 @@
     "offline": "ከመስመር ውጭ ነዎት። የተቀመጠ ውሂብ ይታያል።",
     "pending": "{{count}} ለውጥ ለማመሳሰል በመጠባበቅ ላይ።",
     "pending_plural": "{{count}} ለውጦች ለማመሳሰል በመጠባበቅ ላይ።",
+    "failed": "{{count}} ለውጥ ማመሳሰል አልተሳካም፡ {{error}}",
+    "failed_plural": "{{count}} ለውጦች ማመሳሰል አልተሳካም፡ {{error}}",
+    "failedGeneric": "ለመሞከር Sync ን ይጫኑ።",
     "syncNow": "አሁን አመሳስል",
     "saved": "ከመስመር ውጭ ተቀምጧል",
     "savedBody": "ለውጡ ከመስመር ሲመለሱ ይመሳሰላል።"

@@ -2,12 +2,14 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import NetInfo from '@react-native-community/netinfo';
 import { onlineManager } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
-import { getPendingOfflineCount, processOfflineQueue } from '@/src/offline/processQueue';
+import { getOfflineQueueSummary, processOfflineQueue } from '@/src/offline/processQueue';
 import { queryClient } from '@/src/query/client';
 
 interface NetworkContextValue {
   isOnline: boolean;
   pendingCount: number;
+  failedCount: number;
+  lastError?: string;
   refreshPendingCount: () => Promise<void>;
   syncNow: () => Promise<number>;
 }
@@ -24,10 +26,14 @@ export function NetworkProvider({ children }: { children: React.ReactNode }) {
   const { token } = useAuth();
   const [isOnline, setIsOnline] = useState(true);
   const [pendingCount, setPendingCount] = useState(0);
+  const [failedCount, setFailedCount] = useState(0);
+  const [lastError, setLastError] = useState<string | undefined>();
 
   const refreshPendingCount = useCallback(async () => {
-    const count = await getPendingOfflineCount();
-    setPendingCount(count);
+    const summary = await getOfflineQueueSummary();
+    setPendingCount(summary.pending);
+    setFailedCount(summary.failed);
+    setLastError(summary.lastError);
   }, []);
 
   const syncNow = useCallback(async () => {
@@ -59,8 +65,8 @@ export function NetworkProvider({ children }: { children: React.ReactNode }) {
   }, [token, isOnline, pendingCount, syncNow]);
 
   const value = useMemo(
-    () => ({ isOnline, pendingCount, refreshPendingCount, syncNow }),
-    [isOnline, pendingCount, refreshPendingCount, syncNow]
+    () => ({ isOnline, pendingCount, failedCount, lastError, refreshPendingCount, syncNow }),
+    [isOnline, pendingCount, failedCount, lastError, refreshPendingCount, syncNow]
   );
 
   return <NetworkContext.Provider value={value}>{children}</NetworkContext.Provider>;

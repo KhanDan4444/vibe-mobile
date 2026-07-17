@@ -20,8 +20,17 @@ export async function writeOfflineQueue(jobs: OfflineJob[]): Promise<void> {
 
 export async function enqueueOfflineJob(job: OfflineJob): Promise<void> {
   const jobs = await readOfflineQueue();
-  jobs.push(job);
+  jobs.push({
+    ...job,
+    attempts: job.attempts ?? 0,
+    status: job.status ?? 'pending',
+  });
   await writeOfflineQueue(jobs);
+}
+
+export async function updateOfflineJob(jobId: string, patch: Partial<OfflineJob>): Promise<void> {
+  const jobs = await readOfflineQueue();
+  await writeOfflineQueue(jobs.map((job) => (job.id === jobId ? { ...job, ...patch } : job)));
 }
 
 export async function removeOfflineJob(jobId: string): Promise<void> {

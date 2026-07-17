@@ -9,8 +9,12 @@ import { updateGymProfile } from '@/src/api/profile';
 import type { UpdateProfilePayload } from '@/src/types/api';
 import type { BranchPayload, UpdateBranchPayload } from '@/src/api/branches';
 import type { ChangePlanPayload, EnrollPayload, RenewPayload } from '@/src/types/api';
-import { readOfflineQueue, removeOfflineJob } from '@/src/offline/queue';
-import type { OfflineJob } from '@/src/offline/types';
+import { readOfflineQueue, removeOfflineJob, updateOfflineJob } from '@/src/offline/queue';
+import {
+  OFFLINE_MAX_ATTEMPTS,
+  OFFLINE_RETRY_BASE_MS,
+  type OfflineJob,
+} from '@/src/offline/types';
 
 let processing = false;
 
@@ -60,20 +64,38 @@ async function executeJob(token: string, job: OfflineJob): Promise<void> {
   }
 }
 
+function isReadyToRetry(job: OfflineJob, now: number): boolean {
+  if (job.status === 'failed' && (job.attempts ?? 0) >= OFFLINE_MAX_ATTEMPTS) return false;
+  if (!job.nextRetryAt) return true;
+  return new Date(job.nextRetryAt).getTime() <= now;
+}
+
 export async function processOfflineQueue(token: string, queryClient: QueryClient): Promise<number> {
   if (processing) return 0;
   processing = true;
 
   let synced = 0;
+  const now = Date.now();
   try {
     const jobs = await readOfflineQueue();
     for (const job of jobs) {
+      if (!isReadyToRetry(job, now)) continue;
+
       try {
         await executeJob(token, job);
         await removeOfflineJob(job.id);
         synced += 1;
-      } catch {
-        // Keep failed jobs for a later retry.
+      } catch (err) {
+        const attempts = (job.attempts ?? 0) + 1;
+        const message = err instanceof Error ? err.message : 'Sync failed';
+        const failed = attempts >= OFFLINE_MAX_ATTEMPTS;
+        const delay = OFFLINE_RETRY_BASE_MS * Math.min(attempts, 8);
+        await updateOfflineJob(job.id, {
+          attempts,
+          lastError: message,
+          status: failed ? 'failed' : 'pending',
+          nextRetryAt: failed ? undefined : new Date(Date.now() + delay).toISOString(),
+        });
       }
     }
 
@@ -89,5 +111,21 @@ export async function processOfflineQueue(token: string, queryClient: QueryClien
 
 export async function getPendingOfflineCount(): Promise<number> {
   const jobs = await readOfflineQueue();
-  return jobs.length;
+  return jobs.filter((j) => j.status !== 'failed' || (j.attempts ?? 0) < OFFLINE_MAX_ATTEMPTS).length;
+}
+
+export async function getFailedOfflineJobs(): Promise<OfflineJob[]> {
+  const jobs = await readOfflineQueue();
+  return jobs.filter((j) => j.status === 'failed' || (j.attempts ?? 0) >= OFFLINE_MAX_ATTEMPTS);
+}
+
+export async function getOfflineQueueSummary(): Promise<{ pending: number; failed: number; lastError?: string }> {
+  const jobs = await readOfflineQueue();
+  const failedJobs = jobs.filter((j) => j.status === 'failed' || (j.attempts ?? 0) >= OFFLINE_MAX_ATTEMPTS);
+  const pending = jobs.length - failedJobs.length;
+  return {
+    pending,
+    failed: failedJobs.length,
+    lastError: failedJobs[0]?.lastError ?? jobs.find((j) => j.lastError)?.lastError,
+  };
 }

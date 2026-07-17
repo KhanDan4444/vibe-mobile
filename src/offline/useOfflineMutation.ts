@@ -1,7 +1,12 @@
 import { useMutation, type UseMutationOptions } from '@tanstack/react-query';
 import { createOfflineJobId, enqueueOfflineJob } from '@/src/offline/queue';
 import { useNetwork } from '@/src/offline/NetworkProvider';
-import { OFFLINE_QUEUED, type OfflineJobType, type OfflineQueued } from '@/src/offline/types';
+import {
+  OFFLINE_QUEUED,
+  enrollPayloadHasPhoto,
+  type OfflineJobType,
+  type OfflineQueued,
+} from '@/src/offline/types';
 
 type OfflineMutationOptions<TData, TVariables> = Omit<
   UseMutationOptions<TData | OfflineQueued, Error, TVariables>,
@@ -29,16 +34,26 @@ export function useOfflineMutation<TData, TVariables>({
         return mutationFn(variables);
       }
 
+      const payload = variables as Record<string, unknown>;
+      if (jobType === 'enroll' && enrollPayloadHasPhoto(payload)) {
+        throw new Error('Connect to the internet to enroll a member with a photo.');
+      }
+      if (jobType === 'update-member' && enrollPayloadHasPhoto(payload)) {
+        throw new Error('Connect to the internet to update a member photo.');
+      }
+
       const resolvedMemberId = typeof memberId === 'function' ? memberId(variables) : memberId;
       const resolvedEntityId = typeof entityId === 'function' ? entityId(variables) : entityId;
 
       await enqueueOfflineJob({
         id: createOfflineJobId(),
         type: jobType,
-        payload: variables as Record<string, unknown>,
+        payload,
         memberId: resolvedMemberId,
         entityId: resolvedEntityId,
         createdAt: new Date().toISOString(),
+        attempts: 0,
+        status: 'pending',
       });
       await refreshPendingCount();
       return OFFLINE_QUEUED;
