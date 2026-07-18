@@ -74,6 +74,7 @@ export default function TabLayout() {
       >
         <Tabs
           screenOptions={{
+            sceneStyle: { backgroundColor: c.bg },
             tabBarActiveTintColor: c.accentText,
             tabBarInactiveTintColor: c.dim,
             tabBarLabelStyle: amharicLabelStyle,

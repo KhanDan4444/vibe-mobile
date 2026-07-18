@@ -12,7 +12,7 @@ export const colors = {
   text: '#f8fafc',
   muted: '#94a3b8',
   dim: '#64748b',
-  accent: '#2dd4bf',
+  accent: '#0f766e',
   error: '#fda4af',
   errorBg: 'rgba(244,63,94,0.15)',
 };

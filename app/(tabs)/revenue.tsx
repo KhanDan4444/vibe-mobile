@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { AppText as Text, AppTextInput as TextInput } from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -23,8 +23,6 @@ import { appTextStyle } from '@/src/theme/typography';
 import { formatDisplayDate } from '@/src/utils/date';
 import { DEFAULT_REVENUE_SORT, type RevenueSortId } from '@/src/utils/listSort';
 import { paymentSourceLabel } from '@/src/utils/paymentSources';
-import { revenueToCsv } from '@/src/utils/reportExport';
-import { fetchAllPaymentsForExport } from '@/src/utils/revenueExport';
 import { isGymOwner } from '@/src/utils/roles';
 import type { PaymentListRow, UnpaidMemberSummary } from '@/src/types/api';
 
@@ -315,7 +313,6 @@ export default function RevenueScreen() {
   const [sort, setSort] = useState<RevenueSortId>(DEFAULT_REVENUE_SORT);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [morePeriodsOpen, setMorePeriodsOpen] = useState(false);
-  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search.trim()), 300);
@@ -382,28 +379,6 @@ export default function RevenueScreen() {
         member_name: payment.member_name || '',
       },
     });
-  };
-
-  const shareCsv = async () => {
-    if (!token) return;
-    setExporting(true);
-    try {
-      const allPayments = await fetchAllPaymentsForExport(token, {
-        sort,
-        search: debouncedSearch || undefined,
-        method: methodFilter === 'All methods' ? undefined : methodFilter,
-        ...(selectedBranchId !== 'all' ? { branch_id: selectedBranchId } : {}),
-        ...(customRangeReady ? { from: customFrom, to: customTo } : { preset }),
-      });
-      if (!allPayments.length) return;
-      const body = revenueToCsv(allPayments, showBranchFilter);
-      await Share.share({
-        message: body,
-        title: `revenue-${periodLabel}.csv`,
-      });
-    } finally {
-      setExporting(false);
-    }
   };
 
   const listHeader = (
@@ -601,9 +576,6 @@ export default function RevenueScreen() {
         onCustomToChange={setCustomTo}
         useCustomRange={useCustomRange}
         onUseCustomRange={setUseCustomRange}
-        onExport={shareCsv}
-        exporting={exporting}
-        canExport={owner && (!useCustomRange || customRangeReady)}
       />
 
       <BottomSheet visible={morePeriodsOpen} title={t('revenue.periodMoreTitle')} onClose={() => setMorePeriodsOpen(false)}>

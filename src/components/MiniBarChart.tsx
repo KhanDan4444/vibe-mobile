@@ -24,7 +24,7 @@ const PADDING_TOP = 12;
 const PADDING_BOTTOM = 22;
 
 const PIE_PALETTE = [
-  { base: '#0f766e', light: '#99f6e4' },
+  { base: '#0f766e', light: '#14b8a6' },
   { base: '#0891b2', light: '#a5f3fc' },
   { base: '#38bdf8', light: '#bae6fd' },
   { base: '#34d399', light: '#a7f3d0' },

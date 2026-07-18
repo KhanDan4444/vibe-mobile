@@ -5,7 +5,7 @@ import type { MemberRow } from '@/src/types/api';
 import { usePreferences } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { appTextStyle } from '@/src/theme/typography';
-import { memberStatusCounts } from '@/src/utils/reportPdf';
+import { memberStatusBreakdownExclusive, memberStatusCounts } from '@/src/utils/reportPdf';
 
 const SEGMENT_KEYS = [
   { key: 'active' as const, labelKey: 'statusBreakdown.active', color: '#34d399' },
@@ -35,13 +35,14 @@ export function StatusBreakdown({ members }: { members: MemberRow[] }) {
   }));
 
   const counts = memberStatusCounts(members);
+  const barCounts = memberStatusBreakdownExclusive(members);
   if (counts.total === 0) return null;
 
   return (
     <View style={styles.wrap}>
       <View style={styles.bar}>
         {SEGMENT_KEYS.map((seg) => {
-          const n = counts[seg.key];
+          const n = barCounts[seg.key];
           if (!n) return null;
           return (
             <View

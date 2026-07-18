@@ -1,13 +1,12 @@
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
-import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DateField } from '@/src/components/DateField';
 import { boundsForCustomRangeFrom, boundsForCustomRangeTo } from '@/src/utils/datePickerBounds';
 import { PAYMENT_METHODS } from '@/src/constants/payments';
 import { REVENUE_SORT_OPTIONS, type RevenueSortId } from '@/src/utils/listSort';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
-import { useTheme } from '@/src/context/PreferencesContext';
 
 type MethodFilter = 'All methods' | (typeof PAYMENT_METHODS)[number];
 
@@ -24,9 +23,6 @@ type Props = {
   onCustomToChange: (v: string) => void;
   useCustomRange: boolean;
   onUseCustomRange: (v: boolean) => void;
-  onExport?: () => void;
-  exporting?: boolean;
-  canExport?: boolean;
 };
 
 export function RevenueFiltersSheet({
@@ -42,12 +38,9 @@ export function RevenueFiltersSheet({
   onCustomToChange,
   useCustomRange,
   onUseCustomRange,
-  onExport,
-  exporting,
-  canExport,
 }: Props) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { colors: c } = useTheme();
   const fromBounds = boundsForCustomRangeFrom(customTo);
   const toBounds = boundsForCustomRangeTo(customFrom);
   const styles = useThemedStyles((c) => ({
@@ -103,19 +96,15 @@ export function RevenueFiltersSheet({
     toggleActive: { borderColor: c.accentText, backgroundColor: c.accentSoft },
     toggleText: { fontSize: 15, color: c.muted },
     dateRow: { flexDirection: 'row' as const, gap: 10, marginBottom: 8 },
-    exportBtn: {
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
-      gap: 8,
-      marginTop: 16,
-      marginBottom: 8,
+    doneBtn: {
+      marginTop: 12,
       paddingVertical: 14,
       borderRadius: 10,
-      borderWidth: 1,
-      borderColor: c.border,
+      backgroundColor: c.accent,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
     },
-    exportText: { color: c.accentText, fontSize: 15, fontWeight: '600' as const },
+    doneText: { color: '#fff', fontSize: 16, fontWeight: '600' as const },
   }));
 
   return (
@@ -124,9 +113,9 @@ export function RevenueFiltersSheet({
         <Pressable style={styles.backdrop} onPress={onClose} />
         <View style={styles.sheet}>
           <View style={styles.handle} />
-          <Text style={styles.title}>Filters</Text>
+          <Text style={styles.title}>{t('revenue.filters')}</Text>
 
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             <Text style={styles.sectionLabel}>Sort</Text>
             <View style={styles.optionGroup}>
               {REVENUE_SORT_OPTIONS.map((opt) => (
@@ -179,14 +168,11 @@ export function RevenueFiltersSheet({
                 </View>
               </View>
             ) : null}
-
-            {canExport && onExport ? (
-              <Pressable style={styles.exportBtn} onPress={onExport} disabled={exporting}>
-                <Ionicons name="share-outline" size={18} color={c.accentText} />
-                <Text style={styles.exportText}>{exporting ? 'Preparing…' : 'Share CSV'}</Text>
-              </Pressable>
-            ) : null}
           </ScrollView>
+
+          <Pressable style={styles.doneBtn} onPress={onClose} accessibilityRole="button">
+            <Text style={styles.doneText}>{t('common.done')}</Text>
+          </Pressable>
         </View>
       </View>
     </Modal>

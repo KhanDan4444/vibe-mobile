@@ -24,6 +24,7 @@ const PDF_STYLES = `
   .stat strong { font-size: 18px; }
 `;
 
+/** Active = valid term and paid. Unpaid is separate (not counted as active). */
 export function memberStatusCounts(members: MemberRow[]) {
   let active = 0;
   let dueSoon = 0;
@@ -32,9 +33,28 @@ export function memberStatusCounts(members: MemberRow[]) {
   for (const m of members) {
     const s = (m.status || '').toLowerCase();
     if (m.is_unpaid) unpaid += 1;
-    else if (s === 'active') active += 1;
+    if (s === 'active' && !m.is_unpaid) active += 1;
     else if (s === 'due soon') dueSoon += 1;
     else if (s === 'expired') expired += 1;
+  }
+  return { active, dueSoon, expired, unpaid, total: members.length };
+}
+
+/**
+ * Exclusive buckets for a single stacked bar (each member once).
+ * Priority: Expired → Due soon → Unpaid → Active.
+ */
+export function memberStatusBreakdownExclusive(members: MemberRow[]) {
+  let active = 0;
+  let dueSoon = 0;
+  let expired = 0;
+  let unpaid = 0;
+  for (const m of members) {
+    const s = (m.status || '').toLowerCase();
+    if (s === 'expired') expired += 1;
+    else if (s === 'due soon') dueSoon += 1;
+    else if (m.is_unpaid) unpaid += 1;
+    else if (s === 'active') active += 1;
   }
   return { active, dueSoon, expired, unpaid, total: members.length };
 }

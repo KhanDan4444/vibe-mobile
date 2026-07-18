@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 
 /**
@@ -13,14 +14,15 @@ export function TabScreenFrame({
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
+  const { colors: c } = useTheme();
   const { isTablet, contentMaxWidth, pagePadding } = useResponsiveLayout();
 
   return (
-    <View style={[styles.outer, style]}>
+    <View style={[styles.outer, { backgroundColor: c.bg }, style]}>
       <View
         style={[
           styles.inner,
-          { paddingTop: pagePadding },
+          { paddingTop: pagePadding, backgroundColor: c.bg },
           isTablet && { maxWidth: contentMaxWidth },
         ]}
       >

@@ -173,7 +173,7 @@ export default function DashboardScreen() {
       <Pressable onPress={() => router.push('/(tabs)/revenue')}>
         <Text style={[styles.summaryTitle, { color: c.muted }]}>{t('dashboard.thisMonth')}</Text>
         <Text style={[styles.income, { color: c.accentText }]}>
-          {formatEtb(Number(data.monthlyIncome || 0))}
+          {formatEtb(Number(data.monthlyIncome || 0), { forceCompact: false })}
         </Text>
         {trendLabel ? <Text style={[styles.trend, { color: c.success }]}>{trendLabel}</Text> : null}
         <Text style={[styles.muted, { color: c.dim }]}>
@@ -247,7 +247,6 @@ export default function DashboardScreen() {
         </View>
       ) : data ? (
         <>
-          {summaryBlock}
           <View style={styles.grid}>
             <StatCard
               label={t('dashboard.active')}
@@ -286,6 +285,7 @@ export default function DashboardScreen() {
               onPress={() => goMembers('unpaid')}
             />
           </View>
+          {summaryBlock}
           {owner ? attentionBlock : null}
         </>
       ) : null}
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 12,
   },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 16 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
   statCard: {
     borderRadius: 8,
     paddingVertical: 10,
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
   },
   splitCol: { flex: 1, minWidth: 0 },
   summary: {
-    marginTop: 4,
+    marginTop: 16,
     borderRadius: 14,
     padding: 18,
     borderWidth: StyleSheet.hairlineWidth,
