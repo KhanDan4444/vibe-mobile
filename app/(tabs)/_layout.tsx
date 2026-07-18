@@ -6,11 +6,11 @@ import { useTranslation } from 'react-i18next';
 import { AppHeaderRight } from '@/src/components/AppHeaderRight';
 import { GymBootError } from '@/src/components/GymBootError';
 import { MembersTabIcon } from '@/src/components/MembersTabIcon';
-import { OfflineBanner } from '@/src/components/OfflineBanner';
 import { TabSwipeShell } from '@/src/components/TabSwipeShell';
 import { useAuth } from '@/src/auth/AuthContext';
-import { useTheme } from '@/src/context/PreferencesContext';
+import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
+import { DM_SANS, DM_SANS_SEMI, NOTO_ETHIOPIC, lineHeightFor } from '@/src/theme/typography';
 import { hasGymPortalAccess } from '@/src/utils/roles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -33,12 +33,17 @@ function activeTabIndex(pathname: string) {
 export default function TabLayout() {
   const { user, loading } = useAuth();
   const { colors: c } = useTheme();
+  const { language } = usePreferences();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { tabIconSize, isTablet } = useResponsiveLayout();
   const pathname = usePathname();
   const tabBarBottom = Math.max(insets.bottom, isTablet ? 10 : 6);
   const tabIndex = activeTabIndex(pathname);
+  const amharicLabelStyle =
+    language === 'am'
+      ? { fontFamily: NOTO_ETHIOPIC, fontSize: 11, lineHeight: lineHeightFor(11) }
+      : { fontFamily: DM_SANS, fontSize: 11 };
 
   const goToTab = useCallback((nextIndex: number) => {
     if (nextIndex < 0 || nextIndex >= TAB_ROUTES.length) return;
@@ -62,7 +67,6 @@ export default function TabLayout() {
 
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
-      <OfflineBanner />
       <GymBootError />
       <TabSwipeShell
         onSwipeLeft={tabIndex < TAB_ROUTES.length - 1 ? onSwipeLeft : undefined}
@@ -72,6 +76,7 @@ export default function TabLayout() {
           screenOptions={{
             tabBarActiveTintColor: c.accentText,
             tabBarInactiveTintColor: c.dim,
+            tabBarLabelStyle: amharicLabelStyle,
             tabBarStyle: {
               backgroundColor: c.tabBarBg,
               borderTopColor: c.tabBarBorder,
@@ -80,7 +85,10 @@ export default function TabLayout() {
             },
             headerStyle: { backgroundColor: c.headerBg },
             headerTintColor: c.text,
-            headerTitleStyle: { fontWeight: '600' },
+            headerTitleStyle:
+              language === 'am'
+                ? { fontFamily: NOTO_ETHIOPIC, fontWeight: '600', lineHeight: lineHeightFor(17) }
+                : { fontFamily: DM_SANS_SEMI, fontWeight: '600' },
             headerRight,
           }}
         >

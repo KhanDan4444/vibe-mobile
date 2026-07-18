@@ -2,17 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  Share,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { AppText as Text, AppTextInput as TextInput } from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchPayments } from '@/src/api/payments';
@@ -26,8 +17,9 @@ import { PAYMENT_METHODS, paymentMethodBadgeStyle } from '@/src/constants/paymen
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
-import { useTheme } from '@/src/context/PreferencesContext';
+import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
+import { appTextStyle } from '@/src/theme/typography';
 import { formatDisplayDate } from '@/src/utils/date';
 import { DEFAULT_REVENUE_SORT, type RevenueSortId } from '@/src/utils/listSort';
 import { paymentSourceLabel } from '@/src/utils/paymentSources';
@@ -75,15 +67,16 @@ function PaymentRowItem({
 }) {
   const { t } = useTranslation();
   const { colors: c } = useTheme();
+  const { language } = usePreferences();
   const styles = useThemedStyles((colors) => ({
     row: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       backgroundColor: colors.card,
-      borderRadius: 14,
+      borderRadius: 10,
       padding: 14,
       marginBottom: 8,
-      borderWidth: 1,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.border,
     },
     rowColumn: { flex: 1, marginBottom: 0 },
@@ -121,20 +114,20 @@ function PaymentRowItem({
         />
       </View>
       <View style={styles.rowBody}>
-        <Text style={styles.memberName} numberOfLines={1}>
+        <Text style={appTextStyle(language, styles.memberName)} numberOfLines={1}>
           {payment.member_name || 'Member'}
         </Text>
-        <Text style={styles.rowSub}>
+        <Text style={appTextStyle(language, styles.rowSub)}>
           {formatDisplayDate(payment.date)}
           {source ? ` · ${source}` : ''}
         </Text>
         <View style={[styles.methodBadge, { backgroundColor: badge.bg }]}>
-          <Text style={[styles.methodBadgeText, { color: badge.text }]}>{payment.method}</Text>
+          <Text style={appTextStyle(language, { ...styles.methodBadgeText, color: badge.text })}>{payment.method}</Text>
         </View>
       </View>
       <View style={styles.rowAmountCol}>
-        <Text style={styles.rowAmount}>{Number(payment.amount).toLocaleString()}</Text>
-        <Text style={styles.rowCurrency}>ETB</Text>
+        <Text style={appTextStyle(language, styles.rowAmount)}>{Number(payment.amount).toLocaleString()}</Text>
+        <Text style={appTextStyle(language, styles.rowCurrency)}>ETB</Text>
       </View>
       {menuItems.length > 0 ? <ActionOverflowMenu items={menuItems} /> : null}
     </Pressable>
@@ -142,6 +135,7 @@ function PaymentRowItem({
 }
 
 function MethodStat({ label, amount }: { label: string; amount: number }) {
+  const { language } = usePreferences();
   const styles = useThemedStyles((c) => ({
     methodStat: { flex: 1, minWidth: 0 },
     methodStatLabel: { fontSize: 11, color: c.dim },
@@ -151,10 +145,10 @@ function MethodStat({ label, amount }: { label: string; amount: number }) {
   if (!amount) return null;
   return (
     <View style={styles.methodStat}>
-      <Text style={styles.methodStatLabel} numberOfLines={1}>
+      <Text style={appTextStyle(language, styles.methodStatLabel)} numberOfLines={1}>
         {label}
       </Text>
-      <Text style={styles.methodStatValue}>{amount.toLocaleString()}</Text>
+      <Text style={appTextStyle(language, styles.methodStatValue)}>{amount.toLocaleString()}</Text>
     </View>
   );
 }
@@ -177,9 +171,9 @@ function AttentionCard({
     attentionCard: {
       width: 170,
       backgroundColor: c.card,
-      borderRadius: 12,
+      borderRadius: 10,
       padding: 12,
-      borderWidth: 1,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
       marginRight: 8,
     },
@@ -187,12 +181,13 @@ function AttentionCard({
     attentionMeta: { marginTop: 6, color: c.dim, fontSize: 12 },
     attentionStatus: { marginTop: 8, fontSize: 11, fontWeight: '700' as const },
   }));
+  const { language } = usePreferences();
 
   return (
     <Pressable style={styles.attentionCard} onPress={onPress}>
-      <Text style={styles.attentionName} numberOfLines={1}>{member.name}</Text>
-      <Text style={styles.attentionMeta}>{formatDisplayDate(member.end_date)}</Text>
-      <Text style={[styles.attentionStatus, { color: attentionColor(member.status) }]}>{member.status}</Text>
+      <Text style={appTextStyle(language, styles.attentionName)} numberOfLines={1}>{member.name}</Text>
+      <Text style={appTextStyle(language, styles.attentionMeta)}>{formatDisplayDate(member.end_date)}</Text>
+      <Text style={appTextStyle(language, { ...styles.attentionStatus, color: attentionColor(member.status) })}>{member.status}</Text>
     </Pressable>
   );
 }
@@ -202,17 +197,18 @@ export default function RevenueScreen() {
   const { t } = useTranslation();
   const { token, user } = useAuth();
   const { colors: c } = useTheme();
+  const { language } = usePreferences();
   const styles = useThemedStyles((colors) => ({
     container: { flex: 1, backgroundColor: colors.bg },
-    headerBlock: { paddingTop: 8 },
+    headerBlock: { paddingTop: 0 },
     hero: {
       backgroundColor: colors.card,
-      borderRadius: 16,
+      borderRadius: 14,
       padding: 20,
-      borderWidth: 1,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.border,
     },
-    heroLabel: { fontSize: 13, fontWeight: '600' as const, color: colors.muted, textTransform: 'uppercase' as const, letterSpacing: 0.3 },
+    heroLabel: { fontSize: 13, fontWeight: '600' as const, color: colors.muted },
     heroTotal: { marginTop: 8, fontSize: 36, fontWeight: '700' as const, color: colors.text, letterSpacing: -0.5 },
     heroMeta: { flexDirection: 'row' as const, alignItems: 'center' as const, marginTop: 8, flexWrap: 'wrap' as const },
     heroMetaText: { fontSize: 14, color: colors.dim },
@@ -222,7 +218,7 @@ export default function RevenueScreen() {
       flexDirection: 'row' as const,
       marginTop: 16,
       paddingTop: 16,
-      borderTopWidth: 1,
+      borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: colors.border,
       gap: 8,
     },
@@ -230,9 +226,9 @@ export default function RevenueScreen() {
     periodPill: {
       paddingHorizontal: 14,
       paddingVertical: 9,
-      borderRadius: 20,
+      borderRadius: 10,
       backgroundColor: colors.card,
-      borderWidth: 1,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.border,
     },
     periodPillActive: { backgroundColor: colors.accentSoft, borderColor: colors.accentText },
@@ -244,8 +240,8 @@ export default function RevenueScreen() {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       backgroundColor: colors.card,
-      borderRadius: 12,
-      borderWidth: 1,
+      borderRadius: 10,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.border,
       paddingHorizontal: 12,
     },
@@ -254,9 +250,9 @@ export default function RevenueScreen() {
     filterBtn: {
       width: 44,
       height: 44,
-      borderRadius: 12,
+      borderRadius: 10,
       backgroundColor: colors.card,
-      borderWidth: 1,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.border,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
@@ -289,6 +285,19 @@ export default function RevenueScreen() {
     list: { paddingBottom: 28 },
     emptyWrap: { alignItems: 'center' as const, paddingTop: 48, gap: 12 },
     empty: { textAlign: 'center' as const, color: colors.dim, fontSize: 15 },
+    errorWrap: { alignItems: 'center' as const, paddingTop: 48, gap: 12, paddingHorizontal: 24 },
+    errorText: { textAlign: 'center' as const, color: colors.error, fontSize: 15 },
+    retryBtn: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      minHeight: 44,
+      justifyContent: 'center' as const,
+      backgroundColor: colors.card,
+    },
+    retryText: { color: colors.accentText, fontSize: 14, fontWeight: '600' as const },
   }));
   const owner = isGymOwner(user?.role);
   const { readOnly } = useGymReadOnly();
@@ -400,14 +409,18 @@ export default function RevenueScreen() {
   const listHeader = (
     <View style={styles.headerBlock}>
       <View style={styles.hero}>
-        <Text style={styles.heroLabel}>{periodLabel}</Text>
-        <Text style={styles.heroTotal}>{Number(summary?.total || 0).toLocaleString()} ETB</Text>
+        <Text style={appTextStyle(language, styles.heroLabel)}>
+          {periodLabel}
+        </Text>
+        <Text style={appTextStyle(language, styles.heroTotal)}>{Number(summary?.total || 0).toLocaleString()} ETB</Text>
         <View style={styles.heroMeta}>
-          <Text style={styles.heroMetaText}>{t('revenue.paymentsCount', { count: summary?.count ?? 0 })}</Text>
+          <Text style={appTextStyle(language, styles.heroMetaText)}>
+            {t('revenue.paymentsCount', { count: summary?.count ?? 0 })}
+          </Text>
           {trendPercent ? (
             <>
               <Text style={styles.heroDot}>·</Text>
-              <Text style={[styles.heroMetaText, styles.heroTrend]}>{trendPercent}</Text>
+              <Text style={appTextStyle(language, { ...styles.heroMetaText, ...styles.heroTrend })}>{trendPercent}</Text>
             </>
           ) : null}
         </View>
@@ -423,9 +436,9 @@ export default function RevenueScreen() {
       {attentionMembers.length ? (
         <View style={styles.attentionSection}>
           <View style={styles.attentionHeader}>
-            <Text style={styles.attentionTitle}>{t('revenue.attentionTitle')}</Text>
+            <Text style={appTextStyle(language, styles.attentionTitle)}>{t('revenue.attentionTitle')}</Text>
             <Pressable onPress={() => router.push('/(tabs)/members?filter=unpaid')}>
-              <Text style={styles.attentionLink}>{t('revenue.viewUnpaid')}</Text>
+              <Text style={appTextStyle(language, styles.attentionLink)}>{t('revenue.viewUnpaid')}</Text>
             </Pressable>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.attentionList}>
@@ -449,7 +462,14 @@ export default function RevenueScreen() {
               style={[styles.periodPill, active && styles.periodPillActive]}
               onPress={() => selectPreset(p.value)}
             >
-              <Text style={[styles.periodPillText, active && styles.periodPillTextActive]}>{t(p.labelKey)}</Text>
+              <Text
+                style={appTextStyle(language, {
+                  ...styles.periodPillText,
+                  ...(active ? styles.periodPillTextActive : {}),
+                })}
+              >
+                {t(p.labelKey)}
+              </Text>
             </Pressable>
           );
         })}
@@ -457,7 +477,14 @@ export default function RevenueScreen() {
           style={[styles.periodPill, useCustomRange && styles.periodPillActive]}
           onPress={openMorePeriods}
         >
-          <Text style={[styles.periodPillText, useCustomRange && styles.periodPillTextActive]}>{t('revenue.periodMore')}</Text>
+          <Text
+            style={appTextStyle(language, {
+              ...styles.periodPillText,
+              ...(useCustomRange ? styles.periodPillTextActive : {}),
+            })}
+          >
+            {t('revenue.periodMore')}
+          </Text>
         </Pressable>
       </ScrollView>
 
@@ -465,7 +492,7 @@ export default function RevenueScreen() {
         <View style={styles.searchWrap}>
           <Ionicons name="search" size={18} color={c.dim} style={styles.searchIcon} />
           <TextInput
-            style={styles.searchInput}
+            style={appTextStyle(language, styles.searchInput)}
             placeholder={t('revenue.search')}
             placeholderTextColor={c.dim}
             value={search}
@@ -486,12 +513,16 @@ export default function RevenueScreen() {
       </View>
 
       <View style={styles.listHeading}>
-        <Text style={styles.listHeadingText}>{t('revenue.transactions')}</Text>
-        {!query.isLoading ? <Text style={styles.listHeadingCount}>{t('revenue.shown', { count: payments.length })}</Text> : null}
+        <Text style={appTextStyle(language, styles.listHeadingText)}>{t('revenue.transactions')}</Text>
+        {!query.isLoading ? (
+          <Text style={appTextStyle(language, styles.listHeadingCount)}>
+            {t('revenue.shown', { count: payments.length })}
+          </Text>
+        ) : null}
       </View>
 
       {useCustomRange && !customRangeReady ? (
-        <Text style={styles.hint}>{t('revenue.customRangeHint')}</Text>
+        <Text style={appTextStyle(language, styles.hint)}>{t('revenue.customRangeHint')}</Text>
       ) : null}
     </View>
   );
@@ -505,6 +536,18 @@ export default function RevenueScreen() {
         <View style={{ flex: 1, paddingHorizontal: pagePadding }}>
           {listHeader}
           <ActivityIndicator style={{ marginTop: 32 }} color={c.accentText} />
+        </View>
+      ) : query.isError ? (
+        <View style={{ flex: 1, paddingHorizontal: pagePadding }}>
+          {listHeader}
+          <View style={styles.errorWrap}>
+            <Text style={appTextStyle(language, styles.errorText)}>
+              {query.error instanceof Error ? query.error.message : t('gymBoot.errorBody')}
+            </Text>
+            <Pressable style={styles.retryBtn} onPress={() => void query.refetch()}>
+              <Text style={appTextStyle(language, styles.retryText)}>{t('gymBoot.retry')}</Text>
+            </Pressable>
+          </View>
         </View>
       ) : (
         <FlatList
@@ -535,7 +578,7 @@ export default function RevenueScreen() {
             !useCustomRange || customRangeReady ? (
               <View style={styles.emptyWrap}>
                 <Ionicons name="receipt-outline" size={40} color={c.border} />
-                <Text style={styles.empty}>{t('revenue.empty')}</Text>
+                <Text style={appTextStyle(language, styles.empty)}>{t('revenue.empty')}</Text>
               </View>
             ) : null
           }

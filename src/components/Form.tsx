@@ -1,4 +1,5 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { AppText as Text, AppTextInput as TextInput } from '@/src/components/AppText';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import type { ThemeColors } from '@/src/theme/tokens';
 import { appTextStyle } from '@/src/theme/typography';
@@ -11,7 +12,7 @@ export const colors = {
   text: '#f8fafc',
   muted: '#94a3b8',
   dim: '#64748b',
-  accent: '#4f46e5',
+  accent: '#2dd4bf',
   error: '#fda4af',
   errorBg: 'rgba(244,63,94,0.15)',
 };
@@ -119,7 +120,7 @@ export function ChipRow<T extends string>({
             style={[
               formStyles.chip,
               { borderColor: c.border, backgroundColor: c.card },
-              active && { borderColor: '#818cf8', backgroundColor: c.accentSoft },
+              active && { borderColor: c.accentText, backgroundColor: c.accentSoft },
             ]}
             onPress={() => onChange(opt)}
           >

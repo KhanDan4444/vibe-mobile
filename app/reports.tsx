@@ -1,14 +1,7 @@
 import { Redirect } from 'expo-router';
 import { useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  Share,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, Share, View } from 'react-native';
+import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -260,7 +253,7 @@ export default function ReportsScreen() {
   return (
     <TabScreenFrame>
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <ResponsiveContent style={{ paddingHorizontal: pagePadding, paddingTop: pagePadding }}>
+      <ResponsiveContent style={{ paddingHorizontal: pagePadding }}>
       <BranchFilterBar horizontalPadding={0} />
 
       <Text style={appTextStyle(language, styles.pageTitle)}>{t('reports.title')}</Text>
@@ -289,7 +282,7 @@ export default function ReportsScreen() {
           <View style={styles.statsRow}>
             <StatBox label={t('reports.total')} value={counts.total} styles={styles} language={language} />
             <StatBox label={t('reports.active')} value={counts.active} accent="#34d399" styles={styles} language={language} />
-            <StatBox label={t('reports.dueSoon')} value={counts.dueSoon} accent="#fbbf24" styles={styles} language={language} />
+            <StatBox label={t('reports.dueSoon')} value={counts.dueSoon} accent="#0284c7" styles={styles} language={language} />
             <StatBox label={t('reports.expired')} value={counts.expired} accent="#f87171" styles={styles} language={language} />
             <StatBox label={t('reports.unpaid')} value={counts.unpaid} accent="#fb923c" styles={styles} language={language} />
           </View>

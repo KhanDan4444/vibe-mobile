@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchDashboard } from '@/src/api/dashboard';
@@ -84,8 +85,8 @@ function AlertMemberRow({
   const { t } = useTranslation();
   return (
     <Pressable style={[styles.alertRow, { borderColor: colors.border }]} onPress={onOpen}>
-      <View style={[styles.alertAvatar, { backgroundColor: colors.accentSoft }]}>
-        <Text style={[styles.alertInitial, { color: colors.accentText }]}>
+      <View style={[styles.alertAvatar, { borderColor: colors.border, backgroundColor: colors.card }]}>
+        <Text style={[styles.alertInitial, { color: colors.text }]}>
           {(member.name || '?').trim().charAt(0).toUpperCase()}
         </Text>
       </View>
@@ -119,7 +120,7 @@ export default function DashboardScreen() {
   const owner = isGymOwner(user?.role);
   const staffUser = isGymStaff(user?.role);
   const { readOnly } = useGymReadOnly();
-  const { statCardWidthPercent, isLargeTablet, isTablet, pagePadding } = useResponsiveLayout();
+  const { statCardWidthPercent, isTablet, pagePadding } = useResponsiveLayout();
   const staffBranchLabel = staffUser
     ? user?.branch_name || (user?.branch_id ? `Branch #${user.branch_id}` : null)
     : null;
@@ -132,7 +133,7 @@ export default function DashboardScreen() {
 
   const registeredGymName = profileQuery.data?.gym.name ?? cachedGymName ?? 'Your gym';
 
-  const { data, isLoading, refetch, isRefetching } = useQuery({
+  const { data, isLoading, isError, error, refetch, isRefetching } = useQuery({
     queryKey: ['dashboard', branchKey],
     queryFn: () => fetchDashboard(token!, selectedBranchId),
     enabled: Boolean(token),
@@ -182,7 +183,7 @@ export default function DashboardScreen() {
             : ''}
         </Text>
       </Pressable>
-      {owner ? <MiniBarChart data={data.revenueChart ?? []} showTypeSwitcher /> : null}
+      {owner ? <MiniBarChart data={data.revenueChart ?? []} /> : null}
     </View>
   ) : null;
 
@@ -232,59 +233,61 @@ export default function DashboardScreen() {
 
       {isLoading ? (
         <Text style={[styles.muted, { color: c.dim }]}>{t('dashboard.loading')}</Text>
-      ) : (
-        <View style={styles.grid}>
-          <StatCard
-            label={t('dashboard.active')}
-            value={data?.activeMembers ?? 0}
-            accent={c.success}
-            cardStyle={cardStyle}
-            valueStyle={valueStyle}
-            labelStyle={labelStyle}
-            onPress={() => goMembers()}
-          />
-          <StatCard
-            label={t('dashboard.dueSoon')}
-            value={data?.dueSoonMembers ?? 0}
-            accent={c.warning}
-            cardStyle={cardStyle}
-            valueStyle={valueStyle}
-            labelStyle={labelStyle}
-            onPress={() => goMembers('due_soon')}
-          />
-          <StatCard
-            label={t('dashboard.expired')}
-            value={data?.expiredMembers ?? 0}
-            accent="#f87171"
-            cardStyle={cardStyle}
-            valueStyle={valueStyle}
-            labelStyle={labelStyle}
-            onPress={() => goMembers('expired')}
-          />
-          <StatCard
-            label={t('dashboard.unpaid')}
-            value={data?.unpaidCount ?? 0}
-            accent="#fb923c"
-            cardStyle={cardStyle}
-            valueStyle={valueStyle}
-            labelStyle={labelStyle}
-            onPress={() => goMembers('unpaid')}
-          />
+      ) : isError ? (
+        <View style={styles.errorWrap}>
+          <Text style={[styles.errorText, { color: c.error }]}>
+            {error instanceof Error ? error.message : t('gymBoot.errorBody')}
+          </Text>
+          <Pressable
+            style={[styles.retryBtn, { borderColor: c.border, backgroundColor: c.card }]}
+            onPress={() => void refetch()}
+          >
+            <Text style={[styles.retryText, { color: c.accentText }]}>{t('gymBoot.retry')}</Text>
+          </Pressable>
         </View>
-      )}
-
-      {data ? (
-        isLargeTablet && owner ? (
-          <View style={styles.splitRow}>
-            <View style={styles.splitCol}>{summaryBlock}</View>
-            <View style={styles.splitCol}>{attentionBlock}</View>
+      ) : data ? (
+        <>
+          {summaryBlock}
+          <View style={styles.grid}>
+            <StatCard
+              label={t('dashboard.active')}
+              value={data.activeMembers ?? 0}
+              accent={c.statusActive}
+              cardStyle={cardStyle}
+              valueStyle={valueStyle}
+              labelStyle={labelStyle}
+              onPress={() => goMembers()}
+            />
+            <StatCard
+              label={t('dashboard.dueSoon')}
+              value={data.dueSoonMembers ?? 0}
+              accent={c.statusDueSoon}
+              cardStyle={cardStyle}
+              valueStyle={valueStyle}
+              labelStyle={labelStyle}
+              onPress={() => goMembers('due_soon')}
+            />
+            <StatCard
+              label={t('dashboard.expired')}
+              value={data.expiredMembers ?? 0}
+              accent={c.statusExpired}
+              cardStyle={cardStyle}
+              valueStyle={valueStyle}
+              labelStyle={labelStyle}
+              onPress={() => goMembers('expired')}
+            />
+            <StatCard
+              label={t('dashboard.unpaid')}
+              value={data.unpaidCount ?? 0}
+              accent={c.statusUnpaid}
+              cardStyle={cardStyle}
+              valueStyle={valueStyle}
+              labelStyle={labelStyle}
+              onPress={() => goMembers('unpaid')}
+            />
           </View>
-        ) : (
-          <>
-            {summaryBlock}
-            {attentionBlock}
-          </>
-        )
+          {owner ? attentionBlock : null}
+        </>
       ) : null}
 
       <ReadOnlyBanner />
@@ -310,14 +313,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 12,
   },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 16 },
   statCard: {
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderWidth: StyleSheet.hairlineWidth,
   },
-  statValue: { fontSize: 28, fontWeight: '700' },
-  statLabel: { marginTop: 4, fontSize: 13 },
+  statValue: { fontSize: 22, fontWeight: '700' },
+  statLabel: { marginTop: 2, fontSize: 12 },
   splitRow: {
     flexDirection: 'row',
     gap: 16,
@@ -326,20 +330,31 @@ const styles = StyleSheet.create({
   },
   splitCol: { flex: 1, minWidth: 0 },
   summary: {
-    marginTop: 24,
-    borderRadius: 12,
-    padding: 20,
-    borderWidth: 1,
+    marginTop: 4,
+    borderRadius: 14,
+    padding: 18,
+    borderWidth: StyleSheet.hairlineWidth,
   },
-  summaryTitle: { fontSize: 13, fontWeight: '600', textTransform: 'uppercase' },
-  income: { marginTop: 8, fontSize: 32, fontWeight: '700' },
+  summaryTitle: { fontSize: 13, fontWeight: '600' },
+  income: { marginTop: 6, fontSize: 34, fontWeight: '700', letterSpacing: -0.5 },
   trend: { marginTop: 6, fontSize: 13, fontWeight: '600' },
   muted: { marginTop: 8, fontSize: 14 },
+  errorWrap: { alignItems: 'center', paddingTop: 32, gap: 12 },
+  errorText: { textAlign: 'center', fontSize: 15 },
+  retryBtn: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  retryText: { fontSize: 14, fontWeight: '600' },
   alertCard: {
     marginTop: 16,
     borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
+    padding: 14,
+    borderWidth: StyleSheet.hairlineWidth,
     flex: 1,
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
@@ -350,12 +365,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     paddingVertical: 10,
-    borderTopWidth: 1,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   alertAvatar: {
     width: 36,
     height: 36,
     borderRadius: 18,
+    borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -365,14 +381,14 @@ const styles = StyleSheet.create({
   alertMeta: { marginTop: 3, fontSize: 12 },
   alertRight: { alignItems: 'flex-end', gap: 6 },
   alertStatus: { fontSize: 11, fontWeight: '700', textTransform: 'capitalize' },
-  alertAction: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
+  alertAction: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
   alertActionText: { fontSize: 12, fontWeight: '700' },
   banner: {
     marginTop: 20,
     backgroundColor: 'rgba(251,191,36,0.12)',
     borderRadius: 10,
     padding: 14,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(251,191,36,0.35)',
   },
   bannerText: { color: '#fcd34d', fontSize: 14 },

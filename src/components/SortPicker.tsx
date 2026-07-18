@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Pressable, Text } from 'react-native';
+import { Pressable } from 'react-native';
+import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
@@ -21,16 +22,16 @@ export function SortPicker<T extends string>({
   const [open, setOpen] = useState(false);
   const styles = useThemedStyles((c) => ({
     btn: {
-      paddingHorizontal: 14,
-      paddingVertical: 12,
-      borderRadius: 10,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 8,
       borderWidth: 1,
       borderColor: c.border,
       backgroundColor: c.card,
-      minHeight: 48,
+      alignSelf: 'flex-start' as const,
       justifyContent: 'center' as const,
     },
-    btnText: { color: c.accentText, fontSize: 14, fontWeight: '600' as const },
+    btnText: { color: c.accentText, fontSize: 13, fontWeight: '600' as const },
   }));
 
   const current = options.find((o) => o.id === value)?.label ?? label;

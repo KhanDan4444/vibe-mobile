@@ -19,6 +19,11 @@ export type ThemeColors = {
   inputBorder: string;
   success: string;
   warning: string;
+  statusActive: string;
+  statusDueSoon: string;
+  statusExpired: string;
+  statusUnpaid: string;
+  statusNeutral: string;
 };
 
 export const darkTheme: ThemeColors = {
@@ -28,9 +33,9 @@ export const darkTheme: ThemeColors = {
   text: '#f8fafc',
   muted: '#94a3b8',
   dim: '#64748b',
-  accent: '#4f46e5',
-  accentSoft: 'rgba(99,102,241,0.2)',
-  accentText: '#c7d2fe',
+  accent: '#2dd4bf',
+  accentSoft: 'rgba(45,212,191,0.18)',
+  accentText: '#99f6e4',
   error: '#fda4af',
   errorBg: 'rgba(244,63,94,0.15)',
   headerBg: '#1e293b',
@@ -40,6 +45,11 @@ export const darkTheme: ThemeColors = {
   inputBorder: '#475569',
   success: '#34d399',
   warning: '#fbbf24',
+  statusActive: '#34d399',
+  statusDueSoon: '#38bdf8',
+  statusExpired: '#f87171',
+  statusUnpaid: '#fb923c',
+  statusNeutral: '#94a3b8',
 };
 
 export const lightTheme: ThemeColors = {
@@ -49,9 +59,9 @@ export const lightTheme: ThemeColors = {
   text: '#0f172a',
   muted: '#64748b',
   dim: '#94a3b8',
-  accent: '#4f46e5',
-  accentSoft: 'rgba(79,70,229,0.1)',
-  accentText: '#4338ca',
+  accent: '#0f766e',
+  accentSoft: 'rgba(15,118,110,0.12)',
+  accentText: '#115e59',
   error: '#e11d48',
   errorBg: 'rgba(225,29,72,0.08)',
   headerBg: '#ffffff',
@@ -61,6 +71,11 @@ export const lightTheme: ThemeColors = {
   inputBorder: '#cbd5e1',
   success: '#059669',
   warning: '#d97706',
+  statusActive: '#059669',
+  statusDueSoon: '#0284c7',
+  statusExpired: '#e11d48',
+  statusUnpaid: '#ea580c',
+  statusNeutral: '#64748b',
 };
 
 export function colorsForTheme(theme: AppTheme): ThemeColors {

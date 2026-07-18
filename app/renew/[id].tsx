@@ -1,7 +1,8 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { AppText as Text } from '@/src/components/AppText';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchMember, renewMember } from '@/src/api/members';
@@ -147,7 +148,6 @@ export default function RenewScreen() {
           {member ? <Text style={styles.memberName}>{t('forms.renewFor', { name: member.name })}</Text> : null}
           <ErrorBanner message={error} />
 
-          <Label>{t('forms.plan')}</Label>
           {plans.length === 0 ? (
             <Text style={styles.hint}>{t('forms.noPlans')}</Text>
           ) : (

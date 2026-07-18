@@ -17,7 +17,7 @@ const PDF_STYLES = `
   table { width: 100%; border-collapse: collapse; }
   th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #e2e8f0; }
   th { font-size: 10px; text-transform: uppercase; color: #64748b; }
-  .total { font-size: 22px; font-weight: 700; color: #4f46e5; margin: 8px 0; }
+  .total { font-size: 22px; font-weight: 700; color: #0f766e; margin: 8px 0; }
   .stats { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; }
   .stat { background: #f8fafc; padding: 12px 16px; border-radius: 8px; min-width: 100px; }
   .stat label { display: block; font-size: 10px; color: #64748b; text-transform: uppercase; }

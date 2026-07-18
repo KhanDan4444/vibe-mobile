@@ -9,6 +9,7 @@ import React, {
 import { fetchGymSubscription, loginRequest } from '@/src/api/auth';
 import { apiRequest } from '@/src/api/client';
 import { clearStoredGymName, clearStoredToken, getStoredGymName, getStoredToken, setStoredGymName, setStoredToken } from '@/src/auth/storage';
+import { rememberOfflineQueueGym, retainOfflineQueueForGym } from '@/src/offline/queue';
 import { clearSessionCache } from '@/src/query/clearSessionCache';
 import type { AuthUser, LoginResponse } from '@/src/types/api';
 import { isTokenExpired, userFromToken } from '@/src/utils/jwt';
@@ -35,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const logout = useCallback(async () => {
+    await rememberOfflineQueueGym(user?.gym_id ?? null);
     await clearSessionCache();
     await clearStoredToken();
     await clearStoredGymName();
@@ -42,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setSubscription(null);
     setGymName(null);
-  }, []);
+  }, [user?.gym_id]);
 
   const apiFetch = useCallback(
     async <T,>(path: string, options: RequestInit = {}): Promise<T> => {
@@ -65,6 +67,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (identifier: string, password: string, rememberMe = true) => {
     await clearSessionCache();
     const data = await loginRequest(identifier, password, rememberMe);
+    if (typeof data.user.gym_id === 'number') {
+      await retainOfflineQueueForGym(data.user.gym_id);
+    }
     await setStoredToken(data.token);
     const name = data.subscription?.gymName ?? null;
     if (name) {

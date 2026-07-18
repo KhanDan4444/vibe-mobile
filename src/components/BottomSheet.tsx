@@ -1,6 +1,9 @@
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AppText as Text } from '@/src/components/AppText';
+import { usePreferences } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
+import { appTextStyle } from '@/src/theme/typography';
 
 export function BottomSheet({
   visible,
@@ -13,9 +16,11 @@ export function BottomSheet({
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  /** Optional custom footer. Pickers that close on select should omit this. */
   footer?: React.ReactNode;
 }) {
-  const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
+  const { language } = usePreferences();
   const styles = useThemedStyles((c) => ({
     overlay: { flex: 1, justifyContent: 'flex-end' as const },
     backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.5)' },
@@ -24,7 +29,7 @@ export function BottomSheet({
       borderTopLeftRadius: 20,
       borderTopRightRadius: 20,
       paddingHorizontal: 20,
-      paddingBottom: 28,
+      paddingBottom: Math.max(insets.bottom, 16) + 8,
       maxHeight: '85%' as const,
     },
     handle: {
@@ -37,16 +42,6 @@ export function BottomSheet({
       marginBottom: 16,
     },
     title: { fontSize: 18, fontWeight: '700' as const, color: c.text, marginBottom: 12 },
-    doneBtn: {
-      marginTop: 16,
-      backgroundColor: c.accent,
-      borderRadius: 12,
-      paddingVertical: 14,
-      alignItems: 'center' as const,
-      minHeight: 48,
-      justifyContent: 'center' as const,
-    },
-    doneText: { color: '#fff', fontSize: 16, fontWeight: '600' as const },
   }));
 
   return (
@@ -55,13 +50,15 @@ export function BottomSheet({
         <Pressable style={styles.backdrop} onPress={onClose} />
         <View style={styles.sheet}>
           <View style={styles.handle} />
-          <Text style={styles.title}>{title}</Text>
-          <ScrollView showsVerticalScrollIndicator={false}>{children}</ScrollView>
-          {footer ?? (
-            <Pressable style={styles.doneBtn} onPress={onClose}>
-              <Text style={styles.doneText}>{t('common.done')}</Text>
-            </Pressable>
-          )}
+          <Text style={appTextStyle(language, styles.title)}>{title}</Text>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 4 }}
+            keyboardShouldPersistTaps="handled"
+          >
+            {children}
+          </ScrollView>
+          {footer}
         </View>
       </View>
     </Modal>
@@ -77,6 +74,7 @@ export function SheetOption({
   selected?: boolean;
   onPress: () => void;
 }) {
+  const { language } = usePreferences();
   const styles = useThemedStyles((c) => ({
     option: {
       paddingVertical: 14,
@@ -96,7 +94,14 @@ export function SheetOption({
 
   return (
     <Pressable style={[styles.option, selected && styles.optionActive]} onPress={onPress}>
-      <Text style={[styles.optionText, selected && styles.optionTextActive]}>{label}</Text>
+      <Text
+        style={appTextStyle(language, {
+          ...styles.optionText,
+          ...(selected ? styles.optionTextActive : {}),
+        })}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }

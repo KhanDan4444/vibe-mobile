@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View, type GestureResponderEvent } from 'react-native';
+import { Pressable, ScrollView, View, type GestureResponderEvent } from 'react-native';
+import { AppText as Text } from '@/src/components/AppText';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
@@ -23,8 +24,8 @@ const PADDING_TOP = 12;
 const PADDING_BOTTOM = 22;
 
 const PIE_PALETTE = [
-  { base: '#8b5cf6', light: '#ddd6fe' },
-  { base: '#6366f1', light: '#c7d2fe' },
+  { base: '#0f766e', light: '#99f6e4' },
+  { base: '#0891b2', light: '#a5f3fc' },
   { base: '#38bdf8', light: '#bae6fd' },
   { base: '#34d399', light: '#a7f3d0' },
   { base: '#fbbf24', light: '#fde68a' },
@@ -228,18 +229,43 @@ function LineChartView({
 }) {
   const { t } = useTranslation();
   const points = chartPoints(data);
-  const { point: peak } = getPeakPoint(data);
+  const { index: peakIndex, point: peak } = getPeakPoint(data);
   const first = data[0];
   const linePath = buildLinePath(points);
   const baseline = CHART_HEIGHT - PADDING_BOTTOM;
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [layoutWidth, setLayoutWidth] = useState(0);
+  const focusIndex = selectedIndex ?? peakIndex;
+  const focus = data[focusIndex] ?? peak;
+  const selectedPoint = selectedIndex == null ? null : points[selectedIndex];
   const areaPath =
     points.length > 1
       ? `${linePath} L ${points[points.length - 1].x} ${baseline} L ${points[0].x} ${baseline} Z`
       : '';
 
+  useEffect(() => {
+    setSelectedIndex(null);
+  }, [data]);
+
+  const selectFromTouch = (event: GestureResponderEvent) => {
+    if (layoutWidth <= 0 || points.length === 0) return;
+    const ratio = Math.max(0, Math.min(1, event.nativeEvent.locationX / layoutWidth));
+    setSelectedIndex(Math.round(ratio * (points.length - 1)));
+  };
+
   return (
     <>
-      <View style={[styles.chartShell, { height }]}>
+      <View
+        style={[styles.chartShell, { height }]}
+        onLayout={(event) => setLayoutWidth(event.nativeEvent.layout.width)}
+        onStartShouldSetResponder={() => true}
+        onMoveShouldSetResponder={() => true}
+        onResponderGrant={selectFromTouch}
+        onResponderMove={selectFromTouch}
+        accessible
+        accessibilityRole="adjustable"
+        accessibilityLabel={t('dashboard.chartDailyTotal')}
+      >
         <Svg width="100%" height="100%" viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} preserveAspectRatio="none">
           <Defs>
             <LinearGradient id="revenueAreaFill" x1="0" y1="0" x2="0" y2="1">
@@ -261,18 +287,31 @@ function LineChartView({
           ))}
           {areaPath ? <Path d={areaPath} fill="url(#revenueAreaFill)" /> : null}
           <Path d={linePath} fill="none" stroke={styles.chartLine.color} strokeWidth="3" strokeLinecap="round" />
+          {selectedPoint ? (
+            <Line
+              x1={selectedPoint.x}
+              x2={selectedPoint.x}
+              y1={PADDING_TOP}
+              y2={baseline}
+              stroke={styles.chartLine.color}
+              strokeOpacity="0.45"
+              strokeWidth="1"
+              strokeDasharray="3 3"
+            />
+          ) : null}
           {points.map((point, index) => {
             const isEdge = index === 0 || index === points.length - 1;
+            const isSelected = index === selectedIndex;
             return (
               <Circle
                 key={point.date}
                 cx={point.x}
                 cy={point.y}
-                r={isEdge ? 4 : 3}
+                r={isSelected ? 6 : isEdge ? 4 : 3}
                 fill={styles.chartLine.color}
                 stroke="white"
                 strokeOpacity="0.9"
-                strokeWidth="1.4"
+                strokeWidth={isSelected ? 2 : 1.4}
               />
             );
           })}
@@ -280,8 +319,8 @@ function LineChartView({
       </View>
       <ChartSummaryFooter
         first={first}
-        focus={peak}
-        caption={t('dashboard.chartPeakDay')}
+        focus={focus}
+        caption={selectedIndex == null ? t('dashboard.chartPeakDay') : t('dashboard.chartDailyTotal')}
         styles={styles}
       />
     </>

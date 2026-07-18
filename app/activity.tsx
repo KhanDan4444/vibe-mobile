@@ -1,12 +1,7 @@
 import { Redirect } from 'expo-router';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, View } from 'react-native';
+import { AppText as Text } from '@/src/components/AppText';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchActivityLogs } from '@/src/api/activity';
@@ -76,8 +71,8 @@ export default function ActivityScreen() {
   const { listColumns, pagePadding } = useResponsiveLayout();
   const styles = useThemedStyles((colors) => ({
     container: { flex: 1, backgroundColor: colors.bg },
-    filters: { paddingTop: 12, paddingBottom: 4 },
-    list: { paddingBottom: 24 },
+    filters: { paddingTop: 12, paddingBottom: 14 },
+    list: { paddingTop: 4, paddingBottom: 24 },
     columnWrap: { gap: 10 },
     empty: { textAlign: 'center' as const, color: colors.dim, marginTop: 40, fontSize: 15 },
   }));

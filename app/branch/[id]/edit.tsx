@@ -1,11 +1,11 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text } from 'react-native';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
+import { AppText as Text } from '@/src/components/AppText';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
-import { fetchBranches, reassignBranchStaff, updateBranch } from '@/src/api/branches';
-import { ReassignStaffModal } from '@/src/components/ReassignStaffModal';
+import { fetchBranches, updateBranch } from '@/src/api/branches';
 import { OptionPickerField } from '@/src/components/OptionPickerField';
 import { ErrorBanner, Field, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { useTheme } from '@/src/context/PreferencesContext';
@@ -30,8 +30,6 @@ export default function EditBranchScreen() {
   const [isActive, setIsActive] = useState(true);
   const [isDefault, setIsDefault] = useState(false);
   const [error, setError] = useState('');
-  const [reassignOpen, setReassignOpen] = useState(false);
-  const [deactivateAfterReassign, setDeactivateAfterReassign] = useState(false);
   const flashSaved = useSaveFlash();
   const flashOffline = useOfflineFlash();
   const canManageBranches = Boolean(user && isGymOwner(user.role));
@@ -43,7 +41,6 @@ export default function EditBranchScreen() {
   });
 
   const branch = branchesQuery.data?.branches.find((b) => b.id === branchId);
-  const allBranches = branchesQuery.data?.branches ?? [];
 
   useEffect(() => {
     if (!branch) return;
@@ -71,35 +68,8 @@ export default function EditBranchScreen() {
     onError: (e: Error) => setError(e.message),
   });
 
-  const reassignMutation = useMutation({
-    mutationFn: (targetBranchId: number) => reassignBranchStaff(token!, branchId, targetBranchId),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['branches'] });
-      setReassignOpen(false);
-      if (deactivateAfterReassign) {
-        saveBranch.mutate({
-          name: name.trim(),
-          phone: phone.trim() || null,
-          address: address.trim() || null,
-          is_active: isActive,
-          is_default: isDefault,
-        });
-      }
-    },
-    onError: (e: Error) => setError(e.message),
-  });
-
   const trySave = () => {
     setError('');
-    const staffCount = branch?.staff_count ?? 0;
-    const deactivating = branch?.is_active !== false && !isActive;
-
-    if (deactivating && staffCount > 0) {
-      setDeactivateAfterReassign(true);
-      setReassignOpen(true);
-      return;
-    }
-
     saveBranch.mutate({
       name: name.trim(),
       phone: phone.trim() || null,
@@ -107,12 +77,6 @@ export default function EditBranchScreen() {
       is_active: isActive,
       is_default: isDefault,
     });
-  };
-
-  const openReassignOnly = () => {
-    setError('');
-    setDeactivateAfterReassign(false);
-    setReassignOpen(true);
   };
 
   if (!canManageBranches) {
@@ -188,36 +152,19 @@ export default function EditBranchScreen() {
           />
 
           {hasStaff ? (
-            <Text style={[styles.staffNote, { color: c.warning }]}>
+            <Text style={[styles.staffNote, { color: c.muted }]}>
               {t('branchEdit.staffNote', { count: branch.staff_count ?? 0 })}
             </Text>
-          ) : null}
-
-          {hasStaff ? (
-            <PrimaryButton label={t('branchEdit.reassignStaff')} onPress={openReassignOnly} disabled={saveBranch.isPending} />
           ) : null}
 
           <PrimaryButton
             label={t('common.save')}
             onPress={trySave}
             loading={saveBranch.isPending}
-            disabled={!canSubmit || reassignMutation.isPending}
+            disabled={!canSubmit}
           />
         </ScrollView>
       </KeyboardAvoidingView>
-
-      <ReassignStaffModal
-        visible={reassignOpen}
-        branch={branch}
-        branches={allBranches}
-        deactivateAfter={deactivateAfterReassign}
-        loading={reassignMutation.isPending || saveBranch.isPending}
-        onClose={() => {
-          setReassignOpen(false);
-          setDeactivateAfterReassign(false);
-        }}
-        onConfirm={(targetId) => reassignMutation.mutate(targetId)}
-      />
     </Screen>
   );
 }

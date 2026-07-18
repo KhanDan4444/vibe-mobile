@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { AppText as Text } from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
@@ -88,7 +89,7 @@ export function BranchFilterBar({ horizontalPadding = 16 }: { horizontalPadding?
 }
 
 const styles = StyleSheet.create({
-  wrap: { paddingTop: 12, paddingBottom: 10 },
+  wrap: { paddingBottom: 10 },
   btn: {
     flexDirection: 'row',
     alignItems: 'center',

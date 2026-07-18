@@ -1,6 +1,7 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, Switch, Text, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, Switch, View } from 'react-native';
+import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -57,6 +58,17 @@ export default function EnrollScreen() {
   const styles = useThemedStyles((colors) => ({
     content: { padding: 16, paddingBottom: 40 },
     hint: { color: colors.dim, fontSize: 14, marginTop: 4 },
+    lockedValue: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.inputBg,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600' as const,
+    },
     switchRow: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
@@ -106,6 +118,7 @@ export default function EnrollScreen() {
 
   const buildPayload = (): EnrollPayload => {
     if (!planId) throw new Error('Select a plan.');
+    const planAmount = selectedPlan ? planPrice(selectedPlan) : Number(amount);
     return {
       name: name.trim(),
       phone: phone.trim(),
@@ -115,7 +128,7 @@ export default function EnrollScreen() {
       ...(skipPayment
         ? {}
         : {
-            amount: Number(amount),
+            amount: planAmount,
             date: paymentDate.trim(),
             method,
           }),
@@ -201,7 +214,6 @@ export default function EnrollScreen() {
             <BranchPicker branches={branches} value={branchId} onChange={setBranchId} />
           ) : null}
 
-          <Label>{t('forms.plan')}</Label>
           {plansQuery.isLoading ? (
             <Text style={styles.hint}>{t('forms.loadingPlans')}</Text>
           ) : plans.length === 0 ? (
@@ -232,7 +244,8 @@ export default function EnrollScreen() {
           {!skipPayment ? (
             <>
               <Label>{t('forms.amount')}</Label>
-              <Field value={amount} onChangeText={setAmount} keyboardType="decimal-pad" autoCapitalize="none" />
+              <Text style={styles.lockedValue}>{amount || '—'}</Text>
+              <Text style={styles.hint}>{t('forms.amountFromPlan')}</Text>
 
               <Label>{t('forms.paymentDate')}</Label>
               <DateField

@@ -1,14 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { AppText as Text, AppTextInput as TextInput } from '@/src/components/AppText';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -27,6 +19,7 @@ import { appTextStyle } from '@/src/theme/typography';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import type { ThemeColors } from '@/src/theme/tokens';
+import { lightTheme } from '@/src/theme/tokens';
 import { DEFAULT_MEMBER_SORT, MEMBER_SORT_OPTIONS, type MemberSortId } from '@/src/utils/listSort';
 import { isGymOwner } from '@/src/utils/roles';
 import type { MemberRow } from '@/src/types/api';
@@ -48,34 +41,34 @@ const FILTER_COLORS: Record<
   { dot: string; activeBg: string; activeBorder: string; activeText: string }
 > = {
   all: {
-    dot: '#94a3b8',
-    activeBg: 'rgba(148,163,184,0.16)',
-    activeBorder: '#94a3b8',
-    activeText: '#94a3b8',
+    dot: lightTheme.statusNeutral,
+    activeBg: 'rgba(100,116,139,0.16)',
+    activeBorder: lightTheme.statusNeutral,
+    activeText: lightTheme.statusNeutral,
   },
   active: {
-    dot: '#34d399',
-    activeBg: 'rgba(52,211,153,0.15)',
-    activeBorder: '#34d399',
-    activeText: '#34d399',
+    dot: lightTheme.statusActive,
+    activeBg: 'rgba(5,150,105,0.15)',
+    activeBorder: lightTheme.statusActive,
+    activeText: lightTheme.statusActive,
   },
   unpaid: {
-    dot: '#a78bfa',
-    activeBg: 'rgba(167,139,250,0.16)',
-    activeBorder: '#a78bfa',
-    activeText: '#a78bfa',
+    dot: lightTheme.statusUnpaid,
+    activeBg: 'rgba(234,88,12,0.16)',
+    activeBorder: lightTheme.statusUnpaid,
+    activeText: lightTheme.statusUnpaid,
   },
   due_soon: {
-    dot: '#fbbf24',
-    activeBg: 'rgba(251,191,36,0.16)',
-    activeBorder: '#fbbf24',
-    activeText: '#fbbf24',
+    dot: lightTheme.statusDueSoon,
+    activeBg: 'rgba(217,119,6,0.16)',
+    activeBorder: lightTheme.statusDueSoon,
+    activeText: lightTheme.statusDueSoon,
   },
   expired: {
-    dot: '#f87171',
-    activeBg: 'rgba(248,113,113,0.16)',
-    activeBorder: '#f87171',
-    activeText: '#f87171',
+    dot: lightTheme.statusExpired,
+    activeBg: 'rgba(225,29,72,0.16)',
+    activeBorder: lightTheme.statusExpired,
+    activeText: lightTheme.statusExpired,
   },
 };
 
@@ -85,12 +78,12 @@ function parseFilter(value: string | string[] | undefined): MemberFilter {
   return 'all';
 }
 
-function statusColor(status: string) {
+function statusColor(status: string, c: ThemeColors) {
   const s = status.toLowerCase();
-  if (s === 'active') return '#34d399';
-  if (s === 'due soon') return '#fbbf24';
-  if (s === 'expired') return '#f87171';
-  return '#94a3b8';
+  if (s === 'active') return c.statusActive;
+  if (s === 'due soon') return c.statusDueSoon;
+  if (s === 'expired') return c.statusExpired;
+  return c.statusNeutral;
 }
 
 function MemberRowItem({
@@ -100,6 +93,7 @@ function MemberRowItem({
   showBranch,
   token,
   multiColumn,
+  colors,
 }: {
   member: MemberRow;
   onPress: () => void;
@@ -107,6 +101,7 @@ function MemberRowItem({
   showBranch?: boolean;
   token: string;
   multiColumn?: boolean;
+  colors: ThemeColors;
 }) {
   const { t } = useTranslation();
   return (
@@ -126,7 +121,7 @@ function MemberRowItem({
         ) : null}
       </View>
       <View style={styles.rowMeta}>
-        <Text style={[styles.status, { color: statusColor(member.status) }]}>{member.status}</Text>
+        <Text style={[styles.status, { color: statusColor(member.status, colors) }]}>{member.status}</Text>
         <Text style={styles.plan}>{member.plan_name || t('members.noPlan')}</Text>
         {member.is_unpaid ? <Text style={styles.unpaid}>{t('members.unpaidBadge')}</Text> : null}
       </View>
@@ -307,6 +302,15 @@ export default function MembersScreen() {
 
       {query.isLoading ? (
         <ActivityIndicator style={{ marginTop: 40 }} color={c.accentText} />
+      ) : query.isError ? (
+        <View style={styles.errorWrap}>
+          <Text style={styles.errorText}>
+            {query.error instanceof Error ? query.error.message : t('gymBoot.errorBody')}
+          </Text>
+          <Pressable style={styles.retryBtn} onPress={() => void query.refetch()}>
+            <Text style={styles.retryText}>{t('gymBoot.retry')}</Text>
+          </Pressable>
+        </View>
       ) : (
         <FlatList
           key={`members-cols-${listColumns}`}
@@ -321,6 +325,7 @@ export default function MembersScreen() {
               showBranch={showBranchColumn}
               token={token!}
               multiColumn={listColumns > 1}
+              colors={c}
               onPress={() => router.push(`/member/${item.id}`)}
             />
           )}
@@ -361,9 +366,9 @@ function createStyles(c: ThemeColors) {
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: c.card,
-      borderWidth: 1,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
-      borderRadius: 12,
+      borderRadius: 10,
       paddingHorizontal: 12,
       minHeight: 48,
     },
@@ -391,8 +396,8 @@ function createStyles(c: ThemeColors) {
       paddingLeft: 11,
       paddingRight: 8,
       paddingVertical: 7,
-      borderRadius: 18,
-      borderWidth: 1,
+      borderRadius: 10,
+      borderWidth: StyleSheet.hairlineWidth,
       flexShrink: 0,
       alignSelf: 'flex-start',
       minHeight: 36,
@@ -409,7 +414,7 @@ function createStyles(c: ThemeColors) {
     filterCountBadge: {
       minWidth: 22,
       height: 22,
-      borderRadius: 11,
+      borderRadius: 6,
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 6,
@@ -426,10 +431,10 @@ function createStyles(c: ThemeColors) {
       alignItems: 'center',
       justifyContent: 'space-between',
       backgroundColor: c.card,
-      borderRadius: 12,
-      padding: 14,
-      marginBottom: 10,
-      borderWidth: 1,
+      borderRadius: 8,
+      padding: 12,
+      marginBottom: 8,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
       gap: 12,
     },
@@ -444,23 +449,36 @@ function createStyles(c: ThemeColors) {
     rowMeta: { alignItems: 'flex-end' },
     status: { fontSize: 12, fontWeight: '700', textTransform: 'capitalize' },
     plan: { marginTop: 4, fontSize: 12, color: c.dim },
-    unpaid: { marginTop: 4, fontSize: 11, fontWeight: '700', color: '#fb923c' },
+    unpaid: { marginTop: 4, fontSize: 11, fontWeight: '700', color: c.statusUnpaid },
     empty: { textAlign: 'center', color: c.dim, marginTop: 40, fontSize: 15 },
+    errorWrap: { alignItems: 'center', paddingTop: 48, gap: 12, paddingHorizontal: 24 },
+    errorText: { textAlign: 'center', color: c.error, fontSize: 15 },
+    retryBtn: {
+      borderWidth: 1,
+      borderColor: c.border,
+      borderRadius: 8,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      minHeight: 44,
+      justifyContent: 'center',
+      backgroundColor: c.card,
+    },
+    retryText: { color: c.accentText, fontSize: 14, fontWeight: '600' },
     fab: {
       position: 'absolute',
       bottom: 24,
-      width: 56,
-      height: 56,
-      borderRadius: 28,
+      width: 48,
+      height: 48,
+      borderRadius: 14,
       backgroundColor: c.accent,
       alignItems: 'center',
       justifyContent: 'center',
-      elevation: 4,
+      elevation: 2,
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.18,
+      shadowRadius: 3,
     },
-    fabText: { color: '#fff', fontSize: 28, fontWeight: '300', marginTop: -2 },
+    fabText: { color: '#fff', fontSize: 26, fontWeight: '300', marginTop: -2 },
   });
 }

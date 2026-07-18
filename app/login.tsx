@@ -1,14 +1,6 @@
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { AppText as Text, AppTextInput as TextInput } from '@/src/components/AppText';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -66,7 +58,7 @@ export default function LoginScreen() {
           { backgroundColor: c.card, borderColor: c.border, maxWidth: formMaxWidth, alignSelf: 'center', width: '100%' },
         ]}
       >
-        <Text style={[styles.title, { color: c.text }]}>{t('app.name')}</Text>
+        <Text style={[styles.title, { color: c.accent }]}>{t('app.name')}</Text>
         <Text style={[styles.subtitle, { color: c.muted }]}>{t('auth.subtitle')}</Text>
 
         {error ? (

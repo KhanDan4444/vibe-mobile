@@ -31,14 +31,3 @@ export function updateBranch(token: string, id: number, payload: UpdateBranchPay
     body: JSON.stringify(payload),
   });
 }
-
-export function reassignBranchStaff(token: string, branchId: number, targetBranchId: number) {
-  return apiRequest<{ moved: number; target_branch: { id: number; name: string } }>(
-    `/gym/branches/${branchId}/reassign-staff`,
-    {
-      method: 'POST',
-      token,
-      body: JSON.stringify({ target_branch_id: targetBranchId }),
-    }
-  );
-}

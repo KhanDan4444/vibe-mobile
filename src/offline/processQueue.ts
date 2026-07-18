@@ -9,7 +9,7 @@ import { updateGymProfile } from '@/src/api/profile';
 import type { UpdateProfilePayload } from '@/src/types/api';
 import type { BranchPayload, UpdateBranchPayload } from '@/src/api/branches';
 import type { ChangePlanPayload, EnrollPayload, RenewPayload } from '@/src/types/api';
-import { readOfflineQueue, removeOfflineJob, updateOfflineJob } from '@/src/offline/queue';
+import { jobBelongsToGym, readOfflineQueue, removeOfflineJob, updateOfflineJob } from '@/src/offline/queue';
 import {
   OFFLINE_MAX_ATTEMPTS,
   OFFLINE_RETRY_BASE_MS,
@@ -70,14 +70,23 @@ function isReadyToRetry(job: OfflineJob, now: number): boolean {
   return new Date(job.nextRetryAt).getTime() <= now;
 }
 
-export async function processOfflineQueue(token: string, queryClient: QueryClient): Promise<number> {
+function filterJobsForGym(jobs: OfflineJob[], gymId?: number | null): OfflineJob[] {
+  if (gymId == null) return jobs;
+  return jobs.filter((job) => jobBelongsToGym(job, gymId));
+}
+
+export async function processOfflineQueue(
+  token: string,
+  queryClient: QueryClient,
+  gymId?: number | null
+): Promise<number> {
   if (processing) return 0;
   processing = true;
 
   let synced = 0;
   const now = Date.now();
   try {
-    const jobs = await readOfflineQueue();
+    const jobs = filterJobsForGym(await readOfflineQueue(), gymId);
     for (const job of jobs) {
       if (!isReadyToRetry(job, now)) continue;
 
@@ -109,18 +118,20 @@ export async function processOfflineQueue(token: string, queryClient: QueryClien
   return synced;
 }
 
-export async function getPendingOfflineCount(): Promise<number> {
-  const jobs = await readOfflineQueue();
+export async function getPendingOfflineCount(gymId?: number | null): Promise<number> {
+  const jobs = filterJobsForGym(await readOfflineQueue(), gymId);
   return jobs.filter((j) => j.status !== 'failed' || (j.attempts ?? 0) < OFFLINE_MAX_ATTEMPTS).length;
 }
 
-export async function getFailedOfflineJobs(): Promise<OfflineJob[]> {
-  const jobs = await readOfflineQueue();
+export async function getFailedOfflineJobs(gymId?: number | null): Promise<OfflineJob[]> {
+  const jobs = filterJobsForGym(await readOfflineQueue(), gymId);
   return jobs.filter((j) => j.status === 'failed' || (j.attempts ?? 0) >= OFFLINE_MAX_ATTEMPTS);
 }
 
-export async function getOfflineQueueSummary(): Promise<{ pending: number; failed: number; lastError?: string }> {
-  const jobs = await readOfflineQueue();
+export async function getOfflineQueueSummary(
+  gymId?: number | null
+): Promise<{ pending: number; failed: number; lastError?: string }> {
+  const jobs = filterJobsForGym(await readOfflineQueue(), gymId);
   const failedJobs = jobs.filter((j) => j.status === 'failed' || (j.attempts ?? 0) >= OFFLINE_MAX_ATTEMPTS);
   const pending = jobs.length - failedJobs.length;
   return {

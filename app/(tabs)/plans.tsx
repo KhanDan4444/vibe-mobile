@@ -1,18 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { Redirect, useRouter } from 'expo-router';
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Pressable,
-  RefreshControl,
-  Text,
-  View,
-} from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { AppText as Text } from '@/src/components/AppText';
 import { useAuth } from '@/src/auth/AuthContext';
 import { deletePlan, fetchPlans } from '@/src/api/plans';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { ActionOverflowMenu } from '@/src/components/ActionOverflowMenu';
+import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { ReadOnlyBanner } from '@/src/components/ReadOnlyBanner';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
@@ -45,7 +40,7 @@ function PlanCard({
       borderRadius: 12,
       padding: 16,
       marginBottom: 10,
-      borderWidth: 1,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
     },
     cardColumn: {
@@ -55,7 +50,26 @@ function PlanCard({
     headerRow: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 8 },
     cardMain: { flex: 1 },
     name: { fontSize: 17, fontWeight: '700' as const, color: c.text },
-    meta: { marginTop: 6, fontSize: 14, color: c.muted },
+    footer: {
+      marginTop: 14,
+      paddingTop: 12,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: c.border,
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      justifyContent: 'space-between' as const,
+      gap: 10,
+    },
+    price: { fontSize: 20, fontWeight: '800' as const, color: c.text, flexShrink: 1 },
+    durationBadge: {
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.border,
+      backgroundColor: c.inputBg,
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+    },
+    durationText: { fontSize: 12, fontWeight: '600' as const, color: c.muted },
     activeCount: { marginTop: 6, fontSize: 12, color: c.success },
     inactiveCount: { marginTop: 6, fontSize: 12, color: c.dim },
   }));
@@ -65,7 +79,7 @@ function PlanCard({
     owner && !readOnly
       ? [
           { id: 'edit', label: t('screens.editPlan'), onPress: onEdit },
-          { id: 'delete', label: t('member.delete'), onPress: onDelete, destructive: true },
+          { id: 'delete', label: t('plans.delete'), onPress: onDelete, destructive: true },
         ]
       : [];
 
@@ -74,9 +88,6 @@ function PlanCard({
       <View style={styles.headerRow}>
         <View style={styles.cardMain}>
           <Text style={styles.name}>{plan.name}</Text>
-          <Text style={styles.meta}>
-            {formatPlanDuration(plan.duration, t)} · {Number(plan.price).toLocaleString()} ETB
-          </Text>
           {activeCount > 0 ? (
             <Text style={styles.activeCount}>
               {t('plans.activeMembers', { count: activeCount })}
@@ -86,6 +97,12 @@ function PlanCard({
           )}
         </View>
         <ActionOverflowMenu items={menuItems} />
+      </View>
+      <View style={styles.footer}>
+        <Text style={styles.price}>{Number(plan.price).toLocaleString()} ETB</Text>
+        <View style={styles.durationBadge}>
+          <Text style={styles.durationText}>{formatPlanDuration(plan.duration, t)}</Text>
+        </View>
       </View>
     </View>
   );
@@ -110,18 +127,31 @@ export default function PlansScreen() {
     bannerText: { color: '#fcd34d', fontSize: 13 },
     list: { paddingBottom: 88 },
     empty: { textAlign: 'center' as const, color: colors.dim, marginTop: 40, fontSize: 15 },
+    errorWrap: { alignItems: 'center' as const, paddingTop: 48, gap: 12, paddingHorizontal: 24 },
+    errorText: { textAlign: 'center' as const, color: colors.error, fontSize: 15 },
+    retryBtn: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      minHeight: 44,
+      justifyContent: 'center' as const,
+      backgroundColor: colors.card,
+    },
+    retryText: { color: colors.accentText, fontSize: 14, fontWeight: '600' as const },
     fab: {
       position: 'absolute' as const,
       bottom: 24,
-      width: 56,
-      height: 56,
-      borderRadius: 28,
+      width: 48,
+      height: 48,
+      borderRadius: 14,
       backgroundColor: colors.accent,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
-      elevation: 4,
+      elevation: 2,
     },
-    fabText: { color: '#fff', fontSize: 28, fontWeight: '300' as const, marginTop: -2 },
+    fabText: { color: '#fff', fontSize: 26, fontWeight: '300' as const, marginTop: -2 },
   }));
 
   const { readOnly } = useGymReadOnly();
@@ -129,6 +159,8 @@ export default function PlansScreen() {
   const fabRight = isTablet ? Math.max(pagePadding, (width - contentMaxWidth) / 2 + pagePadding) : 20;
   const owner = isGymOwner(user?.role);
   const canAccessPlans = Boolean(user && hasGymPortalAccess(user.role));
+  const [planToDelete, setPlanToDelete] = useState<PlanRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const query = useQuery({
     queryKey: ['plans'],
@@ -140,7 +172,7 @@ export default function PlansScreen() {
     return <Redirect href="/login" />;
   }
 
-  const confirmDelete = (plan: PlanRow) => {
+  const requestDelete = (plan: PlanRow) => {
     const activeCount = plan.active_member_count ?? 0;
     if (activeCount > 0) {
       Alert.alert(
@@ -149,22 +181,22 @@ export default function PlansScreen() {
       );
       return;
     }
+    setPlanToDelete(plan);
+  };
 
-    Alert.alert(t('plans.deleteTitle'), t('plans.deleteBody', { name: plan.name }), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('member.delete'),
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deletePlan(token!, plan.id);
-            query.refetch();
-          } catch (e) {
-            Alert.alert('Error', e instanceof Error ? e.message : 'Could not delete plan.');
-          }
-        },
-      },
-    ]);
+  const runDelete = async () => {
+    if (!planToDelete || !token) return;
+    setDeleting(true);
+    try {
+      await deletePlan(token, planToDelete.id);
+      setPlanToDelete(null);
+      query.refetch();
+    } catch (e) {
+      setPlanToDelete(null);
+      Alert.alert('Error', e instanceof Error ? e.message : 'Could not delete plan.');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const plans = query.data ?? [];
@@ -176,6 +208,15 @@ export default function PlansScreen() {
 
       {query.isLoading ? (
         <ActivityIndicator style={{ marginTop: 40 }} color={c.accentText} />
+      ) : query.isError ? (
+        <View style={styles.errorWrap}>
+          <Text style={styles.errorText}>
+            {query.error instanceof Error ? query.error.message : t('gymBoot.errorBody')}
+          </Text>
+          <Pressable style={styles.retryBtn} onPress={() => void query.refetch()}>
+            <Text style={styles.retryText}>{t('gymBoot.retry')}</Text>
+          </Pressable>
+        </View>
       ) : (
         <FlatList
           key={`plans-cols-${listColumns}`}
@@ -190,7 +231,7 @@ export default function PlansScreen() {
               readOnly={readOnly}
               multiColumn={listColumns > 1}
               onEdit={() => router.push(`/plan/${item.id}/edit`)}
-              onDelete={() => confirmDelete(item)}
+              onDelete={() => requestDelete(item)}
             />
           )}
           contentContainerStyle={[styles.list, { paddingHorizontal: pagePadding }]}
@@ -206,6 +247,17 @@ export default function PlansScreen() {
           <Text style={styles.fabText}>+</Text>
         </Pressable>
       ) : null}
+
+      <ConfirmDialog
+        visible={Boolean(planToDelete)}
+        title={t('plans.deleteTitle')}
+        message={t('plans.deleteBody', { name: planToDelete?.name ?? '' })}
+        confirmLabel={t('plans.delete')}
+        destructive
+        confirmLoading={deleting}
+        onCancel={() => setPlanToDelete(null)}
+        onConfirm={() => void runDelete()}
+      />
     </View>
     </TabScreenFrame>
   );

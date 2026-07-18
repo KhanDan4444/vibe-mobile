@@ -1,11 +1,12 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useNetwork } from '@/src/offline/NetworkProvider';
 
 export function OfflineBanner() {
   const { isOnline, pendingCount, failedCount, lastError, syncNow } = useNetwork();
-  const { colors: c, isDark } = useTheme();
+  const { isDark } = useTheme();
   const { t } = useTranslation();
 
   if (isOnline && pendingCount === 0 && failedCount === 0) return null;
@@ -36,8 +37,12 @@ export function OfflineBanner() {
         {message}
       </Text>
       {isOnline && (pendingCount > 0 || failedCount > 0) ? (
-        <Pressable onPress={() => void syncNow()} style={styles.syncBtn}>
-          <Text style={styles.syncText}>{t('offline.syncNow')}</Text>
+        <Pressable
+          onPress={() => void syncNow()}
+          style={[styles.syncBtn, { borderColor: color }]}
+          accessibilityLabel={t('offline.syncNow')}
+        >
+          <Text style={[styles.syncText, { color }]}>{t('offline.syncNow')}</Text>
         </Pressable>
       ) : null}
     </View>
@@ -56,10 +61,11 @@ const styles = StyleSheet.create({
   text: { fontSize: 13, flex: 1, fontWeight: '500' },
   syncBtn: {
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.35)',
     borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    minHeight: 44,
+    justifyContent: 'center',
   },
-  syncText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  syncText: { fontSize: 12, fontWeight: '600' },
 });

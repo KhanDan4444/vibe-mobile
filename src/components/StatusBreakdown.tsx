@@ -1,4 +1,5 @@
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import type { MemberRow } from '@/src/types/api';
 import { usePreferences } from '@/src/context/PreferencesContext';
@@ -8,7 +9,7 @@ import { memberStatusCounts } from '@/src/utils/reportPdf';
 
 const SEGMENT_KEYS = [
   { key: 'active' as const, labelKey: 'statusBreakdown.active', color: '#34d399' },
-  { key: 'dueSoon' as const, labelKey: 'statusBreakdown.dueSoon', color: '#fbbf24' },
+  { key: 'dueSoon' as const, labelKey: 'statusBreakdown.dueSoon', color: '#0284c7' },
   { key: 'expired' as const, labelKey: 'statusBreakdown.expired', color: '#f87171' },
   { key: 'unpaid' as const, labelKey: 'statusBreakdown.unpaid', color: '#fb923c' },
 ];

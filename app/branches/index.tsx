@@ -1,12 +1,6 @@
 import { Redirect, useRouter } from 'expo-router';
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  RefreshControl,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { AppText as Text } from '@/src/components/AppText';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchBranches } from '@/src/api/branches';
@@ -32,10 +26,10 @@ function BranchCard({
   const styles = useThemedStyles((c) => ({
     card: {
       backgroundColor: c.card,
-      borderRadius: 12,
-      padding: 16,
-      marginBottom: 10,
-      borderWidth: 1,
+      borderRadius: 10,
+      padding: 14,
+      marginBottom: 8,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
     },
     cardColumn: { flex: 1, marginBottom: 0 },
@@ -93,15 +87,15 @@ export default function BranchesScreen() {
     empty: { textAlign: 'center' as const, color: colors.dim, marginTop: 40, fontSize: 15 },
     fab: {
       position: 'absolute' as const,
-      width: 56,
-      height: 56,
-      borderRadius: 28,
+      width: 48,
+      height: 48,
+      borderRadius: 14,
       backgroundColor: colors.accent,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
-      elevation: 4,
+      elevation: 2,
     },
-    fabText: { color: '#fff', fontSize: 28, fontWeight: '300' as const, marginTop: -2 },
+    fabText: { color: '#fff', fontSize: 26, fontWeight: '300' as const, marginTop: -2 },
   }));
 
   const owner = isGymOwner(user?.role);
@@ -143,7 +137,7 @@ export default function BranchesScreen() {
               onEdit={() => router.push(`/branch/${item.id}/edit`)}
             />
           )}
-          contentContainerStyle={[styles.list, { paddingHorizontal: pagePadding, paddingTop: pagePadding }]}
+          contentContainerStyle={[styles.list, { paddingHorizontal: pagePadding }]}
           refreshControl={
             <RefreshControl refreshing={query.isRefetching} onRefresh={() => query.refetch()} tintColor={c.accentText} />
           }

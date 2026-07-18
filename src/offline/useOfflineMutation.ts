@@ -1,4 +1,6 @@
 import { useMutation, type UseMutationOptions } from '@tanstack/react-query';
+import { useAuth } from '@/src/auth/AuthContext';
+import i18n from '@/src/i18n';
 import { createOfflineJobId, enqueueOfflineJob } from '@/src/offline/queue';
 import { useNetwork } from '@/src/offline/NetworkProvider';
 import {
@@ -25,6 +27,7 @@ export function useOfflineMutation<TData, TVariables>({
   mutationFn,
   ...options
 }: OfflineMutationOptions<TData, TVariables>) {
+  const { user } = useAuth();
   const { isOnline, refreshPendingCount } = useNetwork();
 
   return useMutation<TData | OfflineQueued, Error, TVariables>({
@@ -36,10 +39,10 @@ export function useOfflineMutation<TData, TVariables>({
 
       const payload = variables as Record<string, unknown>;
       if (jobType === 'enroll' && enrollPayloadHasPhoto(payload)) {
-        throw new Error('Connect to the internet to enroll a member with a photo.');
+        throw new Error(i18n.t('offline.photoEnrollRequiresOnline'));
       }
       if (jobType === 'update-member' && enrollPayloadHasPhoto(payload)) {
-        throw new Error('Connect to the internet to update a member photo.');
+        throw new Error(i18n.t('offline.photoUpdateRequiresOnline'));
       }
 
       const resolvedMemberId = typeof memberId === 'function' ? memberId(variables) : memberId;
@@ -49,6 +52,7 @@ export function useOfflineMutation<TData, TVariables>({
         id: createOfflineJobId(),
         type: jobType,
         payload,
+        gymId: typeof user?.gym_id === 'number' ? user.gym_id : undefined,
         memberId: resolvedMemberId,
         entityId: resolvedEntityId,
         createdAt: new Date().toISOString(),

@@ -23,25 +23,26 @@ function computeOnline(state: { isConnected: boolean | null; isInternetReachable
 }
 
 export function NetworkProvider({ children }: { children: React.ReactNode }) {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+  const gymId = user?.gym_id ?? null;
   const [isOnline, setIsOnline] = useState(true);
   const [pendingCount, setPendingCount] = useState(0);
   const [failedCount, setFailedCount] = useState(0);
   const [lastError, setLastError] = useState<string | undefined>();
 
   const refreshPendingCount = useCallback(async () => {
-    const summary = await getOfflineQueueSummary();
+    const summary = await getOfflineQueueSummary(gymId);
     setPendingCount(summary.pending);
     setFailedCount(summary.failed);
     setLastError(summary.lastError);
-  }, []);
+  }, [gymId]);
 
   const syncNow = useCallback(async () => {
     if (!token || !isOnline) return 0;
-    const synced = await processOfflineQueue(token, queryClient);
+    const synced = await processOfflineQueue(token, queryClient, gymId);
     await refreshPendingCount();
     return synced;
-  }, [token, isOnline, refreshPendingCount]);
+  }, [token, isOnline, gymId, refreshPendingCount]);
 
   useEffect(() => {
     onlineManager.setEventListener((setOnline) =>

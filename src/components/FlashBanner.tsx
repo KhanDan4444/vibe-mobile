@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useRef } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { AppText as Text } from '@/src/components/AppText';
 import Animated, {
   Easing,
   runOnJS,
@@ -9,7 +10,6 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/src/context/PreferencesContext';
 
@@ -27,39 +27,32 @@ type FlashBannerProps = {
   onDismiss: () => void;
 };
 
-const DISMISS_MS = 3800;
+/** Short enough to read; long enough to notice without blocking the screen. */
+const DISMISS_MS = 2800;
 
-function variantStyles(variant: FlashVariant, isDark: boolean) {
+function variantAccent(variant: FlashVariant) {
   if (variant === 'offline') {
-    return {
-      accent: '#fbbf24',
-      accentSoft: isDark ? 'rgba(251, 191, 36, 0.16)' : 'rgba(251, 191, 36, 0.12)',
-      border: isDark ? 'rgba(251, 191, 36, 0.45)' : 'rgba(217, 119, 6, 0.35)',
-      icon: 'cloud-offline-outline' as const,
-    };
+    return { accent: '#fbbf24', icon: 'cloud-offline-outline' as const };
   }
-  return {
-    accent: '#34d399',
-    accentSoft: isDark ? 'rgba(52, 211, 153, 0.16)' : 'rgba(5, 150, 105, 0.1)',
-    border: isDark ? 'rgba(52, 211, 153, 0.42)' : 'rgba(5, 150, 105, 0.28)',
-    icon: 'checkmark-circle' as const,
-  };
+  return { accent: '#34d399', icon: 'checkmark-circle' as const };
 }
 
+/**
+ * Compact bottom snackbar — sits above the system nav (not under the status bar),
+ * so gesture / notification chrome does not cover it.
+ */
 export function FlashBanner({ toast, onDismiss }: FlashBannerProps) {
-  const { t } = useTranslation();
-  const { colors: c, isDark } = useTheme();
+  const { isDark } = useTheme();
   const insets = useSafeAreaInsets();
-  const translateY = useSharedValue(24);
+  const translateY = useSharedValue(28);
   const opacity = useSharedValue(0);
-  const progress = useSharedValue(1);
   const dismissing = useRef(false);
 
   const dismissAnimated = () => {
     if (dismissing.current) return;
     dismissing.current = true;
-    translateY.value = withTiming(18, { duration: 180, easing: Easing.in(Easing.quad) });
-    opacity.value = withTiming(0, { duration: 180 }, (finished) => {
+    translateY.value = withTiming(20, { duration: 160, easing: Easing.in(Easing.quad) });
+    opacity.value = withTiming(0, { duration: 160 }, (finished) => {
       if (finished) runOnJS(onDismiss)();
     });
   };
@@ -67,17 +60,14 @@ export function FlashBanner({ toast, onDismiss }: FlashBannerProps) {
   useEffect(() => {
     if (!toast) {
       dismissing.current = false;
-      translateY.value = 24;
+      translateY.value = 28;
       opacity.value = 0;
-      progress.value = 1;
       return undefined;
     }
 
     dismissing.current = false;
-    translateY.value = withSpring(0, { damping: 16, stiffness: 240, mass: 0.8 });
-    opacity.value = withTiming(1, { duration: 220 });
-    progress.value = 1;
-    progress.value = withTiming(0, { duration: DISMISS_MS, easing: Easing.linear });
+    translateY.value = withSpring(0, { damping: 18, stiffness: 280, mass: 0.7 });
+    opacity.value = withTiming(1, { duration: 180 });
 
     const timer = setTimeout(dismissAnimated, DISMISS_MS);
     return () => clearTimeout(timer);
@@ -88,58 +78,52 @@ export function FlashBanner({ toast, onDismiss }: FlashBannerProps) {
     transform: [{ translateY: translateY.value }],
   }));
 
-  const progressStyle = useAnimatedStyle(() => ({
-    width: `${Math.max(progress.value, 0) * 100}%`,
-  }));
-
   if (!toast) return null;
 
   const variant = toast.variant ?? 'success';
-  const palette = variantStyles(variant, isDark);
-  const iconName = toast.icon ?? palette.icon;
+  const { accent, icon: fallbackIcon } = variantAccent(variant);
+  const iconName = toast.icon ?? fallbackIcon;
+  // Success: title-only keeps the bar slim. Offline keeps subtitle for context.
+  const showSubtitle = variant === 'offline' && Boolean(toast.subtitle);
 
   return (
-    <View pointerEvents="box-none" style={[styles.wrap, { top: insets.top + 10 }]}>
+    <View
+      pointerEvents="box-none"
+      style={[
+        styles.wrap,
+        {
+          // Clear Android/iOS system nav; also clears typical tab bar height.
+          bottom: Math.max(insets.bottom, 10) + 56,
+        },
+      ]}
+    >
       <Animated.View style={shellStyle}>
-        <View
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={toast.title}
+          onPress={dismissAnimated}
           style={[
-            styles.card,
+            styles.bar,
             {
-              backgroundColor: c.card,
-              borderColor: palette.border,
-              shadowColor: isDark ? '#000' : '#0f172a',
+              backgroundColor: isDark ? '#1c2330' : '#0f172a',
+              borderColor: isDark ? 'rgba(148,163,184,0.18)' : 'rgba(15,23,42,0.08)',
+              shadowColor: '#000',
             },
           ]}
         >
-          <View style={[styles.iconWrap, { backgroundColor: palette.accentSoft }]}>
-            <Ionicons name={iconName} size={22} color={palette.accent} />
-          </View>
-
+          <View style={[styles.accent, { backgroundColor: accent }]} />
+          <Ionicons name={iconName} size={18} color={accent} style={styles.icon} />
           <View style={styles.copy}>
-            <Text style={[styles.title, { color: c.text }]} numberOfLines={1}>
+            <Text style={[styles.title, { color: '#f8fafc' }]} numberOfLines={1}>
               {toast.title}
             </Text>
-            {toast.subtitle ? (
-              <Text style={[styles.subtitle, { color: c.muted }]} numberOfLines={2}>
+            {showSubtitle ? (
+              <Text style={styles.subtitle} numberOfLines={1}>
                 {toast.subtitle}
               </Text>
             ) : null}
           </View>
-
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('common.dismiss')}
-            hitSlop={10}
-            onPress={dismissAnimated}
-            style={styles.closeBtn}
-          >
-            <Ionicons name="close" size={18} color={c.dim} />
-          </Pressable>
-
-          <View style={[styles.progressTrack, { backgroundColor: palette.accentSoft }]}>
-            <Animated.View style={[styles.progressFill, { backgroundColor: palette.accent }, progressStyle]} />
-          </View>
-        </View>
+        </Pressable>
       </Animated.View>
     </View>
   );
@@ -151,58 +135,44 @@ const styles = StyleSheet.create({
     left: 16,
     right: 16,
     zIndex: 200,
+    elevation: 20,
   },
-  card: {
+  bar: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-    paddingLeft: 14,
-    paddingRight: 12,
-    paddingTop: 14,
-    paddingBottom: 16,
+    minHeight: 44,
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingVertical: 10,
+    paddingRight: 14,
     overflow: 'hidden',
-    shadowOpacity: 0.16,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 8,
+    shadowOpacity: 0.28,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
   },
-  iconWrap: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: 'center',
-    justifyContent: 'center',
+  accent: {
+    width: 3,
+    alignSelf: 'stretch',
+    marginRight: 10,
+    borderTopRightRadius: 2,
+    borderBottomRightRadius: 2,
+  },
+  icon: {
+    marginRight: 8,
   },
   copy: {
     flex: 1,
     minWidth: 0,
-    paddingBottom: 2,
   },
   title: {
-    fontSize: 15,
-    fontWeight: '700',
-    letterSpacing: 0.1,
+    fontSize: 14,
+    fontWeight: '600',
   },
   subtitle: {
-    marginTop: 3,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  closeBtn: {
-    alignSelf: 'flex-start',
-    padding: 2,
-  },
-  progressTrack: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 3,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
+    marginTop: 2,
+    fontSize: 12,
+    lineHeight: 16,
+    color: '#94a3b8',
   },
 });

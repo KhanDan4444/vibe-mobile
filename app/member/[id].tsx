@@ -1,25 +1,22 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, Alert, Pressable, ScrollView, View } from 'react-native';
+import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
 import { deleteMember, fetchMember, fetchMemberPayments } from '@/src/api/members';
+import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { MemberPhoto } from '@/src/components/MemberPhoto';
 import { MemberActionsBar } from '@/src/components/MemberActionsBar';
 import { ResponsiveContent } from '@/src/components/ResponsiveContent';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
-import { useTheme } from '@/src/context/PreferencesContext';
+import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import type { ThemeColors } from '@/src/theme/tokens';
+import { appTextStyle } from '@/src/theme/typography';
 import { formatDisplayDate } from '@/src/utils/date';
 import { paymentMethodBadgeStyle } from '@/src/constants/payments';
 import { paymentSourceLabel } from '@/src/utils/paymentSources';
@@ -33,11 +30,21 @@ function statusColor(status: string, c: ThemeColors) {
   return c.muted;
 }
 
-function Row({ label, value, styles }: { label: string; value: string; styles: ReturnType<typeof buildMemberStyles> }) {
+function Row({
+  label,
+  value,
+  styles,
+  language,
+}: {
+  label: string;
+  value: string;
+  styles: ReturnType<typeof buildMemberStyles>;
+  language: 'en' | 'am';
+}) {
   return (
     <View style={styles.row}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      <Text style={styles.rowValue}>{value}</Text>
+      <Text style={appTextStyle(language, styles.rowLabel)}>{label}</Text>
+      <Text style={appTextStyle(language, styles.rowValue)}>{value}</Text>
     </View>
   );
 }
@@ -61,10 +68,10 @@ function buildMemberStyles(c: ThemeColors) {
     phone: { marginTop: 4, fontSize: 15, color: c.muted },
     status: { marginTop: 8, fontSize: 13, fontWeight: '700' as const, textTransform: 'capitalize' as const },
     unpaid: { marginTop: 6, fontSize: 12, fontWeight: '700' as const, color: '#fb923c' },
-    sectionTitle: { fontSize: 14, fontWeight: '700' as const, color: c.muted, marginBottom: 10, textTransform: 'uppercase' as const },
-    row: { flexDirection: 'row' as const, justifyContent: 'space-between' as const, paddingVertical: 6 },
-    rowLabel: { color: c.dim, fontSize: 14 },
-    rowValue: { color: c.text, fontSize: 14, fontWeight: '500' as const },
+    sectionTitle: { fontSize: 14, fontWeight: '700' as const, color: c.muted, marginBottom: 10 },
+    row: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, justifyContent: 'space-between' as const, paddingVertical: 8, gap: 12 },
+    rowLabel: { color: c.dim, fontSize: 14, flexShrink: 0 },
+    rowValue: { color: c.text, fontSize: 14, fontWeight: '500' as const, flex: 1, textAlign: 'right' as const },
     actions: { gap: 10, marginBottom: 12 },
     actionBtn: {
       backgroundColor: c.accent,
@@ -105,10 +112,13 @@ export default function MemberDetailScreen() {
   const { token, user } = useAuth();
   const { readOnly } = useGymReadOnly();
   const { colors: c } = useTheme();
+  const { language } = usePreferences();
   const { t } = useTranslation();
   const { pagePadding, isLargeTablet } = useResponsiveLayout();
   const styles = useThemedStyles(buildMemberStyles);
   const canViewMember = Boolean(user && hasGymPortalAccess(user.role));
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const memberQuery = useQuery({
     queryKey: ['member', memberId],
@@ -157,34 +167,28 @@ export default function MemberDetailScreen() {
   const payments = paymentsQuery.data ?? [];
   const owner = Boolean(user && isGymOwner(user.role));
 
-  const confirmDeleteMember = () => {
-    Alert.alert(
-      t('member.deleteTitle'),
-      t('member.deleteBody', { name: member.name }),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('member.delete'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteMember(token!, member.id);
-              queryClient.invalidateQueries({ queryKey: ['members'] });
-              queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-              router.replace('/(tabs)/members');
-            } catch (e) {
-              Alert.alert(t('common.error'), e instanceof Error ? e.message : t('member.deleteFailed'));
-            }
-          },
-        },
-      ]
-    );
+  const confirmDeleteMember = () => setDeleteOpen(true);
+
+  const runDeleteMember = async () => {
+    setDeleting(true);
+    try {
+      await deleteMember(token!, member.id);
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      setDeleteOpen(false);
+      router.replace('/(tabs)/members');
+    } catch (e) {
+      setDeleteOpen(false);
+      Alert.alert(t('common.error'), e instanceof Error ? e.message : t('member.deleteFailed'));
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
     <TabScreenFrame>
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <ResponsiveContent style={{ paddingHorizontal: pagePadding, paddingTop: pagePadding }}>
+      <ResponsiveContent style={{ paddingHorizontal: pagePadding }}>
       <View style={isLargeTablet ? { flexDirection: 'row', gap: 12, alignItems: 'flex-start' } : undefined}>
       <View style={[styles.card, isLargeTablet && { flex: 1 }]}>
         <View style={styles.headerRow}>
@@ -199,20 +203,20 @@ export default function MemberDetailScreen() {
             />
           ) : null}
           <View style={styles.headerText}>
-            <Text style={styles.name}>{member.name}</Text>
-            <Text style={styles.phone}>{member.phone || '—'}</Text>
-            <Text style={[styles.status, { color: statusColor(member.status, c) }]}>{member.status}</Text>
-            {member.is_unpaid ? <Text style={styles.unpaid}>{t('member.paymentRequired')}</Text> : null}
+            <Text style={appTextStyle(language, styles.name)}>{member.name}</Text>
+            <Text style={appTextStyle(language, styles.phone)}>{member.phone || '—'}</Text>
+            <Text style={appTextStyle(language, { ...styles.status, color: statusColor(member.status, c) })}>{member.status}</Text>
+            {member.is_unpaid ? <Text style={appTextStyle(language, styles.unpaid)}>{t('member.paymentRequired')}</Text> : null}
           </View>
         </View>
       </View>
 
       <View style={[styles.card, isLargeTablet && { flex: 1 }]}>
-        <Text style={styles.sectionTitle}>{t('member.membership')}</Text>
-        <Row label={t('member.plan')} value={member.plan_name || '—'} styles={styles} />
-        <Row label={t('member.start')} value={formatDisplayDate(member.start_date)} styles={styles} />
-        <Row label={t('member.end')} value={formatDisplayDate(member.end_date)} styles={styles} />
-        {member.branch_name ? <Row label={t('member.branch')} value={member.branch_name} styles={styles} /> : null}
+        <Text style={appTextStyle(language, styles.sectionTitle)}>{t('member.membership')}</Text>
+        <Row label={t('member.plan')} value={member.plan_name || '—'} styles={styles} language={language} />
+        <Row label={t('member.start')} value={formatDisplayDate(member.start_date)} styles={styles} language={language} />
+        <Row label={t('member.end')} value={formatDisplayDate(member.end_date)} styles={styles} language={language} />
+        {member.branch_name ? <Row label={t('member.branch')} value={member.branch_name} styles={styles} language={language} /> : null}
       </View>
       </View>
 
@@ -223,17 +227,16 @@ export default function MemberDetailScreen() {
         onRenew={() => router.push(`/renew/${member.id}`)}
         onPayment={() => router.push(`/payment/${member.id}`)}
         onChangePlan={() => router.push(`/change-plan/${member.id}`)}
-        onTransfer={() => router.push(`/transfer/${member.id}`)}
         onEdit={() => router.push(`/member/${member.id}/edit`)}
         onDelete={confirmDeleteMember}
       />
 
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>{t('member.paymentHistory')}</Text>
+        <Text style={appTextStyle(language, styles.sectionTitle)}>{t('member.paymentHistory')}</Text>
         {paymentsQuery.isLoading ? (
           <ActivityIndicator color={c.accentText} style={{ marginVertical: 12 }} />
         ) : payments.length === 0 ? (
-          <Text style={styles.muted}>{t('member.noPayments')}</Text>
+          <Text style={appTextStyle(language, styles.muted)}>{t('member.noPayments')}</Text>
         ) : (
           payments.map((p) => {
             const source = p.source ? paymentSourceLabel(p.source) : null;
@@ -241,14 +244,14 @@ export default function MemberDetailScreen() {
             return (
             <View key={p.id} style={styles.paymentRow}>
               <View style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
-                <Text style={styles.paymentAmount}>{Number(p.amount).toLocaleString()} ETB</Text>
-                <Text style={styles.paymentMeta}>
+                <Text style={appTextStyle(language, styles.paymentAmount)}>{Number(p.amount).toLocaleString()} ETB</Text>
+                <Text style={appTextStyle(language, styles.paymentMeta)}>
                   {formatDisplayDate(p.date)}
                   {source ? ` · ${source}` : ''}
                 </Text>
               </View>
               <View style={[styles.methodBadge, { backgroundColor: badge.bg }]}>
-                <Text style={[styles.methodBadgeText, { color: badge.text }]}>{p.method}</Text>
+                <Text style={appTextStyle(language, { ...styles.methodBadgeText, color: badge.text })}>{p.method}</Text>
               </View>
             </View>
             );
@@ -257,6 +260,17 @@ export default function MemberDetailScreen() {
       </View>
       </ResponsiveContent>
     </ScrollView>
+
+    <ConfirmDialog
+      visible={deleteOpen}
+      title={t('member.deleteTitle')}
+      message={t('member.deleteBody', { name: member.name })}
+      confirmLabel={t('member.delete')}
+      destructive
+      confirmLoading={deleting}
+      onCancel={() => setDeleteOpen(false)}
+      onConfirm={() => void runDeleteMember()}
+    />
     </TabScreenFrame>
   );
 }

@@ -1,18 +1,12 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Pressable,
-  RefreshControl,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { AppText as Text } from '@/src/components/AppText';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchTeam, updateStaff } from '@/src/api/team';
 import { ActionOverflowMenu } from '@/src/components/ActionOverflowMenu';
+import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
@@ -37,10 +31,10 @@ function StaffCard({
   const styles = useThemedStyles((c) => ({
     card: {
       backgroundColor: c.card,
-      borderRadius: 12,
-      padding: 16,
-      marginBottom: 10,
-      borderWidth: 1,
+      borderRadius: 10,
+      padding: 14,
+      marginBottom: 8,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
     },
     cardColumn: { flex: 1, marginBottom: 0 },
@@ -115,18 +109,20 @@ export default function TeamScreen() {
     empty: { textAlign: 'center' as const, color: colors.dim, marginTop: 40, fontSize: 15 },
     fab: {
       position: 'absolute' as const,
-      width: 56,
-      height: 56,
-      borderRadius: 28,
+      width: 48,
+      height: 48,
+      borderRadius: 14,
       backgroundColor: colors.accent,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
+      elevation: 2,
     },
-    fabText: { color: '#fff', fontSize: 28, fontWeight: '300' as const, marginTop: -2 },
+    fabText: { color: '#fff', fontSize: 26, fontWeight: '300' as const, marginTop: -2 },
   }));
 
   const readOnly = Boolean(subscription?.readOnly);
   const canManageTeam = Boolean(user && isGymOwner(user.role));
+  const [toggleTarget, setToggleTarget] = useState<StaffRow | null>(null);
 
   const query = useQuery({
     queryKey: ['team'],
@@ -137,8 +133,14 @@ export default function TeamScreen() {
   const toggleMutation = useMutation({
     mutationFn: ({ id, is_active }: { id: number; is_active: boolean }) =>
       updateStaff(token!, id, { is_active }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['team'] }),
-    onError: (e: Error) => Alert.alert(t('common.error'), e.message),
+    onSuccess: () => {
+      setToggleTarget(null);
+      queryClient.invalidateQueries({ queryKey: ['team'] });
+    },
+    onError: (e: Error) => {
+      setToggleTarget(null);
+      Alert.alert(t('common.error'), e.message);
+    },
   });
 
   const staff = query.data?.staff ?? [];
@@ -147,21 +149,8 @@ export default function TeamScreen() {
     return <Redirect href="/(tabs)/more" />;
   }
 
-  const toggleActive = (member: StaffRow) => {
-    const next = !member.is_active;
-    Alert.alert(
-      next ? t('team.enableTitle') : t('team.disableTitle'),
-      next ? t('team.enableBody', { name: member.name }) : t('team.disableBody', { name: member.name }),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: next ? t('team.enable') : t('team.disable'),
-          style: next ? 'default' : 'destructive',
-          onPress: () => toggleMutation.mutate({ id: member.id, is_active: next }),
-        },
-      ]
-    );
-  };
+  const requestToggle = (member: StaffRow) => setToggleTarget(member);
+  const toggleNextActive = toggleTarget ? !toggleTarget.is_active : false;
 
   return (
     <TabScreenFrame>
@@ -186,7 +175,7 @@ export default function TeamScreen() {
               member={item}
               multiColumn={listColumns > 1}
               onEdit={() => router.push(`/team/${item.id}/edit`)}
-              onToggle={() => toggleActive(item)}
+              onToggle={() => requestToggle(item)}
             />
           )}
           contentContainerStyle={[styles.list, { paddingHorizontal: pagePadding }]}
@@ -202,6 +191,24 @@ export default function TeamScreen() {
           <Text style={styles.fabText}>+</Text>
         </Pressable>
       ) : null}
+
+      <ConfirmDialog
+        visible={Boolean(toggleTarget)}
+        title={toggleNextActive ? t('team.enableTitle') : t('team.disableTitle')}
+        message={
+          toggleNextActive
+            ? t('team.enableBody', { name: toggleTarget?.name ?? '' })
+            : t('team.disableBody', { name: toggleTarget?.name ?? '' })
+        }
+        confirmLabel={toggleNextActive ? t('team.enable') : t('team.disable')}
+        destructive={!toggleNextActive}
+        confirmLoading={toggleMutation.isPending}
+        onCancel={() => setToggleTarget(null)}
+        onConfirm={() => {
+          if (!toggleTarget) return;
+          toggleMutation.mutate({ id: toggleTarget.id, is_active: !toggleTarget.is_active });
+        }}
+      />
     </View>
     </TabScreenFrame>
   );

@@ -1,7 +1,9 @@
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { AppText as Text } from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useNotificationInbox } from '@/src/notifications/NotificationInboxContext';
@@ -49,7 +51,7 @@ function NotificationRow({
       style={[
         styles.row,
         { backgroundColor: c.bg, borderColor: c.border },
-        !isRead && { borderColor: 'rgba(129,140,248,0.45)', backgroundColor: c.accentSoft },
+        !isRead && { borderColor: c.accentText, backgroundColor: c.accentSoft },
       ]}
     >
       <Pressable style={styles.rowTap} onPress={onOpenMember}>
@@ -66,7 +68,7 @@ function NotificationRow({
           </Text>
           {action ? (
             <Pressable
-              style={[styles.actionBtn, { backgroundColor: c.accentSoft, borderColor: 'rgba(129,140,248,0.4)' }]}
+              style={[styles.actionBtn, { backgroundColor: c.accentSoft, borderColor: c.accentText }]}
               onPress={(e) => {
                 e.stopPropagation?.();
                 onAction();
@@ -86,6 +88,7 @@ function NotificationRow({
 
 export function NotificationsSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { readOnly } = useGymReadOnly();
   const { colors: c } = useTheme();
   const { t } = useTranslation();
@@ -108,7 +111,7 @@ export function NotificationsSheet({ visible, onClose }: { visible: boolean; onC
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} />
-      <View style={[styles.sheet, { backgroundColor: c.card }]}>
+      <View style={[styles.sheet, { backgroundColor: c.card, paddingBottom: Math.max(insets.bottom, 16) }]}>
         <View style={[styles.handle, { backgroundColor: c.border }]} />
         <View style={[styles.header, { borderBottomColor: c.border }]}>
           <View>
@@ -155,7 +158,6 @@ const styles = StyleSheet.create({
     maxHeight: '78%',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    paddingBottom: 24,
   },
   handle: {
     alignSelf: 'center',

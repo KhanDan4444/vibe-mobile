@@ -10,15 +10,7 @@ export function paymentSourceLabel(source?: string | null) {
   return SOURCE_LABELS[source] ?? 'Recorded';
 }
 
-export function paymentSourceColor(source?: string | null) {
-  switch (source) {
-    case 'enroll':
-      return '#a78bfa';
-    case 'renew':
-      return '#38bdf8';
-    case 'change_plan':
-      return '#fbbf24';
-    default:
-      return '#94a3b8';
-  }
+/** Quiet muted tone for all sources — text carries meaning, not color. */
+export function paymentSourceColor(_source?: string | null) {
+  return '#94a3b8';
 }

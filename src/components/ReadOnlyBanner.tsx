@@ -1,47 +1,56 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from '@/src/context/PreferencesContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 
 export function ReadOnlyBanner() {
   const { t } = useTranslation();
+  const { colors: c, isDark } = useTheme();
   const { readOnly, subscriptionReadOnly, branchReadOnly, selectedBranch } = useGymReadOnly();
 
   if (!readOnly) return null;
 
+  const bannerStyle = [
+    styles.banner,
+    {
+      backgroundColor: isDark ? 'rgba(251, 191, 36, 0.16)' : 'rgba(217, 119, 6, 0.12)',
+      borderColor: c.warning,
+    },
+  ];
+  const titleStyle = [styles.title, { color: c.warning }];
+  const bodyStyle = [styles.body, { color: c.warning }];
+
   if (branchReadOnly && selectedBranch && !subscriptionReadOnly) {
     return (
-      <View style={styles.banner}>
-        <Text style={styles.title}>{t('alerts.branchReadOnlyTitle')}</Text>
-        <Text style={styles.body}>{t('alerts.branchReadOnlyBody', { name: selectedBranch.name })}</Text>
+      <View style={bannerStyle}>
+        <Text style={titleStyle}>{t('alerts.branchReadOnlyTitle')}</Text>
+        <Text style={bodyStyle}>{t('alerts.branchReadOnlyBody', { name: selectedBranch.name })}</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.banner}>
-      <Text style={styles.body}>{t('dashboard.readOnlyBanner')}</Text>
+    <View style={bannerStyle}>
+      <Text style={bodyStyle}>{t('dashboard.readOnlyBanner')}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   banner: {
-    marginTop: 12,
-    backgroundColor: 'rgba(251, 191, 36, 0.16)',
+    marginBottom: 12,
     borderRadius: 10,
     padding: 12,
     borderWidth: 1,
-    borderColor: 'rgba(251, 191, 36, 0.35)',
   },
   title: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#92400e',
     marginBottom: 4,
   },
   body: {
     fontSize: 13,
     lineHeight: 18,
-    color: '#92400e',
   },
 });

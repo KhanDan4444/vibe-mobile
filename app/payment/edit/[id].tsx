@@ -1,10 +1,12 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView } from 'react-native';
+import { AppText as Text } from '@/src/components/AppText';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchMember } from '@/src/api/members';
 import { deletePayment, updatePayment } from '@/src/api/payments';
+import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { DateField } from '@/src/components/DateField';
 import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
 import { ErrorBanner, Field, Label, PrimaryButton, Screen } from '@/src/components/Form';
@@ -40,6 +42,7 @@ export default function EditPaymentScreen() {
     return 'Cash';
   });
   const [error, setError] = useState('');
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const styles = useThemedStyles((colors) => ({
     content: { padding: 16, paddingBottom: 40 },
     memberName: { fontSize: 18, fontWeight: '600' as const, color: colors.text, marginBottom: 8 },
@@ -83,29 +86,22 @@ export default function EditPaymentScreen() {
   const deleteMutation = useMutation({
     mutationFn: () => deletePayment(token!, paymentId),
     onSuccess: () => {
+      setDeleteOpen(false);
       queryClient.invalidateQueries({ queryKey: ['payments'] });
       queryClient.invalidateQueries({ queryKey: ['member-payments', memberId] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       router.back();
     },
-    onError: (e: Error) => setError(e.message),
+    onError: (e: Error) => {
+      setDeleteOpen(false);
+      setError(e.message);
+    },
   });
 
   const canSubmit = useMemo(
     () => Number(amount) >= 0 && Number.isFinite(Number(amount)) && paymentDate.trim().length > 0,
     [amount, paymentDate]
   );
-
-  const confirmDelete = () => {
-    Alert.alert(t('paymentEdit.deleteTitle'), t('paymentEdit.deleteBody'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('member.delete'),
-        style: 'destructive',
-        onPress: () => deleteMutation.mutate(),
-      },
-    ]);
-  };
 
   if (!canManagePayment) {
     return <Redirect href="/login" />;
@@ -149,11 +145,22 @@ export default function EditPaymentScreen() {
             disabled={!canSubmit}
           />
 
-          <Pressable style={styles.deleteBtn} onPress={confirmDelete} disabled={deleteMutation.isPending}>
+          <Pressable style={styles.deleteBtn} onPress={() => setDeleteOpen(true)} disabled={deleteMutation.isPending}>
             <Text style={styles.deleteText}>{t('paymentEdit.delete')}</Text>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <ConfirmDialog
+        visible={deleteOpen}
+        title={t('paymentEdit.deleteTitle')}
+        message={t('paymentEdit.deleteBody')}
+        confirmLabel={t('paymentEdit.delete')}
+        destructive
+        confirmLoading={deleteMutation.isPending}
+        onCancel={() => setDeleteOpen(false)}
+        onConfirm={() => deleteMutation.mutate()}
+      />
     </Screen>
   );
 }

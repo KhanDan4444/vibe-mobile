@@ -39,17 +39,30 @@ function daysBetween(from: string, to: string): number {
   return Math.max(0, Math.round((b.getTime() - a.getTime()) / 86400000));
 }
 
+export type ChangePlanAmountHint = {
+  suggestedAmount: number;
+  credit: number;
+  remainingDays: number;
+  totalDays: number;
+  newPlanPrice: number;
+  isDowngrade: boolean;
+  prePayment?: boolean;
+  freshTerm?: boolean;
+  keepTermEnd?: boolean;
+};
+
 export function isMemberPlanDowngrade(currentPlan: PlanRow | null, newPlan: PlanRow | null): boolean {
   if (!currentPlan || !newPlan) return false;
   return Number(newPlan.price) <= Number(currentPlan.price);
 }
 
+/** Suggested change-plan payment — mirrors web memberRenew.suggestChangePlanAmount. */
 export function suggestChangePlanAmount(
   member: MemberRow | null,
   currentPlan: PlanRow | null,
   newPlan: PlanRow | null,
   options: { customTermStart?: boolean; startDate?: string } = {}
-) {
+): ChangePlanAmountHint | null {
   if (!member || !currentPlan || !newPlan) return null;
 
   const newPrice = Number(newPlan.price);
@@ -62,6 +75,9 @@ export function suggestChangePlanAmount(
     return {
       suggestedAmount: Math.round(newPrice * 100) / 100,
       credit: 0,
+      remainingDays: 0,
+      totalDays: 0,
+      newPlanPrice: newPrice,
       isDowngrade: false,
       prePayment: true,
     };
@@ -71,6 +87,9 @@ export function suggestChangePlanAmount(
     return {
       suggestedAmount: Math.round(newPrice * 100) / 100,
       credit: 0,
+      remainingDays: 0,
+      totalDays: 0,
+      newPlanPrice: newPrice,
       isDowngrade: Number(newPlan.price) <= Number(currentPlan.price),
       freshTerm: true,
     };
@@ -90,14 +109,29 @@ export function suggestChangePlanAmount(
   const isDowngrade = newPrice <= currentPrice;
 
   if (isDowngrade) {
-    return { suggestedAmount: 0, credit: 0, isDowngrade: true };
+    return {
+      suggestedAmount: 0,
+      credit: 0,
+      remainingDays,
+      totalDays,
+      newPlanPrice: newPrice,
+      isDowngrade: true,
+      keepTermEnd: true,
+    };
   }
 
   const rawCredit = currentPrice * (remainingDays / totalDays);
   const credit = Math.min(rawCredit, Math.max(0, newPrice - 0.01));
   const suggestedAmount = Math.max(0.01, Math.round((newPrice - credit) * 100) / 100);
 
-  return { suggestedAmount, credit: Math.round(credit * 100) / 100, isDowngrade: false };
+  return {
+    suggestedAmount,
+    credit: Math.round(credit * 100) / 100,
+    remainingDays,
+    totalDays,
+    newPlanPrice: newPrice,
+    isDowngrade: false,
+  };
 }
 
 export function previewMemberTermEnd({

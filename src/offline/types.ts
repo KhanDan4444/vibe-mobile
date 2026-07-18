@@ -17,6 +17,8 @@ export interface OfflineJob {
   id: string;
   type: OfflineJobType;
   payload: Record<string, unknown>;
+  /** Gym that owned the session when the job was queued — used to survive logout. */
+  gymId?: number;
   memberId?: number;
   entityId?: number;
   createdAt: string;

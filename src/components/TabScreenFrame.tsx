@@ -4,6 +4,7 @@ import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 
 /**
  * Centers tab content on tablets with a readable max width; phones stay full-bleed.
+ * Applies a consistent top inset (same as horizontal page padding) under the nav header.
  */
 export function TabScreenFrame({
   children,
@@ -12,13 +13,14 @@ export function TabScreenFrame({
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
-  const { isTablet, contentMaxWidth } = useResponsiveLayout();
+  const { isTablet, contentMaxWidth, pagePadding } = useResponsiveLayout();
 
   return (
     <View style={[styles.outer, style]}>
       <View
         style={[
           styles.inner,
+          { paddingTop: pagePadding },
           isTablet && { maxWidth: contentMaxWidth },
         ]}
       >

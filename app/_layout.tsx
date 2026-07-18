@@ -11,12 +11,14 @@ import { AuthProvider, useAuth } from '@/src/auth/AuthContext';
 import { BranchProvider } from '@/src/context/BranchContext';
 import { FlashProvider } from '@/src/context/FlashContext';
 import { GymBootProvider } from '@/src/context/GymBootContext';
-import { PreferencesProvider, useTheme } from '@/src/context/PreferencesContext';
+import { PreferencesProvider, usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { NotificationInboxProvider } from '@/src/notifications/NotificationInboxContext';
 import { NetworkProvider } from '@/src/offline/NetworkProvider';
+import { OfflineBanner } from '@/src/components/OfflineBanner';
 import { SubscriptionLockout } from '@/src/components/SubscriptionLockout';
 import { PERSISTED_QUERY_KEYS, queryClient, QUERY_CACHE_STORAGE_KEY } from '@/src/query/client';
 import { SystemChrome } from '@/src/theme/SystemChrome';
+import { DM_SANS_SEMI, NOTO_ETHIOPIC, lineHeightFor } from '@/src/theme/typography';
 import { useAppFonts } from '@/src/theme/useAppFonts';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -70,15 +72,19 @@ export default function RootLayout() {
 }
 
 function RootNavigator() {
-  const { loading, subscription } = useAuth();
+  const { loading, subscription, user } = useAuth();
   const { colors: c } = useTheme();
+  const { language } = usePreferences();
   const { t } = useTranslation();
 
   const stackScreen = {
     headerShown: true as const,
     headerStyle: { backgroundColor: c.headerBg },
     headerTintColor: c.text,
-    headerTitleStyle: { fontWeight: '600' as const },
+    headerTitleStyle:
+      language === 'am'
+        ? ({ fontFamily: NOTO_ETHIOPIC, fontWeight: '600' as const, lineHeight: lineHeightFor(17) })
+        : ({ fontFamily: DM_SANS_SEMI, fontWeight: '600' as const }),
   };
 
   if (loading) {
@@ -101,6 +107,7 @@ function RootNavigator() {
   return (
     <>
       <SystemChrome />
+      {user ? <OfflineBanner /> : null}
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="login" />

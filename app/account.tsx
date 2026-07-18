@@ -1,5 +1,6 @@
 import { Redirect, useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { AppText as Text } from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -60,7 +61,7 @@ export default function AccountScreen() {
   return (
     <TabScreenFrame>
     <ScrollView style={[styles.container, { backgroundColor: c.bg }]} contentContainerStyle={styles.content}>
-      <ResponsiveContent style={{ paddingHorizontal: pagePadding, paddingTop: pagePadding }}>
+      <ResponsiveContent style={{ paddingHorizontal: pagePadding }}>
       <View style={[styles.profileCard, { backgroundColor: c.card, borderColor: c.border }]}>
         <View style={[styles.avatar, { backgroundColor: c.accent }]}>
           <Text style={styles.avatarText}>{initialsFrom(user.name, user.email, user.username)}</Text>
@@ -70,7 +71,7 @@ export default function AccountScreen() {
             {displayName}
           </Text>
           <Text style={[styles.meta, { color: c.muted }]} numberOfLines={1}>
-            {user.email || user.username}
+            {user.username || user.email}
           </Text>
           <Text style={[styles.role, { color: c.dim }]}>{roleSubtitle(user.role)}</Text>
         </View>
@@ -106,8 +107,8 @@ const styles = StyleSheet.create({
   profileCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 16,
-    borderWidth: 1,
+    borderRadius: 14,
+    borderWidth: StyleSheet.hairlineWidth,
     padding: 16,
     marginBottom: 22,
   },
@@ -123,13 +124,13 @@ const styles = StyleSheet.create({
   profileText: { flex: 1 },
   name: { fontSize: 18, fontWeight: '800' },
   meta: { marginTop: 3, fontSize: 13 },
-  role: { marginTop: 4, fontSize: 11, fontWeight: '800', textTransform: 'uppercase' },
-  section: { marginTop: 10, marginBottom: 8, paddingHorizontal: 4, fontSize: 12, fontWeight: '800', textTransform: 'uppercase' },
+  role: { marginTop: 4, fontSize: 12, fontWeight: '600' },
+  section: { marginTop: 10, marginBottom: 8, paddingHorizontal: 4, fontSize: 13, fontWeight: '600' },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 12,
-    borderWidth: 1,
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
     padding: 14,
     marginBottom: 10,
   },
