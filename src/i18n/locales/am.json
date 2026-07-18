@@ -194,7 +194,7 @@
     "accountSub": "መገለጫ፣ ቋንቋ፣ ገጽታ እና መውጣት",
     "activity": "የእንቅስቃሴ መዝገብ",
     "activitySub": "ማን ምን ለውጦ",
-    "team": "ቡድን",
+    "team": "ሰራተኞች",
     "teamSub": "የመቀበል ዴስክ ሰራተኞች",
     "branches": "ቅርንጫፎች",
     "branchesSub": "ቦታዎች እና ነባሪዎች",
@@ -261,8 +261,8 @@
     "statusActive": "ንቁ",
     "statusInactive": "ያልተሰራ",
     "defaultBranch": "ነባሪ ቅርንጫፍ",
-    "cannotDeactivateWithStaff": "ከመሰናከል በፊት {{count}} ሰራተኞችን በቡድን ገጽ ወደ ሌላ ቅርንጫፍ ያንቀሳቅሱ።",
-    "staffNote": "{{count}} ሰራተኞች እዚህ ተመድበዋል። ከመሰናከል በፊት ቅርንጫፋቸውን በቡድን ገጽ ይቀይሩ።"
+    "cannotDeactivateWithStaff": "ከመሰናከል በፊት {{count}} ሰራተኞችን በሰራተኞች ገጽ ወደ ሌላ ቅርንጫፍ ያንቀሳቅሱ።",
+    "staffNote": "{{count}} ሰራተኞች እዚህ ተመድበዋል። ከመሰናከል በፊት ቅርንጫፋቸውን በሰራተኞች ገጽ ይቀይሩ።"
   },
   "alerts": {
     "branchReadOnlyTitle": "ያልተሰራ ቅርንጫፍ — ማየት ብቻ",
@@ -344,7 +344,7 @@
     "newPlan": "አዲስ ዕቅድ",
     "editPlan": "ዕቅድ አርትዕ",
     "editPayment": "ክፍያ አርትዕ",
-    "team": "ቡድን",
+    "team": "ሰራተኞች",
     "addStaff": "ሰራተኛ ጨምር",
     "editStaff": "ሰራተኛ አርትዕ",
     "branches": "ቅርንጫፎች",

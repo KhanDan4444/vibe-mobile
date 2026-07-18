@@ -194,7 +194,7 @@
     "accountSub": "Profile, language, theme, and sign out",
     "activity": "Activity log",
     "activitySub": "Who changed what",
-    "team": "Team",
+    "team": "Staff",
     "teamSub": "Help desk staff accounts",
     "branches": "Branches",
     "branchesSub": "Locations & defaults",
@@ -261,8 +261,8 @@
     "statusActive": "Active",
     "statusInactive": "Inactive",
     "defaultBranch": "Default branch",
-    "cannotDeactivateWithStaff": "Move {{count}} staff to another branch in Team before deactivating.",
-    "staffNote": "{{count}} staff assigned here. Change their branch in Team before deactivating."
+    "cannotDeactivateWithStaff": "Move {{count}} staff to another branch in Staff before deactivating.",
+    "staffNote": "{{count}} staff assigned here. Change their branch in Staff before deactivating."
   },
   "alerts": {
     "branchReadOnlyTitle": "Inactive branch — view only",
@@ -344,7 +344,7 @@
     "newPlan": "New plan",
     "editPlan": "Edit plan",
     "editPayment": "Edit payment",
-    "team": "Team",
+    "team": "Staff",
     "addStaff": "Add staff",
     "editStaff": "Edit staff",
     "branches": "Branches",
