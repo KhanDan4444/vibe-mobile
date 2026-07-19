@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useSegments } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
@@ -12,6 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/src/context/PreferencesContext';
+import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 
 export type FlashVariant = 'success' | 'offline';
 
@@ -27,32 +29,33 @@ type FlashBannerProps = {
   onDismiss: () => void;
 };
 
-/** Short enough to read; long enough to notice without blocking the screen. */
-const DISMISS_MS = 2800;
+/** Visible long enough to read title + subtitle without feeling sticky. */
+const DISMISS_MS = 3000;
 
-function variantAccent(variant: FlashVariant) {
-  if (variant === 'offline') {
-    return { accent: '#fbbf24', icon: 'cloud-offline-outline' as const };
-  }
-  return { accent: '#34d399', icon: 'checkmark-circle' as const };
+/** Matches tab bar content height in `(tabs)/_layout` (tablet 58 / phone 52). */
+function tabBarClearance(isTablet: boolean) {
+  return isTablet ? 58 : 52;
 }
 
 /**
- * Compact bottom snackbar — sits above the system nav (not under the status bar),
- * so gesture / notification chrome does not cover it.
+ * Bottom snackbar — full-width enough to read, cleared above the tab bar on tabs
+ * and tucked into the safe-area gutter on stack screens so it does not sit mid-card.
  */
 export function FlashBanner({ toast, onDismiss }: FlashBannerProps) {
-  const { isDark } = useTheme();
+  const { colors: c, isDark } = useTheme();
   const insets = useSafeAreaInsets();
-  const translateY = useSharedValue(28);
+  const { isTablet } = useResponsiveLayout();
+  const segments = useSegments();
+  const onTabs = segments[0] === '(tabs)';
+  const translateY = useSharedValue(32);
   const opacity = useSharedValue(0);
   const dismissing = useRef(false);
 
   const dismissAnimated = () => {
     if (dismissing.current) return;
     dismissing.current = true;
-    translateY.value = withTiming(20, { duration: 160, easing: Easing.in(Easing.quad) });
-    opacity.value = withTiming(0, { duration: 160 }, (finished) => {
+    translateY.value = withTiming(24, { duration: 180, easing: Easing.in(Easing.quad) });
+    opacity.value = withTiming(0, { duration: 180 }, (finished) => {
       if (finished) runOnJS(onDismiss)();
     });
   };
@@ -60,14 +63,14 @@ export function FlashBanner({ toast, onDismiss }: FlashBannerProps) {
   useEffect(() => {
     if (!toast) {
       dismissing.current = false;
-      translateY.value = 28;
+      translateY.value = 32;
       opacity.value = 0;
       return undefined;
     }
 
     dismissing.current = false;
-    translateY.value = withSpring(0, { damping: 18, stiffness: 280, mass: 0.7 });
-    opacity.value = withTiming(1, { duration: 180 });
+    translateY.value = withSpring(0, { damping: 18, stiffness: 260, mass: 0.75 });
+    opacity.value = withTiming(1, { duration: 200 });
 
     const timer = setTimeout(dismissAnimated, DISMISS_MS);
     return () => clearTimeout(timer);
@@ -81,22 +84,13 @@ export function FlashBanner({ toast, onDismiss }: FlashBannerProps) {
   if (!toast) return null;
 
   const variant = toast.variant ?? 'success';
-  const { accent, icon: fallbackIcon } = variantAccent(variant);
-  const iconName = toast.icon ?? fallbackIcon;
-  // Success: title-only keeps the bar slim. Offline keeps subtitle for context.
-  const showSubtitle = variant === 'offline' && Boolean(toast.subtitle);
+  const accent = variant === 'offline' ? '#fbbf24' : c.success;
+  const iconName = toast.icon ?? (variant === 'offline' ? 'cloud-offline-outline' : 'checkmark-circle');
+  const showSubtitle = Boolean(toast.subtitle);
+  const bottomPad = Math.max(insets.bottom, 12) + (onTabs ? tabBarClearance(isTablet) + 10 : 16);
 
   return (
-    <View
-      pointerEvents="box-none"
-      style={[
-        styles.wrap,
-        {
-          // Clear Android/iOS system nav; also clears typical tab bar height.
-          bottom: Math.max(insets.bottom, 10) + 56,
-        },
-      ]}
-    >
+    <View pointerEvents="box-none" style={[styles.wrap, { bottom: bottomPad }]}>
       <Animated.View style={shellStyle}>
         <Pressable
           accessibilityRole="button"
@@ -105,20 +99,22 @@ export function FlashBanner({ toast, onDismiss }: FlashBannerProps) {
           style={[
             styles.bar,
             {
-              backgroundColor: isDark ? '#1c2330' : '#0f172a',
-              borderColor: isDark ? 'rgba(148,163,184,0.18)' : 'rgba(15,23,42,0.08)',
+              backgroundColor: isDark ? '#161d2a' : '#0f172a',
+              borderColor: isDark ? 'rgba(148,163,184,0.22)' : 'rgba(15,23,42,0.1)',
               shadowColor: '#000',
             },
           ]}
         >
           <View style={[styles.accent, { backgroundColor: accent }]} />
-          <Ionicons name={iconName} size={18} color={accent} style={styles.icon} />
+          <View style={[styles.iconWrap, { backgroundColor: `${accent}22` }]}>
+            <Ionicons name={iconName} size={22} color={accent} />
+          </View>
           <View style={styles.copy}>
-            <Text style={[styles.title, { color: '#f8fafc' }]} numberOfLines={1}>
+            <Text style={styles.title} numberOfLines={2}>
               {toast.title}
             </Text>
             {showSubtitle ? (
-              <Text style={styles.subtitle} numberOfLines={1}>
+              <Text style={styles.subtitle} numberOfLines={2}>
                 {toast.subtitle}
               </Text>
             ) : null}
@@ -132,47 +128,54 @@ export function FlashBanner({ toast, onDismiss }: FlashBannerProps) {
 const styles = StyleSheet.create({
   wrap: {
     position: 'absolute',
-    left: 16,
-    right: 16,
+    left: 14,
+    right: 14,
     zIndex: 200,
     elevation: 20,
   },
   bar: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 44,
-    borderRadius: 12,
+    minHeight: 64,
+    borderRadius: 14,
     borderWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 10,
-    paddingRight: 14,
+    paddingVertical: 14,
+    paddingRight: 16,
     overflow: 'hidden',
-    shadowOpacity: 0.28,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 6,
+    shadowOpacity: 0.32,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
   },
   accent: {
-    width: 3,
+    width: 4,
     alignSelf: 'stretch',
-    marginRight: 10,
+    marginRight: 12,
     borderTopRightRadius: 2,
     borderBottomRightRadius: 2,
   },
-  icon: {
-    marginRight: 8,
+  iconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
   copy: {
     flex: 1,
     minWidth: 0,
+    gap: 3,
   },
   title: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#f8fafc',
+    letterSpacing: -0.2,
   },
   subtitle: {
-    marginTop: 2,
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 13,
+    lineHeight: 18,
     color: '#94a3b8',
   },
 });

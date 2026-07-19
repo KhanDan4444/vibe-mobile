@@ -74,6 +74,15 @@ export async function removeOfflineJob(jobId: string): Promise<void> {
   await writeOfflineQueue(jobs.filter((job) => job.id !== jobId));
 }
 
+export async function clearOfflineQueueForGym(gymId?: number | null): Promise<void> {
+  if (gymId == null) {
+    await writeOfflineQueue([]);
+    return;
+  }
+  const jobs = await readOfflineQueue();
+  await writeOfflineQueue(jobs.filter((job) => !jobBelongsToGym(job, gymId)));
+}
+
 export function createOfflineJobId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }

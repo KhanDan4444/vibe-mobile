@@ -19,8 +19,15 @@ export type DateBounds = {
 function toDateBounds(bounds: { min?: string; max?: string }): DateBounds {
   return {
     ...(bounds.min ? { minimumDate: isoToLocalDate(bounds.min) } : {}),
-    ...(bounds.max ? { maximumDate: isoToLocalDate(bounds.max) } : {}),
+    // End-of-day max so Android DateTimePicker does not treat "today 00:00" as already past.
+    ...(bounds.max ? { maximumDate: endOfLocalDay(bounds.max) } : {}),
   };
+}
+
+function endOfLocalDay(iso: string): Date {
+  const d = isoToLocalDate(iso);
+  d.setHours(23, 59, 59, 999);
+  return d;
 }
 
 /** Payment collected on/after term start, never in the future. */

@@ -20,6 +20,7 @@ import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { PAYMENT_METHODS } from '@/src/constants/payments';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
+import { useNetwork } from '@/src/offline/NetworkProvider';
 import { isOfflineQueued } from '@/src/offline/types';
 import { bumpMemberPhotoCache } from '@/src/utils/memberPhotoCache';
 import { todayString } from '@/src/utils/date';
@@ -28,6 +29,7 @@ import {
   boundsForPaymentOnTerm,
   clampPaymentToTerm,
 } from '@/src/utils/datePickerBounds';
+import { formatApiError } from '@/src/utils/paymentValidation';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
 import type { EnrollPayload, PlanRow } from '@/src/types/api';
 
@@ -83,6 +85,8 @@ export default function EnrollScreen() {
   const { readOnly } = useGymReadOnly();
   const flashSaved = useSaveFlash();
   const flashOffline = useOfflineFlash();
+  const { isOnline } = useNetwork();
+  const photoBlocksOffline = !isOnline && Boolean(photoDataUrl);
 
   const plansQuery = useQuery({
     queryKey: ['plans'],
@@ -155,15 +159,27 @@ export default function EnrollScreen() {
       flashSaved('flash.enrolled');
       router.replace(`/member/${data.member.id}`);
     },
-    onError: (e: Error) => setError(e.message),
+    onError: (e: Error) => setError(formatApiError(e.message)),
   });
 
   const canSubmit = useMemo(() => {
+    if (photoBlocksOffline) return false;
     if (!name.trim() || !phone.trim() || !planId || !/^\d{4}-\d{2}-\d{2}$/.test(startDate)) return false;
     if (skipPayment) return true;
     if (showBranchPicker && !branchId) return false;
     return Number(amount) > 0 && /^\d{4}-\d{2}-\d{2}$/.test(paymentDate);
-  }, [name, phone, planId, startDate, skipPayment, amount, paymentDate, showBranchPicker, branchId]);
+  }, [
+    photoBlocksOffline,
+    name,
+    phone,
+    planId,
+    startDate,
+    skipPayment,
+    amount,
+    paymentDate,
+    showBranchPicker,
+    branchId,
+  ]);
 
   if (!canEnroll) {
     return <Redirect href="/login" />;
@@ -186,7 +202,12 @@ export default function EnrollScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <ErrorBanner message={error} />
+          <ErrorBanner
+            message={
+              error ||
+              (photoBlocksOffline ? t('offline.photoRemoveToEnrollOffline') : '')
+            }
+          />
 
           <Label>{t('forms.name')}</Label>
           <Field value={name} onChangeText={setName} placeholder={t('forms.memberName')} autoCapitalize="words" />
@@ -205,9 +226,12 @@ export default function EnrollScreen() {
             onChange={(dataUrl, preview) => {
               setPhotoDataUrl(dataUrl);
               setPhotoPreview(preview);
+              if (!dataUrl) setError('');
             }}
             processing={photoProcessing}
             setProcessing={setPhotoProcessing}
+            pickDisabled={!isOnline}
+            notice={!isOnline ? t('offline.photoNeedsOnline') : undefined}
           />
 
           {showBranchPicker ? (

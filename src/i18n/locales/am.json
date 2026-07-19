@@ -214,7 +214,21 @@
     "saved": "ከመስመር ውጭ ተቀምጧል",
     "savedBody": "ለውጡ ከመስመር ሲመለሱ ይመሳሰላል።",
     "photoEnrollRequiresOnline": "ፎቶ ያለው አባል ለመመዝገብ ከበይነመረብ ጋር ይገናኙ።",
-    "photoUpdateRequiresOnline": "የአባል ፎቶ ለማዘመን ከበይነመረብ ጋር ይገናኙ።"
+    "photoUpdateRequiresOnline": "የአባል ፎቶ ለማዘመን ከበይነመረብ ጋር ይገናኙ።",
+    "photoNeedsOnline": "ፎቶዎች የበይነመረብ ግንኙነት ይፈልጋሉ። ያለ ፎቶ ማስቀመጥ ይችላሉ።",
+    "photoRemoveToEnrollOffline": "ከመስመር ውጭ ለመመዝገብ ፎቶውን ያስወግዱ።",
+    "syncPendingTitle": "ለውጦች ለማመሳሰል በመጠባበቅ ላይ",
+    "syncPendingBody": "{{count}} ለውጥ በዚህ መሣሪያ ተቀምጧል። ወደ ሰርቨር ለመላክ አሁን ያመሳስሉ።",
+    "syncPendingBody_plural": "{{count}} ለውጦች በዚህ መሣሪያ ተቀምጠዋል። ወደ ሰርቨር ለመላክ አሁን ያመሳስሉ።",
+    "syncFailedTitle": "ማመሳሰል ትኩረት ይፈልጋል",
+    "syncFailedBody": "{{count}} ለውጥ ማመሳሰል አልተሳካም፡ {{error}}",
+    "syncFailedBody_plural": "{{count}} ለውጦች ማመሳሰል አልተሳካም፡ {{error}}",
+    "syncLater": "በኋላ",
+    "syncChip": "{{count}} ለማመሳሰል ይጠብቃሉ",
+    "syncDoneTitle": "ተመሳስሏል",
+    "syncDoneBody": "{{count}} ለውጥ ተልኳል።",
+    "syncDoneBody_plural": "{{count}} ለውጦች ተልከዋል።",
+    "discardQueued": "ተራ በመጠባበቅ ላይ ያሉ ለውጦችን አስወግድ"
   },
   "common": {
     "save": "ለውጦችን አስቀምጥ",

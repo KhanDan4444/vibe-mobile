@@ -11,6 +11,7 @@ import { PhotoPickerField } from '@/src/components/PhotoPickerField';
 import { ErrorBanner, Field, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
+import { useNetwork } from '@/src/offline/NetworkProvider';
 import { isOfflineQueued } from '@/src/offline/types';
 import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
@@ -40,8 +41,10 @@ export default function EditMemberScreen() {
   const [error, setError] = useState('');
   const flashSaved = useSaveFlash();
   const flashOffline = useOfflineFlash();
+  const { isOnline } = useNetwork();
   const canEditMember = Boolean(user && hasGymPortalAccess(user.role));
   const owner = isGymOwner(user?.role);
+  const photoBlocksOffline = !isOnline && Boolean(photoDataUrl);
 
   const memberQuery = useQuery({
     queryKey: ['member', memberId],
@@ -125,10 +128,11 @@ export default function EditMemberScreen() {
   };
 
   const canSubmit = useMemo(() => {
+    if (photoBlocksOffline) return false;
     if (!name.trim() || !phone.trim()) return false;
     if (showBranchPicker && branchId == null) return false;
     return true;
-  }, [name, phone, showBranchPicker, branchId]);
+  }, [photoBlocksOffline, name, phone, showBranchPicker, branchId]);
 
   if (!canEditMember) {
     return <Redirect href="/login" />;
@@ -140,7 +144,12 @@ export default function EditMemberScreen() {
     <Screen>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <ErrorBanner message={error} />
+          <ErrorBanner
+            message={
+              error ||
+              (photoBlocksOffline ? t('offline.photoUpdateRequiresOnline') : '')
+            }
+          />
 
           <Label>{t('forms.name')}</Label>
           <Field value={name} onChangeText={setName} autoCapitalize="words" />
@@ -154,9 +163,12 @@ export default function EditMemberScreen() {
               setPhotoDataUrl(dataUrl || null);
               setPhotoPreview(preview);
               setPhotoRemoved(!dataUrl && hadExistingPhoto);
+              if (!dataUrl) setError('');
             }}
             processing={photoProcessing}
             setProcessing={setPhotoProcessing}
+            pickDisabled={!isOnline}
+            notice={!isOnline ? t('offline.photoNeedsOnline') : undefined}
           />
 
           {showBranchPicker ? (

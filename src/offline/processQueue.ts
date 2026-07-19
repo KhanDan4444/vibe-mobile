@@ -78,17 +78,19 @@ function filterJobsForGym(jobs: OfflineJob[], gymId?: number | null): OfflineJob
 export async function processOfflineQueue(
   token: string,
   queryClient: QueryClient,
-  gymId?: number | null
+  gymId?: number | null,
+  options?: { force?: boolean }
 ): Promise<number> {
   if (processing) return 0;
   processing = true;
 
   let synced = 0;
   const now = Date.now();
+  const force = Boolean(options?.force);
   try {
     const jobs = filterJobsForGym(await readOfflineQueue(), gymId);
     for (const job of jobs) {
-      if (!isReadyToRetry(job, now)) continue;
+      if (!force && !isReadyToRetry(job, now)) continue;
 
       try {
         await executeJob(token, job);
@@ -97,10 +99,10 @@ export async function processOfflineQueue(
       } catch (err) {
         const attempts = (job.attempts ?? 0) + 1;
         const message = err instanceof Error ? err.message : 'Sync failed';
-        const failed = attempts >= OFFLINE_MAX_ATTEMPTS;
+        const failed = !force && attempts >= OFFLINE_MAX_ATTEMPTS;
         const delay = OFFLINE_RETRY_BASE_MS * Math.min(attempts, 8);
         await updateOfflineJob(job.id, {
-          attempts,
+          attempts: force ? Math.min(attempts, OFFLINE_MAX_ATTEMPTS - 1) : attempts,
           lastError: message,
           status: failed ? 'failed' : 'pending',
           nextRetryAt: failed ? undefined : new Date(Date.now() + delay).toISOString(),

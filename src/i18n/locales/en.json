@@ -214,7 +214,21 @@
     "saved": "Saved offline",
     "savedBody": "Your change will sync when you're back online.",
     "photoEnrollRequiresOnline": "Connect to the internet to enroll a member with a photo.",
-    "photoUpdateRequiresOnline": "Connect to the internet to update a member photo."
+    "photoUpdateRequiresOnline": "Connect to the internet to update a member photo.",
+    "photoNeedsOnline": "Photos need an internet connection. You can still save without a photo.",
+    "photoRemoveToEnrollOffline": "Remove the photo to enroll while offline.",
+    "syncPendingTitle": "Changes waiting to sync",
+    "syncPendingBody": "{{count}} change is saved on this device. Sync now to upload it to the server.",
+    "syncPendingBody_plural": "{{count}} changes are saved on this device. Sync now to upload them to the server.",
+    "syncFailedTitle": "Sync needs attention",
+    "syncFailedBody": "{{count}} change could not sync: {{error}}",
+    "syncFailedBody_plural": "{{count}} changes could not sync: {{error}}",
+    "syncLater": "Later",
+    "syncChip": "{{count}} waiting to sync",
+    "syncDoneTitle": "Synced",
+    "syncDoneBody": "{{count}} change uploaded.",
+    "syncDoneBody_plural": "{{count}} changes uploaded.",
+    "discardQueued": "Discard queued changes"
   },
   "common": {
     "save": "Save changes",

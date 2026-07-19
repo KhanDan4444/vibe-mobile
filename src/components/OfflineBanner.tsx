@@ -1,71 +1,221 @@
-import { Pressable, StyleSheet, View } from 'react-native';
-import { AppText as Text } from '@/src/components/AppText';
+import { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { AppText as Text } from '@/src/components/AppText';
+import { useFlash } from '@/src/context/FlashContext';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useNetwork } from '@/src/offline/NetworkProvider';
 
+/**
+ * Offline: thin status strip in the layout.
+ * Online with queued changes: modal (Sync is always tappable — not covered by the stack).
+ */
 export function OfflineBanner() {
-  const { isOnline, pendingCount, failedCount, lastError, syncNow } = useNetwork();
-  const { isDark } = useTheme();
+  const { isOnline, pendingCount, failedCount, lastError, isSyncing, syncNow, discardQueuedChanges } =
+    useNetwork();
+  const { colors: c, isDark } = useTheme();
   const { t } = useTranslation();
+  const { showFlash } = useFlash();
+  const insets = useSafeAreaInsets();
+  const [modalDismissed, setModalDismissed] = useState(false);
 
-  if (isOnline && pendingCount === 0 && failedCount === 0) return null;
+  const needsSync = isOnline && (pendingCount > 0 || failedCount > 0);
+  const total = pendingCount + failedCount;
 
-  const offlineBg = isDark ? '#78350f' : '#fef3c7';
-  const pendingBg = isDark ? '#1e3a8a' : '#dbeafe';
-  const failedBg = isDark ? '#7f1d1d' : '#fee2e2';
-  const textColor = isDark ? '#fef3c7' : '#78350f';
-  const pendingText = isDark ? '#dbeafe' : '#1e3a8a';
-  const failedText = isDark ? '#fecaca' : '#991b1b';
+  useEffect(() => {
+    if (needsSync) setModalDismissed(false);
+  }, [needsSync, pendingCount, failedCount]);
 
-  const showFailed = failedCount > 0 && isOnline;
-  const bg = !isOnline ? offlineBg : showFailed ? failedBg : pendingBg;
-  const color = !isOnline ? textColor : showFailed ? failedText : pendingText;
-
-  let message: string;
   if (!isOnline) {
-    message = t('offline.offline');
-  } else if (showFailed) {
-    message = t('offline.failed', { count: failedCount, error: lastError || t('offline.failedGeneric') });
-  } else {
-    message = t('offline.pending', { count: pendingCount });
+    return (
+      <View
+        pointerEvents="none"
+        style={[
+          styles.offlineStrip,
+          {
+            backgroundColor: isDark ? '#78350f' : '#fef3c7',
+            paddingTop: Math.max(insets.top, 8),
+          },
+        ]}
+      >
+        <Text style={[styles.offlineText, { color: isDark ? '#fef3c7' : '#78350f' }]}>
+          {t('offline.offline')}
+        </Text>
+      </View>
+    );
   }
 
+  if (!needsSync) return null;
+
+  const showModal = needsSync && !modalDismissed;
+  const title =
+    failedCount > 0 ? t('offline.syncFailedTitle') : t('offline.syncPendingTitle');
+  const body =
+    failedCount > 0
+      ? t('offline.syncFailedBody', {
+          count: failedCount,
+          error: lastError || t('offline.failedGeneric'),
+        })
+      : t('offline.syncPendingBody', { count: pendingCount });
+
+  const onSync = async () => {
+    const synced = await syncNow(true);
+    if (synced > 0) {
+      showFlash({
+        title: t('offline.syncDoneTitle'),
+        subtitle: t('offline.syncDoneBody', { count: synced }),
+        variant: 'success',
+      });
+    }
+  };
+
   return (
-    <View style={[styles.banner, { backgroundColor: bg }]}>
-      <Text style={[styles.text, { color }]} numberOfLines={2}>
-        {message}
-      </Text>
-      {isOnline && (pendingCount > 0 || failedCount > 0) ? (
+    <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+      {modalDismissed ? (
         <Pressable
-          onPress={() => void syncNow()}
-          style={[styles.syncBtn, { borderColor: color }]}
+          onPress={() => setModalDismissed(false)}
+          style={[
+            styles.chip,
+            {
+              backgroundColor: c.accent,
+              bottom: Math.max(insets.bottom, 12) + 72,
+            },
+          ]}
           accessibilityLabel={t('offline.syncNow')}
         >
-          <Text style={[styles.syncText, { color }]}>{t('offline.syncNow')}</Text>
+          <Text style={styles.chipText}>{t('offline.syncChip', { count: total })}</Text>
         </Pressable>
       ) : null}
+
+      <Modal
+        visible={showModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalDismissed(true)}
+      >
+        <View style={styles.overlay}>
+          <Pressable style={styles.backdrop} onPress={() => setModalDismissed(true)} />
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: c.card,
+                borderColor: c.border,
+                marginBottom: Math.max(insets.bottom, 16),
+              },
+            ]}
+          >
+            <Text style={[styles.title, { color: c.text }]}>{title}</Text>
+            <Text style={[styles.message, { color: c.muted }]}>{body}</Text>
+            {lastError && failedCount === 0 ? (
+              <Text style={[styles.errorDetail, { color: c.warning }]} numberOfLines={3}>
+                {lastError}
+              </Text>
+            ) : null}
+
+            <View style={styles.actions}>
+              <Pressable
+                style={[styles.btn, styles.btnGhost, { borderColor: c.border }]}
+                onPress={() => setModalDismissed(true)}
+                disabled={isSyncing}
+              >
+                <Text style={[styles.btnText, { color: c.muted }]}>{t('offline.syncLater')}</Text>
+              </Pressable>
+              <Pressable
+                style={[styles.btn, { backgroundColor: c.accent, opacity: isSyncing ? 0.7 : 1 }]}
+                onPress={() => void onSync()}
+                disabled={isSyncing}
+                accessibilityLabel={t('offline.syncNow')}
+              >
+                {isSyncing ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={[styles.btnText, styles.btnTextOnAccent]}>{t('offline.syncNow')}</Text>
+                )}
+              </Pressable>
+            </View>
+
+            <Pressable
+              onPress={() => void discardQueuedChanges()}
+              disabled={isSyncing}
+              style={styles.discardBtn}
+              accessibilityLabel={t('offline.discardQueued')}
+            >
+              <Text style={[styles.discardText, { color: c.dim }]}>{t('offline.discardQueued')}</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  banner: {
+  offlineStrip: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 190,
+    elevation: 19,
     paddingHorizontal: 14,
-    paddingVertical: 10,
-    flexDirection: 'row',
+    paddingBottom: 10,
+  },
+  offlineText: { fontSize: 13, fontWeight: '500' },
+  chip: {
+    position: 'absolute',
+    alignSelf: 'center',
+    left: 24,
+    right: 24,
+    zIndex: 180,
+    elevation: 18,
+    borderRadius: 24,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
   },
-  text: { fontSize: 13, flex: 1, fontWeight: '500' },
-  syncBtn: {
+  chipText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+  overlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+  },
+  card: {
+    borderRadius: 16,
     borderWidth: 1,
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    minHeight: 44,
-    justifyContent: 'center',
+    padding: 20,
+    zIndex: 1,
   },
-  syncText: { fontSize: 12, fontWeight: '600' },
+  title: { fontSize: 17, fontWeight: '700' },
+  message: { marginTop: 8, fontSize: 14, lineHeight: 20 },
+  errorDetail: { marginTop: 8, fontSize: 13, lineHeight: 18 },
+  actions: { flexDirection: 'row', gap: 10, marginTop: 20 },
+  btn: {
+    flex: 1,
+    minHeight: 48,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+  },
+  btnGhost: { borderWidth: 1, backgroundColor: 'transparent' },
+  btnText: { fontSize: 15, fontWeight: '600' },
+  btnTextOnAccent: { color: '#fff' },
+  discardBtn: {
+    marginTop: 14,
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  discardText: { fontSize: 13, fontWeight: '500' },
 });

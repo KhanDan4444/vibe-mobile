@@ -18,17 +18,27 @@ export function PhotoPickerField({
   onChange,
   processing,
   setProcessing,
+  pickDisabled = false,
+  notice,
 }: {
   previewUri: string;
   onChange: (dataUrl: string, preview: string) => void;
   processing: boolean;
   setProcessing: (v: boolean) => void;
+  /** When true, Add/Change is blocked (e.g. offline). Remove stays available. */
+  pickDisabled?: boolean;
+  notice?: string;
 }) {
   const { t } = useTranslation();
   const styles = useThemedStyles((c) => ({
     row: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 16, marginTop: 4 },
     preview: { width: 72, height: 72, borderRadius: 36, backgroundColor: c.border },
-    placeholder: { alignItems: 'center' as const, justifyContent: 'center' as const, borderWidth: 1, borderColor: c.border },
+    placeholder: {
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
     placeholderText: { color: c.dim, fontSize: 11 },
     actions: { flex: 1, gap: 8 },
     btn: {
@@ -42,9 +52,17 @@ export function PhotoPickerField({
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
     },
+    btnDisabled: { opacity: 0.45 },
     btnSecondary: { backgroundColor: 'transparent' },
     btnText: { color: c.text, fontSize: 14, fontWeight: '600' as const },
     btnTextSecondary: { color: c.muted, fontSize: 14 },
+    notice: {
+      marginTop: 8,
+      marginBottom: 4,
+      fontSize: 13,
+      lineHeight: 18,
+      color: c.warning,
+    },
   }));
 
   const applyPickedAsset = async (uri: string) => {
@@ -84,7 +102,7 @@ export function PhotoPickerField({
   };
 
   const openPhotoActions = () => {
-    if (processing) return;
+    if (processing || pickDisabled) return;
 
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
@@ -108,10 +126,12 @@ export function PhotoPickerField({
   };
 
   const addLabel = processing ? t('photo.processing') : previewUri ? t('photo.change') : t('photo.add');
+  const pickBlocked = processing || pickDisabled;
 
   return (
     <View>
       <Label>{t('photo.label')}</Label>
+      {notice ? <Text style={styles.notice}>{notice}</Text> : null}
       <View style={styles.row}>
         <View>
           {previewUri ? (
@@ -124,9 +144,9 @@ export function PhotoPickerField({
         </View>
         <View style={styles.actions}>
           <Pressable
-            style={styles.btn}
+            style={[styles.btn, pickBlocked ? styles.btnDisabled : null]}
             onPress={openPhotoActions}
-            disabled={processing}
+            disabled={pickBlocked}
             accessibilityLabel={addLabel}
           >
             <Text style={styles.btnText}>{addLabel}</Text>

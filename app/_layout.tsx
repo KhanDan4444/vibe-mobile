@@ -105,10 +105,10 @@ function RootNavigator() {
   }
 
   return (
-    <>
+    <View style={{ flex: 1, backgroundColor: c.bg }}>
       <SystemChrome />
-      {user ? <OfflineBanner /> : null}
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
+      <View style={{ flex: 1 }}>
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="login" />
       <Stack.Screen name="forgot-password" />
@@ -136,7 +136,10 @@ function RootNavigator() {
       <Stack.Screen name="profile" options={{ ...stackScreen, title: t('screens.gymProfile') }} />
       <Stack.Screen name="change-password" options={{ ...stackScreen, title: t('screens.changePassword') }} />
       <Stack.Screen name="reports" options={{ ...stackScreen, title: t('screens.reports') }} />
-    </Stack>
-    </>
+        </Stack>
+      </View>
+      {/* After Stack so Sync modal / chip stay above navigation touch targets */}
+      {user ? <OfflineBanner /> : null}
+    </View>
   );
 }
