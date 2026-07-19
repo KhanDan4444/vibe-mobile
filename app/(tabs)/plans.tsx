@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query';
 import { Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText as Text } from '@/src/components/AppText';
 import { useAuth } from '@/src/auth/AuthContext';
 import { deletePlan, fetchPlans } from '@/src/api/plans';
@@ -152,6 +151,7 @@ export default function PlansScreen() {
     retryText: { color: colors.accentText, fontSize: 14, fontWeight: '600' as const },
     fab: {
       position: 'absolute' as const,
+      bottom: 24,
       width: 48,
       height: 48,
       borderRadius: 14,
@@ -165,9 +165,7 @@ export default function PlansScreen() {
 
   const { readOnly } = useGymReadOnly();
   const flashDeleted = useDeleteFlash();
-  const insets = useSafeAreaInsets();
   const { listColumns, pagePadding, fabRight, listColumnItemStyle } = useResponsiveLayout();
-  const fabBottom = 24 + Math.max(insets.bottom, 0);
   const owner = isGymOwner(user?.role);
   const canAccessPlans = Boolean(user && hasGymPortalAccess(user.role));
   const [planToDelete, setPlanToDelete] = useState<PlanRow | null>(null);
@@ -260,7 +258,7 @@ export default function PlansScreen() {
       )}
 
       {owner && !readOnly ? (
-        <Pressable style={[styles.fab, { right: fabRight, bottom: fabBottom }]} onPress={() => router.push('/plan/new')}>
+        <Pressable style={[styles.fab, { right: fabRight }]} onPress={() => router.push('/plan/new')}>
           <Text style={styles.fabText}>+</Text>
         </Pressable>
       ) : null}

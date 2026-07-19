@@ -5,7 +5,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchDashboard } from '@/src/api/dashboard';
 import { fetchMembers, type MemberListParams } from '@/src/api/members';
@@ -172,9 +171,7 @@ export default function MembersScreen() {
   const { language } = usePreferences();
   const { t } = useTranslation();
   const styles = createStyles(c);
-  const insets = useSafeAreaInsets();
   const { listColumns, pagePadding, isTablet, fabRight, listColumnItemStyle } = useResponsiveLayout();
-  const fabBottom = 24 + Math.max(insets.bottom, 0);
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -421,7 +418,7 @@ export default function MembersScreen() {
       )}
 
       {!readOnly ? (
-        <Pressable style={[styles.fab, { right: fabRight, bottom: fabBottom }]} onPress={() => router.push('/enroll')}>
+        <Pressable style={[styles.fab, { right: fabRight }]} onPress={() => router.push('/enroll')}>
           <Text style={styles.fabText}>+</Text>
         </Pressable>
       ) : null}
@@ -561,6 +558,7 @@ function createStyles(c: ThemeColors) {
     retryText: { color: c.accentText, fontSize: 14, fontWeight: '600' },
     fab: {
       position: 'absolute',
+      bottom: 24,
       width: 48,
       height: 48,
       borderRadius: 14,
