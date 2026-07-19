@@ -12,6 +12,9 @@ const FLASH_ICONS: Record<string, FlashToast['icon']> = {
   'flash.transferred': 'git-branch-outline',
   'flash.memberUpdated': 'create-outline',
   'flash.offline': 'cloud-offline-outline',
+  'flash.memberDeleted': 'person-remove-outline',
+  'flash.paymentDeleted': 'trash-outline',
+  'flash.planDeleted': 'trash-outline',
 };
 
 export function useSaveFlash() {
@@ -25,6 +28,24 @@ export function useSaveFlash() {
         subtitle: t(`${messageKey}.subtitle`),
         icon: FLASH_ICONS[messageKey] ?? 'checkmark-circle-outline',
         variant: 'success',
+      });
+    },
+    [showFlash, t]
+  );
+}
+
+/** Red toast for destructive actions (delete member / payment / plan). */
+export function useDeleteFlash() {
+  const { showFlash } = useFlash();
+  const { t } = useTranslation();
+
+  return useCallback(
+    (messageKey = 'flash.memberDeleted') => {
+      showFlash({
+        title: t(`${messageKey}.title`),
+        subtitle: t(`${messageKey}.subtitle`),
+        icon: FLASH_ICONS[messageKey] ?? 'trash-outline',
+        variant: 'danger',
       });
     },
     [showFlash, t]

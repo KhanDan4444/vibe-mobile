@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useAuth } from '@/src/auth/AuthContext';
 import { deletePlan, fetchPlans } from '@/src/api/plans';
@@ -11,6 +11,7 @@ import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { ReadOnlyBanner } from '@/src/components/ReadOnlyBanner';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
+import { useDeleteFlash } from '@/src/hooks/useSaveFlash';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useTranslation } from 'react-i18next';
@@ -155,12 +156,14 @@ export default function PlansScreen() {
   }));
 
   const { readOnly } = useGymReadOnly();
+  const flashDeleted = useDeleteFlash();
   const { listColumns, pagePadding, contentMaxWidth, width, isTablet } = useResponsiveLayout();
   const fabRight = isTablet ? Math.max(pagePadding, (width - contentMaxWidth) / 2 + pagePadding) : 20;
   const owner = isGymOwner(user?.role);
   const canAccessPlans = Boolean(user && hasGymPortalAccess(user.role));
   const [planToDelete, setPlanToDelete] = useState<PlanRow | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [notice, setNotice] = useState<{ title: string; message: string } | null>(null);
 
   const query = useQuery({
     queryKey: ['plans'],
@@ -175,10 +178,10 @@ export default function PlansScreen() {
   const requestDelete = (plan: PlanRow) => {
     const activeCount = plan.active_member_count ?? 0;
     if (activeCount > 0) {
-      Alert.alert(
-        t('plans.cannotDeleteTitle'),
-        t('plans.cannotDeleteBody', { name: plan.name, count: activeCount })
-      );
+      setNotice({
+        title: t('plans.cannotDeleteTitle'),
+        message: t('plans.cannotDeleteBody', { name: plan.name, count: activeCount }),
+      });
       return;
     }
     setPlanToDelete(plan);
@@ -190,10 +193,14 @@ export default function PlansScreen() {
     try {
       await deletePlan(token, planToDelete.id);
       setPlanToDelete(null);
+      flashDeleted('flash.planDeleted');
       query.refetch();
     } catch (e) {
       setPlanToDelete(null);
-      Alert.alert('Error', e instanceof Error ? e.message : 'Could not delete plan.');
+      setNotice({
+        title: t('common.error'),
+        message: e instanceof Error ? e.message : t('plans.deleteFailed'),
+      });
     } finally {
       setDeleting(false);
     }
@@ -257,6 +264,14 @@ export default function PlansScreen() {
         confirmLoading={deleting}
         onCancel={() => setPlanToDelete(null)}
         onConfirm={() => void runDelete()}
+      />
+      <ConfirmDialog
+        visible={Boolean(notice)}
+        title={notice?.title ?? ''}
+        message={notice?.message ?? ''}
+        alertOnly
+        destructive={false}
+        onConfirm={() => setNotice(null)}
       />
     </View>
     </TabScreenFrame>

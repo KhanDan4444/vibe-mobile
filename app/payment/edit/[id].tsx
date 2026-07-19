@@ -13,6 +13,7 @@ import { ErrorBanner, Field, Label, PrimaryButton, Screen } from '@/src/componen
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useTranslation } from 'react-i18next';
 import { PAYMENT_METHODS, type PaymentMethod } from '@/src/constants/payments';
+import { useDeleteFlash } from '@/src/hooks/useSaveFlash';
 import { todayString } from '@/src/utils/date';
 import { boundsForPaymentOnTerm } from '@/src/utils/datePickerBounds';
 import { isGymOwner } from '@/src/utils/roles';
@@ -32,6 +33,7 @@ export default function EditPaymentScreen() {
   const queryClient = useQueryClient();
   const { token, user, subscription } = useAuth();
   const { t } = useTranslation();
+  const flashDeleted = useDeleteFlash();
 
   const [amount, setAmount] = useState(String(params.amount ?? ''));
   const [paymentDate, setPaymentDate] = useState(params.date?.split('T')[0] || todayString());
@@ -90,6 +92,7 @@ export default function EditPaymentScreen() {
       queryClient.invalidateQueries({ queryKey: ['payments'] });
       queryClient.invalidateQueries({ queryKey: ['member-payments', memberId] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      flashDeleted('flash.paymentDeleted');
       router.back();
     },
     onError: (e: Error) => {

@@ -1,12 +1,13 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchTeam, resetStaffPassword, updateStaff } from '@/src/api/team';
 import { fetchBranches } from '@/src/api/branches';
 import { BranchPicker } from '@/src/components/BranchPicker';
+import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { ErrorBanner, Field, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { isGymOwner } from '@/src/utils/roles';
@@ -24,6 +25,7 @@ export default function EditStaffScreen() {
   const [branchId, setBranchId] = useState<number | null>(null);
   const [resetPassword, setResetPassword] = useState('');
   const [error, setError] = useState('');
+  const [resetNotice, setResetNotice] = useState('');
   const canManageTeam = Boolean(user && isGymOwner(user.role));
   const styles = useThemedStyles((colors) => ({
     content: { padding: 16, paddingBottom: 40 },
@@ -87,7 +89,7 @@ export default function EditStaffScreen() {
     onSuccess: () => {
       setResetPassword('');
       setError('');
-      Alert.alert('Password updated', `${staff?.name || 'Staff'} can sign in with the new password.`);
+      setResetNotice(`${staff?.name || 'Staff'} can sign in with the new password.`);
     },
     onError: (e: Error) => setError(e.message),
   });
@@ -174,6 +176,14 @@ export default function EditStaffScreen() {
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
+      <ConfirmDialog
+        visible={Boolean(resetNotice)}
+        title="Password updated"
+        message={resetNotice}
+        alertOnly
+        destructive={false}
+        onConfirm={() => setResetNotice('')}
+      />
     </Screen>
   );
 }

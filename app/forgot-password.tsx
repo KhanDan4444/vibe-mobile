@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Pressable, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Pressable, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { requestForgotPasswordOtp, resetPasswordWithOtp } from '@/src/api/auth';
+import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { ErrorBanner, Field, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { useTheme } from '@/src/context/PreferencesContext';
 
@@ -20,6 +21,8 @@ export default function ForgotPasswordScreen() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showSupportOption, setShowSupportOption] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const requestOtp = async () => {
     setError('');
@@ -60,9 +63,8 @@ export default function ForgotPasswordScreen() {
     setLoading(true);
     try {
       const data = await resetPasswordWithOtp({ sessionId, code, password });
-      Alert.alert(t('forgot.updatedTitle'), data.message || t('forgot.updatedBody'), [
-        { text: t('common.done'), onPress: () => router.replace('/login') },
-      ]);
+      setSuccessMessage(data.message || t('forgot.updatedBody'));
+      setSuccessOpen(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : t('forgot.resetFailed'));
     } finally {
@@ -130,6 +132,18 @@ export default function ForgotPasswordScreen() {
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
+      <ConfirmDialog
+        visible={successOpen}
+        title={t('forgot.updatedTitle')}
+        message={successMessage}
+        alertOnly
+        destructive={false}
+        confirmLabel={t('common.done')}
+        onConfirm={() => {
+          setSuccessOpen(false);
+          router.replace('/login');
+        }}
+      />
     </Screen>
   );
 }

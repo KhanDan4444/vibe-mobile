@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 
-export type FlashVariant = 'success' | 'offline';
+export type FlashVariant = 'success' | 'offline' | 'danger';
 
 export type FlashToast = {
   title: string;
@@ -30,7 +30,7 @@ type FlashBannerProps = {
 };
 
 /** Visible long enough to read title + subtitle without feeling sticky. */
-const DISMISS_MS = 3000;
+const DISMISS_MS = 4000;
 
 /** Matches tab bar content height in `(tabs)/_layout` (tablet 58 / phone 52). */
 function tabBarClearance(isTablet: boolean) {
@@ -84,10 +84,46 @@ export function FlashBanner({ toast, onDismiss }: FlashBannerProps) {
   if (!toast) return null;
 
   const variant = toast.variant ?? 'success';
-  const accent = variant === 'offline' ? '#fbbf24' : c.success;
-  const iconName = toast.icon ?? (variant === 'offline' ? 'cloud-offline-outline' : 'checkmark-circle');
+  const accent =
+    variant === 'offline' ? c.warning : variant === 'danger' ? c.error : c.success;
+  const iconName =
+    toast.icon ??
+    (variant === 'offline'
+      ? 'cloud-offline-outline'
+      : variant === 'danger'
+        ? 'trash-outline'
+        : 'checkmark-circle');
   const showSubtitle = Boolean(toast.subtitle);
   const bottomPad = Math.max(insets.bottom, 12) + (onTabs ? tabBarClearance(isTablet) + 10 : 16);
+
+  const surface = isDark
+    ? {
+        backgroundColor: c.card,
+        borderColor: c.border,
+        titleColor: c.text,
+        subtitleColor: c.muted,
+        iconBg: `${accent}22`,
+        shadowOpacity: 0.35,
+      }
+    : {
+        backgroundColor:
+          variant === 'danger' ? '#fff1f2' : variant === 'offline' ? '#fffbeb' : '#ecfdf5',
+        borderColor:
+          variant === 'danger'
+            ? 'rgba(225,29,72,0.18)'
+            : variant === 'offline'
+              ? 'rgba(217,119,6,0.22)'
+              : 'rgba(5,150,105,0.22)',
+        titleColor: c.text,
+        subtitleColor: c.muted,
+        iconBg:
+          variant === 'danger'
+            ? 'rgba(225,29,72,0.1)'
+            : variant === 'offline'
+              ? 'rgba(217,119,6,0.12)'
+              : 'rgba(5,150,105,0.12)',
+        shadowOpacity: 0.12,
+      };
 
   return (
     <View pointerEvents="box-none" style={[styles.wrap, { bottom: bottomPad }]}>
@@ -99,22 +135,23 @@ export function FlashBanner({ toast, onDismiss }: FlashBannerProps) {
           style={[
             styles.bar,
             {
-              backgroundColor: isDark ? '#161d2a' : '#0f172a',
-              borderColor: isDark ? 'rgba(148,163,184,0.22)' : 'rgba(15,23,42,0.1)',
+              backgroundColor: surface.backgroundColor,
+              borderColor: surface.borderColor,
               shadowColor: '#000',
+              shadowOpacity: surface.shadowOpacity,
             },
           ]}
         >
           <View style={[styles.accent, { backgroundColor: accent }]} />
-          <View style={[styles.iconWrap, { backgroundColor: `${accent}22` }]}>
+          <View style={[styles.iconWrap, { backgroundColor: surface.iconBg }]}>
             <Ionicons name={iconName} size={22} color={accent} />
           </View>
           <View style={styles.copy}>
-            <Text style={styles.title} numberOfLines={2}>
+            <Text style={[styles.title, { color: surface.titleColor }]} numberOfLines={2}>
               {toast.title}
             </Text>
             {showSubtitle ? (
-              <Text style={styles.subtitle} numberOfLines={2}>
+              <Text style={[styles.subtitle, { color: surface.subtitleColor }]} numberOfLines={2}>
                 {toast.subtitle}
               </Text>
             ) : null}
@@ -142,7 +179,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingRight: 16,
     overflow: 'hidden',
-    shadowOpacity: 0.32,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 },
     elevation: 8,
@@ -170,12 +206,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#f8fafc',
     letterSpacing: -0.2,
   },
   subtitle: {
     fontSize: 13,
     lineHeight: 18,
-    color: '#94a3b8',
   },
 });

@@ -1,6 +1,6 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -123,6 +123,7 @@ export default function TeamScreen() {
   const readOnly = Boolean(subscription?.readOnly);
   const canManageTeam = Boolean(user && isGymOwner(user.role));
   const [toggleTarget, setToggleTarget] = useState<StaffRow | null>(null);
+  const [errorNotice, setErrorNotice] = useState('');
 
   const query = useQuery({
     queryKey: ['team'],
@@ -139,7 +140,7 @@ export default function TeamScreen() {
     },
     onError: (e: Error) => {
       setToggleTarget(null);
-      Alert.alert(t('common.error'), e.message);
+      setErrorNotice(e.message);
     },
   });
 
@@ -208,6 +209,14 @@ export default function TeamScreen() {
           if (!toggleTarget) return;
           toggleMutation.mutate({ id: toggleTarget.id, is_active: !toggleTarget.is_active });
         }}
+      />
+      <ConfirmDialog
+        visible={Boolean(errorNotice)}
+        title={t('common.error')}
+        message={errorNotice}
+        alertOnly
+        destructive={false}
+        onConfirm={() => setErrorNotice('')}
       />
     </View>
     </TabScreenFrame>

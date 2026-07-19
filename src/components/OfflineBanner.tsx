@@ -14,13 +14,41 @@ import { useTheme } from '@/src/context/PreferencesContext';
 import { useNetwork } from '@/src/offline/NetworkProvider';
 
 /**
- * Offline: thin status strip in the layout.
- * Online with queued changes: modal (Sync is always tappable — not covered by the stack).
+ * In-layout strip when offline — sits above the navigator so it pushes headers down
+ * instead of covering them.
  */
-export function OfflineBanner() {
+export function OfflineStatusStrip() {
+  const { isOnline } = useNetwork();
+  const { isDark } = useTheme();
+  const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
+
+  if (isOnline) return null;
+
+  return (
+    <View
+      style={[
+        styles.offlineStrip,
+        {
+          backgroundColor: isDark ? '#78350f' : '#fef3c7',
+          paddingTop: Math.max(insets.top, 8),
+        },
+      ]}
+    >
+      <Text style={[styles.offlineText, { color: isDark ? '#fef3c7' : '#78350f' }]}>
+        {t('offline.offline')}
+      </Text>
+    </View>
+  );
+}
+
+/**
+ * Online sync UI (modal + reminder chip). Rendered above the stack for touch targets.
+ */
+export function OfflineSyncOverlay() {
   const { isOnline, pendingCount, failedCount, lastError, isSyncing, syncNow, discardQueuedChanges } =
     useNetwork();
-  const { colors: c, isDark } = useTheme();
+  const { colors: c } = useTheme();
   const { t } = useTranslation();
   const { showFlash } = useFlash();
   const insets = useSafeAreaInsets();
@@ -32,25 +60,6 @@ export function OfflineBanner() {
   useEffect(() => {
     if (needsSync) setModalDismissed(false);
   }, [needsSync, pendingCount, failedCount]);
-
-  if (!isOnline) {
-    return (
-      <View
-        pointerEvents="none"
-        style={[
-          styles.offlineStrip,
-          {
-            backgroundColor: isDark ? '#78350f' : '#fef3c7',
-            paddingTop: Math.max(insets.top, 8),
-          },
-        ]}
-      >
-        <Text style={[styles.offlineText, { color: isDark ? '#fef3c7' : '#78350f' }]}>
-          {t('offline.offline')}
-        </Text>
-      </View>
-    );
-  }
 
   if (!needsSync) return null;
 
@@ -157,14 +166,18 @@ export function OfflineBanner() {
   );
 }
 
+/** @deprecated Prefer OfflineStatusStrip + OfflineSyncOverlay */
+export function OfflineBanner() {
+  return (
+    <>
+      <OfflineStatusStrip />
+      <OfflineSyncOverlay />
+    </>
+  );
+}
+
 const styles = StyleSheet.create({
   offlineStrip: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 190,
-    elevation: 19,
     paddingHorizontal: 14,
     paddingBottom: 10,
   },

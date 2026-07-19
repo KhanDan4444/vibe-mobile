@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { completeGymSignup, getPublicSaasPlans, requestGymSignupOtp } from '@/src/api/auth';
+import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { OptionPickerField } from '@/src/components/OptionPickerField';
 import { ErrorBanner, Field, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { useTheme } from '@/src/context/PreferencesContext';
@@ -34,6 +35,8 @@ export default function RegisterGymScreen() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -140,9 +143,8 @@ export default function RegisterGymScreen() {
       const data = await completeGymSignup(
         trimmedEmail ? { ...payload, email: trimmedEmail } : payload
       );
-      Alert.alert(t('signup.successTitle'), data.message || t('signup.successBody'), [
-        { text: t('common.done'), onPress: () => router.replace('/login') },
-      ]);
+      setSuccessMessage(data.message || t('signup.successBody'));
+      setSuccessOpen(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : t('signup.completeFailed'));
     } finally {
@@ -260,6 +262,18 @@ export default function RegisterGymScreen() {
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
+      <ConfirmDialog
+        visible={successOpen}
+        title={t('signup.successTitle')}
+        message={successMessage}
+        alertOnly
+        destructive={false}
+        confirmLabel={t('common.done')}
+        onConfirm={() => {
+          setSuccessOpen(false);
+          router.replace('/login');
+        }}
+      />
     </Screen>
   );
 }

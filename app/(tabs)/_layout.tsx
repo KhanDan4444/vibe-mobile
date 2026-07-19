@@ -9,6 +9,7 @@ import { MembersTabIcon } from '@/src/components/MembersTabIcon';
 import { TabSwipeShell } from '@/src/components/TabSwipeShell';
 import { useAuth } from '@/src/auth/AuthContext';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
+import { useNetwork } from '@/src/offline/NetworkProvider';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { DM_SANS, DM_SANS_SEMI, NOTO_ETHIOPIC, lineHeightFor } from '@/src/theme/typography';
 import { hasGymPortalAccess } from '@/src/utils/roles';
@@ -35,6 +36,7 @@ export default function TabLayout() {
   const { colors: c } = useTheme();
   const { language } = usePreferences();
   const { t } = useTranslation();
+  const { isOnline } = useNetwork();
   const insets = useSafeAreaInsets();
   const { tabIconSize, isTablet } = useResponsiveLayout();
   const pathname = usePathname();
@@ -91,6 +93,8 @@ export default function TabLayout() {
                 ? { fontFamily: NOTO_ETHIOPIC, fontWeight: '600', lineHeight: lineHeightFor(17) }
                 : { fontFamily: DM_SANS_SEMI, fontWeight: '600' },
             headerRight,
+            // Root offline strip already owns the top inset.
+            ...(!isOnline ? { safeAreaInsets: { top: 0 } } : {}),
           }}
         >
           <Tabs.Screen

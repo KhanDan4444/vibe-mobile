@@ -13,7 +13,7 @@ import { DateField } from '@/src/components/DateField';
 import { PhotoPickerField } from '@/src/components/PhotoPickerField';
 import { PlanPickerField } from '@/src/components/PlanPickerField';
 import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
-import { ErrorBanner, Field, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, Field, Label, PrimaryButton, Screen, useFormScrollPadding } from '@/src/components/Form';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
@@ -32,6 +32,7 @@ import {
 import { formatApiError } from '@/src/utils/paymentValidation';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
 import type { EnrollPayload, PlanRow } from '@/src/types/api';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function planPrice(plan: PlanRow): number {
   return Number(plan.price) || 0;
@@ -57,8 +58,8 @@ export default function EnrollScreen() {
   const [error, setError] = useState('');
   const { colors: c } = useTheme();
   const { t } = useTranslation();
+  const formPadding = useFormScrollPadding();
   const styles = useThemedStyles((colors) => ({
-    content: { padding: 16, paddingBottom: 40 },
     hint: { color: colors.dim, fontSize: 14, marginTop: 4 },
     lockedValue: {
       borderWidth: 1,
@@ -201,7 +202,7 @@ export default function EnrollScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={formPadding} keyboardShouldPersistTaps="handled">
           <ErrorBanner
             message={
               error ||

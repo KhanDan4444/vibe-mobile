@@ -235,6 +235,7 @@
     "create": "ፍጠር",
     "cancel": "ሰርዝ",
     "confirm": "አረጋግጥ",
+    "ok": "እሺ",
     "done": "ተከናውኗል",
     "dismiss": "ዝጋ",
     "yes": "አዎ",
@@ -316,6 +317,18 @@
     "memberUpdated": {
       "title": "አባል ተዘምኗል",
       "subtitle": "የመገለጫ መረጃ ተቀምጧል።"
+    },
+    "memberDeleted": {
+      "title": "አባል ተሰርዟል",
+      "subtitle": "መዝገባቸው እና የክፍያ ታሪካቸው ተወግዷል።"
+    },
+    "paymentDeleted": {
+      "title": "ክፍያ ተሰርዟል",
+      "subtitle": "ይህ ክፍያ ከገቢ ተወግዷል።"
+    },
+    "planDeleted": {
+      "title": "ዕቅድ ተሰርዟል",
+      "subtitle": "ዕቅዱ ለመመዝገብ አይገኝም።"
     },
     "offline": {
       "title": "ከመስመር ውጭ ተቀምጧል",
@@ -528,6 +541,7 @@
     "delete": "ዕቅድ ሰርዝ",
     "cannotDeleteTitle": "መሰረዝ አይቻልም",
     "cannotDeleteBody": "\"{{name}}\" {{count}} ንቁ አባል(ዎች) አሉት። መጀመሪያ አስተላልፉ ወይም ጊዜውን ያበቁ።",
+    "deleteFailed": "ዕቅዱን መሰረዝ አልተቻለም።",
     "empty": "ዕቅድ እስካሁን የለም።",
     "activeMembers": "{{count}} ንቁ አባል(ዎች)",
     "noActiveMembers": "ንቁ አባል የለም"

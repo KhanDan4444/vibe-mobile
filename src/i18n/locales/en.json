@@ -235,6 +235,7 @@
     "create": "Create",
     "cancel": "Cancel",
     "confirm": "Confirm",
+    "ok": "OK",
     "done": "Done",
     "dismiss": "Dismiss",
     "yes": "Yes",
@@ -316,6 +317,18 @@
     "memberUpdated": {
       "title": "Member updated",
       "subtitle": "Profile details were saved."
+    },
+    "memberDeleted": {
+      "title": "Member deleted",
+      "subtitle": "Their record and payment history were removed."
+    },
+    "paymentDeleted": {
+      "title": "Payment deleted",
+      "subtitle": "This payment was removed from revenue."
+    },
+    "planDeleted": {
+      "title": "Plan deleted",
+      "subtitle": "The plan is no longer available for enroll."
     },
     "offline": {
       "title": "Saved offline",
@@ -528,6 +541,7 @@
     "delete": "Delete plan",
     "cannotDeleteTitle": "Cannot delete",
     "cannotDeleteBody": "\"{{name}}\" has {{count}} active member(s). Move or expire them first.",
+    "deleteFailed": "Could not delete plan.",
     "empty": "No plans yet.",
     "activeMembers": "{{count}} active member(s)",
     "noActiveMembers": "No active members"

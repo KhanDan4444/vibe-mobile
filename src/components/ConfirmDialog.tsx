@@ -13,13 +13,18 @@ type ConfirmDialogProps = {
   /** Destructive actions (delete / disable) render the confirm control in red. */
   destructive?: boolean;
   confirmLoading?: boolean;
+  /**
+   * Single primary button only (OK / Got it). Use for blockers and errors
+   * instead of system Alert.alert.
+   */
+  alertOnly?: boolean;
   onConfirm: () => void;
-  onCancel: () => void;
+  onCancel?: () => void;
 };
 
 /**
- * In-app confirm sheet. Prefer this over Alert.alert for destructive actions —
- * Android system alerts ignore `style: 'destructive'` and tint with the brand green.
+ * In-app bottom sheet dialog. Prefer this over Alert.alert —
+ * system alerts use a mismatched font/tint on Android.
  */
 export function ConfirmDialog({
   visible,
@@ -29,6 +34,7 @@ export function ConfirmDialog({
   cancelLabel,
   destructive = true,
   confirmLoading,
+  alertOnly = false,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -36,10 +42,13 @@ export function ConfirmDialog({
   const { colors: c } = useTheme();
   const insets = useSafeAreaInsets();
 
+  const dismiss = onCancel ?? onConfirm;
+  const primaryLabel = confirmLabel ?? (alertOnly ? t('common.ok') : t('common.confirm'));
+
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={dismiss}>
       <View style={styles.overlay}>
-        <Pressable style={styles.backdrop} onPress={onCancel} />
+        <Pressable style={styles.backdrop} onPress={dismiss} />
         <View
           style={[
             styles.card,
@@ -54,19 +63,22 @@ export function ConfirmDialog({
           <Text style={[styles.message, { color: c.muted }]}>{message}</Text>
 
           <View style={styles.actions}>
-            <Pressable
-              style={[styles.btn, styles.btnGhost, { borderColor: c.border }]}
-              onPress={onCancel}
-              disabled={confirmLoading}
-            >
-              <Text style={[styles.btnText, { color: c.muted }]}>
-                {cancelLabel ?? t('common.cancel')}
-              </Text>
-            </Pressable>
+            {alertOnly ? null : (
+              <Pressable
+                style={[styles.btn, styles.btnGhost, { borderColor: c.border }]}
+                onPress={dismiss}
+                disabled={confirmLoading}
+              >
+                <Text style={[styles.btnText, { color: c.muted }]}>
+                  {cancelLabel ?? t('common.cancel')}
+                </Text>
+              </Pressable>
+            )}
             <Pressable
               style={[
                 styles.btn,
-                destructive
+                alertOnly ? styles.btnFull : null,
+                destructive && !alertOnly
                   ? styles.btnDanger
                   : { backgroundColor: c.accent },
               ]}
@@ -74,7 +86,7 @@ export function ConfirmDialog({
               disabled={confirmLoading}
             >
               <Text style={[styles.btnText, styles.btnTextOnAccent]}>
-                {confirmLoading ? '…' : confirmLabel ?? t('common.confirm')}
+                {confirmLoading ? '…' : primaryLabel}
               </Text>
             </Pressable>
           </View>
@@ -121,6 +133,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 12,
+  },
+  btnFull: {
+    flex: 1,
   },
   btnGhost: {
     borderWidth: 1,

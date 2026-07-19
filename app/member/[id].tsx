@@ -1,7 +1,7 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -13,6 +13,7 @@ import { ResponsiveContent } from '@/src/components/ResponsiveContent';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
+import { useDeleteFlash } from '@/src/hooks/useSaveFlash';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import type { ThemeColors } from '@/src/theme/tokens';
@@ -116,9 +117,11 @@ export default function MemberDetailScreen() {
   const { t } = useTranslation();
   const { pagePadding, isLargeTablet } = useResponsiveLayout();
   const styles = useThemedStyles(buildMemberStyles);
+  const flashDeleted = useDeleteFlash();
   const canViewMember = Boolean(user && hasGymPortalAccess(user.role));
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [errorNotice, setErrorNotice] = useState('');
 
   const memberQuery = useQuery({
     queryKey: ['member', memberId],
@@ -176,10 +179,11 @@ export default function MemberDetailScreen() {
       queryClient.invalidateQueries({ queryKey: ['members'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       setDeleteOpen(false);
+      flashDeleted('flash.memberDeleted');
       router.replace('/(tabs)/members');
     } catch (e) {
       setDeleteOpen(false);
-      Alert.alert(t('common.error'), e instanceof Error ? e.message : t('member.deleteFailed'));
+      setErrorNotice(e instanceof Error ? e.message : t('member.deleteFailed'));
     } finally {
       setDeleting(false);
     }
@@ -270,6 +274,14 @@ export default function MemberDetailScreen() {
       confirmLoading={deleting}
       onCancel={() => setDeleteOpen(false)}
       onConfirm={() => void runDeleteMember()}
+    />
+    <ConfirmDialog
+      visible={Boolean(errorNotice)}
+      title={t('common.error')}
+      message={errorNotice}
+      alertOnly
+      destructive={false}
+      onConfirm={() => setErrorNotice('')}
     />
     </TabScreenFrame>
   );

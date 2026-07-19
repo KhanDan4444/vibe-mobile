@@ -1,4 +1,5 @@
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText as Text, AppTextInput as TextInput } from '@/src/components/AppText';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import type { ThemeColors } from '@/src/theme/tokens';
@@ -17,9 +18,29 @@ export const colors = {
   errorBg: 'rgba(244,63,94,0.15)',
 };
 
+/**
+ * Form screens — pads the system nav / gesture bar so the primary CTA is not
+ * covered by the Android navigation shadow.
+ */
 export function Screen({ children }: { children: React.ReactNode }) {
   const { colors: c } = useTheme();
-  return <View style={{ flex: 1, backgroundColor: c.bg }}>{children}</View>;
+  const insets = useSafeAreaInsets();
+  // Extra buffer clears Android nav-bar / gesture shadow over bottom CTAs.
+  return (
+    <View style={{ flex: 1, backgroundColor: c.bg, paddingBottom: Math.max(insets.bottom, 8) + 20 }}>
+      {children}
+    </View>
+  );
+}
+
+/** Scroll content padding with extra room under the last button / field. */
+export function useFormScrollPadding(horizontal = 16) {
+  return {
+    paddingHorizontal: horizontal,
+    paddingTop: horizontal,
+    // Clear of keyboard accessory / nav-bar shadow above the safe-area pad on Screen.
+    paddingBottom: 56,
+  };
 }
 
 export function Label({ children }: { children: string }) {
@@ -166,6 +187,7 @@ export const formStyles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 24,
+    marginBottom: 8,
   },
   buttonDisabled: { opacity: 0.6 },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },

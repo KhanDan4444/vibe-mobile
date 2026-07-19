@@ -1,12 +1,13 @@
 import { Redirect } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, Share, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Share, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchMemberReport, fetchRevenueReport } from '@/src/api/reports';
 import { BranchFilterBar } from '@/src/components/BranchFilterBar';
+import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { MiniBarChart } from '@/src/components/MiniBarChart';
 import { StatusBreakdown } from '@/src/components/StatusBreakdown';
 import { OptionPickerField } from '@/src/components/OptionPickerField';
@@ -131,6 +132,7 @@ export default function ReportsScreen() {
   const [memberFilter, setMemberFilter] = useState<MemberFilter>('all');
   const [revenuePreset, setRevenuePreset] = useState<RevenuePreset>('this_month');
   const [exporting, setExporting] = useState<string | null>(null);
+  const [exportError, setExportError] = useState('');
   const canViewReports = Boolean(user && hasGymPortalAccess(user.role));
 
   const memberFilters = useMemo(
@@ -244,7 +246,7 @@ export default function ReportsScreen() {
 
       await sharePdfFromHtml(html, title);
     } catch (e) {
-      Alert.alert(t('reports.exportFailed'), e instanceof Error ? e.message : t('reports.exportFailedBody'));
+      setExportError(e instanceof Error ? e.message : t('reports.exportFailedBody'));
     } finally {
       setExporting(null);
     }
@@ -334,6 +336,14 @@ export default function ReportsScreen() {
       </View>
       </ResponsiveContent>
     </ScrollView>
+    <ConfirmDialog
+      visible={Boolean(exportError)}
+      title={t('reports.exportFailed')}
+      message={exportError}
+      alertOnly
+      destructive={false}
+      onConfirm={() => setExportError('')}
+    />
     </TabScreenFrame>
   );
 }

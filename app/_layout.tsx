@@ -13,8 +13,8 @@ import { FlashProvider } from '@/src/context/FlashContext';
 import { GymBootProvider } from '@/src/context/GymBootContext';
 import { PreferencesProvider, usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { NotificationInboxProvider } from '@/src/notifications/NotificationInboxContext';
-import { NetworkProvider } from '@/src/offline/NetworkProvider';
-import { OfflineBanner } from '@/src/components/OfflineBanner';
+import { NetworkProvider, useNetwork } from '@/src/offline/NetworkProvider';
+import { OfflineStatusStrip, OfflineSyncOverlay } from '@/src/components/OfflineBanner';
 import { SubscriptionLockout } from '@/src/components/SubscriptionLockout';
 import { PERSISTED_QUERY_KEYS, queryClient, QUERY_CACHE_STORAGE_KEY } from '@/src/query/client';
 import { SystemChrome } from '@/src/theme/SystemChrome';
@@ -76,6 +76,7 @@ function RootNavigator() {
   const { colors: c } = useTheme();
   const { language } = usePreferences();
   const { t } = useTranslation();
+  const { isOnline } = useNetwork();
 
   const stackScreen = {
     headerShown: true as const,
@@ -85,6 +86,8 @@ function RootNavigator() {
       language === 'am'
         ? ({ fontFamily: NOTO_ETHIOPIC, fontWeight: '600' as const, lineHeight: lineHeightFor(17) })
         : ({ fontFamily: DM_SANS_SEMI, fontWeight: '600' as const }),
+    // Offline strip already consumes the top safe area — avoid a second gap under it.
+    ...(user && !isOnline ? { safeAreaInsets: { top: 0 } } : {}),
   };
 
   if (loading) {
@@ -107,8 +110,15 @@ function RootNavigator() {
   return (
     <View style={{ flex: 1, backgroundColor: c.bg }}>
       <SystemChrome />
+      {user ? <OfflineStatusStrip /> : null}
       <View style={{ flex: 1 }}>
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.bg } }}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: c.bg },
+            ...(user && !isOnline ? { safeAreaInsets: { top: 0 } } : {}),
+          }}
+        >
       <Stack.Screen name="index" />
       <Stack.Screen name="login" />
       <Stack.Screen name="forgot-password" />
@@ -138,8 +148,7 @@ function RootNavigator() {
       <Stack.Screen name="reports" options={{ ...stackScreen, title: t('screens.reports') }} />
         </Stack>
       </View>
-      {/* After Stack so Sync modal / chip stay above navigation touch targets */}
-      {user ? <OfflineBanner /> : null}
+      {user ? <OfflineSyncOverlay /> : null}
     </View>
   );
 }
