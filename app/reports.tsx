@@ -127,8 +127,8 @@ export default function ReportsScreen() {
   const { colors: c } = useTheme();
   const { language } = usePreferences();
   const { t } = useTranslation();
-  const { pagePadding, statCardWidthPercent } = useResponsiveLayout();
-  const styles = useThemedStyles((colors) => buildReportStyles(colors, statCardWidthPercent));
+  const { pagePadding, reportStatWidthPercent } = useResponsiveLayout();
+  const styles = useThemedStyles((colors) => buildReportStyles(colors, reportStatWidthPercent));
   const [memberFilter, setMemberFilter] = useState<MemberFilter>('all');
   const [revenuePreset, setRevenuePreset] = useState<RevenuePreset>('this_month');
   const [exporting, setExporting] = useState<string | null>(null);

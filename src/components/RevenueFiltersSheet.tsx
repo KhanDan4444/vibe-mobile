@@ -3,6 +3,7 @@ import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DateField } from '@/src/components/DateField';
+import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { boundsForCustomRangeFrom, boundsForCustomRangeTo } from '@/src/utils/datePickerBounds';
 import { PAYMENT_METHODS } from '@/src/constants/payments';
 import { REVENUE_SORT_OPTIONS, type RevenueSortId } from '@/src/utils/listSort';
@@ -41,6 +42,7 @@ export function RevenueFiltersSheet({
 }: Props) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const { isTablet, formMaxWidth } = useResponsiveLayout();
   const fromBounds = boundsForCustomRangeFrom(customTo);
   const toBounds = boundsForCustomRangeTo(customFrom);
   const styles = useThemedStyles((c) => ({
@@ -53,6 +55,9 @@ export function RevenueFiltersSheet({
       paddingHorizontal: 20,
       paddingBottom: Math.max(insets.bottom, 16) + 8,
       maxHeight: '85%' as const,
+      width: '100%' as const,
+      alignSelf: 'center' as const,
+      ...(isTablet ? { maxWidth: formMaxWidth + 40 } : {}),
     },
     handle: {
       alignSelf: 'center' as const,

@@ -1,6 +1,6 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -8,7 +8,7 @@ import { fetchTeam, resetStaffPassword, updateStaff } from '@/src/api/team';
 import { fetchBranches } from '@/src/api/branches';
 import { BranchPicker } from '@/src/components/BranchPicker';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
-import { ErrorBanner, Field, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { isGymOwner } from '@/src/utils/roles';
 
@@ -28,7 +28,6 @@ export default function EditStaffScreen() {
   const [resetNotice, setResetNotice] = useState('');
   const canManageTeam = Boolean(user && isGymOwner(user.role));
   const styles = useThemedStyles((colors) => ({
-    content: { padding: 16, paddingBottom: 40 },
     readOnly: { color: colors.muted, padding: 16, fontSize: 15 },
     divider: { marginTop: 32, marginBottom: 16, height: 1, backgroundColor: colors.border },
     sectionTitle: { fontSize: 16, fontWeight: '700' as const, color: colors.text },
@@ -128,7 +127,7 @@ export default function EditStaffScreen() {
   return (
     <Screen>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <FormScroll>
           <ErrorBanner message={error} />
 
           <Label>Name</Label>
@@ -174,7 +173,7 @@ export default function EditStaffScreen() {
           >
             <Text style={styles.resetBtnText}>{resetMutation.isPending ? 'Updating…' : 'Reset password'}</Text>
           </Pressable>
-        </ScrollView>
+        </FormScroll>
       </KeyboardAvoidingView>
       <ConfirmDialog
         visible={Boolean(resetNotice)}

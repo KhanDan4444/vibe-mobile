@@ -1,6 +1,6 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -8,7 +8,7 @@ import { fetchBranches } from '@/src/api/branches';
 import { fetchMember, updateMember } from '@/src/api/members';
 import { BranchPicker } from '@/src/components/BranchPicker';
 import { PhotoPickerField } from '@/src/components/PhotoPickerField';
-import { ErrorBanner, Field, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { useNetwork } from '@/src/offline/NetworkProvider';
@@ -143,7 +143,7 @@ export default function EditMemberScreen() {
   return (
     <Screen>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <FormScroll>
           <ErrorBanner
             message={
               error ||
@@ -193,14 +193,13 @@ export default function EditMemberScreen() {
             loading={mutation.isPending || photoProcessing}
             disabled={!canSubmit || photoProcessing}
           />
-        </ScrollView>
+        </FormScroll>
       </KeyboardAvoidingView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 16, paddingBottom: 40 },
   hint: { fontSize: 13, marginTop: 16, lineHeight: 20 },
   branchReadOnly: { marginTop: 8 },
   branchValue: {

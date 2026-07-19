@@ -3,7 +3,8 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 
 /**
- * Inner scroll/list content with consistent horizontal padding and optional max width.
+ * Inner scroll/list content with consistent horizontal padding.
+ * Max-width centering belongs to TabScreenFrame — do not nest both.
  */
 export function ResponsiveContent({
   children,
@@ -14,17 +15,10 @@ export function ResponsiveContent({
   style?: StyleProp<ViewStyle>;
   noPadding?: boolean;
 }) {
-  const { pagePadding, isTablet, contentMaxWidth } = useResponsiveLayout();
+  const { pagePadding } = useResponsiveLayout();
 
   return (
-    <View
-      style={[
-        styles.base,
-        !noPadding && { paddingHorizontal: pagePadding },
-        isTablet && { maxWidth: contentMaxWidth, alignSelf: 'center', width: '100%' },
-        style,
-      ]}
-    >
+    <View style={[styles.base, !noPadding && { paddingHorizontal: pagePadding }, style]}>
       {children}
     </View>
   );

@@ -19,11 +19,13 @@ import type { StaffRow } from '@/src/types/api';
 function StaffCard({
   member,
   multiColumn,
+  columnStyle,
   onEdit,
   onToggle,
 }: {
   member: StaffRow;
   multiColumn?: boolean;
+  columnStyle?: object;
   onEdit: () => void;
   onToggle: () => void;
 }) {
@@ -37,7 +39,7 @@ function StaffCard({
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
     },
-    cardColumn: { flex: 1, marginBottom: 0 },
+    cardColumn: { marginBottom: 0 },
     headerRow: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 8 },
     cardMain: { flex: 1, marginBottom: 0 },
     name: { fontSize: 17, fontWeight: '700' as const, color: c.text },
@@ -67,7 +69,7 @@ function StaffCard({
   ];
 
   return (
-    <View style={[styles.card, multiColumn && styles.cardColumn]}>
+    <View style={[styles.card, multiColumn && styles.cardColumn, multiColumn && columnStyle]}>
       <View style={styles.headerRow}>
         <View style={styles.cardMain}>
           <Text style={styles.name}>{member.name}</Text>
@@ -90,7 +92,7 @@ export default function TeamScreen() {
   const { colors: c } = useTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { listColumns, pagePadding, fabRight } = useResponsiveLayout();
+  const { listColumns, pagePadding, fabRight, listColumnItemStyle } = useResponsiveLayout();
   const fabBottom = 24 + insets.bottom;
   const styles = useThemedStyles((colors) => ({
     container: { flex: 1, backgroundColor: colors.bg },
@@ -175,6 +177,7 @@ export default function TeamScreen() {
             <StaffCard
               member={item}
               multiColumn={listColumns > 1}
+              columnStyle={listColumnItemStyle}
               onEdit={() => router.push(`/team/${item.id}/edit`)}
               onToggle={() => requestToggle(item)}
             />

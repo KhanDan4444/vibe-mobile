@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Pressable, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, Pressable, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { requestForgotPasswordOtp, resetPasswordWithOtp } from '@/src/api/auth';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
-import { ErrorBanner, Field, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { useTheme } from '@/src/context/PreferencesContext';
 
 export default function ForgotPasswordScreen() {
@@ -75,7 +75,7 @@ export default function ForgotPasswordScreen() {
   return (
     <Screen>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <FormScroll contentContainerStyle={{ paddingTop: 72 }}>
           <Text style={[styles.title, { color: c.text }]}>{t('forgot.title')}</Text>
           <Text style={[styles.subtitle, { color: c.muted }]}>{t('forgot.subtitle')}</Text>
           <ErrorBanner message={error} />
@@ -130,7 +130,7 @@ export default function ForgotPasswordScreen() {
           <Pressable style={styles.back} onPress={() => router.replace('/login')}>
             <Text style={[styles.secondaryText, { color: c.muted }]}>{t('forgot.backToLogin')}</Text>
           </Pressable>
-        </ScrollView>
+        </FormScroll>
       </KeyboardAvoidingView>
       <ConfirmDialog
         visible={successOpen}
@@ -149,7 +149,6 @@ export default function ForgotPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 24, paddingTop: 72, paddingBottom: 40 },
   title: { fontSize: 26, fontWeight: '700', textAlign: 'center' },
   subtitle: { marginTop: 8, marginBottom: 24, fontSize: 14, lineHeight: 21, textAlign: 'center' },
   message: { marginBottom: 12, fontSize: 14, textAlign: 'center' },

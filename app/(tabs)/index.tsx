@@ -120,7 +120,7 @@ export default function DashboardScreen() {
   const owner = isGymOwner(user?.role);
   const staffUser = isGymStaff(user?.role);
   const { readOnly } = useGymReadOnly();
-  const { statCardWidthPercent, isTablet, pagePadding } = useResponsiveLayout();
+  const { statCardWidthPercent, isTablet, pagePadding, chartHeight } = useResponsiveLayout();
   const staffBranchLabel = staffUser
     ? user?.branch_name || (user?.branch_id ? `Branch #${user.branch_id}` : null)
     : null;
@@ -169,7 +169,7 @@ export default function DashboardScreen() {
   const alertFilter = alertMembers.some((member) => member.status.toLowerCase() === 'expired') ? 'expired' : 'due_soon';
 
   const summaryBlock = data ? (
-    <View style={[styles.summary, { backgroundColor: c.card, borderColor: c.border }]}>
+    <View style={[styles.summary, { backgroundColor: c.card, borderColor: c.border }, isTablet && owner && styles.splitChild]}>
       <Pressable onPress={() => router.push('/(tabs)/revenue')}>
         <Text style={[styles.summaryTitle, { color: c.muted }]}>{t('dashboard.thisMonth')}</Text>
         <Text style={[styles.income, { color: c.accentText }]}>
@@ -183,13 +183,15 @@ export default function DashboardScreen() {
             : ''}
         </Text>
       </Pressable>
-      {owner ? <MiniBarChart data={data.revenueChart ?? []} /> : null}
+      {owner ? (
+        <MiniBarChart data={data.revenueChart ?? []} height={chartHeight} showTypeSwitcher={isTablet} />
+      ) : null}
     </View>
   ) : null;
 
   const attentionBlock =
     data && owner ? (
-      <View style={[styles.alertCard, { backgroundColor: c.card, borderColor: c.border }]}>
+      <View style={[styles.alertCard, { backgroundColor: c.card, borderColor: c.border }, isTablet && styles.splitChild]}>
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: c.text }]}>{t('dashboard.attentionTitle')}</Text>
           <Pressable onPress={() => goMembers(alertFilter)}>
@@ -285,8 +287,17 @@ export default function DashboardScreen() {
               onPress={() => goMembers('unpaid')}
             />
           </View>
-          {summaryBlock}
-          {owner ? attentionBlock : null}
+          {isTablet && owner && summaryBlock && attentionBlock ? (
+            <View style={styles.splitRow}>
+              <View style={styles.splitCol}>{summaryBlock}</View>
+              <View style={styles.splitCol}>{attentionBlock}</View>
+            </View>
+          ) : (
+            <>
+              {summaryBlock}
+              {owner ? attentionBlock : null}
+            </>
+          )}
         </>
       ) : null}
 
@@ -325,15 +336,17 @@ const styles = StyleSheet.create({
   splitRow: {
     flexDirection: 'row',
     gap: 16,
-    marginTop: 24,
-    alignItems: 'flex-start',
+    marginTop: 16,
+    alignItems: 'stretch',
   },
   splitCol: { flex: 1, minWidth: 0 },
+  splitChild: { marginTop: 0 },
   summary: {
     marginTop: 16,
     borderRadius: 14,
     padding: 18,
     borderWidth: StyleSheet.hairlineWidth,
+    flex: 1,
   },
   summaryTitle: { fontSize: 13, fontWeight: '600' },
   income: { marginTop: 6, fontSize: 34, fontWeight: '700', letterSpacing: -0.5 },

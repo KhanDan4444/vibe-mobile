@@ -1,6 +1,6 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, Switch, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, Switch, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -13,7 +13,7 @@ import { DateField } from '@/src/components/DateField';
 import { PhotoPickerField } from '@/src/components/PhotoPickerField';
 import { PlanPickerField } from '@/src/components/PlanPickerField';
 import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
-import { ErrorBanner, Field, Label, PrimaryButton, Screen, useFormScrollPadding } from '@/src/components/Form';
+import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
@@ -32,7 +32,6 @@ import {
 import { formatApiError } from '@/src/utils/paymentValidation';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
 import type { EnrollPayload, PlanRow } from '@/src/types/api';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function planPrice(plan: PlanRow): number {
   return Number(plan.price) || 0;
@@ -58,7 +57,6 @@ export default function EnrollScreen() {
   const [error, setError] = useState('');
   const { colors: c } = useTheme();
   const { t } = useTranslation();
-  const formPadding = useFormScrollPadding();
   const styles = useThemedStyles((colors) => ({
     hint: { color: colors.dim, fontSize: 14, marginTop: 4 },
     lockedValue: {
@@ -202,7 +200,7 @@ export default function EnrollScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView contentContainerStyle={formPadding} keyboardShouldPersistTaps="handled">
+        <FormScroll>
           <ErrorBanner
             message={
               error ||
@@ -293,7 +291,7 @@ export default function EnrollScreen() {
             loading={mutation.isPending || photoProcessing}
             disabled={!canSubmit || photoProcessing}
           />
-        </ScrollView>
+        </FormScroll>
       </KeyboardAvoidingView>
     </Screen>
   );

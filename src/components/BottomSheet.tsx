@@ -2,6 +2,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText as Text } from '@/src/components/AppText';
 import { usePreferences } from '@/src/context/PreferencesContext';
+import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { appTextStyle } from '@/src/theme/typography';
 
@@ -21,6 +22,8 @@ export function BottomSheet({
 }) {
   const insets = useSafeAreaInsets();
   const { language } = usePreferences();
+  const { isTablet, formMaxWidth } = useResponsiveLayout();
+  const sheetMaxWidth = formMaxWidth + 40;
   const styles = useThemedStyles((c) => ({
     overlay: { flex: 1, justifyContent: 'flex-end' as const },
     backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.5)' },
@@ -31,6 +34,9 @@ export function BottomSheet({
       paddingHorizontal: 20,
       paddingBottom: Math.max(insets.bottom, 16) + 8,
       maxHeight: '85%' as const,
+      width: '100%' as const,
+      alignSelf: 'center' as const,
+      ...(isTablet ? { maxWidth: sheetMaxWidth } : {}),
     },
     handle: {
       alignSelf: 'center' as const,

@@ -108,8 +108,7 @@ const styles = StyleSheet.create({
   },
   rowTablet: {
     width: '48.5%',
-    flexGrow: 1,
-    minWidth: 280,
+    flexGrow: 0,
   },
   rowIcon: { marginRight: 12 },
   rowText: { flex: 1 },

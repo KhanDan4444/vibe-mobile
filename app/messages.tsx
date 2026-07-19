@@ -20,7 +20,17 @@ import type { MemberSmsRow } from '@/src/types/api';
 
 type SmsFilter = (typeof SMS_TYPE_FILTER_KEYS)[number]['value'];
 
-function SmsItem({ row, multiColumn, onPress }: { row: MemberSmsRow; multiColumn?: boolean; onPress: () => void }) {
+function SmsItem({
+  row,
+  multiColumn,
+  columnStyle,
+  onPress,
+}: {
+  row: MemberSmsRow;
+  multiColumn?: boolean;
+  columnStyle?: object;
+  onPress: () => void;
+}) {
   const styles = useThemedStyles((c) => ({
     card: {
       backgroundColor: c.card,
@@ -30,7 +40,7 @@ function SmsItem({ row, multiColumn, onPress }: { row: MemberSmsRow; multiColumn
       borderWidth: 1,
       borderColor: c.border,
     },
-    cardColumn: { flex: 1, marginBottom: 0 },
+    cardColumn: { marginBottom: 0 },
     cardHeader: { flexDirection: 'row' as const, justifyContent: 'space-between' as const, gap: 8 },
     member: { flex: 1, fontSize: 15, fontWeight: '600' as const, color: c.text },
     time: { fontSize: 11, color: c.dim },
@@ -40,7 +50,7 @@ function SmsItem({ row, multiColumn, onPress }: { row: MemberSmsRow; multiColumn
   }));
 
   return (
-    <Pressable style={[styles.card, multiColumn && styles.cardColumn]} onPress={onPress}>
+    <Pressable style={[styles.card, multiColumn && styles.cardColumn, multiColumn && columnStyle]} onPress={onPress}>
       <View style={styles.cardHeader}>
         <Text style={styles.member}>{row.member_name}</Text>
         <Text style={styles.time}>{formatDisplayDateTime(row.sent_at)}</Text>
@@ -58,7 +68,7 @@ export default function MessagesScreen() {
   const { selectedBranchId } = useBranchScope();
   const { colors: c } = useTheme();
   const { t } = useTranslation();
-  const { listColumns, pagePadding } = useResponsiveLayout();
+  const { listColumns, pagePadding, listColumnItemStyle } = useResponsiveLayout();
   const styles = useThemedStyles((colors) => ({
     container: { flex: 1, backgroundColor: colors.bg },
     filters: { paddingTop: 12, paddingBottom: 4 },
@@ -117,7 +127,12 @@ export default function MessagesScreen() {
           columnWrapperStyle={listColumns > 1 ? styles.columnWrap : undefined}
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => (
-            <SmsItem row={item} multiColumn={listColumns > 1} onPress={() => router.push(`/member/${item.member_id}`)} />
+            <SmsItem
+              row={item}
+              multiColumn={listColumns > 1}
+              columnStyle={listColumnItemStyle}
+              onPress={() => router.push(`/member/${item.member_id}`)}
+            />
           )}
           contentContainerStyle={[styles.list, { paddingHorizontal: pagePadding }]}
           refreshControl={

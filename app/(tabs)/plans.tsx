@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText as Text } from '@/src/components/AppText';
 import { useAuth } from '@/src/auth/AuthContext';
 import { deletePlan, fetchPlans } from '@/src/api/plans';
@@ -26,6 +27,7 @@ function PlanCard({
   onEdit,
   onDelete,
   multiColumn,
+  columnStyle,
 }: {
   plan: PlanRow;
   owner: boolean;
@@ -33,6 +35,7 @@ function PlanCard({
   onEdit: () => void;
   onDelete: () => void;
   multiColumn?: boolean;
+  columnStyle?: object;
 }) {
   const { t } = useTranslation();
   const styles = useThemedStyles((c) => ({
@@ -45,7 +48,6 @@ function PlanCard({
       borderColor: c.border,
     },
     cardColumn: {
-      flex: 1,
       marginBottom: 0,
     },
     headerRow: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 8 },
@@ -85,7 +87,7 @@ function PlanCard({
       : [];
 
   return (
-    <View style={[styles.card, multiColumn && styles.cardColumn]}>
+    <View style={[styles.card, multiColumn && styles.cardColumn, multiColumn && columnStyle]}>
       <View style={styles.headerRow}>
         <View style={styles.cardMain}>
           <Text style={styles.name}>{plan.name}</Text>
@@ -127,7 +129,14 @@ export default function PlansScreen() {
     },
     bannerText: { color: '#fcd34d', fontSize: 13 },
     list: { paddingBottom: 88 },
-    empty: { textAlign: 'center' as const, color: colors.dim, marginTop: 40, fontSize: 15 },
+    empty: {
+      textAlign: 'center' as const,
+      color: colors.dim,
+      marginTop: 40,
+      fontSize: 15,
+      alignSelf: 'center' as const,
+      maxWidth: 360,
+    },
     errorWrap: { alignItems: 'center' as const, paddingTop: 48, gap: 12, paddingHorizontal: 24 },
     errorText: { textAlign: 'center' as const, color: colors.error, fontSize: 15 },
     retryBtn: {
@@ -143,7 +152,6 @@ export default function PlansScreen() {
     retryText: { color: colors.accentText, fontSize: 14, fontWeight: '600' as const },
     fab: {
       position: 'absolute' as const,
-      bottom: 24,
       width: 48,
       height: 48,
       borderRadius: 14,
@@ -157,8 +165,9 @@ export default function PlansScreen() {
 
   const { readOnly } = useGymReadOnly();
   const flashDeleted = useDeleteFlash();
-  const { listColumns, pagePadding, contentMaxWidth, width, isTablet } = useResponsiveLayout();
-  const fabRight = isTablet ? Math.max(pagePadding, (width - contentMaxWidth) / 2 + pagePadding) : 20;
+  const insets = useSafeAreaInsets();
+  const { listColumns, pagePadding, fabRight, listColumnItemStyle } = useResponsiveLayout();
+  const fabBottom = 24 + Math.max(insets.bottom, 0);
   const owner = isGymOwner(user?.role);
   const canAccessPlans = Boolean(user && hasGymPortalAccess(user.role));
   const [planToDelete, setPlanToDelete] = useState<PlanRow | null>(null);
@@ -237,6 +246,7 @@ export default function PlansScreen() {
               owner={owner}
               readOnly={readOnly}
               multiColumn={listColumns > 1}
+              columnStyle={listColumnItemStyle}
               onEdit={() => router.push(`/plan/${item.id}/edit`)}
               onDelete={() => requestDelete(item)}
             />
@@ -250,7 +260,7 @@ export default function PlansScreen() {
       )}
 
       {owner && !readOnly ? (
-        <Pressable style={[styles.fab, { right: fabRight }]} onPress={() => router.push('/plan/new')}>
+        <Pressable style={[styles.fab, { right: fabRight, bottom: fabBottom }]} onPress={() => router.push('/plan/new')}>
           <Text style={styles.fabText}>+</Text>
         </Pressable>
       ) : null}

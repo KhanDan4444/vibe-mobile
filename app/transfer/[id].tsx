@@ -1,14 +1,14 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, ScrollView, View } from 'react-native';
+import { Alert, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchBranches } from '@/src/api/branches';
 import { fetchMember, transferMember } from '@/src/api/members';
 import { OptionPickerField } from '@/src/components/OptionPickerField';
-import { ErrorBanner, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
@@ -33,7 +33,6 @@ export default function TransferScreen() {
   const flashOffline = useOfflineFlash();
   const canTransfer = Boolean(user && isGymOwner(user.role));
   const styles = useThemedStyles((colors) => ({
-    content: { padding: 16, paddingBottom: 40 },
     body: { color: colors.muted, fontSize: 15, lineHeight: 22, marginBottom: 16 },
     bold: { color: colors.text, fontWeight: '600' as const },
     hint: { color: colors.dim, fontSize: 14 },
@@ -91,7 +90,7 @@ export default function TransferScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={styles.content}>
+      <FormScroll>
         {member ? (
           <Text style={styles.body}>
             {t('forms.transferBody', {
@@ -130,7 +129,7 @@ export default function TransferScreen() {
           loading={mutation.isPending}
           disabled={!canSubmit}
         />
-      </ScrollView>
+      </FormScroll>
     </Screen>
   );
 }

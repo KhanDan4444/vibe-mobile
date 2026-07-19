@@ -16,11 +16,13 @@ function BranchCard({
   branch,
   owner,
   multiColumn,
+  columnStyle,
   onEdit,
 }: {
   branch: BranchRow;
   owner: boolean;
   multiColumn?: boolean;
+  columnStyle?: object;
   onEdit: () => void;
 }) {
   const styles = useThemedStyles((c) => ({
@@ -32,7 +34,7 @@ function BranchCard({
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
     },
-    cardColumn: { flex: 1, marginBottom: 0 },
+    cardColumn: { marginBottom: 0 },
     cardMain: { flex: 1 },
     name: { fontSize: 17, fontWeight: '700' as const, color: c.text },
     meta: { marginTop: 4, fontSize: 13, color: c.muted },
@@ -51,7 +53,7 @@ function BranchCard({
   }));
 
   return (
-    <View style={[styles.card, multiColumn && styles.cardColumn]}>
+    <View style={[styles.card, multiColumn && styles.cardColumn, multiColumn && columnStyle]}>
       <View style={styles.cardMain}>
         <Text style={styles.name}>
           {branch.name}
@@ -78,7 +80,7 @@ export default function BranchesScreen() {
   const { token, user, subscription } = useAuth();
   const { colors: c } = useTheme();
   const insets = useSafeAreaInsets();
-  const { listColumns, pagePadding, fabRight } = useResponsiveLayout();
+  const { listColumns, pagePadding, fabRight, listColumnItemStyle } = useResponsiveLayout();
   const fabBottom = 24 + insets.bottom;
   const styles = useThemedStyles((colors) => ({
     container: { flex: 1, backgroundColor: colors.bg },
@@ -134,6 +136,7 @@ export default function BranchesScreen() {
               branch={item}
               owner={owner && !readOnly}
               multiColumn={listColumns > 1}
+              columnStyle={listColumnItemStyle}
               onEdit={() => router.push(`/branch/${item.id}/edit`)}
             />
           )}

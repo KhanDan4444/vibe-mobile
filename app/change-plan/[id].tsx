@@ -1,7 +1,7 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -11,7 +11,7 @@ import { DateField } from '@/src/components/DateField';
 import { PlanPickerField } from '@/src/components/PlanPickerField';
 import { ChangePlanPaymentSummary } from '@/src/components/ChangePlanPaymentSummary';
 import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
-import { ErrorBanner, Field, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useTranslation } from 'react-i18next';
 import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
@@ -56,7 +56,6 @@ export default function ChangePlanScreen() {
   const { t } = useTranslation();
   const canChangePlan = Boolean(user && hasGymPortalAccess(user.role));
   const styles = useThemedStyles((colors) => ({
-    content: { padding: 16, paddingBottom: 40 },
     center: { flex: 1, alignItems: 'center' as const, justifyContent: 'center' as const, padding: 24 },
     memberName: { color: colors.text, fontSize: 17, fontWeight: '600' as const, marginBottom: 4 },
     subtitle: { color: colors.muted, fontSize: 14, marginBottom: 14, lineHeight: 20 },
@@ -304,7 +303,7 @@ export default function ChangePlanScreen() {
   return (
     <Screen>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <FormScroll>
           {member ? (
             <>
               <Text style={styles.memberName}>{t('forms.changePlanFor', { name: member.name })}</Text>
@@ -431,7 +430,7 @@ export default function ChangePlanScreen() {
             loading={mutation.isPending}
             disabled={!canSubmit}
           />
-        </ScrollView>
+        </FormScroll>
       </KeyboardAvoidingView>
     </Screen>
   );

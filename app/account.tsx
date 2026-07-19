@@ -139,5 +139,5 @@ const styles = StyleSheet.create({
   rowValue: { fontSize: 13, fontWeight: '700' },
   menuGrid: { gap: 0 },
   menuGridTablet: { flexDirection: 'row', gap: 20, alignItems: 'flex-start' },
-  menuColumn: { flex: 1, minWidth: 280 },
+  menuColumn: { width: '48.5%', flexGrow: 0 },
 });

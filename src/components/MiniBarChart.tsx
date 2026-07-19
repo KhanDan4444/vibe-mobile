@@ -266,7 +266,7 @@ function LineChartView({
         accessibilityRole="adjustable"
         accessibilityLabel={t('dashboard.chartDailyTotal')}
       >
-        <Svg width="100%" height="100%" viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} preserveAspectRatio="none">
+        <Svg width="100%" height="100%" viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} preserveAspectRatio="xMidYMid meet">
           <Defs>
             <LinearGradient id="revenueAreaFill" x1="0" y1="0" x2="0" y2="1">
               <Stop offset="0" stopColor={styles.chartLine.color} stopOpacity="0.34" />

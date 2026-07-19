@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { completeGymSignup, getPublicSaasPlans, requestGymSignupOtp } from '@/src/api/auth';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { OptionPickerField } from '@/src/components/OptionPickerField';
-import { ErrorBanner, Field, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { useTheme } from '@/src/context/PreferencesContext';
 import type { PublicSaasPlan } from '@/src/types/api';
 import { formatEtb } from '@/src/utils/formatMoney';
@@ -178,7 +178,7 @@ export default function RegisterGymScreen() {
   return (
     <Screen>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <FormScroll contentContainerStyle={{ paddingTop: 72 }}>
           <Text style={[styles.title, { color: c.text }]}>{t('signup.title')}</Text>
           <Text style={[styles.subtitle, { color: c.muted }]}>{t('signup.subtitle')}</Text>
           <ErrorBanner message={error} />
@@ -260,7 +260,7 @@ export default function RegisterGymScreen() {
           <Pressable style={styles.back} onPress={() => router.replace('/login')}>
             <Text style={[styles.backLinkText, { color: c.accent }]}>{t('signup.backToLogin')}</Text>
           </Pressable>
-        </ScrollView>
+        </FormScroll>
       </KeyboardAvoidingView>
       <ConfirmDialog
         visible={successOpen}
@@ -279,7 +279,6 @@ export default function RegisterGymScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 24, paddingTop: 72, paddingBottom: 40 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   unavailableCard: {
     borderWidth: 1,

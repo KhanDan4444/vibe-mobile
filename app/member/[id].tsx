@@ -115,7 +115,7 @@ export default function MemberDetailScreen() {
   const { colors: c } = useTheme();
   const { language } = usePreferences();
   const { t } = useTranslation();
-  const { pagePadding, isLargeTablet } = useResponsiveLayout();
+  const { pagePadding, isTablet } = useResponsiveLayout();
   const styles = useThemedStyles(buildMemberStyles);
   const flashDeleted = useDeleteFlash();
   const canViewMember = Boolean(user && hasGymPortalAccess(user.role));
@@ -193,8 +193,8 @@ export default function MemberDetailScreen() {
     <TabScreenFrame>
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <ResponsiveContent style={{ paddingHorizontal: pagePadding }}>
-      <View style={isLargeTablet ? { flexDirection: 'row', gap: 12, alignItems: 'flex-start' } : undefined}>
-      <View style={[styles.card, isLargeTablet && { flex: 1 }]}>
+      <View style={isTablet ? { flexDirection: 'row', gap: 12, alignItems: 'flex-start' } : undefined}>
+      <View style={[styles.card, isTablet && { flex: 1 }]}>
         <View style={styles.headerRow}>
           {token ? (
             <MemberPhoto
@@ -215,7 +215,7 @@ export default function MemberDetailScreen() {
         </View>
       </View>
 
-      <View style={[styles.card, isLargeTablet && { flex: 1 }]}>
+      <View style={[styles.card, isTablet && { flex: 1 }]}>
         <Text style={appTextStyle(language, styles.sectionTitle)}>{t('member.membership')}</Text>
         <Row label={t('member.plan')} value={member.plan_name || '—'} styles={styles} language={language} />
         <Row label={t('member.start')} value={formatDisplayDate(member.start_date)} styles={styles} language={language} />

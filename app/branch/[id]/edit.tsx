@@ -1,13 +1,13 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchBranches, updateBranch } from '@/src/api/branches';
 import { OptionPickerField } from '@/src/components/OptionPickerField';
-import { ErrorBanner, Field, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { isOfflineQueued } from '@/src/offline/types';
@@ -113,7 +113,7 @@ export default function EditBranchScreen() {
   return (
     <Screen>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <FormScroll>
           <ErrorBanner message={error} />
 
           <Label>{t('branchEdit.name')}</Label>
@@ -163,14 +163,13 @@ export default function EditBranchScreen() {
             loading={saveBranch.isPending}
             disabled={!canSubmit}
           />
-        </ScrollView>
+        </FormScroll>
       </KeyboardAvoidingView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 16, paddingBottom: 40 },
   readOnly: { padding: 16, fontSize: 15 },
   staffNote: { marginTop: 16, fontSize: 13, lineHeight: 18 },
 });

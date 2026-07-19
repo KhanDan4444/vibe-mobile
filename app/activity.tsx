@@ -26,7 +26,15 @@ const ACTOR_OPTION_KEYS: { value: ActorFilter; labelKey: string }[] = [
   { value: 'owner', labelKey: 'activity.ownerOnly' },
 ];
 
-function ActivityItem({ entry, multiColumn }: { entry: ActivityLogRow; multiColumn?: boolean }) {
+function ActivityItem({
+  entry,
+  multiColumn,
+  columnStyle,
+}: {
+  entry: ActivityLogRow;
+  multiColumn?: boolean;
+  columnStyle?: object;
+}) {
   const styles = useThemedStyles((c) => ({
     card: {
       backgroundColor: c.card,
@@ -36,7 +44,7 @@ function ActivityItem({ entry, multiColumn }: { entry: ActivityLogRow; multiColu
       borderWidth: 1,
       borderColor: c.border,
     },
-    cardColumn: { flex: 1, marginBottom: 0 },
+    cardColumn: { marginBottom: 0 },
     cardHeader: { flexDirection: 'row' as const, justifyContent: 'space-between' as const, gap: 8 },
     action: { flex: 1, fontSize: 15, fontWeight: '600' as const, color: c.text },
     time: { fontSize: 11, color: c.dim },
@@ -48,7 +56,7 @@ function ActivityItem({ entry, multiColumn }: { entry: ActivityLogRow; multiColu
   const details = formatAuditDetails(entry);
 
   return (
-    <View style={[styles.card, multiColumn && styles.cardColumn]}>
+    <View style={[styles.card, multiColumn && styles.cardColumn, multiColumn && columnStyle]}>
       <View style={styles.cardHeader}>
         <Text style={styles.action}>{formatAuditAction(entry.action)}</Text>
         <Text style={styles.time}>{formatDisplayDateTime(entry.created_at)}</Text>
@@ -68,7 +76,7 @@ export default function ActivityScreen() {
   const { selectedBranchId } = useBranchScope();
   const { colors: c } = useTheme();
   const { t } = useTranslation();
-  const { listColumns, pagePadding } = useResponsiveLayout();
+  const { listColumns, pagePadding, listColumnItemStyle } = useResponsiveLayout();
   const styles = useThemedStyles((colors) => ({
     container: { flex: 1, backgroundColor: colors.bg },
     filters: { paddingTop: 12, paddingBottom: 14 },
@@ -126,7 +134,9 @@ export default function ActivityScreen() {
           numColumns={listColumns}
           columnWrapperStyle={listColumns > 1 ? styles.columnWrap : undefined}
           keyExtractor={(item) => String(item.id)}
-          renderItem={({ item }) => <ActivityItem entry={item} multiColumn={listColumns > 1} />}
+          renderItem={({ item }) => (
+            <ActivityItem entry={item} multiColumn={listColumns > 1} columnStyle={listColumnItemStyle} />
+          )}
           contentContainerStyle={[styles.list, { paddingHorizontal: pagePadding }]}
           refreshControl={
             <RefreshControl refreshing={query.isRefetching} onRefresh={() => query.refetch()} tintColor={c.accentText} />

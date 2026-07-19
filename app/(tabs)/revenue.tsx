@@ -52,6 +52,7 @@ function PaymentRowItem({
   owner,
   readOnly,
   multiColumn,
+  columnStyle,
   onOpenMember,
   onEdit,
 }: {
@@ -60,6 +61,7 @@ function PaymentRowItem({
   owner: boolean;
   readOnly: boolean;
   multiColumn?: boolean;
+  columnStyle?: object;
   onOpenMember: () => void;
   onEdit: () => void;
 }) {
@@ -77,7 +79,7 @@ function PaymentRowItem({
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.border,
     },
-    rowColumn: { flex: 1, marginBottom: 0 },
+    rowColumn: { marginBottom: 0 },
     avatar: { marginRight: 12 },
     rowBody: { flex: 1, minWidth: 0, marginRight: 8 },
     memberName: { fontSize: 15, fontWeight: '600' as const, color: colors.text },
@@ -101,7 +103,7 @@ function PaymentRowItem({
       : [];
 
   return (
-    <Pressable style={[styles.row, multiColumn && styles.rowColumn]} onPress={onOpenMember}>
+    <Pressable style={[styles.row, multiColumn && styles.rowColumn, multiColumn && columnStyle]} onPress={onOpenMember}>
       <View style={styles.avatar}>
         <MemberPhoto
           memberId={payment.member_id}
@@ -161,9 +163,11 @@ function attentionColor(status: string) {
 function AttentionCard({
   member,
   onPress,
+  wide,
 }: {
   member: UnpaidMemberSummary;
   onPress: () => void;
+  wide?: boolean;
 }) {
   const styles = useThemedStyles((c) => ({
     attentionCard: {
@@ -175,6 +179,14 @@ function AttentionCard({
       borderColor: c.border,
       marginRight: 8,
     },
+    attentionCardWide: {
+      width: undefined,
+      flexGrow: 1,
+      flexBasis: '30%',
+      maxWidth: '32%',
+      marginRight: 0,
+      marginBottom: 8,
+    },
     attentionName: { color: c.text, fontSize: 14, fontWeight: '700' as const },
     attentionMeta: { marginTop: 6, color: c.dim, fontSize: 12 },
     attentionStatus: { marginTop: 8, fontSize: 11, fontWeight: '700' as const },
@@ -182,7 +194,7 @@ function AttentionCard({
   const { language } = usePreferences();
 
   return (
-    <Pressable style={styles.attentionCard} onPress={onPress}>
+    <Pressable style={[styles.attentionCard, wide && styles.attentionCardWide]} onPress={onPress}>
       <Text style={appTextStyle(language, styles.attentionName)} numberOfLines={1}>{member.name}</Text>
       <Text style={appTextStyle(language, styles.attentionMeta)}>{formatDisplayDate(member.end_date)}</Text>
       <Text style={appTextStyle(language, { ...styles.attentionStatus, color: attentionColor(member.status) })}>{member.status}</Text>
@@ -281,7 +293,7 @@ export default function RevenueScreen() {
     attentionLink: { color: colors.accentText, fontSize: 13, fontWeight: '600' as const },
     attentionList: { paddingRight: 8 },
     list: { paddingBottom: 28 },
-    emptyWrap: { alignItems: 'center' as const, paddingTop: 48, gap: 12 },
+    emptyWrap: { alignItems: 'center' as const, paddingTop: 48, gap: 12, alignSelf: 'center' as const, maxWidth: 360 },
     empty: { textAlign: 'center' as const, color: colors.dim, fontSize: 15 },
     errorWrap: { alignItems: 'center' as const, paddingTop: 48, gap: 12, paddingHorizontal: 24 },
     errorText: { textAlign: 'center' as const, color: colors.error, fontSize: 15 },
@@ -299,7 +311,7 @@ export default function RevenueScreen() {
   }));
   const owner = isGymOwner(user?.role);
   const { readOnly } = useGymReadOnly();
-  const { listColumns, pagePadding } = useResponsiveLayout();
+  const { listColumns, pagePadding, isTablet, listColumnItemStyle } = useResponsiveLayout();
   const { selectedBranchId, showBranchFilter } = useBranchScope();
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
 
@@ -416,15 +428,28 @@ export default function RevenueScreen() {
               <Text style={appTextStyle(language, styles.attentionLink)}>{t('revenue.viewUnpaid')}</Text>
             </Pressable>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.attentionList}>
-            {attentionMembers.map((member) => (
-              <AttentionCard
-                key={member.id}
-                member={member}
-                onPress={() => router.push(`/member/${member.id}`)}
-              />
-            ))}
-          </ScrollView>
+          {isTablet ? (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+              {attentionMembers.map((member) => (
+                <AttentionCard
+                  key={member.id}
+                  member={member}
+                  wide
+                  onPress={() => router.push(`/member/${member.id}`)}
+                />
+              ))}
+            </View>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.attentionList}>
+              {attentionMembers.map((member) => (
+                <AttentionCard
+                  key={member.id}
+                  member={member}
+                  onPress={() => router.push(`/member/${member.id}`)}
+                />
+              ))}
+            </ScrollView>
+          )}
         </View>
       ) : null}
 
@@ -539,6 +564,7 @@ export default function RevenueScreen() {
               owner={owner}
               readOnly={readOnly}
               multiColumn={listColumns > 1}
+              columnStyle={listColumnItemStyle}
               onOpenMember={() => router.push(`/member/${item.member_id}`)}
               onEdit={() => openEdit(item)}
             />

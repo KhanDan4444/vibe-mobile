@@ -1,7 +1,7 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -10,7 +10,7 @@ import { createPayment } from '@/src/api/payments';
 import { fetchPlans } from '@/src/api/plans';
 import { DateField } from '@/src/components/DateField';
 import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
-import { ErrorBanner, Field, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useTranslation } from 'react-i18next';
 import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
@@ -37,7 +37,6 @@ export default function PaymentScreen() {
   const { t } = useTranslation();
   const canRecordPayment = Boolean(user && hasGymPortalAccess(user.role));
   const styles = useThemedStyles((colors) => ({
-    content: { padding: 16, paddingBottom: 40 },
     memberName: { color: colors.text, fontSize: 17, fontWeight: '600' as const, marginBottom: 8 },
   }));
 
@@ -102,7 +101,7 @@ export default function PaymentScreen() {
   return (
     <Screen>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <FormScroll>
           {member ? <Text style={styles.memberName}>{t('forms.paymentFor', { name: member.name })}</Text> : null}
           <ErrorBanner message={error} />
 
@@ -128,7 +127,7 @@ export default function PaymentScreen() {
             loading={mutation.isPending}
             disabled={!canSubmit}
           />
-        </ScrollView>
+        </FormScroll>
       </KeyboardAvoidingView>
     </Screen>
   );

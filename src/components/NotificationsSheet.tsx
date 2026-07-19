@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
+import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useNotificationInbox } from '@/src/notifications/NotificationInboxContext';
 import type { DashboardNotification } from '@/src/types/api';
 import type { ThemeColors } from '@/src/theme/tokens';
@@ -92,6 +93,7 @@ export function NotificationsSheet({ visible, onClose }: { visible: boolean; onC
   const { readOnly } = useGymReadOnly();
   const { colors: c } = useTheme();
   const { t } = useTranslation();
+  const { isTablet, formMaxWidth } = useResponsiveLayout();
   const { notifications, unread, isRead, markRead, markAllRead, dismiss, loading } = useNotificationInbox();
 
   const openMember = (item: DashboardNotification) => {
@@ -110,52 +112,63 @@ export function NotificationsSheet({ visible, onClose }: { visible: boolean; onC
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose} />
-      <View style={[styles.sheet, { backgroundColor: c.card, paddingBottom: Math.max(insets.bottom, 16) }]}>
-        <View style={[styles.handle, { backgroundColor: c.border }]} />
-        <View style={[styles.header, { borderBottomColor: c.border }]}>
-          <View>
-            <Text style={[styles.title, { color: c.text }]}>{t('notifications.title')}</Text>
-            <Text style={[styles.subtitle, { color: c.muted }]}>
-              {unread > 0 ? t('notifications.unread', { count: unread }) : t('notifications.caughtUp')}
-            </Text>
+      <View style={styles.overlay}>
+        <Pressable style={styles.backdrop} onPress={onClose} />
+        <View
+          style={[
+            styles.sheet,
+            { backgroundColor: c.card, paddingBottom: Math.max(insets.bottom, 16) },
+            isTablet && { maxWidth: formMaxWidth + 40 },
+          ]}
+        >
+          <View style={[styles.handle, { backgroundColor: c.border }]} />
+          <View style={[styles.header, { borderBottomColor: c.border }]}>
+            <View>
+              <Text style={[styles.title, { color: c.text }]}>{t('notifications.title')}</Text>
+              <Text style={[styles.subtitle, { color: c.muted }]}>
+                {unread > 0 ? t('notifications.unread', { count: unread }) : t('notifications.caughtUp')}
+              </Text>
+            </View>
+            {unread > 0 ? (
+              <Pressable onPress={markAllRead}>
+                <Text style={[styles.markAll, { color: c.accentText }]}>{t('notifications.markAllRead')}</Text>
+              </Pressable>
+            ) : null}
           </View>
-          {unread > 0 ? (
-            <Pressable onPress={markAllRead}>
-              <Text style={[styles.markAll, { color: c.accentText }]}>{t('notifications.markAllRead')}</Text>
-            </Pressable>
-          ) : null}
-        </View>
 
-        <ScrollView contentContainerStyle={styles.list}>
-          {loading ? (
-            <Text style={[styles.empty, { color: c.dim }]}>{t('notifications.loading')}</Text>
-          ) : notifications.length === 0 ? (
-            <Text style={[styles.empty, { color: c.dim }]}>{t('notifications.empty')}</Text>
-          ) : (
-            notifications.map((item) => (
-              <NotificationRow
-                key={item.id}
-                item={item}
-                isRead={isRead(item.id)}
-                readOnly={readOnly}
-                colors={c}
-                onOpenMember={() => openMember(item)}
-                onAction={() => runAction(item)}
-                onDismiss={() => dismiss(item.id)}
-              />
-            ))
-          )}
-        </ScrollView>
+          <ScrollView contentContainerStyle={styles.list}>
+            {loading ? (
+              <Text style={[styles.empty, { color: c.dim }]}>{t('notifications.loading')}</Text>
+            ) : notifications.length === 0 ? (
+              <Text style={[styles.empty, { color: c.dim }]}>{t('notifications.empty')}</Text>
+            ) : (
+              notifications.map((item) => (
+                <NotificationRow
+                  key={item.id}
+                  item={item}
+                  isRead={isRead(item.id)}
+                  readOnly={readOnly}
+                  colors={c}
+                  onOpenMember={() => openMember(item)}
+                  onAction={() => runAction(item)}
+                  onDismiss={() => dismiss(item.id)}
+                />
+              ))
+            )}
+          </ScrollView>
+        </View>
       </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)' },
+  overlay: { flex: 1, justifyContent: 'flex-end' },
+  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.45)' },
   sheet: {
     maxHeight: '78%',
+    width: '100%',
+    alignSelf: 'center',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
   },

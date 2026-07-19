@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchDashboard } from '@/src/api/dashboard';
 import { fetchMembers, type MemberListParams } from '@/src/api/members';
@@ -94,6 +95,7 @@ function MemberRowItem({
   token,
   multiColumn,
   colors,
+  columnStyle,
 }: {
   member: MemberRow;
   onPress: () => void;
@@ -102,29 +104,52 @@ function MemberRowItem({
   token: string;
   multiColumn?: boolean;
   colors: ThemeColors;
+  columnStyle?: object;
 }) {
   const { t } = useTranslation();
   return (
-    <Pressable style={[styles.row, multiColumn && styles.rowColumn]} onPress={onPress}>
-      <MemberPhoto
-        memberId={member.id}
-        name={member.name}
-        token={token}
-        size={44}
-        hasPhoto={Boolean(member.photo_url)}
-      />
-      <View style={styles.rowMain}>
-        <Text style={styles.name}>{member.name}</Text>
-        <Text style={styles.phone}>{member.phone || '—'}</Text>
-        {showBranch && member.branch_name ? (
-          <Text style={styles.branch}>{member.branch_name}</Text>
+    <Pressable
+      style={[styles.row, multiColumn && styles.rowColumn, multiColumn && columnStyle, multiColumn && styles.rowStacked]}
+      onPress={onPress}
+    >
+      <View style={styles.rowTop}>
+        <MemberPhoto
+          memberId={member.id}
+          name={member.name}
+          token={token}
+          size={multiColumn ? 40 : 44}
+          hasPhoto={Boolean(member.photo_url)}
+        />
+        <View style={styles.rowMain}>
+          <Text style={styles.name} numberOfLines={1}>
+            {member.name}
+          </Text>
+          <Text style={styles.phone} numberOfLines={1}>
+            {member.phone || '—'}
+          </Text>
+          {showBranch && member.branch_name ? (
+            <Text style={styles.branch} numberOfLines={1}>
+              {member.branch_name}
+            </Text>
+          ) : null}
+        </View>
+        {!multiColumn ? (
+          <View style={styles.rowMeta}>
+            <Text style={[styles.status, { color: statusColor(member.status, colors) }]}>{member.status}</Text>
+            <Text style={styles.plan}>{member.plan_name || t('members.noPlan')}</Text>
+            {member.is_unpaid ? <Text style={styles.unpaid}>{t('members.unpaidBadge')}</Text> : null}
+          </View>
         ) : null}
       </View>
-      <View style={styles.rowMeta}>
-        <Text style={[styles.status, { color: statusColor(member.status, colors) }]}>{member.status}</Text>
-        <Text style={styles.plan}>{member.plan_name || t('members.noPlan')}</Text>
-        {member.is_unpaid ? <Text style={styles.unpaid}>{t('members.unpaidBadge')}</Text> : null}
-      </View>
+      {multiColumn ? (
+        <View style={styles.rowMetaStacked}>
+          <Text style={[styles.status, { color: statusColor(member.status, colors) }]}>{member.status}</Text>
+          <Text style={[styles.plan, styles.planStacked]} numberOfLines={1}>
+            {member.plan_name || t('members.noPlan')}
+          </Text>
+          {member.is_unpaid ? <Text style={styles.unpaid}>{t('members.unpaidBadge')}</Text> : null}
+        </View>
+      ) : null}
     </Pressable>
   );
 }
@@ -147,8 +172,9 @@ export default function MembersScreen() {
   const { language } = usePreferences();
   const { t } = useTranslation();
   const styles = createStyles(c);
-  const { listColumns, pagePadding, contentMaxWidth, width, isTablet } = useResponsiveLayout();
-  const fabRight = isTablet ? Math.max(pagePadding, (width - contentMaxWidth) / 2 + pagePadding) : 20;
+  const insets = useSafeAreaInsets();
+  const { listColumns, pagePadding, isTablet, fabRight, listColumnItemStyle } = useResponsiveLayout();
+  const fabBottom = 24 + Math.max(insets.bottom, 0);
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -243,57 +269,105 @@ export default function MembersScreen() {
           ) : null}
         </View>
 
-        <ScrollView
-          ref={filterScrollRef}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={[styles.filterScroll, { marginHorizontal: -pagePadding }]}
-          contentContainerStyle={[styles.filters, { paddingHorizontal: pagePadding }]}
-        >
-          {FILTER_OPTIONS.map((option) => {
-            const active = filter === option;
-            const palette = FILTER_COLORS[option];
-            return (
-              <Pressable
-                key={option}
-                style={[
-                  styles.filterChip,
-                  active
-                    ? { backgroundColor: palette.activeBg, borderColor: palette.activeBorder }
-                    : { backgroundColor: c.card, borderColor: c.border },
-                ]}
-                onPress={() => setFilter(option)}
-              >
-                <View style={[styles.filterDot, { backgroundColor: palette.dot }]} />
-                <Text
-                  style={appTextStyle(language, {
-                    ...styles.filterLabel,
-                    color: active ? palette.activeText : c.text,
-                  })}
-                >
-                  {t(FILTER_LABEL_KEYS[option])}
-                </Text>
-                <View
+        {isTablet ? (
+          <View style={[styles.filters, styles.filtersWrap]}>
+            {FILTER_OPTIONS.map((option) => {
+              const active = filter === option;
+              const palette = FILTER_COLORS[option];
+              return (
+                <Pressable
+                  key={option}
                   style={[
-                    styles.filterCountBadge,
+                    styles.filterChip,
                     active
-                      ? { backgroundColor: palette.activeBorder }
-                      : { backgroundColor: c.border },
+                      ? { backgroundColor: palette.activeBg, borderColor: palette.activeBorder }
+                      : { backgroundColor: c.card, borderColor: c.border },
                   ]}
+                  onPress={() => setFilter(option)}
                 >
+                  <View style={[styles.filterDot, { backgroundColor: palette.dot }]} />
                   <Text
                     style={appTextStyle(language, {
-                      ...styles.filterCount,
-                      color: active ? '#fff' : c.muted,
+                      ...styles.filterLabel,
+                      color: active ? palette.activeText : c.text,
                     })}
                   >
-                    {filterCounts[option]}
+                    {t(FILTER_LABEL_KEYS[option])}
                   </Text>
-                </View>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+                  <View
+                    style={[
+                      styles.filterCountBadge,
+                      active
+                        ? { backgroundColor: palette.activeBorder }
+                        : { backgroundColor: c.border },
+                    ]}
+                  >
+                    <Text
+                      style={appTextStyle(language, {
+                        ...styles.filterCount,
+                        color: active ? '#fff' : c.muted,
+                      })}
+                    >
+                      {filterCounts[option]}
+                    </Text>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : (
+          <ScrollView
+            ref={filterScrollRef}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={[styles.filterScroll, { marginHorizontal: -pagePadding }]}
+            contentContainerStyle={[styles.filters, { paddingHorizontal: pagePadding }]}
+          >
+            {FILTER_OPTIONS.map((option) => {
+              const active = filter === option;
+              const palette = FILTER_COLORS[option];
+              return (
+                <Pressable
+                  key={option}
+                  style={[
+                    styles.filterChip,
+                    active
+                      ? { backgroundColor: palette.activeBg, borderColor: palette.activeBorder }
+                      : { backgroundColor: c.card, borderColor: c.border },
+                  ]}
+                  onPress={() => setFilter(option)}
+                >
+                  <View style={[styles.filterDot, { backgroundColor: palette.dot }]} />
+                  <Text
+                    style={appTextStyle(language, {
+                      ...styles.filterLabel,
+                      color: active ? palette.activeText : c.text,
+                    })}
+                  >
+                    {t(FILTER_LABEL_KEYS[option])}
+                  </Text>
+                  <View
+                    style={[
+                      styles.filterCountBadge,
+                      active
+                        ? { backgroundColor: palette.activeBorder }
+                        : { backgroundColor: c.border },
+                    ]}
+                  >
+                    <Text
+                      style={appTextStyle(language, {
+                        ...styles.filterCount,
+                        color: active ? '#fff' : c.muted,
+                      })}
+                    >
+                      {filterCounts[option]}
+                    </Text>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        )}
 
         <View style={styles.sortRow}>
           <SortPicker label={t('members.sort')} options={MEMBER_SORT_OPTIONS} value={sort} onChange={setSort} />
@@ -325,6 +399,7 @@ export default function MembersScreen() {
               showBranch={showBranchColumn}
               token={token!}
               multiColumn={listColumns > 1}
+              columnStyle={listColumnItemStyle}
               colors={c}
               onPress={() => router.push(`/member/${item.id}`)}
             />
@@ -346,7 +421,7 @@ export default function MembersScreen() {
       )}
 
       {!readOnly ? (
-        <Pressable style={[styles.fab, { right: fabRight }]} onPress={() => router.push('/enroll')}>
+        <Pressable style={[styles.fab, { right: fabRight, bottom: fabBottom }]} onPress={() => router.push('/enroll')}>
           <Text style={styles.fabText}>+</Text>
         </Pressable>
       ) : null}
@@ -389,6 +464,7 @@ function createStyles(c: ThemeColors) {
       paddingRight: 32,
       gap: 8,
     },
+    filtersWrap: { flexWrap: 'wrap' },
     filterChip: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -439,18 +515,37 @@ function createStyles(c: ThemeColors) {
       gap: 12,
     },
     rowColumn: {
-      flex: 1,
       marginBottom: 0,
     },
-    rowMain: { flex: 1, marginRight: 8 },
+    rowStacked: {
+      flexDirection: 'column',
+      alignItems: 'stretch',
+      gap: 10,
+    },
+    rowTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    rowMain: { flex: 1, marginRight: 8, minWidth: 0 },
     name: { fontSize: 16, fontWeight: '600', color: c.text },
     phone: { marginTop: 4, fontSize: 13, color: c.muted },
     branch: { marginTop: 2, fontSize: 12, color: c.dim },
     rowMeta: { alignItems: 'flex-end' },
+    rowMetaStacked: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: 8,
+      paddingTop: 2,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: c.border,
+    },
     status: { fontSize: 12, fontWeight: '700', textTransform: 'capitalize' },
     plan: { marginTop: 4, fontSize: 12, color: c.dim },
+    planStacked: { marginTop: 0 },
     unpaid: { marginTop: 4, fontSize: 11, fontWeight: '700', color: c.statusUnpaid },
-    empty: { textAlign: 'center', color: c.dim, marginTop: 40, fontSize: 15 },
+    empty: { textAlign: 'center', color: c.dim, marginTop: 40, fontSize: 15, alignSelf: 'center', maxWidth: 360 },
     errorWrap: { alignItems: 'center', paddingTop: 48, gap: 12, paddingHorizontal: 24 },
     errorText: { textAlign: 'center', color: c.error, fontSize: 15 },
     retryBtn: {
@@ -466,7 +561,6 @@ function createStyles(c: ThemeColors) {
     retryText: { color: c.accentText, fontSize: 14, fontWeight: '600' },
     fab: {
       position: 'absolute',
-      bottom: 24,
       width: 48,
       height: 48,
       borderRadius: 14,

@@ -3,6 +3,7 @@ import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import type { MemberRow } from '@/src/types/api';
 import { usePreferences } from '@/src/context/PreferencesContext';
+import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { appTextStyle } from '@/src/theme/typography';
 import { memberStatusBreakdownExclusive, memberStatusCounts } from '@/src/utils/reportPdf';
@@ -17,12 +18,13 @@ const SEGMENT_KEYS = [
 export function StatusBreakdown({ members }: { members: MemberRow[] }) {
   const { t } = useTranslation();
   const { language } = usePreferences();
+  const { isTablet } = useResponsiveLayout();
   const styles = useThemedStyles((c) => ({
     wrap: { marginTop: 16, marginBottom: 8 },
     bar: {
       flexDirection: 'row' as const,
-      height: 10,
-      borderRadius: 5,
+      height: isTablet ? 14 : 10,
+      borderRadius: isTablet ? 7 : 5,
       overflow: 'hidden' as const,
       backgroundColor: c.border,
     },

@@ -1,7 +1,8 @@
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText as Text, AppTextInput as TextInput } from '@/src/components/AppText';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
+import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import type { ThemeColors } from '@/src/theme/tokens';
 import { appTextStyle } from '@/src/theme/typography';
 
@@ -34,13 +35,40 @@ export function Screen({ children }: { children: React.ReactNode }) {
 }
 
 /** Scroll content padding with extra room under the last button / field. */
-export function useFormScrollPadding(horizontal = 16) {
+export function useFormScrollPadding() {
+  const { pagePadding } = useResponsiveLayout();
   return {
-    paddingHorizontal: horizontal,
-    paddingTop: horizontal,
+    paddingHorizontal: pagePadding,
+    paddingTop: pagePadding,
     // Clear of keyboard accessory / nav-bar shadow above the safe-area pad on Screen.
     paddingBottom: 56,
+    alignItems: 'center' as const,
   };
+}
+
+/**
+ * ScrollView that centers form fields and caps width on tablet (`formMaxWidth`).
+ */
+export function FormScroll({
+  children,
+  contentContainerStyle,
+  style,
+}: {
+  children: React.ReactNode;
+  contentContainerStyle?: StyleProp<ViewStyle>;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const { formMaxWidth } = useResponsiveLayout();
+  const scrollPad = useFormScrollPadding();
+  return (
+    <ScrollView
+      style={style}
+      contentContainerStyle={[scrollPad, contentContainerStyle]}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={{ width: '100%', maxWidth: formMaxWidth }}>{children}</View>
+    </ScrollView>
+  );
 }
 
 export function Label({ children }: { children: string }) {

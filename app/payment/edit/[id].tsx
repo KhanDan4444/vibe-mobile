@@ -1,6 +1,6 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -9,7 +9,7 @@ import { deletePayment, updatePayment } from '@/src/api/payments';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { DateField } from '@/src/components/DateField';
 import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
-import { ErrorBanner, Field, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useTranslation } from 'react-i18next';
 import { PAYMENT_METHODS, type PaymentMethod } from '@/src/constants/payments';
@@ -46,7 +46,6 @@ export default function EditPaymentScreen() {
   const [error, setError] = useState('');
   const [deleteOpen, setDeleteOpen] = useState(false);
   const styles = useThemedStyles((colors) => ({
-    content: { padding: 16, paddingBottom: 40 },
     memberName: { fontSize: 18, fontWeight: '600' as const, color: colors.text, marginBottom: 8 },
     readOnly: { color: colors.muted, padding: 16, fontSize: 15, lineHeight: 22 },
     deleteBtn: {
@@ -121,7 +120,7 @@ export default function EditPaymentScreen() {
   return (
     <Screen>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <FormScroll>
           {params.member_name ? <Text style={styles.memberName}>{params.member_name}</Text> : null}
           <ErrorBanner message={error} />
 
@@ -151,7 +150,7 @@ export default function EditPaymentScreen() {
           <Pressable style={styles.deleteBtn} onPress={() => setDeleteOpen(true)} disabled={deleteMutation.isPending}>
             <Text style={styles.deleteText}>{t('paymentEdit.delete')}</Text>
           </Pressable>
-        </ScrollView>
+        </FormScroll>
       </KeyboardAvoidingView>
 
       <ConfirmDialog
