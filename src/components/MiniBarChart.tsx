@@ -1,14 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, View, type GestureResponderEvent } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import type { DashboardChartPoint } from '@/src/types/api';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import {
   aggregateChartByWeek,
-  aggregatePieSlices,
   CHART_OTHER_KEY,
   getPeakPoint,
   pickNearestBarIndex,
@@ -33,9 +31,6 @@ const PIE_PALETTE = [
   { base: '#22d3ee', light: '#a5f3fc' },
   { base: '#fb923c', light: '#fed7aa' },
 ];
-
-type ChartType = 'line' | 'bar' | 'pie';
-const CHART_TYPE_STORAGE_KEY = 'dashboard.chartType';
 
 type ChartPoint = {
   x: number;
@@ -129,62 +124,6 @@ function describeDonutSlice(
 function formatPercent(amount: number, total: number) {
   if (total <= 0) return '0%';
   return `${Math.round((amount / total) * 100)}%`;
-}
-
-function ChartTypeSwitcher({
-  value,
-  onChange,
-}: {
-  value: ChartType;
-  onChange: (type: ChartType) => void;
-}) {
-  const { t } = useTranslation();
-  const styles = useThemedStyles((c) => ({
-    row: {
-      flexDirection: 'row' as const,
-      gap: 6,
-      marginTop: 12,
-    },
-    pill: {
-      flex: 1,
-      paddingVertical: 7,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: c.border,
-      alignItems: 'center' as const,
-    },
-    pillActive: {
-      backgroundColor: c.accentSoft,
-      borderColor: c.accentText,
-    },
-    pillText: { fontSize: 12, fontWeight: '600' as const, color: c.muted },
-    pillTextActive: { color: c.accentText },
-  }));
-
-  const options: { id: ChartType; label: string }[] = [
-    { id: 'line', label: t('dashboard.chartTypeLine') },
-    { id: 'bar', label: t('dashboard.chartTypeBar') },
-    { id: 'pie', label: t('dashboard.chartTypePie') },
-  ];
-
-  return (
-    <View style={styles.row}>
-      {options.map((option) => {
-        const active = value === option.id;
-        return (
-          <Pressable
-            key={option.id}
-            style={[styles.pill, active && styles.pillActive]}
-            onPress={() => onChange(option.id)}
-            accessibilityRole="button"
-            accessibilityState={{ selected: active }}
-          >
-            <Text style={[styles.pillText, active && styles.pillTextActive]}>{option.label}</Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
 }
 
 function ChartSummaryFooter({
@@ -801,40 +740,17 @@ function useChartStyles() {
 export function MiniBarChart({
   data,
   height = CHART_HEIGHT,
-  showTypeSwitcher = false,
 }: {
   data: DashboardChartPoint[];
   height?: number;
-  showTypeSwitcher?: boolean;
 }) {
   const { t } = useTranslation();
-  const [chartType, setChartType] = useState<ChartType>('line');
   const styles = useChartStyles();
   const lineBarBundle = useMemo(() => aggregateChartByWeek(data), [data]);
-  const pieBundle = useMemo(() => aggregatePieSlices(data), [data]);
 
-  useEffect(() => {
-    if (!showTypeSwitcher) return;
-    AsyncStorage.getItem(CHART_TYPE_STORAGE_KEY)
-      .then((value) => {
-        if (value === 'line' || value === 'bar' || value === 'pie') setChartType(value);
-      })
-      .catch(() => {});
-  }, [showTypeSwitcher]);
-
-  const onChartTypeChange = (type: ChartType) => {
-    setChartType(type);
-    if (showTypeSwitcher) {
-      AsyncStorage.setItem(CHART_TYPE_STORAGE_KEY, type).catch(() => {});
-    }
-  };
-
-  const chartNote =
-    chartType === 'pie' && pieBundle.hasOther
-      ? t('dashboard.chartPieGrouped', { count: pieBundle.sourceDays })
-      : chartType !== 'pie' && lineBarBundle.grouped
-        ? t('dashboard.chartWeekGrouped', { count: lineBarBundle.sourceDays })
-        : null;
+  const chartNote = lineBarBundle.grouped
+    ? t('dashboard.chartWeekGrouped', { count: lineBarBundle.sourceDays })
+    : null;
 
   if (!data.length) {
     return <Text style={styles.empty}>{t('dashboard.noRevenueData')}</Text>;
@@ -842,19 +758,10 @@ export function MiniBarChart({
 
   return (
     <View style={styles.wrap}>
-      {showTypeSwitcher ? (
-        <>
-          <ChartTypeSwitcher value={chartType} onChange={onChartTypeChange} />
-          <Text style={styles.chartScopeHint}>{t('dashboard.chartScopeHint')}</Text>
-        </>
-      ) : null}
+      <Text style={styles.chartScopeHint}>{t('dashboard.chartScopeHint')}</Text>
       {chartNote ? <Text style={styles.chartNote}>{chartNote}</Text> : null}
-      {chartType === 'line' ? <LineChartView data={lineBarBundle.points} height={height} styles={styles} /> : null}
-      {chartType === 'bar' ? <BarChartView data={lineBarBundle.points} height={height} styles={styles} /> : null}
-      {chartType === 'pie' ? (
-        <PieChartView data={pieBundle.points} height={height} styles={styles} />
-      ) : null}
-      {showTypeSwitcher ? <Text style={styles.chartRevenueHint}>{t('dashboard.chartRevenueHint')}</Text> : null}
+      <LineChartView data={lineBarBundle.points} height={height} styles={styles} />
+      <Text style={styles.chartRevenueHint}>{t('dashboard.chartRevenueHint')}</Text>
     </View>
   );
 }

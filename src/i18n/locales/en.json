@@ -48,6 +48,8 @@
     "chartPieHint": "Each slice is one day's collections",
     "attentionTitle": "Needs attention",
     "noAttention": "No urgent member actions right now.",
+    "unpaidShortcutTitle": "Unpaid members",
+    "unpaidShortcutBody": "Collect payment or follow up",
     "expires": "Expires {{date}}",
     "renew": "Renew",
     "viewAll": "View all"

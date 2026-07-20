@@ -48,6 +48,8 @@
     "chartPieHint": "እያንዳንዱ ክፍል የአንድ ቀን ገቢ ነው",
     "attentionTitle": "ትኩረት የሚፈልጉ",
     "noAttention": "አሁን አስቸኳይ የአባል እርምጃ የለም።",
+    "unpaidShortcutTitle": "ያልተከፈሉ አባላት",
+    "unpaidShortcutBody": "ክፍያ ይቀበሉ ወይም ይከታተሉ",
     "expires": "{{date}} ያበቃል",
     "renew": "ያድሱ",
     "viewAll": "ሁሉን ይመልከቱ"

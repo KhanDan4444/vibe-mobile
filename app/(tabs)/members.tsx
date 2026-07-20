@@ -171,7 +171,9 @@ export default function MembersScreen() {
   const { language } = usePreferences();
   const { t } = useTranslation();
   const styles = createStyles(c);
-  const { listColumns, pagePadding, isTablet, fabRight, listColumnItemStyle } = useResponsiveLayout();
+  const { pagePadding, isTablet, fabRight, listColumnItemStyle } = useResponsiveLayout();
+  // Members read better as a full-width list (photo + status row), not a 2-col grid.
+  const listColumns = 1;
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -497,7 +499,7 @@ function createStyles(c: ThemeColors) {
       fontWeight: '800',
     },
     sortRow: { alignSelf: 'flex-start' },
-    list: { paddingBottom: 24 },
+    list: { paddingBottom: 88 },
     columnWrap: { gap: 10 },
     row: {
       flexDirection: 'row',

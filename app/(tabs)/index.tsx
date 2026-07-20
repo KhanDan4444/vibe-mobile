@@ -166,10 +166,18 @@ export default function DashboardScreen() {
   const valueStyle = [styles.statValue, { color: c.text }];
   const labelStyle = [styles.statLabel, { color: c.muted }];
   const alertMembers = (data?.alertMembers ?? []).slice(0, 5);
-  const alertFilter = alertMembers.some((member) => member.status.toLowerCase() === 'expired') ? 'expired' : 'due_soon';
+  const unpaidCount = data?.unpaidCount ?? 0;
+  const attentionHasContent = alertMembers.length > 0 || unpaidCount > 0;
+  const alertFilter = alertMembers.some((member) => member.status.toLowerCase() === 'expired')
+    ? 'expired'
+    : alertMembers.some((member) => member.status.toLowerCase() === 'due soon')
+      ? 'due_soon'
+      : unpaidCount > 0
+        ? 'unpaid'
+        : 'due_soon';
 
   const summaryBlock = data ? (
-    <View style={[styles.summary, { backgroundColor: c.card, borderColor: c.border }, isTablet && owner && styles.splitChild]}>
+    <View style={[styles.summary, { backgroundColor: c.card, borderColor: c.border }]}>
       <Pressable onPress={() => router.push('/(tabs)/revenue')}>
         <Text style={[styles.summaryTitle, { color: c.muted }]}>{t('dashboard.thisMonth')}</Text>
         <Text style={[styles.income, { color: c.accentText }]}>
@@ -184,19 +192,21 @@ export default function DashboardScreen() {
         </Text>
       </Pressable>
       {owner ? (
-        <MiniBarChart data={data.revenueChart ?? []} height={chartHeight} showTypeSwitcher={isTablet} />
+        <MiniBarChart data={data.revenueChart ?? []} height={chartHeight} />
       ) : null}
     </View>
   ) : null;
 
   const attentionBlock =
-    data && owner ? (
-      <View style={[styles.alertCard, { backgroundColor: c.card, borderColor: c.border }, isTablet && styles.splitChild]}>
+    data && owner && (attentionHasContent || !isTablet) ? (
+      <View style={[styles.alertCard, { backgroundColor: c.card, borderColor: c.border }]}>
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: c.text }]}>{t('dashboard.attentionTitle')}</Text>
-          <Pressable onPress={() => goMembers(alertFilter)}>
-            <Text style={[styles.viewAll, { color: c.accentText }]}>{t('dashboard.viewAll')}</Text>
-          </Pressable>
+          {attentionHasContent ? (
+            <Pressable onPress={() => goMembers(alertFilter)}>
+              <Text style={[styles.viewAll, { color: c.accentText }]}>{t('dashboard.viewAll')}</Text>
+            </Pressable>
+          ) : null}
         </View>
         {alertMembers.length ? (
           alertMembers.map((member) => {
@@ -212,6 +222,22 @@ export default function DashboardScreen() {
               />
             );
           })
+        ) : unpaidCount > 0 ? (
+          <Pressable
+            style={[styles.attentionShortcut, { borderColor: c.border, backgroundColor: c.accentSoft }]}
+            onPress={() => goMembers('unpaid')}
+          >
+            <Text style={[styles.attentionShortcutValue, { color: c.statusUnpaid }]}>{unpaidCount}</Text>
+            <View style={styles.attentionShortcutBody}>
+              <Text style={[styles.attentionShortcutTitle, { color: c.text }]}>
+                {t('dashboard.unpaidShortcutTitle')}
+              </Text>
+              <Text style={[styles.attentionShortcutMeta, { color: c.dim }]}>
+                {t('dashboard.unpaidShortcutBody')}
+              </Text>
+            </View>
+            <Text style={[styles.viewAll, { color: c.accentText }]}>{t('dashboard.viewAll')}</Text>
+          </Pressable>
         ) : (
           <Text style={[styles.muted, { color: c.dim }]}>{t('dashboard.noAttention')}</Text>
         )}
@@ -287,17 +313,8 @@ export default function DashboardScreen() {
               onPress={() => goMembers('unpaid')}
             />
           </View>
-          {isTablet && owner && summaryBlock && attentionBlock ? (
-            <View style={styles.splitRow}>
-              <View style={styles.splitCol}>{summaryBlock}</View>
-              <View style={styles.splitCol}>{attentionBlock}</View>
-            </View>
-          ) : (
-            <>
-              {summaryBlock}
-              {owner ? attentionBlock : null}
-            </>
-          )}
+          {summaryBlock}
+          {owner ? attentionBlock : null}
         </>
       ) : null}
 
@@ -333,20 +350,11 @@ const styles = StyleSheet.create({
   },
   statValue: { fontSize: 22, fontWeight: '700' },
   statLabel: { marginTop: 2, fontSize: 12 },
-  splitRow: {
-    flexDirection: 'row',
-    gap: 16,
-    marginTop: 16,
-    alignItems: 'stretch',
-  },
-  splitCol: { flex: 1, minWidth: 0 },
-  splitChild: { marginTop: 0 },
   summary: {
     marginTop: 16,
     borderRadius: 14,
     padding: 18,
     borderWidth: StyleSheet.hairlineWidth,
-    flex: 1,
   },
   summaryTitle: { fontSize: 13, fontWeight: '600' },
   income: { marginTop: 6, fontSize: 34, fontWeight: '700', letterSpacing: -0.5 },
@@ -368,7 +376,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     borderWidth: StyleSheet.hairlineWidth,
-    flex: 1,
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
   sectionTitle: { fontSize: 16, fontWeight: '700' },
@@ -396,6 +403,19 @@ const styles = StyleSheet.create({
   alertStatus: { fontSize: 11, fontWeight: '700', textTransform: 'capitalize' },
   alertAction: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
   alertActionText: { fontSize: 12, fontWeight: '700' },
+  attentionShortcut: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 4,
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  attentionShortcutValue: { fontSize: 28, fontWeight: '800', minWidth: 36 },
+  attentionShortcutBody: { flex: 1, minWidth: 0 },
+  attentionShortcutTitle: { fontSize: 14, fontWeight: '700' },
+  attentionShortcutMeta: { marginTop: 3, fontSize: 12, lineHeight: 16 },
   banner: {
     marginTop: 20,
     backgroundColor: 'rgba(251,191,36,0.12)',

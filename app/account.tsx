@@ -82,6 +82,12 @@ export default function AccountScreen() {
           <Text style={[styles.section, { color: c.dim }]}>{t('account.preferences')}</Text>
           <AccountRow icon={theme === 'dark' ? 'moon-outline' : 'sunny-outline'} label={t('profile.appearance')} value={themeLabel} onPress={cycleTheme} />
           <AccountRow icon="language-outline" label={t('profile.language')} value={langLabel} onPress={toggleLanguage} />
+          {isTablet ? (
+            <>
+              <Text style={[styles.section, { color: c.dim }]}>{t('account.session')}</Text>
+              <AccountRow icon="log-out-outline" label={t('profile.signOut')} danger onPress={handleLogout} />
+            </>
+          ) : null}
         </View>
 
         <View style={isTablet ? styles.menuColumn : undefined}>
@@ -90,11 +96,15 @@ export default function AccountScreen() {
             <AccountRow icon="storefront-outline" label={t('profile.gymProfile')} onPress={() => router.push('/profile')} />
           ) : null}
           <AccountRow icon="key-outline" label={t('profile.changePassword')} onPress={() => router.push('/change-password')} />
-
-          <Text style={[styles.section, { color: c.dim }]}>{t('account.session')}</Text>
-          <AccountRow icon="log-out-outline" label={t('profile.signOut')} danger onPress={handleLogout} />
         </View>
       </View>
+
+      {!isTablet ? (
+        <>
+          <Text style={[styles.section, { color: c.dim }]}>{t('account.session')}</Text>
+          <AccountRow icon="log-out-outline" label={t('profile.signOut')} danger onPress={handleLogout} />
+        </>
+      ) : null}
       </ResponsiveContent>
     </ScrollView>
     </TabScreenFrame>

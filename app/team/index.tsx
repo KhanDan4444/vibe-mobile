@@ -33,9 +33,9 @@ function StaffCard({
   const styles = useThemedStyles((c) => ({
     card: {
       backgroundColor: c.card,
-      borderRadius: 10,
-      padding: 14,
-      marginBottom: 8,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 10,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
     },
@@ -92,7 +92,8 @@ export default function TeamScreen() {
   const { colors: c } = useTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { listColumns, pagePadding, fabRight, listColumnItemStyle } = useResponsiveLayout();
+  const { pagePadding, fabRight, listColumnItemStyle } = useResponsiveLayout();
+  const listColumns = 1;
   const fabBottom = 24 + insets.bottom;
   const styles = useThemedStyles((colors) => ({
     container: { flex: 1, backgroundColor: colors.bg },

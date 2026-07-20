@@ -165,7 +165,8 @@ export default function PlansScreen() {
 
   const { readOnly } = useGymReadOnly();
   const flashDeleted = useDeleteFlash();
-  const { listColumns, pagePadding, fabRight, listColumnItemStyle } = useResponsiveLayout();
+  const { pagePadding, fabRight, listColumnItemStyle } = useResponsiveLayout();
+  const listColumns = 1;
   const owner = isGymOwner(user?.role);
   const canAccessPlans = Boolean(user && hasGymPortalAccess(user.role));
   const [planToDelete, setPlanToDelete] = useState<PlanRow | null>(null);

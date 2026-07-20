@@ -4,6 +4,7 @@ import { AppText as Text } from '@/src/components/AppText';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchBranches } from '@/src/api/branches';
+import { ActionOverflowMenu } from '@/src/components/ActionOverflowMenu';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
@@ -28,49 +29,80 @@ function BranchCard({
   const styles = useThemedStyles((c) => ({
     card: {
       backgroundColor: c.card,
-      borderRadius: 10,
-      padding: 14,
-      marginBottom: 8,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 10,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
     },
     cardColumn: { marginBottom: 0 },
+    headerRow: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 8 },
     cardMain: { flex: 1 },
-    name: { fontSize: 17, fontWeight: '700' as const, color: c.text },
-    meta: { marginTop: 4, fontSize: 13, color: c.muted },
-    counts: { marginTop: 8, fontSize: 12, color: c.dim },
-    inactive: { marginTop: 6, fontSize: 12, fontWeight: '700' as const, color: '#f87171' },
-    editBtn: {
-      marginTop: 12,
-      alignSelf: 'flex-start' as const,
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: c.inputBorder,
+    nameRow: { flexDirection: 'row' as const, flexWrap: 'wrap' as const, alignItems: 'center' as const, gap: 8 },
+    name: { fontSize: 17, fontWeight: '700' as const, color: c.text, flexShrink: 1 },
+    defaultBadge: {
+      fontSize: 11,
+      fontWeight: '700' as const,
+      color: c.accentText,
+      backgroundColor: 'rgba(52,211,153,0.15)',
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 6,
+      overflow: 'hidden' as const,
     },
-    editText: { color: c.accentText, fontSize: 13, fontWeight: '600' as const },
+    meta: { marginTop: 4, fontSize: 13, color: c.muted },
+    footer: {
+      marginTop: 12,
+      flexDirection: 'row' as const,
+      flexWrap: 'wrap' as const,
+      alignItems: 'center' as const,
+      gap: 8,
+    },
+    countBadge: {
+      fontSize: 12,
+      fontWeight: '600' as const,
+      color: c.dim,
+      backgroundColor: c.inputBg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.border,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 8,
+    },
+    inactive: {
+      fontSize: 11,
+      fontWeight: '700' as const,
+      color: '#f87171',
+      backgroundColor: 'rgba(248,113,113,0.15)',
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 6,
+      overflow: 'hidden' as const,
+    },
   }));
+
+  const menuItems = owner
+    ? [{ id: 'edit', label: 'Edit', onPress: onEdit }]
+    : [];
 
   return (
     <View style={[styles.card, multiColumn && styles.cardColumn, multiColumn && columnStyle]}>
-      <View style={styles.cardMain}>
-        <Text style={styles.name}>
-          {branch.name}
-          {branch.is_default ? ' · Default' : ''}
-        </Text>
-        {branch.phone ? <Text style={styles.meta}>{branch.phone}</Text> : null}
-        {branch.address ? <Text style={styles.meta}>{branch.address}</Text> : null}
-        <Text style={styles.counts}>
-          {branch.member_count ?? 0} members · {branch.staff_count ?? 0} staff
-        </Text>
-        {branch.is_active === false ? <Text style={styles.inactive}>Inactive</Text> : null}
+      <View style={styles.headerRow}>
+        <View style={styles.cardMain}>
+          <View style={styles.nameRow}>
+            <Text style={styles.name}>{branch.name}</Text>
+            {branch.is_default ? <Text style={styles.defaultBadge}>Default</Text> : null}
+          </View>
+          {branch.phone ? <Text style={styles.meta}>{branch.phone}</Text> : null}
+          {branch.address ? <Text style={styles.meta}>{branch.address}</Text> : null}
+          <View style={styles.footer}>
+            <Text style={styles.countBadge}>{branch.member_count ?? 0} members</Text>
+            <Text style={styles.countBadge}>{branch.staff_count ?? 0} staff</Text>
+            {branch.is_active === false ? <Text style={styles.inactive}>Inactive</Text> : null}
+          </View>
+        </View>
+        {menuItems.length ? <ActionOverflowMenu items={menuItems} /> : null}
       </View>
-      {owner ? (
-        <Pressable style={styles.editBtn} onPress={onEdit}>
-          <Text style={styles.editText}>Edit</Text>
-        </Pressable>
-      ) : null}
     </View>
   );
 }
@@ -80,7 +112,8 @@ export default function BranchesScreen() {
   const { token, user, subscription } = useAuth();
   const { colors: c } = useTheme();
   const insets = useSafeAreaInsets();
-  const { listColumns, pagePadding, fabRight, listColumnItemStyle } = useResponsiveLayout();
+  const { pagePadding, fabRight, listColumnItemStyle } = useResponsiveLayout();
+  const listColumns = 1;
   const fabBottom = 24 + insets.bottom;
   const styles = useThemedStyles((colors) => ({
     container: { flex: 1, backgroundColor: colors.bg },
