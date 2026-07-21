@@ -26,7 +26,6 @@ export const colors = {
 export function Screen({ children }: { children: React.ReactNode }) {
   const { colors: c } = useTheme();
   const insets = useSafeAreaInsets();
-  // Extra buffer clears Android nav-bar / gesture shadow over bottom CTAs.
   return (
     <View style={{ flex: 1, backgroundColor: c.bg, paddingBottom: Math.max(insets.bottom, 8) + 20 }}>
       {children}

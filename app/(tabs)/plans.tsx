@@ -165,7 +165,7 @@ export default function PlansScreen() {
 
   const { readOnly } = useGymReadOnly();
   const flashDeleted = useDeleteFlash();
-  const { pagePadding, fabRight, listColumnItemStyle } = useResponsiveLayout();
+  const { pagePadding, fabRight, fabSize, fabRadius, fabFontSize, listColumnItemStyle } = useResponsiveLayout();
   const listColumns = 1;
   const owner = isGymOwner(user?.role);
   const canAccessPlans = Boolean(user && hasGymPortalAccess(user.role));
@@ -259,8 +259,11 @@ export default function PlansScreen() {
       )}
 
       {owner && !readOnly ? (
-        <Pressable style={[styles.fab, { right: fabRight }]} onPress={() => router.push('/plan/new')}>
-          <Text style={styles.fabText}>+</Text>
+        <Pressable
+          style={[styles.fab, { right: fabRight, width: fabSize, height: fabSize, borderRadius: fabRadius }]}
+          onPress={() => router.push('/plan/new')}
+        >
+          <Text style={[styles.fabText, { fontSize: fabFontSize }]}>+</Text>
         </Pressable>
       ) : null}
 

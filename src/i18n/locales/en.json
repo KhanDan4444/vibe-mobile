@@ -10,6 +10,7 @@
   },
   "auth": {
     "subtitle": "Gym staff sign in",
+    "tagline": "Members, payments & branches — in one place.",
     "identifier": "Username or email",
     "password": "Password",
     "signIn": "Sign in",

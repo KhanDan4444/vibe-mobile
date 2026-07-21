@@ -14,16 +14,40 @@ export function lineHeightFor(fontSize: number) {
 }
 
 function dmSansForWeight(fontWeight: TextStyle['fontWeight']): string {
-  if (
-    fontWeight === '600' ||
-    fontWeight === '700' ||
-    fontWeight === '800' ||
-    fontWeight === '900' ||
-    fontWeight === 'bold'
-  ) {
-    return DM_SANS_SEMI;
+  switch (fontWeight) {
+    case '100':
+    case '200':
+    case '300':
+      return 'DMSans_300Light';
+    case '500':
+      return 'DMSans_500Medium';
+    case '600':
+      return 'DMSans_600SemiBold';
+    case '700':
+    case 'bold':
+      return 'DMSans_700Bold';
+    case '800':
+    case '900':
+      return 'DMSans_800ExtraBold';
+    default:
+      return DM_SANS;
   }
-  return DM_SANS;
+}
+
+/** Amharic gets a 3-step scale: regular, semibold, bold — light weights hurt Ethiopic legibility. */
+function notoEthiopicForWeight(fontWeight: TextStyle['fontWeight']): string {
+  switch (fontWeight) {
+    case '500':
+    case '600':
+      return 'NotoSansEthiopic_600SemiBold';
+    case '700':
+    case '800':
+    case '900':
+    case 'bold':
+      return 'NotoSansEthiopic_700Bold';
+    default:
+      return NOTO_ETHIOPIC;
+  }
 }
 
 /** Apply language-safe text styles (font + line height), matching web `html` / `html[lang=am]`. */
@@ -34,7 +58,7 @@ export function appTextStyle(language: AppLanguage, style: TextStyle = {}): Text
     lineHeight: style.lineHeight ?? lineHeightFor(fontSize),
   };
   if (language === 'am') {
-    const am: TextStyle = { ...base, fontFamily: NOTO_ETHIOPIC };
+    const am: TextStyle = { ...base, fontFamily: notoEthiopicForWeight(style.fontWeight) };
     // Mirror web: `html[lang=am] .uppercase { text-transform: none; letter-spacing: normal }`
     if (style.textTransform === 'uppercase') {
       am.textTransform = 'none';

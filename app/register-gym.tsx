@@ -6,7 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { completeGymSignup, getPublicSaasPlans, requestGymSignupOtp } from '@/src/api/auth';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { OptionPickerField } from '@/src/components/OptionPickerField';
-import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, Field, FormScroll, Label, PrimaryButton } from '@/src/components/Form';
+import { AuthScreen } from '@/src/components/AuthScreen';
 import { useTheme } from '@/src/context/PreferencesContext';
 import type { PublicSaasPlan } from '@/src/types/api';
 import { formatEtb } from '@/src/utils/formatMoney';
@@ -154,29 +155,29 @@ export default function RegisterGymScreen() {
 
   if (plansLoading) {
     return (
-      <Screen>
+      <AuthScreen>
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={c.accent} />
         </View>
-      </Screen>
+      </AuthScreen>
     );
   }
 
   if (plans.length === 0) {
     return (
-      <Screen>
+      <AuthScreen>
         <View style={[styles.centered, styles.unavailableCard, { backgroundColor: c.card, borderColor: c.border }]}>
           <Text style={[styles.unavailableText, { color: c.muted }]}>{t('signup.unavailable')}</Text>
           <Pressable onPress={() => router.replace('/login')} style={styles.backLink}>
             <Text style={[styles.backLinkText, { color: c.accent }]}>{t('signup.backToLogin')}</Text>
           </Pressable>
         </View>
-      </Screen>
+      </AuthScreen>
     );
   }
 
   return (
-    <Screen>
+    <AuthScreen>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <FormScroll contentContainerStyle={{ paddingTop: 72 }}>
           <Text style={[styles.title, { color: c.text }]}>{t('signup.title')}</Text>
@@ -274,7 +275,7 @@ export default function RegisterGymScreen() {
           router.replace('/login');
         }}
       />
-    </Screen>
+    </AuthScreen>
   );
 }
 

@@ -171,7 +171,7 @@ export default function MembersScreen() {
   const { language } = usePreferences();
   const { t } = useTranslation();
   const styles = createStyles(c);
-  const { pagePadding, isTablet, fabRight, listColumnItemStyle } = useResponsiveLayout();
+  const { pagePadding, isTablet, fabRight, fabSize, fabRadius, fabFontSize, listColumnItemStyle } = useResponsiveLayout();
   // Members read better as a full-width list (photo + status row), not a 2-col grid.
   const listColumns = 1;
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
@@ -420,8 +420,11 @@ export default function MembersScreen() {
       )}
 
       {!readOnly ? (
-        <Pressable style={[styles.fab, { right: fabRight }]} onPress={() => router.push('/enroll')}>
-          <Text style={styles.fabText}>+</Text>
+        <Pressable
+          style={[styles.fab, { right: fabRight, width: fabSize, height: fabSize, borderRadius: fabRadius }]}
+          onPress={() => router.push('/enroll')}
+        >
+          <Text style={[styles.fabText, { fontSize: fabFontSize }]}>+</Text>
         </Pressable>
       ) : null}
     </View>

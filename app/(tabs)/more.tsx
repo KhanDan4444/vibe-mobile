@@ -44,7 +44,7 @@ export default function MoreScreen() {
   const { user } = useAuth();
   const { colors: c } = useTheme();
   const { t } = useTranslation();
-  const { isTablet, pagePadding } = useResponsiveLayout();
+  const { pagePadding } = useResponsiveLayout();
   const owner = isGymOwner(user?.role);
 
   const items = MENU.filter((item) => !item.ownerOnly || owner);
@@ -55,15 +55,11 @@ export default function MoreScreen() {
         <ResponsiveContent style={{ paddingHorizontal: pagePadding }}>
           <Text style={[styles.hint, { color: c.dim }]}>{t('more.hint')}</Text>
 
-          <View style={[styles.menuGrid, isTablet && styles.menuGridTablet]}>
+          <View style={styles.menuGrid}>
             {items.map((item) => (
               <Pressable
                 key={item.route}
-                style={[
-                  styles.row,
-                  { backgroundColor: c.card, borderColor: c.border },
-                  isTablet && styles.rowTablet,
-                ]}
+                style={[styles.row, { backgroundColor: c.card, borderColor: c.border }]}
                 onPress={() => router.push(item.route as never)}
               >
                 <Ionicons name={item.icon} size={22} color={c.muted} style={styles.rowIcon} />
@@ -95,20 +91,12 @@ const styles = StyleSheet.create({
   menuGrid: {
     gap: 10,
   },
-  menuGridTablet: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 10,
     padding: 14,
     borderWidth: StyleSheet.hairlineWidth,
-  },
-  rowTablet: {
-    width: '48.5%',
-    flexGrow: 0,
   },
   rowIcon: { marginRight: 12 },
   rowText: { flex: 1 },

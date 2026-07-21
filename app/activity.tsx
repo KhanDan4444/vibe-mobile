@@ -76,7 +76,8 @@ export default function ActivityScreen() {
   const { selectedBranchId } = useBranchScope();
   const { colors: c } = useTheme();
   const { t } = useTranslation();
-  const { listColumns, pagePadding, listColumnItemStyle } = useResponsiveLayout();
+  const { pagePadding, listColumnItemStyle } = useResponsiveLayout();
+  const listColumns = 1;
   const styles = useThemedStyles((colors) => ({
     container: { flex: 1, backgroundColor: colors.bg },
     filters: { paddingTop: 12, paddingBottom: 14 },

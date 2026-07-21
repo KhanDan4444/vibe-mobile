@@ -25,11 +25,9 @@ import {
   buildFullReportPdfHtml,
   buildMembersPdfHtml,
   buildRevenuePdfHtml,
-  memberStatusCounts,
   sharePdfFromHtml,
 } from '@/src/utils/reportPdf';
 import { hasGymPortalAccess } from '@/src/utils/roles';
-import { aggregateRevenueByDate } from '@/src/utils/reportChartData';
 
 type MemberFilter = 'all' | 'active' | 'unpaid' | 'due_soon' | 'expired';
 
@@ -150,23 +148,41 @@ export default function ReportsScreen() {
   const displayGym = gymName || t('reports.yourGym');
 
   const membersQuery = useQuery({
-    queryKey: ['report-members', memberFilter, selectedBranchId],
-    queryFn: () => fetchMemberReport(token!, { ...branchParam, ...memberMeta.query }),
+    queryKey: ['report-members-summary', memberFilter, selectedBranchId],
+    queryFn: () => fetchMemberReport(token!, { ...branchParam, ...memberMeta.query, summary: true }),
     enabled: Boolean(token && canViewReports),
   });
 
   const revenueQuery = useQuery({
-    queryKey: ['report-revenue', revenuePreset, selectedBranchId],
-    queryFn: () => fetchRevenueReport(token!, { ...branchParam, preset: revenuePreset }),
+    queryKey: ['report-revenue-summary', revenuePreset, selectedBranchId],
+    queryFn: () => fetchRevenueReport(token!, { ...branchParam, preset: revenuePreset, summary: true }),
     enabled: Boolean(token && canViewReports),
   });
 
-  const members = membersQuery.data?.members ?? [];
-  const payments = revenueQuery.data?.payments ?? [];
   const revenueSummary = revenueQuery.data?.summary;
   const loading = membersQuery.isLoading || revenueQuery.isLoading;
-  const counts = memberStatusCounts(members);
-  const revenueTrend = aggregateRevenueByDate(payments);
+  const counts = membersQuery.data?.counts ?? {
+    total: 0,
+    active: 0,
+    dueSoon: 0,
+    expired: 0,
+    unpaid: 0,
+  };
+  const barCounts = membersQuery.data?.barCounts ?? counts;
+  const revenueTrend = revenueQuery.data?.chart ?? [];
+  const hasExportableData = counts.total > 0 || (revenueSummary?.count ?? 0) > 0;
+
+  const loadFullExportData = async () => {
+    const [memberReport, revenueReport] = await Promise.all([
+      fetchMemberReport(token!, { ...branchParam, ...memberMeta.query }),
+      fetchRevenueReport(token!, { ...branchParam, preset: revenuePreset }),
+    ]);
+    return {
+      members: memberReport.members ?? [],
+      payments: revenueReport.payments ?? [],
+      revenueSummary: revenueReport.summary,
+    };
+  };
 
   if (!canViewReports) {
     return <Redirect href="/(tabs)/more" />;
@@ -175,6 +191,7 @@ export default function ReportsScreen() {
   const shareCsv = async (kind: 'members' | 'revenue' | 'full') => {
     setExporting(`${kind}-csv`);
     try {
+      const { members, payments } = await loadFullExportData();
       const showBranch = showBranchFilter;
       let body = '';
       let title = 'Vibe report';
@@ -199,6 +216,8 @@ export default function ReportsScreen() {
       }
 
       await Share.share({ message: body, title });
+    } catch (e) {
+      setExportError(e instanceof Error ? e.message : t('reports.exportFailedBody'));
     } finally {
       setExporting(null);
     }
@@ -207,6 +226,7 @@ export default function ReportsScreen() {
   const sharePdf = async (kind: 'members' | 'revenue' | 'full') => {
     setExporting(`${kind}-pdf`);
     try {
+      const { members, payments, revenueSummary: exportSummary } = await loadFullExportData();
       const showBranch = showBranchFilter;
       let html = '';
       let title = 'Report';
@@ -226,7 +246,7 @@ export default function ReportsScreen() {
           branchLabel,
           periodLabel,
           payments,
-          summary: revenueSummary,
+          summary: exportSummary,
           showBranch,
         });
         title = 'Revenue report';
@@ -238,7 +258,7 @@ export default function ReportsScreen() {
           periodLabel,
           members,
           payments,
-          revenueSummary,
+          revenueSummary: exportSummary,
           showBranch,
         });
         title = 'Full gym report';
@@ -288,7 +308,7 @@ export default function ReportsScreen() {
             <StatBox label={t('reports.expired')} value={counts.expired} accent="#f87171" styles={styles} language={language} />
             <StatBox label={t('reports.unpaid')} value={counts.unpaid} accent="#fb923c" styles={styles} language={language} />
           </View>
-          <StatusBreakdown members={members} />
+          <StatusBreakdown counts={counts} barCounts={barCounts} />
         </>
       )}
 
@@ -325,7 +345,7 @@ export default function ReportsScreen() {
           {t('reports.shareReportSub', { memberFilter: memberMeta.label.toLowerCase(), period: periodLabel.toLowerCase() })}
         </Text>
         <ExportRow
-          disabled={(members.length === 0 && payments.length === 0) || exporting != null}
+          disabled={!hasExportableData || exporting != null}
           onCsv={() => shareCsv('full')}
           onPdf={() => sharePdf('full')}
           csvLoading={exporting === 'full-csv'}

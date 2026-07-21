@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ActivityIndicator, Image, Modal, Pressable, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
@@ -30,9 +30,15 @@ export function MemberPhoto({
     initialData: 0,
     staleTime: Infinity,
   });
-  const [src, setSrc] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [failed, setFailed] = useState(false);
+
+  const photoQuery = useQuery({
+    queryKey: ['member-photo', memberId, cacheBust],
+    queryFn: () => fetchMemberPhotoDataUri(memberId, token, cacheBust),
+    enabled: Boolean(hasPhoto && memberId && token),
+    staleTime: 1000 * 60 * 30,
+    gcTime: 1000 * 60 * 60,
+  });
+
   const [expanded, setExpanded] = useState(false);
   const styles = useThemedStyles((colors) => ({
     fallback: {
@@ -73,44 +79,13 @@ export function MemberPhoto({
     .map((p) => p[0]?.toUpperCase() || '')
     .join('');
 
-  useEffect(() => {
-    let cancelled = false;
-    setSrc(null);
-    setFailed(false);
-    setExpanded(false);
-
-    if (!hasPhoto || !memberId || !token) {
-      setLoading(false);
-      if (!hasPhoto) setFailed(true);
-      return undefined;
-    }
-
-    setLoading(true);
-    (async () => {
-      try {
-        const dataUri = await fetchMemberPhotoDataUri(memberId, token, cacheBust);
-        if (cancelled) return;
-        if (!dataUri) {
-          setFailed(true);
-          return;
-        }
-        setSrc(dataUri);
-      } catch {
-        if (!cancelled) setFailed(true);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [memberId, token, hasPhoto, cacheBust]);
-
+  const src = photoQuery.data ?? null;
+  const failed = !hasPhoto || photoQuery.isError || photoQuery.data === null;
+  const loading = photoQuery.isLoading && !src && !failed;
   const shellStyle = { width: size, height: size, borderRadius: size / 2 };
   const canExpand = expandable && Boolean(src) && !failed;
 
-  if (loading && !src && !failed) {
+  if (loading) {
     return (
       <View style={[styles.fallback, shellStyle]}>
         <ActivityIndicator size="small" color={c.accentText} />
@@ -123,7 +98,6 @@ export function MemberPhoto({
       <Image
         source={{ uri: src }}
         style={[shellStyle, { backgroundColor: c.border }]}
-        onError={() => setFailed(true)}
       />
     );
 

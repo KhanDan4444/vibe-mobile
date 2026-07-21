@@ -1,11 +1,25 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { usePathname } from 'expo-router';
 import { useAuth } from '@/src/auth/AuthContext';
+import { useAuthThemeForced } from '@/src/context/AuthThemeContext';
 import { changeAppLanguage, type AppLanguage } from '@/src/i18n';
 import { colorsForTheme, type AppTheme, type ThemeColors } from '@/src/theme/tokens';
+import {
+  defaultGuestLanguage,
+  langStorageKey,
+  persistGuestLanguage,
+  readGuestLanguage,
+  readStoredLanguage,
+} from '@/src/utils/langStorage';
 
 const THEME_KEY = 'vibe-mobile-theme';
-const LANG_KEY_PREFIX = 'vibe-mobile-lang';
+const AUTH_SEGMENTS = new Set(['login', 'register-gym', 'forgot-password']);
+
+function isAuthPath(pathname: string) {
+  const segment = pathname.replace(/^\//, '').split('/')[0] ?? '';
+  return AUTH_SEGMENTS.has(segment);
+}
 
 type PreferencesValue = {
   theme: AppTheme;
@@ -20,30 +34,27 @@ type PreferencesValue = {
 
 const PreferencesContext = createContext<PreferencesValue | null>(null);
 
-function langStorageKey(userId?: number | null, gymId?: number | null) {
-  if (gymId) return `${LANG_KEY_PREFIX}:gym:${gymId}`;
-  if (userId) return `${LANG_KEY_PREFIX}:user:${userId}`;
-  return `${LANG_KEY_PREFIX}:guest`;
-}
-
 export function PreferencesProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
+  const pathname = usePathname();
+  const onAuthRoute = isAuthPath(pathname);
   const [theme, setThemeState] = useState<AppTheme>('dark');
   const [language, setLanguageState] = useState<AppLanguage>('en');
   const [hydrated, setHydrated] = useState(false);
+  const userScopeRef = useRef<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         const storedTheme = await AsyncStorage.getItem(THEME_KEY);
-        const langKey = langStorageKey(user?.id, user?.gym_id);
-        const storedLang = await AsyncStorage.getItem(langKey);
+        const code = onAuthRoute || !user
+          ? await readGuestLanguage()
+          : await readStoredLanguage(user.id, user.gym_id);
         if (cancelled) return;
         if (storedTheme === 'light' || storedTheme === 'dark') setThemeState(storedTheme);
-        const lng = storedLang === 'am' ? 'am' : 'en';
-        setLanguageState(lng);
-        await changeAppLanguage(lng);
+        setLanguageState(code);
+        await changeAppLanguage(code);
       } finally {
         if (!cancelled) setHydrated(true);
       }
@@ -51,6 +62,23 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     return () => {
       cancelled = true;
     };
+  }, [user?.id, user?.gym_id, onAuthRoute]);
+
+  useEffect(() => {
+    const scope = user ? `${user.gym_id ?? ''}:${user.id ?? ''}` : 'guest';
+    if (scope === userScopeRef.current) return;
+
+    const previousScope = userScopeRef.current;
+    userScopeRef.current = scope;
+
+    if (!user && previousScope && previousScope !== 'guest') {
+      void (async () => {
+        const guest = defaultGuestLanguage();
+        await persistGuestLanguage(guest);
+        setLanguageState(guest);
+        await changeAppLanguage(guest);
+      })();
+    }
   }, [user?.id, user?.gym_id]);
 
   const setTheme = useCallback(async (next: AppTheme) => {
@@ -98,8 +126,18 @@ export function usePreferences() {
   return ctx;
 }
 
-/** Shorthand for themed colors in screens. */
+/** Shorthand for themed colors in screens. Auth routes force dark without changing saved preference. */
 export function useTheme() {
+  const authForced = useAuthThemeForced();
   const { colors, theme, isDark, cycleTheme, setTheme } = usePreferences();
+  if (authForced) {
+    return {
+      colors: colorsForTheme('dark'),
+      theme: 'dark' as AppTheme,
+      isDark: true,
+      cycleTheme,
+      setTheme,
+    };
+  }
   return { colors, theme, isDark, cycleTheme, setTheme };
 }

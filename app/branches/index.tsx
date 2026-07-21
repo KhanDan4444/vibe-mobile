@@ -112,7 +112,7 @@ export default function BranchesScreen() {
   const { token, user, subscription } = useAuth();
   const { colors: c } = useTheme();
   const insets = useSafeAreaInsets();
-  const { pagePadding, fabRight, listColumnItemStyle } = useResponsiveLayout();
+  const { pagePadding, fabRight, fabSize, fabRadius, fabFontSize, listColumnItemStyle } = useResponsiveLayout();
   const listColumns = 1;
   const fabBottom = 24 + insets.bottom;
   const styles = useThemedStyles((colors) => ({
@@ -182,8 +182,11 @@ export default function BranchesScreen() {
       )}
 
       {owner && !readOnly ? (
-        <Pressable style={[styles.fab, { right: fabRight, bottom: fabBottom }]} onPress={() => router.push('/branch/new')}>
-          <Text style={styles.fabText}>+</Text>
+        <Pressable
+          style={[styles.fab, { right: fabRight, bottom: fabBottom, width: fabSize, height: fabSize, borderRadius: fabRadius }]}
+          onPress={() => router.push('/branch/new')}
+        >
+          <Text style={[styles.fabText, { fontSize: fabFontSize }]}>+</Text>
         </Pressable>
       ) : null}
     </View>

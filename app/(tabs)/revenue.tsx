@@ -311,7 +311,8 @@ export default function RevenueScreen() {
   }));
   const owner = isGymOwner(user?.role);
   const { readOnly } = useGymReadOnly();
-  const { listColumns, pagePadding, isTablet, listColumnItemStyle } = useResponsiveLayout();
+  const { pagePadding, isTablet, listColumnItemStyle } = useResponsiveLayout();
+  const listColumns = 1;
   const { selectedBranchId, showBranchFilter } = useBranchScope();
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
 

@@ -25,6 +25,10 @@ export function useResponsiveLayout() {
   const tabIconSize = isTablet ? 26 : 24;
   /** FABs sit inside TabScreenFrame — inset from the framed content edge, not the screen. */
   const fabRight = isTablet ? pagePadding : 20;
+  /** Larger FAB on tablet so it doesn't look lost on the bigger canvas. */
+  const fabSize = isTablet ? 60 : 48;
+  const fabRadius = isTablet ? 18 : 14;
+  const fabFontSize = isTablet ? 32 : 26;
   const chartHeight = isTablet ? 168 : 132;
 
   /**
@@ -50,6 +54,9 @@ export function useResponsiveLayout() {
     formMaxWidth,
     tabIconSize,
     fabRight,
+    fabSize,
+    fabRadius,
+    fabFontSize,
     chartHeight,
     listColumnItemStyle,
   };

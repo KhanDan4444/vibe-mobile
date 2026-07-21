@@ -5,7 +5,8 @@ import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { requestForgotPasswordOtp, resetPasswordWithOtp } from '@/src/api/auth';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
-import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, Field, FormScroll, Label, PrimaryButton } from '@/src/components/Form';
+import { AuthScreen } from '@/src/components/AuthScreen';
 import { useTheme } from '@/src/context/PreferencesContext';
 
 export default function ForgotPasswordScreen() {
@@ -73,7 +74,7 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <Screen>
+    <AuthScreen>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <FormScroll contentContainerStyle={{ paddingTop: 72 }}>
           <Text style={[styles.title, { color: c.text }]}>{t('forgot.title')}</Text>
@@ -144,7 +145,7 @@ export default function ForgotPasswordScreen() {
           router.replace('/login');
         }}
       />
-    </Screen>
+    </AuthScreen>
   );
 }
 

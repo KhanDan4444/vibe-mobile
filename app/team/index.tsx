@@ -92,7 +92,7 @@ export default function TeamScreen() {
   const { colors: c } = useTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { pagePadding, fabRight, listColumnItemStyle } = useResponsiveLayout();
+  const { pagePadding, fabRight, fabSize, fabRadius, fabFontSize, listColumnItemStyle } = useResponsiveLayout();
   const listColumns = 1;
   const fabBottom = 24 + insets.bottom;
   const styles = useThemedStyles((colors) => ({
@@ -192,8 +192,11 @@ export default function TeamScreen() {
       )}
 
       {!readOnly ? (
-        <Pressable style={[styles.fab, { right: fabRight, bottom: fabBottom }]} onPress={() => router.push('/team/new')}>
-          <Text style={styles.fabText}>+</Text>
+        <Pressable
+          style={[styles.fab, { right: fabRight, bottom: fabBottom, width: fabSize, height: fabSize, borderRadius: fabRadius }]}
+          onPress={() => router.push('/team/new')}
+        >
+          <Text style={[styles.fabText, { fontSize: fabFontSize }]}>+</Text>
         </Pressable>
       ) : null}
 

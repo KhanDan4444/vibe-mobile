@@ -2,6 +2,7 @@ import { View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import type { MemberRow } from '@/src/types/api';
+import type { MemberStatusCounts } from '@/src/api/reports';
 import { usePreferences } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
@@ -15,7 +16,13 @@ const SEGMENT_KEYS = [
   { key: 'unpaid' as const, labelKey: 'statusBreakdown.unpaid', color: '#fb923c' },
 ];
 
-export function StatusBreakdown({ members }: { members: MemberRow[] }) {
+type Props = {
+  members?: MemberRow[];
+  counts?: MemberStatusCounts | null;
+  barCounts?: MemberStatusCounts | null;
+};
+
+export function StatusBreakdown({ members, counts: countsProp, barCounts: barProp }: Props) {
   const { t } = useTranslation();
   const { language } = usePreferences();
   const { isTablet } = useResponsiveLayout();
@@ -36,8 +43,8 @@ export function StatusBreakdown({ members }: { members: MemberRow[] }) {
     legendValue: { fontSize: 13, fontWeight: '700' as const, color: c.text },
   }));
 
-  const counts = memberStatusCounts(members);
-  const barCounts = memberStatusBreakdownExclusive(members);
+  const counts = countsProp ?? memberStatusCounts(members ?? []);
+  const barCounts = barProp ?? memberStatusBreakdownExclusive(members ?? []);
   if (counts.total === 0) return null;
 
   return (
