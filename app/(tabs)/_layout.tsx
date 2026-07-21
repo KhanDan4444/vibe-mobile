@@ -1,8 +1,9 @@
 import { Redirect, Tabs, router, usePathname } from 'expo-router';
 import { useCallback } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { AppBootSplash } from '@/src/components/AppBootSplash';
 import { AppHeaderRight } from '@/src/components/AppHeaderRight';
 import { GymBootError } from '@/src/components/GymBootError';
 import { MembersTabIcon } from '@/src/components/MembersTabIcon';
@@ -56,11 +57,7 @@ export default function TabLayout() {
   const onSwipeRight = useCallback(() => goToTab(tabIndex - 1), [goToTab, tabIndex]);
 
   if (loading) {
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: c.bg }}>
-        <ActivityIndicator size="large" color={c.accent} />
-      </View>
-    );
+    return <AppBootSplash />;
   }
 
   if (!user || !hasGymPortalAccess(user.role)) {

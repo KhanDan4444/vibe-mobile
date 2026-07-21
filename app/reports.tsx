@@ -1,7 +1,8 @@
 import { Redirect } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Share, View } from 'react-native';
+import { Pressable, ScrollView, Share, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
+import { PageSkeleton } from '@/src/components/Skeleton';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -298,7 +299,7 @@ export default function ReportsScreen() {
       />
 
       {loading ? (
-        <ActivityIndicator color={c.accentText} style={{ marginVertical: 24 }} />
+        <PageSkeleton variant="reports" padded={false} style={{ marginVertical: 8 }} />
       ) : (
         <>
           <View style={styles.statsRow}>

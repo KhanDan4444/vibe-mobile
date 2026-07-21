@@ -10,6 +10,10 @@ export type ThemeColors = {
   accent: string;
   accentSoft: string;
   accentText: string;
+  /** Brand signature — empty states / highlights, not primary CTAs. */
+  warm: string;
+  warmSoft: string;
+  warmText: string;
   error: string;
   errorBg: string;
   headerBg: string;
@@ -36,6 +40,9 @@ export const darkTheme: ThemeColors = {
   accent: '#0f766e',
   accentSoft: 'rgba(15,118,110,0.22)',
   accentText: '#14b8a6',
+  warm: '#fbbf24',
+  warmSoft: 'rgba(251,191,36,0.14)',
+  warmText: '#fcd34d',
   error: '#fda4af',
   errorBg: 'rgba(244,63,94,0.15)',
   headerBg: '#1e293b',
@@ -62,6 +69,9 @@ export const lightTheme: ThemeColors = {
   accent: '#0f766e',
   accentSoft: 'rgba(15,118,110,0.12)',
   accentText: '#115e59',
+  warm: '#b45309',
+  warmSoft: 'rgba(180,83,9,0.12)',
+  warmText: '#92400e',
   error: '#e11d48',
   errorBg: 'rgba(225,29,72,0.08)',
   headerBg: '#ffffff',

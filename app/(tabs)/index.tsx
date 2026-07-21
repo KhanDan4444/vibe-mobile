@@ -8,6 +8,7 @@ import { fetchDashboard } from '@/src/api/dashboard';
 import { fetchGymProfile } from '@/src/api/profile';
 import { BranchFilterBar } from '@/src/components/BranchFilterBar';
 import { MiniBarChart } from '@/src/components/MiniBarChart';
+import { PageSkeleton } from '@/src/components/Skeleton';
 import { ReadOnlyBanner } from '@/src/components/ReadOnlyBanner';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useTheme } from '@/src/context/PreferencesContext';
@@ -260,7 +261,7 @@ export default function DashboardScreen() {
       <BranchFilterBar horizontalPadding={0} />
 
       {isLoading ? (
-        <Text style={[styles.muted, { color: c.dim }]}>{t('dashboard.loading')}</Text>
+        <PageSkeleton variant="dashboard" padded={false} />
       ) : isError ? (
         <View style={styles.errorWrap}>
           <Text style={[styles.errorText, { color: c.error }]}>

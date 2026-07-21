@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { AppText as Text, AppTextInput as TextInput } from '@/src/components/AppText';
+import { ListFooterSkeleton, PageSkeleton } from '@/src/components/Skeleton';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchPayments } from '@/src/api/payments';
@@ -13,6 +14,7 @@ import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
 import { BranchFilterBar } from '@/src/components/BranchFilterBar';
 import { RevenueFiltersSheet } from '@/src/components/RevenueFiltersSheet';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
+import { EmptyState } from '@/src/components/EmptyState';
 import { PAYMENT_METHODS, paymentMethodBadgeStyle } from '@/src/constants/payments';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
@@ -536,7 +538,7 @@ export default function RevenueScreen() {
       {query.isLoading && !query.data ? (
         <View style={{ flex: 1, paddingHorizontal: pagePadding }}>
           {listHeader}
-          <ActivityIndicator style={{ marginTop: 32 }} color={c.accentText} />
+          <PageSkeleton variant="list-rows" padded={false} />
         </View>
       ) : query.isError ? (
         <View style={{ flex: 1, paddingHorizontal: pagePadding }}>
@@ -578,14 +580,15 @@ export default function RevenueScreen() {
           onEndReachedThreshold={0.4}
           ListEmptyComponent={
             !useCustomRange || customRangeReady ? (
-              <View style={styles.emptyWrap}>
-                <Ionicons name="receipt-outline" size={40} color={c.border} />
-                <Text style={appTextStyle(language, styles.empty)}>{t('revenue.empty')}</Text>
-              </View>
+              <EmptyState
+                icon="receipt-outline"
+                title={t('revenue.emptyTitle')}
+                body={t('revenue.emptyBody')}
+              />
             ) : null
           }
           ListFooterComponent={
-            query.isFetchingNextPage ? <ActivityIndicator color={c.accentText} style={{ marginVertical: 20 }} /> : null
+            query.isFetchingNextPage ? <ListFooterSkeleton /> : null
           }
         />
       )}

@@ -1,5 +1,7 @@
 {
-  "app": { "name": "VibeSaaS" },
+  "app": {
+    "name": "VibeSaaS"
+  },
   "tabs": {
     "dashboard": "Dashboard",
     "members": "Members",
@@ -64,9 +66,11 @@
     "filterUnpaid": "Unpaid",
     "sort": "Sort members",
     "filterLabel": "Filter",
-    "empty": "No members found.",
+    "empty": "No members match this filter.",
     "noPlan": "No plan",
-    "unpaidBadge": "Unpaid"
+    "unpaidBadge": "Unpaid",
+    "emptyTitle": "No members yet",
+    "emptyBody": "Enroll your first member to track terms and payments."
   },
   "revenue": {
     "search": "Search member",
@@ -92,7 +96,9 @@
     "vsPrior": "{{trend}} vs prior period",
     "tapToEdit": "Tap row to edit",
     "attentionTitle": "Unpaid attention",
-    "viewUnpaid": "View unpaid"
+    "viewUnpaid": "View unpaid",
+    "emptyTitle": "No payments yet",
+    "emptyBody": "Payments show up here once members enroll or renew."
   },
   "forgot": {
     "title": "Reset password",
@@ -514,7 +520,9 @@
     "staffOnly": "Staff only",
     "ownerOnly": "Owner only",
     "empty": "No activity yet.",
-    "filterLabel": "Show activity from"
+    "filterLabel": "Show activity from",
+    "emptyTitle": "No activity yet",
+    "emptyBody": "Events appear here as you enroll, renew, and collect payments."
   },
   "messages": {
     "empty": "No SMS messages yet.",
@@ -522,7 +530,9 @@
     "filterAll": "All",
     "filterDueSoon": "Due soon",
     "filterExpiresToday": "Expires today",
-    "filterExpired": "Expired"
+    "filterExpired": "Expired",
+    "emptyTitle": "No SMS yet",
+    "emptyBody": "Member SMS history shows up after you send the first message."
   },
   "team": {
     "noBranch": "No branch",
@@ -536,7 +546,9 @@
     "enableTitle": "Enable staff",
     "disableTitle": "Disable staff",
     "enableBody": "Allow {{name}} to sign in?",
-    "disableBody": "Block {{name}} from signing in?"
+    "disableBody": "Block {{name}} from signing in?",
+    "emptyTitle": "No staff yet",
+    "emptyBody": "Add help desk staff to manage members at the desk."
   },
   "plans": {
     "deleteTitle": "Delete plan",
@@ -547,12 +559,19 @@
     "deleteFailed": "Could not delete plan.",
     "empty": "No plans yet.",
     "activeMembers": "{{count}} active member(s)",
-    "noActiveMembers": "No active members"
+    "noActiveMembers": "No active members",
+    "emptyTitle": "No plans yet",
+    "emptyBody": "Create a membership tier before enrolling members."
   },
   "statusBreakdown": {
     "active": "Active",
     "dueSoon": "Due soon",
     "expired": "Expired",
     "unpaid": "Unpaid"
+  },
+  "branches": {
+    "emptyTitle": "No branches yet",
+    "emptyBody": "Add your first location to organize members by branch.",
+    "empty": "No branches found."
   }
 }

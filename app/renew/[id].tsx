@@ -11,6 +11,7 @@ import { DateField } from '@/src/components/DateField';
 import { PlanPickerField } from '@/src/components/PlanPickerField';
 import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
 import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { PageSkeleton } from '@/src/components/Skeleton';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useTranslation } from 'react-i18next';
 import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
@@ -133,9 +134,7 @@ export default function RenewScreen() {
   if (memberQuery.isLoading) {
     return (
       <Screen>
-        <View style={styles.center}>
-          <Text style={styles.hint}>{t('common.loading')}</Text>
-        </View>
+        <PageSkeleton variant="form" count={5} />
       </Screen>
     );
   }

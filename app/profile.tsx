@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchGymProfile, updateGymProfile } from '@/src/api/profile';
 import { ErrorBanner, Field, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { PageSkeleton } from '@/src/components/Skeleton';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
@@ -82,7 +83,7 @@ export default function ProfileScreen() {
   if (profileQuery.isLoading) {
     return (
       <Screen>
-        <Text style={[styles.readOnly, { color: c.muted }]}>{t('common.loading')}</Text>
+        <PageSkeleton variant="form" />
       </Screen>
     );
   }

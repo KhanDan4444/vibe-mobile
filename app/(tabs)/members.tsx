@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { AppText as Text, AppTextInput as TextInput } from '@/src/components/AppText';
+import { ListFooterSkeleton, PageSkeleton } from '@/src/components/Skeleton';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -13,8 +14,10 @@ import { BranchFilterBar } from '@/src/components/BranchFilterBar';
 import { ReadOnlyBanner } from '@/src/components/ReadOnlyBanner';
 import { SortPicker } from '@/src/components/SortPicker';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
+import { EmptyState } from '@/src/components/EmptyState';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useTheme, usePreferences } from '@/src/context/PreferencesContext';
+import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { appTextStyle } from '@/src/theme/typography';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
@@ -170,7 +173,7 @@ export default function MembersScreen() {
   const { colors: c } = useTheme();
   const { language } = usePreferences();
   const { t } = useTranslation();
-  const styles = createStyles(c);
+  const styles = useThemedStyles(createStyles);
   const { pagePadding, isTablet, fabRight, fabSize, fabRadius, fabFontSize, listColumnItemStyle } = useResponsiveLayout();
   // Members read better as a full-width list (photo + status row), not a 2-col grid.
   const listColumns = 1;
@@ -374,7 +377,7 @@ export default function MembersScreen() {
       </View>
 
       {query.isLoading ? (
-        <ActivityIndicator style={{ marginTop: 40 }} color={c.accentText} />
+        <PageSkeleton variant="list-rows" />
       ) : query.isError ? (
         <View style={styles.errorWrap}>
           <Text style={styles.errorText}>
@@ -408,12 +411,14 @@ export default function MembersScreen() {
             if (query.hasNextPage && !query.isFetchingNextPage) query.fetchNextPage();
           }}
           onEndReachedThreshold={0.4}
-          ListEmptyComponent={<Text style={styles.empty}>{t('members.empty')}</Text>}
-          ListFooterComponent={
-            query.isFetchingNextPage ? (
-              <ActivityIndicator color={c.accentText} style={{ marginVertical: 16 }} />
-            ) : null
+          ListEmptyComponent={
+            <EmptyState
+              icon="people-outline"
+              title={t('members.emptyTitle')}
+              body={t('members.emptyBody')}
+            />
           }
+          ListFooterComponent={query.isFetchingNextPage ? <ListFooterSkeleton /> : null}
           refreshing={query.isRefetching}
           onRefresh={() => query.refetch()}
         />
@@ -433,15 +438,15 @@ export default function MembersScreen() {
 }
 
 function createStyles(c: ThemeColors) {
-  return StyleSheet.create({
+  return {
     container: { flex: 1, backgroundColor: c.bg },
     toolbar: {
       paddingBottom: 10,
       gap: 10,
     },
     searchWrap: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
       backgroundColor: c.card,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
@@ -461,15 +466,15 @@ function createStyles(c: ThemeColors) {
       marginHorizontal: -16,
     },
     filters: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
       paddingRight: 32,
       gap: 8,
     },
-    filtersWrap: { flexWrap: 'wrap' },
+    filtersWrap: { flexWrap: 'wrap' as const },
     filterChip: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
       gap: 6,
       paddingLeft: 11,
       paddingRight: 8,
@@ -477,7 +482,7 @@ function createStyles(c: ThemeColors) {
       borderRadius: 10,
       borderWidth: StyleSheet.hairlineWidth,
       flexShrink: 0,
-      alignSelf: 'flex-start',
+      alignSelf: 'flex-start' as const,
       minHeight: 36,
     },
     filterDot: {
@@ -487,27 +492,27 @@ function createStyles(c: ThemeColors) {
     },
     filterLabel: {
       fontSize: 13,
-      fontWeight: '700',
+      fontWeight: '700' as const,
     },
     filterCountBadge: {
       minWidth: 22,
       height: 22,
       borderRadius: 6,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
       paddingHorizontal: 6,
     },
     filterCount: {
       fontSize: 12,
-      fontWeight: '800',
+      fontWeight: '800' as const,
     },
-    sortRow: { alignSelf: 'flex-start' },
+    sortRow: { alignSelf: 'flex-start' as const },
     list: { paddingBottom: 88 },
     columnWrap: { gap: 10 },
     row: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      justifyContent: 'space-between' as const,
       backgroundColor: c.card,
       borderRadius: 8,
       padding: 12,
@@ -520,36 +525,36 @@ function createStyles(c: ThemeColors) {
       marginBottom: 0,
     },
     rowStacked: {
-      flexDirection: 'column',
-      alignItems: 'stretch',
+      flexDirection: 'column' as const,
+      alignItems: 'stretch' as const,
       gap: 10,
     },
     rowTop: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
       gap: 12,
     },
     rowMain: { flex: 1, marginRight: 8, minWidth: 0 },
-    name: { fontSize: 16, fontWeight: '600', color: c.text },
+    name: { fontSize: 16, fontWeight: '600' as const, color: c.text },
     phone: { marginTop: 4, fontSize: 13, color: c.muted },
     branch: { marginTop: 2, fontSize: 12, color: c.dim },
-    rowMeta: { alignItems: 'flex-end' },
+    rowMeta: { alignItems: 'flex-end' as const },
     rowMetaStacked: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      flexWrap: 'wrap',
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      flexWrap: 'wrap' as const,
       gap: 8,
       paddingTop: 2,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: c.border,
     },
-    status: { fontSize: 12, fontWeight: '700', textTransform: 'capitalize' },
+    status: { fontSize: 12, fontWeight: '700' as const, textTransform: 'capitalize' as const },
     plan: { marginTop: 4, fontSize: 12, color: c.dim },
     planStacked: { marginTop: 0 },
-    unpaid: { marginTop: 4, fontSize: 11, fontWeight: '700', color: c.statusUnpaid },
-    empty: { textAlign: 'center', color: c.dim, marginTop: 40, fontSize: 15, alignSelf: 'center', maxWidth: 360 },
-    errorWrap: { alignItems: 'center', paddingTop: 48, gap: 12, paddingHorizontal: 24 },
-    errorText: { textAlign: 'center', color: c.error, fontSize: 15 },
+    unpaid: { marginTop: 4, fontSize: 11, fontWeight: '700' as const, color: c.statusUnpaid },
+    empty: { textAlign: 'center' as const, color: c.dim, marginTop: 40, fontSize: 15, alignSelf: 'center' as const, maxWidth: 360 },
+    errorWrap: { alignItems: 'center' as const, paddingTop: 48, gap: 12, paddingHorizontal: 24 },
+    errorText: { textAlign: 'center' as const, color: c.error, fontSize: 15 },
     retryBtn: {
       borderWidth: 1,
       borderColor: c.border,
@@ -557,25 +562,25 @@ function createStyles(c: ThemeColors) {
       paddingHorizontal: 16,
       paddingVertical: 12,
       minHeight: 44,
-      justifyContent: 'center',
+      justifyContent: 'center' as const,
       backgroundColor: c.card,
     },
-    retryText: { color: c.accentText, fontSize: 14, fontWeight: '600' },
+    retryText: { color: c.accentText, fontSize: 14, fontWeight: '600' as const },
     fab: {
-      position: 'absolute',
+      position: 'absolute' as const,
       bottom: 24,
       width: 48,
       height: 48,
       borderRadius: 14,
       backgroundColor: c.accent,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
       elevation: 2,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.18,
       shadowRadius: 3,
     },
-    fabText: { color: '#fff', fontSize: 26, fontWeight: '300', marginTop: -2 },
-  });
+    fabText: { color: '#fff', fontSize: 26, fontWeight: '300' as const, marginTop: -2 },
+  };
 }

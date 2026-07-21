@@ -8,6 +8,7 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { fetchBranches, updateBranch } from '@/src/api/branches';
 import { OptionPickerField } from '@/src/components/OptionPickerField';
 import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { PageSkeleton } from '@/src/components/Skeleton';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { isOfflineQueued } from '@/src/offline/types';
@@ -94,7 +95,7 @@ export default function EditBranchScreen() {
   if (branchesQuery.isLoading) {
     return (
       <Screen>
-        <Text style={[styles.readOnly, { color: c.muted }]}>{t('common.loading')}</Text>
+        <PageSkeleton variant="form" count={4} />
       </Screen>
     );
   }

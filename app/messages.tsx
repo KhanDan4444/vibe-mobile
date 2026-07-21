@@ -1,13 +1,15 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
+import { ListFooterSkeleton, PageSkeleton } from '@/src/components/Skeleton';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchMemberSms } from '@/src/api/memberSms';
 import { BranchFilterBar } from '@/src/components/BranchFilterBar';
 import { FilterPickerButton } from '@/src/components/FilterPickerButton';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
+import { EmptyState } from '@/src/components/EmptyState';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
@@ -119,7 +121,7 @@ export default function MessagesScreen() {
       </View>
 
       {query.isLoading ? (
-        <ActivityIndicator style={{ marginTop: 40 }} color={c.accentText} />
+        <PageSkeleton variant="list-cards" />
       ) : (
         <FlatList
           key={`sms-cols-${listColumns}`}
@@ -143,9 +145,15 @@ export default function MessagesScreen() {
             if (query.hasNextPage && !query.isFetchingNextPage) query.fetchNextPage();
           }}
           onEndReachedThreshold={0.4}
-          ListEmptyComponent={<Text style={styles.empty}>{t('messages.empty')}</Text>}
+          ListEmptyComponent={
+            <EmptyState
+              icon="chatbubble-ellipses-outline"
+              title={t('messages.emptyTitle')}
+              body={t('messages.emptyBody')}
+            />
+          }
           ListFooterComponent={
-            query.isFetchingNextPage ? <ActivityIndicator color={c.accentText} style={{ marginVertical: 16 }} /> : null
+            query.isFetchingNextPage ? <ListFooterSkeleton /> : null
           }
         />
       )}

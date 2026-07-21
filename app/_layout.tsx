@@ -1,11 +1,11 @@
 import '@/src/i18n';
-import { Redirect, Stack } from 'expo-router';
+import { Stack } from 'expo-router';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import { ActivityIndicator, LogBox, View } from 'react-native';
+import { LogBox, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { AuthProvider, useAuth } from '@/src/auth/AuthContext';
 import { BranchProvider } from '@/src/context/BranchContext';
@@ -15,6 +15,7 @@ import { PreferencesProvider, usePreferences, useTheme } from '@/src/context/Pre
 import { NotificationInboxProvider } from '@/src/notifications/NotificationInboxContext';
 import { NetworkProvider, useNetwork } from '@/src/offline/NetworkProvider';
 import { OfflineStatusStrip, OfflineSyncOverlay } from '@/src/components/OfflineBanner';
+import { AppBootSplash } from '@/src/components/AppBootSplash';
 import { SubscriptionLockout } from '@/src/components/SubscriptionLockout';
 import { PERSISTED_QUERY_KEYS, queryClient, QUERY_CACHE_STORAGE_KEY } from '@/src/query/client';
 import { SystemChrome } from '@/src/theme/SystemChrome';
@@ -34,10 +35,7 @@ export { ErrorBoundary } from 'expo-router';
 export default function RootLayout() {
   const { loaded: fontsLoaded } = useAppFonts();
 
-  useEffect(() => {
-    if (fontsLoaded) void SplashScreen.hideAsync();
-  }, [fontsLoaded]);
-
+  // Keep native splash until fonts are ready (auth gate hides it next).
   if (!fontsLoaded) return null;
 
   return (
@@ -78,6 +76,10 @@ function RootNavigator() {
   const { t } = useTranslation();
   const { isOnline } = useNetwork();
 
+  useEffect(() => {
+    if (!loading) void SplashScreen.hideAsync();
+  }, [loading]);
+
   const stackScreen = {
     headerShown: true as const,
     headerStyle: { backgroundColor: c.headerBg },
@@ -91,11 +93,7 @@ function RootNavigator() {
   };
 
   if (loading) {
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: c.bg }}>
-        <ActivityIndicator size="large" color={c.accent} />
-      </View>
-    );
+    return <AppBootSplash />;
   }
 
   if (subscription?.accessDenied || subscription?.locked || subscription?.status === 'expired') {
@@ -119,33 +117,33 @@ function RootNavigator() {
             ...(user && !isOnline ? { safeAreaInsets: { top: 0 } } : {}),
           }}
         >
-      <Stack.Screen name="index" />
-      <Stack.Screen name="login" />
-      <Stack.Screen name="forgot-password" />
-      <Stack.Screen name="register-gym" />
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="account" options={{ ...stackScreen, title: t('screens.account') }} />
-      <Stack.Screen name="member/[id]" options={{ ...stackScreen, title: t('screens.member') }} />
-      <Stack.Screen name="enroll" options={{ ...stackScreen, title: t('screens.enroll') }} />
-      <Stack.Screen name="renew/[id]" options={{ ...stackScreen, title: t('screens.renew') }} />
-      <Stack.Screen name="payment/[id]" options={{ ...stackScreen, title: t('screens.recordPayment') }} />
-      <Stack.Screen name="change-plan/[id]" options={{ ...stackScreen, title: t('screens.changePlan') }} />
-      <Stack.Screen name="member/[id]/edit" options={{ ...stackScreen, title: t('screens.editMember') }} />
-      <Stack.Screen name="transfer/[id]" options={{ ...stackScreen, title: t('screens.transfer') }} />
-      <Stack.Screen name="plan/new" options={{ ...stackScreen, title: t('screens.newPlan') }} />
-      <Stack.Screen name="plan/[id]/edit" options={{ ...stackScreen, title: t('screens.editPlan') }} />
-      <Stack.Screen name="payment/edit/[id]" options={{ ...stackScreen, title: t('screens.editPayment') }} />
-      <Stack.Screen name="team/index" options={{ ...stackScreen, title: t('screens.team') }} />
-      <Stack.Screen name="team/new" options={{ ...stackScreen, title: t('screens.addStaff') }} />
-      <Stack.Screen name="team/[id]/edit" options={{ ...stackScreen, title: t('screens.editStaff') }} />
-      <Stack.Screen name="branches/index" options={{ ...stackScreen, title: t('screens.branches') }} />
-      <Stack.Screen name="branch/new" options={{ ...stackScreen, title: t('screens.newBranch') }} />
-      <Stack.Screen name="branch/[id]/edit" options={{ ...stackScreen, title: t('screens.editBranch') }} />
-      <Stack.Screen name="messages" options={{ ...stackScreen, title: t('screens.memberSms') }} />
-      <Stack.Screen name="activity" options={{ ...stackScreen, title: t('tabs.activity') }} />
-      <Stack.Screen name="profile" options={{ ...stackScreen, title: t('screens.gymProfile') }} />
-      <Stack.Screen name="change-password" options={{ ...stackScreen, title: t('screens.changePassword') }} />
-      <Stack.Screen name="reports" options={{ ...stackScreen, title: t('screens.reports') }} />
+          <Stack.Screen name="index" />
+          <Stack.Screen name="login" />
+          <Stack.Screen name="forgot-password" />
+          <Stack.Screen name="register-gym" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="account" options={{ ...stackScreen, title: t('screens.account') }} />
+          <Stack.Screen name="member/[id]" options={{ ...stackScreen, title: t('screens.member') }} />
+          <Stack.Screen name="enroll" options={{ ...stackScreen, title: t('screens.enroll') }} />
+          <Stack.Screen name="renew/[id]" options={{ ...stackScreen, title: t('screens.renew') }} />
+          <Stack.Screen name="payment/[id]" options={{ ...stackScreen, title: t('screens.recordPayment') }} />
+          <Stack.Screen name="change-plan/[id]" options={{ ...stackScreen, title: t('screens.changePlan') }} />
+          <Stack.Screen name="member/[id]/edit" options={{ ...stackScreen, title: t('screens.editMember') }} />
+          <Stack.Screen name="transfer/[id]" options={{ ...stackScreen, title: t('screens.transfer') }} />
+          <Stack.Screen name="plan/new" options={{ ...stackScreen, title: t('screens.newPlan') }} />
+          <Stack.Screen name="plan/[id]/edit" options={{ ...stackScreen, title: t('screens.editPlan') }} />
+          <Stack.Screen name="payment/edit/[id]" options={{ ...stackScreen, title: t('screens.editPayment') }} />
+          <Stack.Screen name="team/index" options={{ ...stackScreen, title: t('screens.team') }} />
+          <Stack.Screen name="team/new" options={{ ...stackScreen, title: t('screens.addStaff') }} />
+          <Stack.Screen name="team/[id]/edit" options={{ ...stackScreen, title: t('screens.editStaff') }} />
+          <Stack.Screen name="branches/index" options={{ ...stackScreen, title: t('screens.branches') }} />
+          <Stack.Screen name="branch/new" options={{ ...stackScreen, title: t('screens.newBranch') }} />
+          <Stack.Screen name="branch/[id]/edit" options={{ ...stackScreen, title: t('screens.editBranch') }} />
+          <Stack.Screen name="messages" options={{ ...stackScreen, title: t('screens.memberSms') }} />
+          <Stack.Screen name="activity" options={{ ...stackScreen, title: t('tabs.activity') }} />
+          <Stack.Screen name="profile" options={{ ...stackScreen, title: t('screens.gymProfile') }} />
+          <Stack.Screen name="change-password" options={{ ...stackScreen, title: t('screens.changePassword') }} />
+          <Stack.Screen name="reports" options={{ ...stackScreen, title: t('screens.reports') }} />
         </Stack>
       </View>
       {user ? <OfflineSyncOverlay /> : null}

@@ -1,11 +1,14 @@
 import { Redirect, useRouter } from 'expo-router';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
+import { PageSkeleton } from '@/src/components/Skeleton';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchBranches } from '@/src/api/branches';
 import { ActionOverflowMenu } from '@/src/components/ActionOverflowMenu';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
+import { EmptyState } from '@/src/components/EmptyState';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
@@ -108,6 +111,7 @@ function BranchCard({
 }
 
 export default function BranchesScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { token, user, subscription } = useAuth();
   const { colors: c } = useTheme();
@@ -156,7 +160,7 @@ export default function BranchesScreen() {
     <TabScreenFrame>
     <View style={styles.container}>
       {query.isLoading ? (
-        <ActivityIndicator style={{ marginTop: 40 }} color={c.accentText} />
+        <PageSkeleton variant="list-cards" />
       ) : (
         <FlatList
           key={`branches-cols-${listColumns}`}
@@ -177,7 +181,13 @@ export default function BranchesScreen() {
           refreshControl={
             <RefreshControl refreshing={query.isRefetching} onRefresh={() => query.refetch()} tintColor={c.accentText} />
           }
-          ListEmptyComponent={<Text style={styles.empty}>No branches found.</Text>}
+          ListEmptyComponent={
+            <EmptyState
+              icon="business-outline"
+              title={t('branches.emptyTitle')}
+              body={t('branches.emptyBody')}
+            />
+          }
         />
       )}
 

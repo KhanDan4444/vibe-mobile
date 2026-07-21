@@ -1,13 +1,15 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
+import { PageSkeleton } from '@/src/components/Skeleton';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchTeam, updateStaff } from '@/src/api/team';
 import { ActionOverflowMenu } from '@/src/components/ActionOverflowMenu';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
+import { EmptyState } from '@/src/components/EmptyState';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
@@ -166,7 +168,7 @@ export default function TeamScreen() {
       ) : null}
 
       {query.isLoading ? (
-        <ActivityIndicator style={{ marginTop: 40 }} color={c.accentText} />
+        <PageSkeleton variant="list-cards" />
       ) : (
         <FlatList
           key={`team-cols-${listColumns}`}
@@ -187,7 +189,9 @@ export default function TeamScreen() {
           refreshControl={
             <RefreshControl refreshing={query.isRefetching} onRefresh={() => query.refetch()} tintColor={c.accentText} />
           }
-          ListEmptyComponent={<Text style={styles.empty}>{t('team.empty')}</Text>}
+          ListEmptyComponent={
+            <EmptyState icon="people-outline" title={t('team.emptyTitle')} body={t('team.emptyBody')} />
+          }
         />
       )}
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -8,6 +8,7 @@ import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { OptionPickerField } from '@/src/components/OptionPickerField';
 import { ErrorBanner, Field, FormScroll, Label, PrimaryButton } from '@/src/components/Form';
 import { AuthScreen } from '@/src/components/AuthScreen';
+import { PageSkeleton } from '@/src/components/Skeleton';
 import { useTheme } from '@/src/context/PreferencesContext';
 import type { PublicSaasPlan } from '@/src/types/api';
 import { formatEtb } from '@/src/utils/formatMoney';
@@ -156,9 +157,7 @@ export default function RegisterGymScreen() {
   if (plansLoading) {
     return (
       <AuthScreen>
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={c.accent} />
-        </View>
+        <PageSkeleton variant="form" count={4} />
       </AuthScreen>
     );
   }

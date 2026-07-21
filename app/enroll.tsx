@@ -14,6 +14,7 @@ import { PhotoPickerField } from '@/src/components/PhotoPickerField';
 import { PlanPickerField } from '@/src/components/PlanPickerField';
 import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
 import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { SkeletonBone } from '@/src/components/Skeleton';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
@@ -238,7 +239,10 @@ export default function EnrollScreen() {
           ) : null}
 
           {plansQuery.isLoading ? (
-            <Text style={styles.hint}>{t('forms.loadingPlans')}</Text>
+            <View style={{ gap: 10, marginVertical: 8 }}>
+              <SkeletonBone width="40%" height={12} />
+              <SkeletonBone width="100%" height={44} radius={10} />
+            </View>
           ) : plans.length === 0 ? (
             <Text style={styles.hint}>{t('forms.noPlans')}</Text>
           ) : (

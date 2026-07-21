@@ -1,8 +1,9 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
+import { PageSkeleton } from '@/src/components/Skeleton';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
 import { deleteMember, fetchMember, fetchMemberPayments } from '@/src/api/members';
@@ -149,9 +150,9 @@ export default function MemberDetailScreen() {
 
   if (memberQuery.isLoading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color={c.accentText} size="large" />
-      </View>
+      <TabScreenFrame>
+        <PageSkeleton variant="detail" />
+      </TabScreenFrame>
     );
   }
 
@@ -238,7 +239,7 @@ export default function MemberDetailScreen() {
       <View style={styles.card}>
         <Text style={appTextStyle(language, styles.sectionTitle)}>{t('member.paymentHistory')}</Text>
         {paymentsQuery.isLoading ? (
-          <ActivityIndicator color={c.accentText} style={{ marginVertical: 12 }} />
+          <PageSkeleton variant="list-rows" count={3} padded={false} style={{ marginTop: 8 }} />
         ) : payments.length === 0 ? (
           <Text style={appTextStyle(language, styles.muted)}>{t('member.noPayments')}</Text>
         ) : (

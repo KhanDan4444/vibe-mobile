@@ -1,13 +1,15 @@
 import { Redirect } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, View } from 'react-native';
+import { FlatList, RefreshControl, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
+import { ListFooterSkeleton, PageSkeleton } from '@/src/components/Skeleton';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchActivityLogs } from '@/src/api/activity';
 import { BranchFilterBar } from '@/src/components/BranchFilterBar';
 import { FilterPickerButton } from '@/src/components/FilterPickerButton';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
+import { EmptyState } from '@/src/components/EmptyState';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
@@ -127,7 +129,7 @@ export default function ActivityScreen() {
       </View>
 
       {query.isLoading ? (
-        <ActivityIndicator style={{ marginTop: 40 }} color={c.accentText} />
+        <PageSkeleton variant="list-cards" />
       ) : (
         <FlatList
           key={`activity-cols-${listColumns}`}
@@ -146,9 +148,15 @@ export default function ActivityScreen() {
             if (query.hasNextPage && !query.isFetchingNextPage) query.fetchNextPage();
           }}
           onEndReachedThreshold={0.4}
-          ListEmptyComponent={<Text style={styles.empty}>{t('activity.empty')}</Text>}
+          ListEmptyComponent={
+            <EmptyState
+              icon="time-outline"
+              title={t('activity.emptyTitle')}
+              body={t('activity.emptyBody')}
+            />
+          }
           ListFooterComponent={
-            query.isFetchingNextPage ? <ActivityIndicator color={c.accentText} style={{ marginVertical: 16 }} /> : null
+            query.isFetchingNextPage ? <ListFooterSkeleton /> : null
           }
         />
       )}

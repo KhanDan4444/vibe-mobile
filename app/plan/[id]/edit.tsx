@@ -8,6 +8,7 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { fetchPlans, updatePlan } from '@/src/api/plans';
 import type { PlanPayload } from '@/src/api/plans';
 import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { PageSkeleton } from '@/src/components/Skeleton';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { isOfflineQueued } from '@/src/offline/types';
@@ -86,7 +87,7 @@ export default function EditPlanScreen() {
   if (plansQuery.isLoading) {
     return (
       <Screen>
-        <Text style={[styles.readOnly, { color: c.muted }]}>{t('common.loading')}</Text>
+        <PageSkeleton variant="form" count={4} />
       </Screen>
     );
   }

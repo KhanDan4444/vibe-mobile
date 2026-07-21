@@ -9,6 +9,7 @@ import { fetchBranches } from '@/src/api/branches';
 import { BranchPicker } from '@/src/components/BranchPicker';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { PageSkeleton } from '@/src/components/Skeleton';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { isGymOwner } from '@/src/utils/roles';
 
@@ -111,7 +112,7 @@ export default function EditStaffScreen() {
   if (teamQuery.isLoading) {
     return (
       <Screen>
-        <Text style={styles.readOnly}>Loading…</Text>
+        <PageSkeleton variant="form" count={5} />
       </Screen>
     );
   }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { AppText as Text, AppTextInput as TextInput } from '@/src/components/AppText';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -16,7 +17,8 @@ export default function LoginScreen() {
   const { login, logout } = useAuth();
   const { colors: c } = useTheme();
   const { t } = useTranslation();
-  const { formMaxWidth, pagePadding } = useResponsiveLayout();
+  const { formMaxWidth, pagePadding, isTablet } = useResponsiveLayout();
+  const s = isTablet ? tabletStyles : phoneStyles;
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -55,14 +57,15 @@ export default function LoginScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
-          contentContainerStyle={[styles.scroll, { paddingHorizontal: pagePadding }]}
+          contentContainerStyle={[s.scroll, { paddingHorizontal: pagePadding }]}
           keyboardShouldPersistTaps="handled"
           bounces={false}
         >
           <View style={styles.wrap}>
-            <View
+            <Animated.View
+              entering={FadeInDown.duration(380).springify().damping(18)}
               style={[
-                styles.card,
+                s.card,
                 {
                   backgroundColor: c.card,
                   borderColor: c.border,
@@ -74,62 +77,62 @@ export default function LoginScreen() {
             >
               <View style={[styles.cardAccent, { backgroundColor: c.accent }]} />
               <LoginBrandPanel />
-              <Text style={[styles.subtitle, { color: c.muted }]}>{t('auth.subtitle')}</Text>
+              <Text style={[s.subtitle, { color: c.muted }]}>{t('auth.subtitle')}</Text>
 
               {error ? (
-                <Text style={[styles.error, { color: c.error, backgroundColor: c.errorBg, borderColor: 'rgba(244,63,94,0.4)' }]}>
+                <Text style={[s.error, { color: c.error, backgroundColor: c.errorBg, borderColor: 'rgba(244,63,94,0.4)' }]}>
                   {error}
                 </Text>
               ) : null}
 
-              <Text style={[styles.label, { color: c.muted }]}>{t('auth.identifier')}</Text>
+              <Text style={[s.label, { color: c.muted }]}>{t('auth.identifier')}</Text>
               <TextInput
                 autoCapitalize="none"
                 autoCorrect={false}
                 value={identifier}
                 onChangeText={setIdentifier}
-                style={[styles.input, { backgroundColor: c.inputBg, borderColor: c.inputBorder, color: c.text }]}
+                style={[s.input, { backgroundColor: c.inputBg, borderColor: c.inputBorder, color: c.text }]}
                 placeholder="owner@gym.com"
                 placeholderTextColor={c.dim}
               />
 
-              <Text style={[styles.label, { color: c.muted }]}>{t('auth.password')}</Text>
+              <Text style={[s.label, { color: c.muted }]}>{t('auth.password')}</Text>
               <TextInput
                 secureTextEntry
                 value={password}
                 onChangeText={setPassword}
-                style={[styles.input, styles.inputTight, { backgroundColor: c.inputBg, borderColor: c.inputBorder, color: c.text }]}
+                style={[s.input, s.inputTight, { backgroundColor: c.inputBg, borderColor: c.inputBorder, color: c.text }]}
                 placeholder="••••••••"
                 placeholderTextColor={c.dim}
               />
 
-              <Pressable style={styles.forgotLink} onPress={() => router.push('/forgot-password' as never)}>
-                <Text style={[styles.linkText, { color: c.accent }]}>{t('auth.forgotPassword')}</Text>
+              <Pressable style={s.forgotLink} onPress={() => router.push('/forgot-password' as never)}>
+                <Text style={[s.linkText, { color: c.accent }]}>{t('auth.forgotPassword')}</Text>
               </Pressable>
 
               <Pressable
-                style={[styles.button, { backgroundColor: c.accent }, loading && styles.buttonDisabled]}
+                style={[s.button, { backgroundColor: c.accent }, loading && styles.buttonDisabled]}
                 onPress={handleSubmit}
                 disabled={loading}
               >
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.buttonText}>{t('auth.signIn')}</Text>
+                  <Text style={s.buttonText}>{t('auth.signIn')}</Text>
                 )}
               </Pressable>
 
-              <View style={styles.registerRow}>
-                <Text style={[styles.registerPrompt, { color: c.muted }]}>{t('auth.newGymOwner')} </Text>
+              <View style={s.registerRow}>
+                <Text style={[s.registerPrompt, { color: c.muted }]}>{t('auth.newGymOwner')} </Text>
                 <Pressable onPress={() => router.push('/register-gym' as never)}>
-                  <Text style={[styles.linkText, { color: c.accent }]}>{t('auth.registerGym')}</Text>
+                  <Text style={[s.linkText, { color: c.accent }]}>{t('auth.registerGym')}</Text>
                 </Pressable>
               </View>
 
               {__DEV__ ? (
-                <Text style={[styles.hint, { color: c.dim }]}>API: {API_BASE_URL}</Text>
+                <Text style={[s.hint, { color: c.dim }]}>API: {API_BASE_URL}</Text>
               ) : null}
-            </View>
+            </Animated.View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -139,25 +142,9 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  scroll: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingVertical: 32,
-  },
   wrap: {
     width: '100%',
     alignItems: 'center',
-  },
-  card: {
-    width: '100%',
-    borderRadius: 16,
-    padding: 24,
-    paddingTop: 20,
-    borderWidth: 1,
-    overflow: 'hidden',
-    shadowOffset: { width: 0, height: 10 },
-    shadowRadius: 28,
-    elevation: 6,
   },
   cardAccent: {
     position: 'absolute',
@@ -166,9 +153,99 @@ const styles = StyleSheet.create({
     right: 0,
     height: 3,
   },
+  buttonDisabled: { opacity: 0.7 },
+});
+
+const phoneStyles = StyleSheet.create({
+  scroll: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingVertical: 20,
+  },
+  card: {
+    width: '100%',
+    borderRadius: 14,
+    padding: 18,
+    paddingTop: 16,
+    borderWidth: 1,
+    overflow: 'hidden',
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 20,
+    elevation: 5,
+  },
   subtitle: {
-    marginTop: -8,
-    marginBottom: 24,
+    marginTop: -4,
+    marginBottom: 16,
+    fontSize: 13,
+    textAlign: 'center',
+  },
+  label: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 5,
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 12,
+    fontSize: 15,
+  },
+  inputTight: {
+    marginBottom: 6,
+  },
+  button: {
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  buttonText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  forgotLink: { alignSelf: 'flex-end', marginBottom: 10 },
+  registerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    marginTop: 12,
+  },
+  registerPrompt: { fontSize: 13 },
+  linkText: { fontSize: 13, fontWeight: '700' },
+  error: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 12,
+    fontSize: 13,
+  },
+  hint: {
+    marginTop: 14,
+    fontSize: 11,
+    textAlign: 'center',
+  },
+});
+
+const tabletStyles = StyleSheet.create({
+  scroll: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingVertical: 32,
+  },
+  card: {
+    width: '100%',
+    borderRadius: 16,
+    padding: 28,
+    paddingTop: 24,
+    borderWidth: 1,
+    overflow: 'hidden',
+    shadowOffset: { width: 0, height: 12 },
+    shadowRadius: 28,
+    elevation: 6,
+  },
+  subtitle: {
+    marginTop: -4,
+    marginBottom: 20,
     fontSize: 14,
     textAlign: 'center',
   },
@@ -182,7 +259,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    marginBottom: 16,
+    marginBottom: 14,
     fontSize: 16,
   },
   inputTight: {
@@ -194,7 +271,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 4,
   },
-  buttonDisabled: { opacity: 0.7 },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   forgotLink: { alignSelf: 'flex-end', marginBottom: 12 },
   registerRow: {
@@ -210,11 +286,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     padding: 12,
-    marginBottom: 16,
+    marginBottom: 14,
     fontSize: 14,
   },
   hint: {
-    marginTop: 20,
+    marginTop: 18,
     fontSize: 11,
     textAlign: 'center',
   },

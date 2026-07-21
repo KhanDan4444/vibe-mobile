@@ -66,9 +66,11 @@
     "filterUnpaid": "ያልተከፈለ",
     "sort": "አባላትን ደርድር",
     "filterLabel": "ማጣሪያ",
-    "empty": "አባል አልተገኘም።",
+    "empty": "ከዚህ ማጣሪያ ጋር የሚዛመድ አባል የለም።",
     "noPlan": "ዕቅድ የለም",
-    "unpaidBadge": "ያልተከፈለ"
+    "unpaidBadge": "ያልተከፈለ",
+    "emptyTitle": "እስካሁን አባል የለም",
+    "emptyBody": "ውሎችንና ክፍያዎችን ለመከታተል የመጀመሪያ አባልዎን ያስመዝግቡ።"
   },
   "revenue": {
     "search": "አባል ይፈልጉ",
@@ -94,7 +96,9 @@
     "vsPrior": "{{trend}} ከቀድሞው ጊዜ",
     "tapToEdit": "ለማስተካከል ይንኩ",
     "attentionTitle": "ያልተከፈሉ ትኩረት",
-    "viewUnpaid": "ያልተከፈሉን ይመልከቱ"
+    "viewUnpaid": "ያልተከፈሉን ይመልከቱ",
+    "emptyTitle": "እስካሁን ክፍያ የለም",
+    "emptyBody": "አባላት ሲመዘገቡ ወይም ሲያድሱ ክፍያዎች እዚህ ይታያሉ።"
   },
   "forgot": {
     "title": "የይለፍ ቃል ዳግም ያስጀምሩ",
@@ -516,7 +520,9 @@
     "staffOnly": "ሰራተኞች ብቻ",
     "ownerOnly": "ባለቤት ብቻ",
     "empty": "እንቅስቃሴ እስካሁን የለም።",
-    "filterLabel": "እንቅስቃሴ ከ"
+    "filterLabel": "እንቅስቃሴ ከ",
+    "emptyTitle": "እስካሁን እንቅስቃሴ የለም",
+    "emptyBody": "ሲመዘግቡ፣ ሲያድሱ እና ክፍያ ሲሰበስቡ ክስተቶች እዚህ ይታያሉ።"
   },
   "messages": {
     "empty": "SMS መልዕክት እስካሁን የለም።",
@@ -524,7 +530,9 @@
     "filterAll": "ሁሉም",
     "filterDueSoon": "በቅርብ ያበቃ",
     "filterExpiresToday": "ዛሬ ያበቃ",
-    "filterExpired": "የተጠናቀቀ"
+    "filterExpired": "የተጠናቀቀ",
+    "emptyTitle": "እስካሁን SMS የለም",
+    "emptyBody": "የመጀመሪያውን መልእክት ከላኩ በኋላ የአባል SMS ታሪክ ይታያል።"
   },
   "team": {
     "noBranch": "ቅርንጫፍ የለም",
@@ -538,7 +546,9 @@
     "enableTitle": "ሰራተኛ አንቃ",
     "disableTitle": "ሰራተኛ አሰናክል",
     "enableBody": "{{name}} መግባት ይፈቀድ?",
-    "disableBody": "{{name}} መግባት ይከለክል?"
+    "disableBody": "{{name}} መግባት ይከለክል?",
+    "emptyTitle": "እስካሁን ሰራተኛ የለም",
+    "emptyBody": "በዴስክ አባላትን እንዲያስተዳድሩ የእገዛ ዴስክ ሰራተኞችን ያክሉ።"
   },
   "plans": {
     "deleteTitle": "ዕቅድ ሰርዝ",
@@ -549,12 +559,19 @@
     "deleteFailed": "ዕቅዱን መሰረዝ አልተቻለም።",
     "empty": "ዕቅድ እስካሁን የለም።",
     "activeMembers": "{{count}} ንቁ አባል(ዎች)",
-    "noActiveMembers": "ንቁ አባል የለም"
+    "noActiveMembers": "ንቁ አባል የለም",
+    "emptyTitle": "እስካሁን ዕቅድ የለም",
+    "emptyBody": "አባላትን ከማስመዝገብዎ በፊት የአባልነት ደረጃ ይፍጠሩ።"
   },
   "statusBreakdown": {
     "active": "ንቁ",
     "dueSoon": "በቅርብ ያበቃ",
     "expired": "የተጠናቀቀ",
     "unpaid": "ያልተከፈለ"
+  },
+  "branches": {
+    "emptyTitle": "እስካሁን ቅርንጫፍ የለም",
+    "emptyBody": "አባላትን በቅርንጫፍ ለማደራጀት የመጀመሪያ ቦታዎን ያክሉ።",
+    "empty": "ቅርንጫፍ አልተገኘም።"
   }
 }

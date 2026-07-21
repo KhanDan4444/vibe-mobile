@@ -1,5 +1,6 @@
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
+import { PageSkeleton } from '@/src/components/Skeleton';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -144,7 +145,7 @@ export function NotificationsSheet({ visible, onClose }: { visible: boolean; onC
             showsVerticalScrollIndicator={false}
           >
             {loading ? (
-              <Text style={[styles.empty, { color: c.dim }]}>{t('notifications.loading')}</Text>
+              <PageSkeleton variant="list-rows" count={4} padded={false} />
             ) : notifications.length === 0 ? (
               <Text style={[styles.empty, { color: c.dim }]}>{t('notifications.empty')}</Text>
             ) : (
