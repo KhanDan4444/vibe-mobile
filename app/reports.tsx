@@ -103,7 +103,7 @@ function buildReportStyles(colors: ThemeColors, statCardWidthPercent: string) {
       borderWidth: 1,
       borderColor: colors.border,
     },
-    revenueTotal: { fontSize: 28, fontWeight: '700' as const, color: colors.accentText },
+    revenueTotal: { fontSize: 28, fontWeight: '700' as const, color: colors.text },
     revenueMeta: { marginTop: 4, fontSize: 13, color: colors.dim },
     fullSection: {
       marginTop: 32,

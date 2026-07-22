@@ -145,7 +145,7 @@ function ChartSummaryFooter({
         </Text>
         <View style={styles.labelsCenter}>
           <Text style={styles.footerCaption}>{caption}</Text>
-          <Text style={[styles.footerAmount, styles.accent]} numberOfLines={1}>
+          <Text style={[styles.footerAmount, styles.amountText]} numberOfLines={1}>
             {formatEtb(Number(focus.amount), { forceCompact: true })}
           </Text>
         </View>
@@ -227,33 +227,28 @@ function LineChartView({
           {areaPath ? <Path d={areaPath} fill="url(#revenueAreaFill)" /> : null}
           <Path d={linePath} fill="none" stroke={styles.chartLine.color} strokeWidth="3" strokeLinecap="round" />
           {selectedPoint ? (
-            <Line
-              x1={selectedPoint.x}
-              x2={selectedPoint.x}
-              y1={PADDING_TOP}
-              y2={baseline}
-              stroke={styles.chartLine.color}
-              strokeOpacity="0.45"
-              strokeWidth="1"
-              strokeDasharray="3 3"
-            />
-          ) : null}
-          {points.map((point, index) => {
-            const isEdge = index === 0 || index === points.length - 1;
-            const isSelected = index === selectedIndex;
-            return (
+            <>
+              <Line
+                x1={selectedPoint.x}
+                x2={selectedPoint.x}
+                y1={PADDING_TOP}
+                y2={baseline}
+                stroke={styles.chartLine.color}
+                strokeOpacity="0.45"
+                strokeWidth="1"
+                strokeDasharray="3 3"
+              />
               <Circle
-                key={point.date}
-                cx={point.x}
-                cy={point.y}
-                r={isSelected ? 6 : isEdge ? 4 : 3}
+                cx={selectedPoint.x}
+                cy={selectedPoint.y}
+                r={5}
                 fill={styles.chartLine.color}
                 stroke="white"
                 strokeOpacity="0.9"
-                strokeWidth={isSelected ? 2 : 1.4}
+                strokeWidth={2}
               />
-            );
-          })}
+            </>
+          ) : null}
         </Svg>
       </View>
       <ChartSummaryFooter
@@ -610,7 +605,7 @@ function PieChartView({
               <SvgText x={cx} y={cy - 12} fill={styles.label.color} fontSize="10" fontWeight="600" textAnchor="middle">
                 {chartPointLabel(selectedSlice.date, otherLabel)}
               </SvgText>
-              <SvgText x={cx} y={cy + 4} fill={styles.accent.color} fontSize="15" fontWeight="700" textAnchor="middle">
+              <SvgText x={cx} y={cy + 4} fill={styles.amountText.color} fontSize="15" fontWeight="700" textAnchor="middle">
                 {formatCompactNumber(selectedSlice.amount)}
               </SvgText>
               <SvgText x={cx} y={cy + 18} fill={styles.label.color} fontSize="10" textAnchor="middle">
@@ -622,7 +617,7 @@ function PieChartView({
               <SvgText x={cx} y={cy - 14} fill={styles.label.color} fontSize="10" fontWeight="600" textAnchor="middle">
                 {t('dashboard.chartPieTotal')}
               </SvgText>
-              <SvgText x={cx} y={cy + 2} fill={styles.accent.color} fontSize="15" fontWeight="700" textAnchor="middle">
+              <SvgText x={cx} y={cy + 2} fill={styles.amountText.color} fontSize="15" fontWeight="700" textAnchor="middle">
                 {formatCompactNumber(total)}
               </SvgText>
               <SvgText x={cx} y={cy + 16} fill={styles.label.color} fontSize="10" textAnchor="middle">
@@ -694,6 +689,7 @@ function useChartStyles() {
     footerBlock: { marginTop: 8 },
     footerCaption: { fontSize: 10, color: c.dim, textTransform: 'uppercase' as const, letterSpacing: 0.4 },
     footerAmount: { marginTop: 2, fontSize: 16, fontWeight: '700' as const },
+    amountText: { color: c.text },
     label: { fontSize: 11, color: c.dim },
     muted: { color: c.muted },
     empty: { fontSize: 14, color: c.dim, marginTop: 8 },

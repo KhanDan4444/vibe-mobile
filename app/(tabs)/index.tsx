@@ -181,7 +181,7 @@ export default function DashboardScreen() {
     <View style={[styles.summary, { backgroundColor: c.card, borderColor: c.border }]}>
       <Pressable onPress={() => router.push('/(tabs)/revenue')}>
         <Text style={[styles.summaryTitle, { color: c.muted }]}>{t('dashboard.thisMonth')}</Text>
-        <Text style={[styles.income, { color: c.accentText }]}>
+        <Text style={[styles.income, { color: c.text }]}>
           {formatEtb(Number(data.monthlyIncome || 0), { forceCompact: false })}
         </Text>
         {trendLabel ? <Text style={[styles.trend, { color: c.success }]}>{trendLabel}</Text> : null}

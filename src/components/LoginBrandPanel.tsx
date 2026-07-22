@@ -14,8 +14,8 @@ export function LoginBrandPanel() {
 
   return (
     <View style={s.wrap}>
-      <View style={[s.iconRing, { borderColor: c.accent }]}>
-        <Image source={APP_ICON} style={s.icon} resizeMode="contain" />
+      <View style={[s.iconClip, { borderColor: c.accent }]}>
+        <Image source={APP_ICON} style={s.icon} resizeMode="cover" />
       </View>
       <Text style={[s.name, { color: c.accentText }]}>{t('app.name')}</Text>
       <Text style={[s.tagline, { color: c.muted }]}>{t('auth.tagline')}</Text>
@@ -28,16 +28,18 @@ const phoneStyles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  iconRing: {
+  iconClip: {
     marginBottom: 8,
-    padding: 2,
-    borderRadius: 14,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     borderWidth: 1.5,
+    overflow: 'hidden',
+    padding: 0,
   },
   icon: {
-    width: 44,
-    height: 44,
-    borderRadius: 11,
+    width: 48,
+    height: 48,
   },
   name: {
     fontSize: 22,
@@ -58,16 +60,17 @@ const tabletStyles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  iconRing: {
+  iconClip: {
     marginBottom: 10,
-    padding: 3,
-    borderRadius: 16,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     borderWidth: 1.5,
+    overflow: 'hidden',
   },
   icon: {
-    width: 52,
-    height: 52,
-    borderRadius: 13,
+    width: 56,
+    height: 56,
   },
   name: {
     fontSize: 26,

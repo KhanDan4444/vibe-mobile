@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import { AppText as Text, AppTextInput as TextInput } from '@/src/components/AppText';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -62,8 +61,7 @@ export default function LoginScreen() {
           bounces={false}
         >
           <View style={styles.wrap}>
-            <Animated.View
-              entering={FadeInDown.duration(380).springify().damping(18)}
+            <View
               style={[
                 s.card,
                 {
@@ -132,7 +130,7 @@ export default function LoginScreen() {
               {__DEV__ ? (
                 <Text style={[s.hint, { color: c.dim }]}>API: {API_BASE_URL}</Text>
               ) : null}
-            </Animated.View>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

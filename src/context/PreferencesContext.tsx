@@ -126,11 +126,13 @@ export function usePreferences() {
   return ctx;
 }
 
-/** Shorthand for themed colors in screens. Auth routes force dark without changing saved preference. */
+/** Shorthand for themed colors in screens. Auth routes always use dark (like web). */
 export function useTheme() {
   const authForced = useAuthThemeForced();
+  const pathname = usePathname();
+  const onAuthRoute = isAuthPath(pathname);
   const { colors, theme, isDark, cycleTheme, setTheme } = usePreferences();
-  if (authForced) {
+  if (authForced || onAuthRoute) {
     return {
       colors: colorsForTheme('dark'),
       theme: 'dark' as AppTheme,
