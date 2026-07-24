@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Niku",
-    "slug": "niku-mobile",
+    "slug": "vibe-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -49,13 +49,26 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash.png",
+          "backgroundColor": "#000508",
+          "enableFullScreenImage_legacy": true,
           "resizeMode": "cover",
-          "backgroundColor": "#020617",
-          "dark": {
+          "ios": {
             "image": "./assets/images/splash.png",
-            "resizeMode": "cover",
-            "backgroundColor": "#020617"
+            "backgroundColor": "#000508",
+            "dark": {
+              "image": "./assets/images/splash.png",
+              "backgroundColor": "#000508"
+            }
+          },
+          "android": {
+            "image": "./assets/images/icon.png",
+            "imageWidth": 180,
+            "resizeMode": "contain",
+            "backgroundColor": "#000508",
+            "dark": {
+              "image": "./assets/images/icon.png",
+              "backgroundColor": "#000508"
+            }
           }
         }
       ],

@@ -4,7 +4,6 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
 import { LogBox, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { AuthProvider, useAuth } from '@/src/auth/AuthContext';
@@ -35,8 +34,8 @@ export { ErrorBoundary } from 'expo-router';
 export default function RootLayout() {
   const { loaded: fontsLoaded } = useAppFonts();
 
-  // Keep native splash until fonts are ready (auth gate hides it next).
-  if (!fontsLoaded) return null;
+  // Show full-bleed gym splash while fonts load (native splash can't do this on Android).
+  if (!fontsLoaded) return <AppBootSplash />;
 
   return (
     <PersistQueryClientProvider
@@ -75,10 +74,6 @@ function RootNavigator() {
   const { language } = usePreferences();
   const { t } = useTranslation();
   const { isOnline } = useNetwork();
-
-  useEffect(() => {
-    if (!loading) void SplashScreen.hideAsync();
-  }, [loading]);
 
   const stackScreen = {
     headerShown: true as const,

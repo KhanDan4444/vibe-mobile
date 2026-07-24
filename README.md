@@ -81,7 +81,7 @@ npm run submit:ios
 
 Configure App Store Connect / Google Play credentials when prompted (`eas credentials`).
 
-**App IDs:** Android `com.niku.mobile`, iOS `com.niku.mobile`, Expo slug `niku-mobile`, scheme `niku`.
+**App IDs:** Android/iOS `com.niku.mobile`, display name `Niku`, Expo slug `vibe-mobile` (EAS project), scheme `niku`.
 
 ## Feature checklist
 

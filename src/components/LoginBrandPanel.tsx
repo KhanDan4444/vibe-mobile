@@ -14,7 +14,9 @@ export function LoginBrandPanel() {
 
   return (
     <View style={s.wrap}>
-      <Image source={APP_ICON} style={s.icon} resizeMode="contain" accessibilityLabel="ንቁ" />
+      <View style={s.iconShell}>
+        <Image source={APP_ICON} style={s.icon} resizeMode="cover" accessibilityLabel="ንቁ" />
+      </View>
       <Text style={[s.subtitle, { color: c.muted }]}>{t('auth.signInSubtitle')}</Text>
     </View>
   );
@@ -25,10 +27,16 @@ const phoneStyles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  icon: {
+  iconShell: {
     width: 72,
     height: 72,
+    borderRadius: 36,
+    overflow: 'hidden',
     marginBottom: 12,
+  },
+  icon: {
+    width: '100%',
+    height: '100%',
   },
   subtitle: {
     fontSize: 14,
@@ -43,10 +51,16 @@ const tabletStyles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  icon: {
+  iconShell: {
     width: 88,
     height: 88,
+    borderRadius: 44,
+    overflow: 'hidden',
     marginBottom: 14,
+  },
+  icon: {
+    width: '100%',
+    height: '100%',
   },
   subtitle: {
     fontSize: 15,
