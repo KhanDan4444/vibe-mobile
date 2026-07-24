@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "VibeSaaS"
+    "name": "ንቁ"
   },
   "tabs": {
     "dashboard": "ዳሽቦርድ",
@@ -13,6 +13,7 @@
   "auth": {
     "subtitle": "የጂም ሰራተኞች መግቢያ",
     "tagline": "አባላት፣ ገቢ እና ቅርንጫፎች — በአንድ ቦታ",
+    "signInSubtitle": "የስራ ቦታዎን ለማስተዳደር ይግቡ",
     "identifier": "የተጠቃሚ ስም ወይም ኢሜይል",
     "password": "የይለፍ ቃል",
     "signIn": "ግባ",

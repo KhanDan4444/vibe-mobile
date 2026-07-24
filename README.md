@@ -1,4 +1,4 @@
-# VibeSaaS Mobile
+# ንቁ Mobile
 
 Expo (React Native) app for **gym owners and front-desk staff** — dashboard, members, enroll, renew, payments, and offline support.
 
@@ -81,7 +81,7 @@ npm run submit:ios
 
 Configure App Store Connect / Google Play credentials when prompted (`eas credentials`).
 
-**Note:** `app.json` uses `com.vibesaas.mobile` as bundle ID / package name — change before publishing if needed.
+**App IDs:** Android `com.niku.mobile`, iOS `com.niku.mobile`, Expo slug `niku-mobile`, scheme `niku`.
 
 ## Feature checklist
 

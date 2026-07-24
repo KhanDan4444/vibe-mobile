@@ -1,25 +1,16 @@
 import { Image, StyleSheet, View } from 'react-native';
-import { useTheme } from '@/src/context/PreferencesContext';
-import { darkTheme } from '@/src/theme/tokens';
 
-const APP_ICON = require('@/assets/images/splash-icon-round.png');
+const SPLASH = require('@/assets/images/splash.png');
 
 /** Native splash backgrounds — keep in sync with app.json expo-splash-screen. */
-export const BOOT_SPLASH_BG_DARK = darkTheme.bg; // #0f172a — app dark appearance
-export const BOOT_SPLASH_BG_LIGHT = '#ffffff';
+export const BOOT_SPLASH_BG_DARK = '#020617';
+export const BOOT_SPLASH_BG_LIGHT = '#020617';
 
-const ICON_SIZE = 96;
-
-/** Branded boot screen — centered round app icon on light or dark theme bg. */
+/** Full-bleed branded splash — gym scene + ንቁ lockup. */
 export function AppBootSplash() {
-  const { isDark } = useTheme();
-  const backgroundColor = isDark ? BOOT_SPLASH_BG_DARK : BOOT_SPLASH_BG_LIGHT;
-
   return (
-    <View style={[styles.root, { backgroundColor }]} accessibilityLabel="Loading">
-      <View style={styles.iconClip}>
-        <Image source={APP_ICON} style={styles.icon} resizeMode="cover" />
-      </View>
+    <View style={styles.root} accessibilityLabel="Loading">
+      <Image source={SPLASH} style={styles.image} resizeMode="cover" />
     </View>
   );
 }
@@ -27,17 +18,11 @@ export function AppBootSplash() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: BOOT_SPLASH_BG_DARK,
   },
-  iconClip: {
-    width: ICON_SIZE,
-    height: ICON_SIZE,
-    borderRadius: ICON_SIZE / 2,
-    overflow: 'hidden',
-  },
-  icon: {
-    width: ICON_SIZE,
-    height: ICON_SIZE,
+  image: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
   },
 });

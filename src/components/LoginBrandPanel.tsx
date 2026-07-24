@@ -14,11 +14,8 @@ export function LoginBrandPanel() {
 
   return (
     <View style={s.wrap}>
-      <View style={[s.iconClip, { borderColor: c.accent }]}>
-        <Image source={APP_ICON} style={s.icon} resizeMode="cover" />
-      </View>
-      <Text style={[s.name, { color: c.accentText }]}>{t('app.name')}</Text>
-      <Text style={[s.tagline, { color: c.muted }]}>{t('auth.tagline')}</Text>
+      <Image source={APP_ICON} style={s.icon} resizeMode="contain" accessibilityLabel="ንቁ" />
+      <Text style={[s.subtitle, { color: c.muted }]}>{t('auth.signInSubtitle')}</Text>
     </View>
   );
 }
@@ -26,62 +23,35 @@ export function LoginBrandPanel() {
 const phoneStyles = StyleSheet.create({
   wrap: {
     alignItems: 'center',
-    marginBottom: 12,
-  },
-  iconClip: {
-    marginBottom: 8,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 1.5,
-    overflow: 'hidden',
-    padding: 0,
+    marginBottom: 16,
   },
   icon: {
-    width: 48,
-    height: 48,
+    width: 72,
+    height: 72,
+    marginBottom: 12,
   },
-  name: {
-    fontSize: 22,
-    fontWeight: '800',
+  subtitle: {
+    fontSize: 14,
+    lineHeight: 20,
     textAlign: 'center',
-  },
-  tagline: {
-    marginTop: 4,
-    fontSize: 13,
-    lineHeight: 18,
-    textAlign: 'center',
-    maxWidth: 260,
+    maxWidth: 280,
   },
 });
 
 const tabletStyles = StyleSheet.create({
   wrap: {
     alignItems: 'center',
-    marginBottom: 16,
-  },
-  iconClip: {
-    marginBottom: 10,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: 1.5,
-    overflow: 'hidden',
+    marginBottom: 20,
   },
   icon: {
-    width: 56,
-    height: 56,
+    width: 88,
+    height: 88,
+    marginBottom: 14,
   },
-  name: {
-    fontSize: 26,
-    fontWeight: '800',
+  subtitle: {
+    fontSize: 15,
+    lineHeight: 22,
     textAlign: 'center',
-  },
-  tagline: {
-    marginTop: 6,
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: 'center',
-    maxWidth: 320,
+    maxWidth: 340,
   },
 });

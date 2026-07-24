@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "VibeSaaS"
+    "name": "ንቁ"
   },
   "tabs": {
     "dashboard": "Dashboard",
@@ -13,6 +13,7 @@
   "auth": {
     "subtitle": "Gym staff sign in",
     "tagline": "Members, payments & branches — in one place.",
+    "signInSubtitle": "Sign in to manage your workspace",
     "identifier": "Username or email",
     "password": "Password",
     "signIn": "Sign in",

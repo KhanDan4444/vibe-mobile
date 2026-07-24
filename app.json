@@ -1,25 +1,24 @@
 {
   "expo": {
-    "name": "VibeSaaS",
-    "slug": "vibe-mobile",
+    "name": "Niku",
+    "slug": "niku-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "vibemobile",
+    "scheme": "niku",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "com.vibesaas.mobile",
+      "bundleIdentifier": "com.niku.mobile",
       "supportsTablet": true,
       "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "Allow VibeSaaS to access photos for member profile pictures."
+        "NSPhotoLibraryUsageDescription": "Allow ንቁ to access photos for member profile pictures."
       }
     },
     "android": {
-      "package": "com.vibesaas.mobile",
-      "softwareKeyboardLayoutMode": "resize",
+      "package": "com.niku.mobile",
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#000f16",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -44,19 +43,19 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow VibeSaaS to access photos for member profile pictures."
+          "photosPermission": "Allow ንቁ to access photos for member profile pictures."
         }
       ],
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon-round.png",
-          "imageWidth": 120,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "image": "./assets/images/splash.png",
+          "resizeMode": "cover",
+          "backgroundColor": "#020617",
           "dark": {
-            "image": "./assets/images/splash-icon-round.png",
-            "backgroundColor": "#0f172a"
+            "image": "./assets/images/splash.png",
+            "resizeMode": "cover",
+            "backgroundColor": "#020617"
           }
         }
       ],
@@ -69,9 +68,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "dca0fab5-ba7a-4e9e-8d26-a28303f7f16a"
+        "projectId": "d673a5a3-fbed-4a89-a1a5-d59486b1a4b9"
       }
     },
-    "owner": "danielxo44"
+    "owner": "danzol"
   }
 }

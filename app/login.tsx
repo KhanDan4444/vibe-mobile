@@ -75,7 +75,6 @@ export default function LoginScreen() {
             >
               <View style={[styles.cardAccent, { backgroundColor: c.accent }]} />
               <LoginBrandPanel />
-              <Text style={[s.subtitle, { color: c.muted }]}>{t('auth.subtitle')}</Text>
 
               {error ? (
                 <Text style={[s.error, { color: c.error, backgroundColor: c.errorBg, borderColor: 'rgba(244,63,94,0.4)' }]}>
@@ -171,12 +170,6 @@ const phoneStyles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 5,
   },
-  subtitle: {
-    marginTop: -4,
-    marginBottom: 16,
-    fontSize: 13,
-    textAlign: 'center',
-  },
   label: {
     fontSize: 12,
     fontWeight: '600',
@@ -240,12 +233,6 @@ const tabletStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: 12 },
     shadowRadius: 28,
     elevation: 6,
-  },
-  subtitle: {
-    marginTop: -4,
-    marginBottom: 20,
-    fontSize: 14,
-    textAlign: 'center',
   },
   label: {
     fontSize: 13,
