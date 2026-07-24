@@ -2,15 +2,12 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 
-const APP_ICON = require('@/assets/images/icon.png');
+/** Soft circular mark — must match app.json expo-splash-screen image. */
+const SPLASH_ICON = require('@/assets/images/splash-icon.png');
 
-/**
- * Must stay pixel-identical to the native splash in app.json (expo-splash-screen):
- * same icon, same width, same background — otherwise the handoff reads as two splashes.
- */
 export const BOOT_SPLASH_BG_DARK = '#000508';
 export const BOOT_SPLASH_BG_LIGHT = '#000508';
-const BOOT_SPLASH_ICON_WIDTH = 180;
+const BOOT_SPLASH_ICON_WIDTH = 160;
 
 export function AppBootSplash() {
   useEffect(() => {
@@ -20,7 +17,7 @@ export function AppBootSplash() {
 
   return (
     <View style={styles.root} accessibilityLabel="Loading">
-      <Image source={APP_ICON} style={styles.icon} resizeMode="contain" />
+      <Image source={SPLASH_ICON} style={styles.icon} resizeMode="contain" />
     </View>
   );
 }
