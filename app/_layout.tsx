@@ -22,6 +22,8 @@ import { DM_SANS_SEMI, NOTO_ETHIOPIC, lineHeightFor } from '@/src/theme/typograp
 import { useAppFonts } from '@/src/theme/useAppFonts';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
+// The JS boot screen mirrors the native splash, so swap instantly instead of cross-fading.
+SplashScreen.setOptions({ duration: 0, fade: false });
 
 if (__DEV__) {
   LogBox.ignoreLogs(['Unable to activate keep awake']);
@@ -34,7 +36,6 @@ export { ErrorBoundary } from 'expo-router';
 export default function RootLayout() {
   const { loaded: fontsLoaded } = useAppFonts();
 
-  // Show full-bleed gym splash while fonts load (native splash can't do this on Android).
   if (!fontsLoaded) return <AppBootSplash />;
 
   return (
