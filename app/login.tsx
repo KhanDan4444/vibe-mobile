@@ -24,7 +24,8 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { ApiError } from '@/src/api/client';
 import { AuthScreen } from '@/src/components/AuthScreen';
 import { LoginBrandPanel } from '@/src/components/LoginBrandPanel';
-import { useTheme } from '@/src/context/PreferencesContext';
+import { useBootSplash } from '@/src/context/BootSplashContext';
+import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { hasGymPortalAccess, isPlatformAdmin } from '@/src/utils/roles';
 import { API_BASE_URL } from '@/src/config/api';
@@ -36,7 +37,9 @@ type Field = 'identifier' | 'password';
 export default function LoginScreen() {
   const { login, logout } = useAuth();
   const { colors: c } = useTheme();
+  const { language } = usePreferences();
   const { t } = useTranslation();
+  const { dismissBootSplash } = useBootSplash();
   const { formMaxWidth, pagePadding, isTablet } = useResponsiveLayout();
   const s = isTablet ? tabletStyles : phoneStyles;
   const [identifier, setIdentifier] = useState('');
@@ -47,12 +50,22 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const passwordRef = useRef<RNTextInput>(null);
 
+  // Amharic placeholders need Ethiopic; typed email/password stay DM Sans.
+  const identifierLatin = language !== 'am' || identifier.length > 0;
+  const passwordLatin = language !== 'am' || password.length > 0;
+
   const enter = useSharedValue(0);
   const pressed = useSharedValue(0);
 
   useEffect(() => {
     enter.value = withTiming(1, { duration: 460, easing: Easing.out(Easing.cubic) });
   }, [enter]);
+
+  // Safety net if the hero image never fires onLoad (cached / edge cases).
+  useEffect(() => {
+    const timer = setTimeout(dismissBootSplash, 900);
+    return () => clearTimeout(timer);
+  }, [dismissBootSplash]);
 
   const cardAnim = useAnimatedStyle(() => ({
     opacity: enter.value,
@@ -95,7 +108,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <AuthScreen hero>
+    <AuthScreen hero onHeroReady={dismissBootSplash}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -117,7 +130,7 @@ export default function LoginScreen() {
 
               <View style={[s.inputShell, fieldColors('identifier')]}>
                 <TextInput
-                  latin
+                  latin={identifierLatin}
                   autoCapitalize="none"
                   autoCorrect={false}
                   autoComplete="username"
@@ -137,7 +150,7 @@ export default function LoginScreen() {
 
               <View style={[s.inputShell, s.inputShellTight, fieldColors('password')]}>
                 <TextInput
-                  latin
+                  latin={passwordLatin}
                   ref={passwordRef}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"

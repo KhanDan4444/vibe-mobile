@@ -7,16 +7,18 @@ import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 const APP_ICON = require('@/assets/images/icon.png');
 
 export function LoginBrandPanel() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { colors: c } = useTheme();
   const { isTablet } = useResponsiveLayout();
   const s = isTablet ? tabletStyles : phoneStyles;
+  // English slogan is Latin (DM Sans); Amharic slogan uses the Ethiopic face.
+  const sloganLatin = i18n.language !== 'am';
 
   return (
     <View style={s.wrap}>
       {/* Same asset as the home-screen / launcher icon */}
       <Image source={APP_ICON} style={s.icon} resizeMode="contain" accessibilityLabel="ንቁ" />
-      <Text latin style={[s.slogan, { color: c.accentText }]}>
+      <Text latin={sloganLatin} style={[s.slogan, { color: c.accentText }]}>
         {t('auth.brandSlogan')}
       </Text>
     </View>

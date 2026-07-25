@@ -4,9 +4,12 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SplashScreen from 'expo-splash-screen';
-import { LogBox, View } from 'react-native';
+import { useEffect } from 'react';
+import { StyleSheet, LogBox, View } from 'react-native';
+import Animated, { Easing, FadeOut } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { AuthProvider, useAuth } from '@/src/auth/AuthContext';
+import { BootSplashProvider, useBootSplash } from '@/src/context/BootSplashContext';
 import { BranchProvider } from '@/src/context/BranchContext';
 import { FlashProvider } from '@/src/context/FlashContext';
 import { GymBootProvider } from '@/src/context/GymBootContext';
@@ -14,7 +17,7 @@ import { PreferencesProvider, usePreferences, useTheme } from '@/src/context/Pre
 import { NotificationInboxProvider } from '@/src/notifications/NotificationInboxContext';
 import { NetworkProvider, useNetwork } from '@/src/offline/NetworkProvider';
 import { OfflineStatusStrip, OfflineSyncOverlay } from '@/src/components/OfflineBanner';
-import { AppBootSplash } from '@/src/components/AppBootSplash';
+import { AppBootSplash, BOOT_SPLASH_BG_DARK } from '@/src/components/AppBootSplash';
 import { SubscriptionLockout } from '@/src/components/SubscriptionLockout';
 import { PERSISTED_QUERY_KEYS, queryClient, QUERY_CACHE_STORAGE_KEY } from '@/src/query/client';
 import { SystemChrome } from '@/src/theme/SystemChrome';
@@ -22,7 +25,6 @@ import { DM_SANS_SEMI, NOTO_ETHIOPIC, lineHeightFor } from '@/src/theme/typograp
 import { useAppFonts } from '@/src/theme/useAppFonts';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
-// The JS boot screen mirrors the native splash, so swap instantly instead of cross-fading.
 SplashScreen.setOptions({ duration: 0, fade: false });
 
 if (__DEV__) {
@@ -52,17 +54,19 @@ export default function RootLayout() {
     >
       <AuthProvider>
         <PreferencesProvider>
-          <BranchProvider>
-            <GymBootProvider>
-              <NotificationInboxProvider>
-                <NetworkProvider>
-                  <FlashProvider>
-                    <RootNavigator />
-                  </FlashProvider>
-                </NetworkProvider>
-              </NotificationInboxProvider>
-            </GymBootProvider>
-          </BranchProvider>
+          <BootSplashProvider>
+            <BranchProvider>
+              <GymBootProvider>
+                <NotificationInboxProvider>
+                  <NetworkProvider>
+                    <FlashProvider>
+                      <RootNavigator />
+                    </FlashProvider>
+                  </NetworkProvider>
+                </NotificationInboxProvider>
+              </GymBootProvider>
+            </BranchProvider>
+          </BootSplashProvider>
         </PreferencesProvider>
       </AuthProvider>
     </PersistQueryClientProvider>
@@ -75,6 +79,21 @@ function RootNavigator() {
   const { language } = usePreferences();
   const { t } = useTranslation();
   const { isOnline } = useNetwork();
+  const { bootVisible, dismissBootSplash } = useBootSplash();
+
+  // Logged-in cold start: tabs never hit login's onHeroReady — dismiss once auth is ready.
+  useEffect(() => {
+    if (!loading && user) dismissBootSplash();
+  }, [loading, user, dismissBootSplash]);
+
+  useEffect(() => {
+    if (
+      !loading &&
+      (subscription?.accessDenied || subscription?.locked || subscription?.status === 'expired')
+    ) {
+      dismissBootSplash();
+    }
+  }, [loading, subscription, dismissBootSplash]);
 
   const stackScreen = {
     headerShown: true as const,
@@ -84,7 +103,6 @@ function RootNavigator() {
       language === 'am'
         ? ({ fontFamily: NOTO_ETHIOPIC, fontWeight: '600' as const, lineHeight: lineHeightFor(17) })
         : ({ fontFamily: DM_SANS_SEMI, fontWeight: '600' as const }),
-    // Offline strip already consumes the top safe area — avoid a second gap under it.
     ...(user && !isOnline ? { safeAreaInsets: { top: 0 } } : {}),
   };
 
@@ -102,14 +120,14 @@ function RootNavigator() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: c.bg }}>
+    <View style={{ flex: 1, backgroundColor: bootVisible ? BOOT_SPLASH_BG_DARK : c.bg }}>
       <SystemChrome />
       {user ? <OfflineStatusStrip /> : null}
       <View style={{ flex: 1 }}>
         <Stack
           screenOptions={{
             headerShown: false,
-            contentStyle: { backgroundColor: c.bg },
+            contentStyle: { backgroundColor: bootVisible ? BOOT_SPLASH_BG_DARK : c.bg },
             ...(user && !isOnline ? { safeAreaInsets: { top: 0 } } : {}),
           }}
         >
@@ -143,6 +161,24 @@ function RootNavigator() {
         </Stack>
       </View>
       {user ? <OfflineSyncOverlay /> : null}
+
+      {/* Cover the index→login redirect gap so users never see a blank slate shell. */}
+      {bootVisible ? (
+        <Animated.View
+          style={styles.bootOverlay}
+          pointerEvents="auto"
+          exiting={FadeOut.duration(320).easing(Easing.out(Easing.quad))}
+        >
+          <AppBootSplash />
+        </Animated.View>
+      ) : null}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  bootOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 100,
+  },
+});

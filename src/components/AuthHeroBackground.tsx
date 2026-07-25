@@ -6,16 +6,24 @@ const LOGIN_BG = require('@/assets/images/login-bg.png');
 type Props = {
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
+  /** Fires once the backdrop is ready (or fails) so boot splash can lift. */
+  onReady?: () => void;
 };
 
 /**
  * Login hero: gym atmosphere as a brand backdrop.
  * Uses a scrubbed asset (no baked-in logo/slogan) so form copy stays clean.
  */
-export function AuthHeroBackground({ children, style }: Props) {
+export function AuthHeroBackground({ children, style, onReady }: Props) {
   return (
     <View style={[styles.root, style]}>
-      <Image source={LOGIN_BG} style={styles.scene} resizeMode="cover" />
+      <Image
+        source={LOGIN_BG}
+        style={styles.scene}
+        resizeMode="cover"
+        onLoad={onReady}
+        onError={onReady}
+      />
       <View style={styles.dim} pointerEvents="none" />
       <View style={styles.tealWash} pointerEvents="none" />
       <View style={styles.content}>{children}</View>

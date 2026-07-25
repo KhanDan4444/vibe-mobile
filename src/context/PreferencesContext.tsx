@@ -6,7 +6,6 @@ import { useAuthThemeForced } from '@/src/context/AuthThemeContext';
 import { changeAppLanguage, type AppLanguage } from '@/src/i18n';
 import { colorsForTheme, type AppTheme, type ThemeColors } from '@/src/theme/tokens';
 import {
-  defaultGuestLanguage,
   langStorageKey,
   persistGuestLanguage,
   readGuestLanguage,
@@ -42,6 +41,8 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
   const [language, setLanguageState] = useState<AppLanguage>('en');
   const [hydrated, setHydrated] = useState(false);
   const userScopeRef = useRef<string | null>(null);
+  const languageRef = useRef<AppLanguage>(language);
+  languageRef.current = language;
 
   useEffect(() => {
     let cancelled = false;
@@ -71,12 +72,14 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     const previousScope = userScopeRef.current;
     userScopeRef.current = scope;
 
+    // Logout: carry the in-app language onto the login/guest screen.
+    // (Previously reset to device default — which snapped Amharic users back to English.)
     if (!user && previousScope && previousScope !== 'guest') {
       void (async () => {
-        const guest = defaultGuestLanguage();
-        await persistGuestLanguage(guest);
-        setLanguageState(guest);
-        await changeAppLanguage(guest);
+        const code = languageRef.current === 'am' ? 'am' : 'en';
+        await persistGuestLanguage(code);
+        setLanguageState(code);
+        await changeAppLanguage(code);
       })();
     }
   }, [user?.id, user?.gym_id]);
@@ -97,6 +100,8 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
       await changeAppLanguage(code);
       const key = langStorageKey(user?.id, user?.gym_id);
       await AsyncStorage.setItem(key, code);
+      // Mirror to guest storage so login/register keep the preference after logout.
+      await persistGuestLanguage(code);
     },
     [user?.id, user?.gym_id]
   );
