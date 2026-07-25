@@ -64,8 +64,8 @@ export default function LoginScreen() {
   }));
 
   const fieldColors = (field: Field) => ({
-    backgroundColor: 'rgba(2, 6, 23, 0.84)',
-    borderColor: focused === field ? c.accentText : 'rgba(148, 163, 184, 0.46)',
+    backgroundColor: focused === field ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.07)',
+    borderColor: focused === field ? 'rgba(45, 212, 191, 0.55)' : 'rgba(255, 255, 255, 0.14)',
   });
 
   const handleSubmit = async () => {
@@ -106,15 +106,7 @@ export default function LoginScreen() {
           bounces={false}
         >
           <View style={styles.wrap}>
-            <Animated.View
-              style={[
-                s.form,
-                cardAnim,
-                {
-                  maxWidth: formMaxWidth,
-                },
-              ]}
-            >
+            <Animated.View style={[s.form, cardAnim, { maxWidth: formMaxWidth }]}>
               <LoginBrandPanel />
 
               {error ? (
@@ -123,7 +115,6 @@ export default function LoginScreen() {
                 </Text>
               ) : null}
 
-              <Text style={[s.label, { color: c.text }]}>{t('auth.identifier')}</Text>
               <View style={[s.inputShell, fieldColors('identifier')]}>
                 <TextInput
                   latin
@@ -137,13 +128,13 @@ export default function LoginScreen() {
                   onFocus={() => setFocused('identifier')}
                   onBlur={() => setFocused(null)}
                   onSubmitEditing={() => passwordRef.current?.focus()}
-                  style={[s.inputField, { color: c.text }]}
-                  placeholder="owner@gym.com"
-                  placeholderTextColor={c.dim}
+                  style={[s.inputField, { color: '#f8fafc' }]}
+                  placeholder={t('auth.identifier')}
+                  placeholderTextColor="rgba(226, 232, 240, 0.45)"
+                  accessibilityLabel={t('auth.identifier')}
                 />
               </View>
 
-              <Text style={[s.label, { color: c.text }]}>{t('auth.password')}</Text>
               <View style={[s.inputShell, s.inputShellTight, fieldColors('password')]}>
                 <TextInput
                   latin
@@ -157,9 +148,10 @@ export default function LoginScreen() {
                   onFocus={() => setFocused('password')}
                   onBlur={() => setFocused(null)}
                   onSubmitEditing={handleSubmit}
-                  style={[s.inputField, { color: c.text }]}
-                  placeholder="••••••••"
-                  placeholderTextColor={c.dim}
+                  style={[s.inputField, { color: '#f8fafc' }]}
+                  placeholder={t('auth.password')}
+                  placeholderTextColor="rgba(226, 232, 240, 0.45)"
+                  accessibilityLabel={t('auth.password')}
                 />
                 <Pressable
                   onPress={() => setShowPassword((v) => !v)}
@@ -171,7 +163,7 @@ export default function LoginScreen() {
                   <Ionicons
                     name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                     size={isTablet ? 22 : 20}
-                    color={focused === 'password' ? c.accentText : c.dim}
+                    color={focused === 'password' ? c.accentText : 'rgba(226, 232, 240, 0.45)'}
                   />
                 </Pressable>
               </View>
@@ -204,7 +196,9 @@ export default function LoginScreen() {
               </AnimatedPressable>
 
               <View style={s.registerRow}>
-                <Text style={[s.registerPrompt, { color: c.muted }]}>{t('auth.newGymOwner')} </Text>
+                <Text style={[s.registerPrompt, { color: 'rgba(226, 232, 240, 0.72)' }]}>
+                  {t('auth.newGymOwner')}{' '}
+                </Text>
                 <Pressable hitSlop={8} onPress={() => router.push('/register-gym' as never)}>
                   <Text style={[s.linkText, { color: c.accentText }]}>{t('auth.registerGym')}</Text>
                 </Pressable>
@@ -240,60 +234,50 @@ const phoneStyles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 4,
   },
-  label: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 7,
-  },
   inputShell: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.22,
-    shadowOffset: { width: 0, height: 5 },
-    shadowRadius: 12,
-    elevation: 2,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    marginBottom: 12,
   },
   inputShellTight: {
     marginBottom: 8,
   },
   inputField: {
     flex: 1,
-    paddingVertical: 13,
-    fontSize: 15,
+    paddingVertical: 15,
+    fontSize: 16,
   },
   eyeButton: {
     paddingLeft: 10,
   },
   button: {
-    borderRadius: 12,
-    paddingVertical: 14,
+    borderRadius: 16,
+    paddingVertical: 15,
     alignItems: 'center',
     marginTop: 4,
-    shadowOpacity: 0.35,
-    shadowOffset: { width: 0, height: 6 },
-    shadowRadius: 12,
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 16,
     elevation: 4,
   },
-  buttonText: { color: '#fff', fontSize: 15, fontWeight: '700', letterSpacing: 0.2 },
+  buttonText: { color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.2 },
   forgotLink: { alignSelf: 'flex-end', marginBottom: 14 },
   registerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     flexWrap: 'wrap',
-    marginTop: 18,
+    marginTop: 20,
   },
   registerPrompt: { fontSize: 13 },
   linkText: { fontSize: 13, fontWeight: '700' },
   error: {
     borderWidth: 1,
-    borderRadius: 10,
-    padding: 10,
+    borderRadius: 14,
+    padding: 12,
     marginBottom: 14,
     fontSize: 13,
   },
@@ -314,60 +298,50 @@ const tabletStyles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 8,
   },
-  label: {
-    fontSize: 13,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
   inputShell: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    marginBottom: 18,
-    shadowColor: '#000',
-    shadowOpacity: 0.22,
-    shadowOffset: { width: 0, height: 6 },
-    shadowRadius: 14,
-    elevation: 2,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 18,
+    paddingHorizontal: 18,
+    marginBottom: 14,
   },
   inputShellTight: {
     marginBottom: 10,
   },
   inputField: {
     flex: 1,
-    paddingVertical: 15,
-    fontSize: 16,
+    paddingVertical: 17,
+    fontSize: 17,
   },
   eyeButton: {
     paddingLeft: 12,
   },
   button: {
-    borderRadius: 12,
-    paddingVertical: 16,
+    borderRadius: 18,
+    paddingVertical: 17,
     alignItems: 'center',
     marginTop: 6,
-    shadowOpacity: 0.35,
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 16,
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 10 },
+    shadowRadius: 18,
     elevation: 5,
   },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.2 },
+  buttonText: { color: '#fff', fontSize: 17, fontWeight: '700', letterSpacing: 0.2 },
   forgotLink: { alignSelf: 'flex-end', marginBottom: 16 },
   registerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     flexWrap: 'wrap',
-    marginTop: 20,
+    marginTop: 22,
   },
   registerPrompt: { fontSize: 14 },
   linkText: { fontSize: 14, fontWeight: '700' },
   error: {
     borderWidth: 1,
-    borderRadius: 10,
-    padding: 12,
+    borderRadius: 16,
+    padding: 14,
     marginBottom: 16,
     fontSize: 14,
   },

@@ -1,6 +1,7 @@
 import { Image, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-const GYM_SCENE = require('@/assets/images/splash.png');
+/** Gym atmosphere only — brand mark/slogan removed so UI text never doubles. */
+const LOGIN_BG = require('@/assets/images/login-bg.png');
 
 type Props = {
   children: React.ReactNode;
@@ -9,16 +10,14 @@ type Props = {
 
 /**
  * Login hero: gym atmosphere as a brand backdrop.
- * The central overlay preserves form contrast without hiding the scene.
+ * Uses a scrubbed asset (no baked-in logo/slogan) so form copy stays clean.
  */
 export function AuthHeroBackground({ children, style }: Props) {
   return (
     <View style={[styles.root, style]}>
-      <Image source={GYM_SCENE} style={styles.scene} resizeMode="cover" />
-      {/* Kill most of the photo brightness so fields stay crisp */}
+      <Image source={LOGIN_BG} style={styles.scene} resizeMode="cover" />
       <View style={styles.dim} pointerEvents="none" />
       <View style={styles.tealWash} pointerEvents="none" />
-      <View style={styles.vignette} pointerEvents="none" />
       <View style={styles.content}>{children}</View>
     </View>
   );
@@ -36,15 +35,11 @@ const styles = StyleSheet.create({
   },
   dim: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(2, 6, 23, 0.42)',
+    backgroundColor: 'rgba(2, 6, 23, 0.28)',
   },
   tealWash: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(15, 118, 110, 0.1)',
-  },
-  vignette: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(2, 6, 23, 0.16)',
+    backgroundColor: 'rgba(15, 118, 110, 0.08)',
   },
   content: {
     flex: 1,
