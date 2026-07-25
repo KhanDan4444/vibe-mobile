@@ -6,7 +6,7 @@ import { AuthHeroBackground } from './AuthHeroBackground';
 
 type Props = {
   children: React.ReactNode;
-  /** Login uses gym hero; register/forgot use plain dark background. */
+  /** Login uses brand gradient hero; register/forgot use plain dark background. */
   hero?: boolean;
   onHeroReady?: () => void;
 };

@@ -1,31 +1,37 @@
-import { Image, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
-
-/** Gym atmosphere only — brand mark/slogan removed so UI text never doubles. */
-const LOGIN_BG = require('@/assets/images/login-bg.png');
+import { useEffect } from 'react';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 type Props = {
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
-  /** Fires once the backdrop is ready (or fails) so boot splash can lift. */
+  /** Fires once the backdrop is ready so boot splash can lift. */
   onReady?: () => void;
 };
 
 /**
- * Login hero: gym atmosphere as a brand backdrop.
- * Uses a scrubbed asset (no baked-in logo/slogan) so form copy stays clean.
+ * Login hero: same teal → slate gradient as the web auth page.
+ * CSS: linear-gradient(135deg, rgb(19 78 74 / 0.55) 0%, #0f172a 45%, #0f172a 100%)
  */
 export function AuthHeroBackground({ children, style, onReady }: Props) {
+  useEffect(() => {
+    onReady?.();
+  }, [onReady]);
+
   return (
     <View style={[styles.root, style]}>
-      <Image
-        source={LOGIN_BG}
-        style={styles.scene}
-        resizeMode="cover"
-        onLoad={onReady}
-        onError={onReady}
-      />
-      <View style={styles.dim} pointerEvents="none" />
-      <View style={styles.tealWash} pointerEvents="none" />
+      <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" pointerEvents="none">
+        <Defs>
+          <LinearGradient id="authHero" x1="0%" y1="0%" x2="100%" y2="100%">
+            <Stop offset="0%" stopColor="rgb(19, 78, 74)" stopOpacity={0.55} />
+            <Stop offset="45%" stopColor="#0f172a" stopOpacity={1} />
+            <Stop offset="100%" stopColor="#0f172a" stopOpacity={1} />
+          </LinearGradient>
+        </Defs>
+        {/* Base matches web dark body so the translucent teal stop composites the same way */}
+        <Rect x="0" y="0" width="100%" height="100%" fill="#13161c" />
+        <Rect x="0" y="0" width="100%" height="100%" fill="url(#authHero)" />
+      </Svg>
       <View style={styles.content}>{children}</View>
     </View>
   );
@@ -34,20 +40,7 @@ export function AuthHeroBackground({ children, style, onReady }: Props) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#020617',
-  },
-  scene: {
-    ...StyleSheet.absoluteFillObject,
-    width: '100%',
-    height: '100%',
-  },
-  dim: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(2, 6, 23, 0.28)',
-  },
-  tealWash: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(15, 118, 110, 0.08)',
+    backgroundColor: '#0f172a',
   },
   content: {
     flex: 1,

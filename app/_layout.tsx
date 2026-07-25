@@ -167,7 +167,7 @@ function RootNavigator() {
         <Animated.View
           style={styles.bootOverlay}
           pointerEvents="auto"
-          exiting={FadeOut.duration(320).easing(Easing.out(Easing.quad))}
+          exiting={FadeOut.duration(520).easing(Easing.out(Easing.cubic))}
         >
           <AppBootSplash />
         </Animated.View>
