@@ -9,7 +9,7 @@ type Props = {
 
 /**
  * Login hero: gym atmosphere as a brand backdrop.
- * Kept very dark so the form card stays readable and primary.
+ * The central overlay preserves form contrast without hiding the scene.
  */
 export function AuthHeroBackground({ children, style }: Props) {
   return (
@@ -36,15 +36,15 @@ const styles = StyleSheet.create({
   },
   dim: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(2, 6, 23, 0.72)',
+    backgroundColor: 'rgba(2, 6, 23, 0.42)',
   },
   tealWash: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(15, 118, 110, 0.18)',
+    backgroundColor: 'rgba(15, 118, 110, 0.1)',
   },
   vignette: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(2, 6, 23, 0.35)',
+    backgroundColor: 'rgba(2, 6, 23, 0.16)',
   },
   content: {
     flex: 1,

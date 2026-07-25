@@ -64,8 +64,8 @@ export default function LoginScreen() {
   }));
 
   const fieldColors = (field: Field) => ({
-    backgroundColor: c.inputBg,
-    borderColor: focused === field ? c.accentText : c.inputBorder,
+    backgroundColor: 'rgba(2, 6, 23, 0.84)',
+    borderColor: focused === field ? c.accentText : 'rgba(148, 163, 184, 0.46)',
   });
 
   const handleSubmit = async () => {
@@ -108,14 +108,10 @@ export default function LoginScreen() {
           <View style={styles.wrap}>
             <Animated.View
               style={[
-                s.card,
+                s.form,
                 cardAnim,
                 {
-                  backgroundColor: c.card,
-                  borderColor: c.border,
                   maxWidth: formMaxWidth,
-                  shadowColor: '#000',
-                  shadowOpacity: 0.35,
                 },
               ]}
             >
@@ -127,9 +123,10 @@ export default function LoginScreen() {
                 </Text>
               ) : null}
 
-              <Text style={[s.label, { color: c.muted }]}>{t('auth.identifier')}</Text>
+              <Text style={[s.label, { color: c.text }]}>{t('auth.identifier')}</Text>
               <View style={[s.inputShell, fieldColors('identifier')]}>
                 <TextInput
+                  latin
                   autoCapitalize="none"
                   autoCorrect={false}
                   autoComplete="username"
@@ -146,9 +143,10 @@ export default function LoginScreen() {
                 />
               </View>
 
-              <Text style={[s.label, { color: c.muted }]}>{t('auth.password')}</Text>
+              <Text style={[s.label, { color: c.text }]}>{t('auth.password')}</Text>
               <View style={[s.inputShell, s.inputShellTight, fieldColors('password')]}>
                 <TextInput
+                  latin
                   ref={passwordRef}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
@@ -173,7 +171,7 @@ export default function LoginScreen() {
                   <Ionicons
                     name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                     size={isTablet ? 22 : 20}
-                    color={c.muted}
+                    color={focused === 'password' ? c.accentText : c.dim}
                   />
                 </Pressable>
               </View>
@@ -238,16 +236,9 @@ const phoneStyles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 20,
   },
-  card: {
+  form: {
     width: '100%',
-    borderRadius: 18,
-    padding: 22,
-    paddingTop: 24,
-    borderWidth: 1,
-    overflow: 'hidden',
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 20,
-    elevation: 5,
+    paddingHorizontal: 4,
   },
   label: {
     fontSize: 12,
@@ -261,6 +252,11 @@ const phoneStyles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 14,
     marginBottom: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.22,
+    shadowOffset: { width: 0, height: 5 },
+    shadowRadius: 12,
+    elevation: 2,
   },
   inputShellTight: {
     marginBottom: 8,
@@ -314,16 +310,9 @@ const tabletStyles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 32,
   },
-  card: {
+  form: {
     width: '100%',
-    borderRadius: 20,
-    padding: 32,
-    paddingTop: 32,
-    borderWidth: 1,
-    overflow: 'hidden',
-    shadowOffset: { width: 0, height: 12 },
-    shadowRadius: 28,
-    elevation: 6,
+    paddingHorizontal: 8,
   },
   label: {
     fontSize: 13,
@@ -337,6 +326,11 @@ const tabletStyles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 16,
     marginBottom: 18,
+    shadowColor: '#000',
+    shadowOpacity: 0.22,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 14,
+    elevation: 2,
   },
   inputShellTight: {
     marginBottom: 10,

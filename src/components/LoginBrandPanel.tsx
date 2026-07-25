@@ -16,8 +16,9 @@ export function LoginBrandPanel() {
     <View style={s.wrap}>
       {/* Same asset as the home-screen / launcher icon */}
       <Image source={APP_ICON} style={s.icon} resizeMode="contain" accessibilityLabel="ንቁ" />
-      <Text style={[s.slogan, { color: c.accentText }]}>{t('auth.brandSlogan')}</Text>
-      <Text style={[s.subtitle, { color: c.muted }]}>{t('auth.signInSubtitle')}</Text>
+      <Text latin style={[s.slogan, { color: c.accentText }]}>
+        {t('auth.brandSlogan')}
+      </Text>
     </View>
   );
 }
@@ -25,49 +26,35 @@ export function LoginBrandPanel() {
 const phoneStyles = StyleSheet.create({
   wrap: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 30,
   },
   icon: {
-    width: 84,
-    height: 84,
-    marginBottom: 14,
+    width: 104,
+    height: 104,
+    marginBottom: 16,
   },
   slogan: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
-    letterSpacing: 0.4,
+    letterSpacing: 0.6,
     textAlign: 'center',
-    marginBottom: 6,
-  },
-  subtitle: {
-    fontSize: 13,
-    lineHeight: 18,
-    textAlign: 'center',
-    maxWidth: 280,
   },
 });
 
 const tabletStyles = StyleSheet.create({
   wrap: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 36,
   },
   icon: {
-    width: 100,
-    height: 100,
-    marginBottom: 16,
+    width: 124,
+    height: 124,
+    marginBottom: 18,
   },
   slogan: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '700',
-    letterSpacing: 0.5,
+    letterSpacing: 0.7,
     textAlign: 'center',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: 'center',
-    maxWidth: 340,
   },
 });
