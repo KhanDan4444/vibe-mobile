@@ -26,6 +26,7 @@ import { formatDisplayDate } from '@/src/utils/date';
 import { DEFAULT_REVENUE_SORT, type RevenueSortId } from '@/src/utils/listSort';
 import { paymentSourceLabel } from '@/src/utils/paymentSources';
 import { isGymOwner } from '@/src/utils/roles';
+import { SecondaryButton } from '@/src/components/ui/Button';
 import type { PaymentListRow, UnpaidMemberSummary } from '@/src/types/api';
 
 type PaymentPreset = 'today' | 'this_week' | 'this_month' | 'last_month' | 'last_30_days' | 'this_year';
@@ -299,17 +300,6 @@ export default function RevenueScreen() {
     empty: { textAlign: 'center' as const, color: colors.dim, fontSize: 15 },
     errorWrap: { alignItems: 'center' as const, paddingTop: 48, gap: 12, paddingHorizontal: 24 },
     errorText: { textAlign: 'center' as const, color: colors.error, fontSize: 15 },
-    retryBtn: {
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 8,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      minHeight: 44,
-      justifyContent: 'center' as const,
-      backgroundColor: colors.card,
-    },
-    retryText: { color: colors.accentText, fontSize: 14, fontWeight: '600' as const },
   }));
   const owner = isGymOwner(user?.role);
   const { readOnly } = useGymReadOnly();
@@ -547,9 +537,7 @@ export default function RevenueScreen() {
             <Text style={appTextStyle(language, styles.errorText)}>
               {query.error instanceof Error ? query.error.message : t('gymBoot.errorBody')}
             </Text>
-            <Pressable style={styles.retryBtn} onPress={() => void query.refetch()}>
-              <Text style={appTextStyle(language, styles.retryText)}>{t('gymBoot.retry')}</Text>
-            </Pressable>
+            <SecondaryButton label={t('gymBoot.retry')} onPress={() => void query.refetch()} />
           </View>
         </View>
       ) : (

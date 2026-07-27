@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { PageSkeleton } from '@/src/components/Skeleton';
+import { LoadError } from '@/src/components/LoadError';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
 import { deleteMember, fetchMember, fetchMemberPayments } from '@/src/api/members';
@@ -13,8 +14,10 @@ import { MemberActionsBar } from '@/src/components/MemberActionsBar';
 import { ResponsiveContent } from '@/src/components/ResponsiveContent';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
+import type { AppLanguage } from '@/src/i18n';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
-import { useDeleteFlash } from '@/src/hooks/useSaveFlash';
+import { useFlash } from '@/src/context/FlashContext';
+import { scheduleDeleteWithUndo } from '@/src/utils/scheduleWithUndo';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import type { ThemeColors } from '@/src/theme/tokens';
@@ -41,7 +44,7 @@ function Row({
   label: string;
   value: string;
   styles: ReturnType<typeof buildMemberStyles>;
-  language: 'en' | 'am';
+  language: AppLanguage;
 }) {
   return (
     <View style={styles.row}>
@@ -118,10 +121,9 @@ export default function MemberDetailScreen() {
   const { t } = useTranslation();
   const { pagePadding, isTablet } = useResponsiveLayout();
   const styles = useThemedStyles(buildMemberStyles);
-  const flashDeleted = useDeleteFlash();
+  const { showFlash } = useFlash();
   const canViewMember = Boolean(user && hasGymPortalAccess(user.role));
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [errorNotice, setErrorNotice] = useState('');
 
   const memberQuery = useQuery({
@@ -158,12 +160,16 @@ export default function MemberDetailScreen() {
 
   if (memberQuery.isError || !memberQuery.data) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.error}>{t('member.loadFailed')}</Text>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backBtnText}>{t('member.goBack')}</Text>
-        </Pressable>
-      </View>
+      <TabScreenFrame>
+        <LoadError
+          message={
+            memberQuery.error instanceof Error
+              ? memberQuery.error.message
+              : t('member.loadFailed')
+          }
+          onRetry={() => void memberQuery.refetch()}
+        />
+      </TabScreenFrame>
     );
   }
 
@@ -173,21 +179,24 @@ export default function MemberDetailScreen() {
 
   const confirmDeleteMember = () => setDeleteOpen(true);
 
-  const runDeleteMember = async () => {
-    setDeleting(true);
-    try {
-      await deleteMember(token!, member.id);
-      queryClient.invalidateQueries({ queryKey: ['members'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      setDeleteOpen(false);
-      flashDeleted('flash.memberDeleted');
-      router.replace('/(tabs)/members');
-    } catch (e) {
-      setDeleteOpen(false);
-      setErrorNotice(e instanceof Error ? e.message : t('member.deleteFailed'));
-    } finally {
-      setDeleting(false);
-    }
+  const runDeleteMember = () => {
+    setDeleteOpen(false);
+    router.replace('/(tabs)/members');
+    scheduleDeleteWithUndo({
+      showFlash,
+      t,
+      pendingKey: 'flash.memberDeletePending',
+      cancelledKey: 'flash.memberDeleteCancelled',
+      committedKey: 'flash.memberDeleted',
+      subtitleParams: { name: member.name },
+      onUndo: () => {},
+      onCommit: async () => {
+        await deleteMember(token!, member.id);
+        queryClient.invalidateQueries({ queryKey: ['members'] });
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+        queryClient.invalidateQueries({ queryKey: ['member', member.id] });
+      },
+    });
   };
 
   return (
@@ -272,7 +281,7 @@ export default function MemberDetailScreen() {
       message={t('member.deleteBody', { name: member.name })}
       confirmLabel={t('member.delete')}
       destructive
-      confirmLoading={deleting}
+      confirmLoading={false}
       onCancel={() => setDeleteOpen(false)}
       onConfirm={() => void runDeleteMember()}
     />

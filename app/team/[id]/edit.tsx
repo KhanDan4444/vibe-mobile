@@ -10,6 +10,7 @@ import { BranchPicker } from '@/src/components/BranchPicker';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { PageSkeleton } from '@/src/components/Skeleton';
+import { LoadError } from '@/src/components/LoadError';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { isGymOwner } from '@/src/utils/roles';
 
@@ -113,6 +114,17 @@ export default function EditStaffScreen() {
     return (
       <Screen>
         <PageSkeleton variant="form" count={5} />
+      </Screen>
+    );
+  }
+
+  if (teamQuery.isError) {
+    return (
+      <Screen>
+        <LoadError
+          message={teamQuery.error instanceof Error ? teamQuery.error.message : undefined}
+          onRetry={() => void teamQuery.refetch()}
+        />
       </Screen>
     );
   }

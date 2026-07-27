@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { FlatList, Pressable, RefreshControl, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { ListFooterSkeleton, PageSkeleton } from '@/src/components/Skeleton';
+import { LoadError } from '@/src/components/LoadError';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchMemberSms } from '@/src/api/memberSms';
@@ -122,6 +123,11 @@ export default function MessagesScreen() {
 
       {query.isLoading ? (
         <PageSkeleton variant="list-cards" />
+      ) : query.isError ? (
+        <LoadError
+          message={query.error instanceof Error ? query.error.message : undefined}
+          onRetry={() => void query.refetch()}
+        />
       ) : (
         <FlatList
           key={`sms-cols-${listColumns}`}

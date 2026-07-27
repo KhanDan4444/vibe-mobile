@@ -8,12 +8,15 @@ import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { ErrorBanner, Field, FormScroll, Label, PrimaryButton } from '@/src/components/Form';
 import { AuthScreen } from '@/src/components/AuthScreen';
 import { useTheme } from '@/src/context/PreferencesContext';
+import { isValidEthiopianPhone } from '@/src/utils/phone';
+
+const USERNAME_RE = /^[a-z0-9._]+$/i;
 
 export default function ForgotPasswordScreen() {
   const { t } = useTranslation();
   const { colors: c } = useTheme();
   const [step, setStep] = useState<'request' | 'reset'>('request');
-  const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [sessionId, setSessionId] = useState('');
   const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
@@ -28,14 +31,21 @@ export default function ForgotPasswordScreen() {
   const requestOtp = async () => {
     setError('');
     setMessage('');
-    const cleanUsername = username.trim();
-    if (!cleanUsername) {
-      setError(t('forgot.usernameRequired'));
+    const trimmed = identifier.trim();
+    if (!trimmed) {
+      setError(t('forgot.identifierRequired'));
       return;
+    }
+    if (!isValidEthiopianPhone(trimmed)) {
+      const user = trimmed.toLowerCase();
+      if (user.length < 3 || user.length > 30 || !USERNAME_RE.test(user)) {
+        setError(t('forgot.identifierInvalid'));
+        return;
+      }
     }
     setLoading(true);
     try {
-      const data = await requestForgotPasswordOtp(cleanUsername);
+      const data = await requestForgotPasswordOtp(trimmed);
       if (!data.sessionId) throw new Error(t('forgot.noSession'));
       setSessionId(data.sessionId);
       setStep('reset');
@@ -84,8 +94,15 @@ export default function ForgotPasswordScreen() {
 
           {step === 'request' ? (
             <>
-              <Label>{t('forgot.username')}</Label>
-              <Field value={username} onChangeText={setUsername} autoCapitalize="none" placeholder={t('forgot.usernamePlaceholder')} />
+              <Label>{t('forgot.identifier')}</Label>
+              <Field
+                value={identifier}
+                onChangeText={setIdentifier}
+                autoCapitalize="none"
+                keyboardType="default"
+                placeholder={t('forgot.identifierPlaceholder')}
+              />
+              <Text style={[styles.hint, { color: c.muted }]}>{t('forgot.identifierHint')}</Text>
               <PrimaryButton label={t('forgot.sendOtp')} onPress={requestOtp} loading={loading} />
             </>
           ) : (
@@ -152,6 +169,7 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   title: { fontSize: 26, fontWeight: '700', textAlign: 'center' },
   subtitle: { marginTop: 8, marginBottom: 24, fontSize: 14, lineHeight: 21, textAlign: 'center' },
+  hint: { marginTop: -4, marginBottom: 12, fontSize: 12, lineHeight: 18 },
   message: { marginBottom: 12, fontSize: 14, textAlign: 'center' },
   secondary: { alignItems: 'center', paddingVertical: 14 },
   back: { alignItems: 'center', paddingVertical: 18 },

@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePathname } from 'expo-router';
 import { useAuth } from '@/src/auth/AuthContext';
 import { useAuthThemeForced } from '@/src/context/AuthThemeContext';
-import { changeAppLanguage, type AppLanguage } from '@/src/i18n';
+import { changeAppLanguage, nextLanguage, normalizeLanguage, type AppLanguage, LANGUAGE_LABEL_KEYS } from '@/src/i18n';
 import { colorsForTheme, type AppTheme, type ThemeColors } from '@/src/theme/tokens';
 import {
   langStorageKey,
@@ -76,7 +76,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     // (Previously reset to device default — which snapped Amharic users back to English.)
     if (!user && previousScope && previousScope !== 'guest') {
       void (async () => {
-        const code = languageRef.current === 'am' ? 'am' : 'en';
+        const code = normalizeLanguage(languageRef.current);
         await persistGuestLanguage(code);
         setLanguageState(code);
         await changeAppLanguage(code);
@@ -95,7 +95,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
 
   const setLanguage = useCallback(
     async (lng: AppLanguage) => {
-      const code = lng === 'am' ? 'am' : 'en';
+      const code = normalizeLanguage(lng);
       setLanguageState(code);
       await changeAppLanguage(code);
       const key = langStorageKey(user?.id, user?.gym_id);

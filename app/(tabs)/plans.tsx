@@ -18,7 +18,9 @@ import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useTranslation } from 'react-i18next';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
+import { runInBackground } from '@/src/utils/runInBackground';
 import { formatPlanDuration } from '@/src/utils/planFormat';
+import { SecondaryButton } from '@/src/components/ui/Button';
 import type { PlanRow } from '@/src/types/api';
 
 function PlanCard({
@@ -140,17 +142,6 @@ export default function PlansScreen() {
     },
     errorWrap: { alignItems: 'center' as const, paddingTop: 48, gap: 12, paddingHorizontal: 24 },
     errorText: { textAlign: 'center' as const, color: colors.error, fontSize: 15 },
-    retryBtn: {
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 8,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      minHeight: 44,
-      justifyContent: 'center' as const,
-      backgroundColor: colors.card,
-    },
-    retryText: { color: colors.accentText, fontSize: 14, fontWeight: '600' as const },
     fab: {
       position: 'absolute' as const,
       bottom: 24,
@@ -204,7 +195,7 @@ export default function PlansScreen() {
       await deletePlan(token, planToDelete.id);
       setPlanToDelete(null);
       flashDeleted('flash.planDeleted');
-      query.refetch();
+      runInBackground(query.refetch());
     } catch (e) {
       setPlanToDelete(null);
       setNotice({
@@ -230,9 +221,7 @@ export default function PlansScreen() {
           <Text style={styles.errorText}>
             {query.error instanceof Error ? query.error.message : t('gymBoot.errorBody')}
           </Text>
-          <Pressable style={styles.retryBtn} onPress={() => void query.refetch()}>
-            <Text style={styles.retryText}>{t('gymBoot.retry')}</Text>
-          </Pressable>
+          <SecondaryButton label={t('gymBoot.retry')} onPress={() => void query.refetch()} />
         </View>
       ) : (
         <FlatList

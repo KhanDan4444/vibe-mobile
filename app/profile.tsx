@@ -8,12 +8,14 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { fetchGymProfile, updateGymProfile } from '@/src/api/profile';
 import { ErrorBanner, Field, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { PageSkeleton } from '@/src/components/Skeleton';
+import { LoadError } from '@/src/components/LoadError';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { isOfflineQueued } from '@/src/offline/types';
 import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
+import { runInBackground } from '@/src/utils/runInBackground';
 import { isGymOwner } from '@/src/utils/roles';
 import type { UpdateProfilePayload } from '@/src/types/api';
 
@@ -53,17 +55,17 @@ export default function ProfileScreen() {
   const mutation = useOfflineMutation({
     jobType: 'update-profile',
     mutationFn: (payload: UpdateProfilePayload) => updateGymProfile(token!, payload),
-    onSuccess: async (data) => {
+    onSuccess: (data) => {
       if (isOfflineQueued(data)) {
         flashOffline();
         router.back();
         return;
       }
-      await updateGymName(gymName.trim());
-      queryClient.invalidateQueries({ queryKey: ['gym-profile'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       flashSaved();
       router.back();
+      runInBackground(updateGymName(gymName.trim()));
+      queryClient.invalidateQueries({ queryKey: ['gym-profile'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
     onError: (e: Error) => setError(e.message),
   });
@@ -84,6 +86,17 @@ export default function ProfileScreen() {
     return (
       <Screen>
         <PageSkeleton variant="form" />
+      </Screen>
+    );
+  }
+
+  if (profileQuery.isError) {
+    return (
+      <Screen>
+        <LoadError
+          message={profileQuery.error instanceof Error ? profileQuery.error.message : undefined}
+          onRetry={() => void profileQuery.refetch()}
+        />
       </Screen>
     );
   }

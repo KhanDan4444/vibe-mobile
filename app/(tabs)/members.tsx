@@ -21,8 +21,10 @@ import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { appTextStyle } from '@/src/theme/typography';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
+import StatusBadge from '@/src/components/StatusBadge';
+import { SecondaryButton } from '@/src/components/ui/Button';
 import type { ThemeColors } from '@/src/theme/tokens';
-import { lightTheme } from '@/src/theme/tokens';
+import { radiusMd } from '@/src/theme/tokens';
 import { DEFAULT_MEMBER_SORT, MEMBER_SORT_OPTIONS, type MemberSortId } from '@/src/utils/listSort';
 import { isGymOwner } from '@/src/utils/roles';
 import type { MemberRow } from '@/src/types/api';
@@ -39,54 +41,46 @@ const FILTER_LABEL_KEYS: Record<MemberFilter, string> = {
   unpaid: 'members.filterUnpaid',
 };
 
-const FILTER_COLORS: Record<
-  MemberFilter,
-  { dot: string; activeBg: string; activeBorder: string; activeText: string }
-> = {
-  all: {
-    dot: lightTheme.statusNeutral,
-    activeBg: 'rgba(100,116,139,0.16)',
-    activeBorder: lightTheme.statusNeutral,
-    activeText: lightTheme.statusNeutral,
-  },
-  active: {
-    dot: lightTheme.statusActive,
-    activeBg: 'rgba(5,150,105,0.15)',
-    activeBorder: lightTheme.statusActive,
-    activeText: lightTheme.statusActive,
-  },
-  unpaid: {
-    dot: lightTheme.statusUnpaid,
-    activeBg: 'rgba(234,88,12,0.16)',
-    activeBorder: lightTheme.statusUnpaid,
-    activeText: lightTheme.statusUnpaid,
-  },
-  due_soon: {
-    dot: lightTheme.statusDueSoon,
-    activeBg: 'rgba(217,119,6,0.16)',
-    activeBorder: lightTheme.statusDueSoon,
-    activeText: lightTheme.statusDueSoon,
-  },
-  expired: {
-    dot: lightTheme.statusExpired,
-    activeBg: 'rgba(225,29,72,0.16)',
-    activeBorder: lightTheme.statusExpired,
-    activeText: lightTheme.statusExpired,
-  },
-};
+function filterPalette(c: ThemeColors, option: MemberFilter) {
+  const palettes: Record<MemberFilter, { dot: string; activeBg: string; activeBorder: string; activeText: string }> = {
+    all: {
+      dot: c.statusNeutral,
+      activeBg: `${c.statusNeutral}29`,
+      activeBorder: c.statusNeutral,
+      activeText: c.statusNeutral,
+    },
+    active: {
+      dot: c.statusActive,
+      activeBg: `${c.statusActive}26`,
+      activeBorder: c.statusActive,
+      activeText: c.statusActive,
+    },
+    unpaid: {
+      dot: c.statusUnpaid,
+      activeBg: `${c.statusUnpaid}29`,
+      activeBorder: c.statusUnpaid,
+      activeText: c.statusUnpaid,
+    },
+    due_soon: {
+      dot: c.statusDueSoon,
+      activeBg: `${c.statusDueSoon}29`,
+      activeBorder: c.statusDueSoon,
+      activeText: c.statusDueSoon,
+    },
+    expired: {
+      dot: c.statusExpired,
+      activeBg: `${c.statusExpired}29`,
+      activeBorder: c.statusExpired,
+      activeText: c.statusExpired,
+    },
+  };
+  return palettes[option];
+}
 
 function parseFilter(value: string | string[] | undefined): MemberFilter {
   const raw = Array.isArray(value) ? value[0] : value;
   if (raw === 'active' || raw === 'due_soon' || raw === 'expired' || raw === 'unpaid') return raw;
   return 'all';
-}
-
-function statusColor(status: string, c: ThemeColors) {
-  const s = status.toLowerCase();
-  if (s === 'active') return c.statusActive;
-  if (s === 'due soon') return c.statusDueSoon;
-  if (s === 'expired') return c.statusExpired;
-  return c.statusNeutral;
 }
 
 function MemberRowItem({
@@ -137,7 +131,7 @@ function MemberRowItem({
         </View>
         {!multiColumn ? (
           <View style={styles.rowMeta}>
-            <Text style={[styles.status, { color: statusColor(member.status, colors) }]}>{member.status}</Text>
+            <StatusBadge status={member.status} />
             <Text style={styles.plan}>{member.plan_name || t('members.noPlan')}</Text>
             {member.is_unpaid ? <Text style={styles.unpaid}>{t('members.unpaidBadge')}</Text> : null}
           </View>
@@ -145,7 +139,7 @@ function MemberRowItem({
       </View>
       {multiColumn ? (
         <View style={styles.rowMetaStacked}>
-          <Text style={[styles.status, { color: statusColor(member.status, colors) }]}>{member.status}</Text>
+          <StatusBadge status={member.status} />
           <Text style={[styles.plan, styles.planStacked]} numberOfLines={1}>
             {member.plan_name || t('members.noPlan')}
           </Text>
@@ -275,7 +269,7 @@ export default function MembersScreen() {
           <View style={[styles.filters, styles.filtersWrap]}>
             {FILTER_OPTIONS.map((option) => {
               const active = filter === option;
-              const palette = FILTER_COLORS[option];
+              const palette = filterPalette(c, option);
               return (
                 <Pressable
                   key={option}
@@ -327,7 +321,7 @@ export default function MembersScreen() {
           >
             {FILTER_OPTIONS.map((option) => {
               const active = filter === option;
-              const palette = FILTER_COLORS[option];
+              const palette = filterPalette(c, option);
               return (
                 <Pressable
                   key={option}
@@ -383,9 +377,7 @@ export default function MembersScreen() {
           <Text style={styles.errorText}>
             {query.error instanceof Error ? query.error.message : t('gymBoot.errorBody')}
           </Text>
-          <Pressable style={styles.retryBtn} onPress={() => void query.refetch()}>
-            <Text style={styles.retryText}>{t('gymBoot.retry')}</Text>
-          </Pressable>
+          <SecondaryButton label={t('gymBoot.retry')} onPress={() => void query.refetch()} />
         </View>
       ) : (
         <FlatList
@@ -479,7 +471,7 @@ function createStyles(c: ThemeColors) {
       paddingLeft: 11,
       paddingRight: 8,
       paddingVertical: 7,
-      borderRadius: 10,
+      borderRadius: 999,
       borderWidth: StyleSheet.hairlineWidth,
       flexShrink: 0,
       alignSelf: 'flex-start' as const,
@@ -492,19 +484,19 @@ function createStyles(c: ThemeColors) {
     },
     filterLabel: {
       fontSize: 13,
-      fontWeight: '700' as const,
+      fontWeight: '500' as const,
     },
     filterCountBadge: {
       minWidth: 22,
       height: 22,
-      borderRadius: 6,
+      borderRadius: 11,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
       paddingHorizontal: 6,
     },
     filterCount: {
       fontSize: 12,
-      fontWeight: '800' as const,
+      fontWeight: '600' as const,
     },
     sortRow: { alignSelf: 'flex-start' as const },
     list: { paddingBottom: 88 },
@@ -514,7 +506,7 @@ function createStyles(c: ThemeColors) {
       alignItems: 'center' as const,
       justifyContent: 'space-between' as const,
       backgroundColor: c.card,
-      borderRadius: 8,
+      borderRadius: radiusMd,
       padding: 12,
       marginBottom: 8,
       borderWidth: StyleSheet.hairlineWidth,
@@ -555,17 +547,6 @@ function createStyles(c: ThemeColors) {
     empty: { textAlign: 'center' as const, color: c.dim, marginTop: 40, fontSize: 15, alignSelf: 'center' as const, maxWidth: 360 },
     errorWrap: { alignItems: 'center' as const, paddingTop: 48, gap: 12, paddingHorizontal: 24 },
     errorText: { textAlign: 'center' as const, color: c.error, fontSize: 15 },
-    retryBtn: {
-      borderWidth: 1,
-      borderColor: c.border,
-      borderRadius: 8,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      minHeight: 44,
-      justifyContent: 'center' as const,
-      backgroundColor: c.card,
-    },
-    retryText: { color: c.accentText, fontSize: 14, fontWeight: '600' as const },
     fab: {
       position: 'absolute' as const,
       bottom: 24,

@@ -8,7 +8,7 @@ import { ResponsiveContent } from '@/src/components/ResponsiveContent';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
-import type { AppLanguage } from '@/src/i18n';
+import { nextLanguage, LANGUAGE_LABEL_KEYS } from '@/src/i18n';
 import { initialsFrom, roleSubtitle } from '@/src/utils/userDisplay';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
 
@@ -47,11 +47,10 @@ export default function AccountScreen() {
 
   const displayName = user.name || user.email || user.username || 'User';
   const themeLabel = theme === 'dark' ? t('profile.themeDark') : t('profile.themeLight');
-  const langLabel = language === 'am' ? t('profile.amharic') : t('profile.english');
+  const langLabel = t(LANGUAGE_LABEL_KEYS[language]);
 
   const toggleLanguage = () => {
-    const next: AppLanguage = language === 'en' ? 'am' : 'en';
-    void setLanguage(next);
+    void setLanguage(nextLanguage(language));
   };
 
   const handleLogout = () => {

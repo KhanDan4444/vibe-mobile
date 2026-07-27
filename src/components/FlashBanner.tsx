@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useSegments } from 'expo-router';
-import { useEffect, useRef } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AccessibilityInfo, PanResponder, Pressable, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { AppText as Text } from '@/src/components/AppText';
 import Animated, {
+  cancelAnimation,
   Easing,
   runOnJS,
   useAnimatedStyle,
@@ -22,145 +24,321 @@ export type FlashToast = {
   subtitle?: string;
   variant?: FlashVariant;
   icon?: keyof typeof Ionicons.glyphMap;
+  durationMs?: number;
+  urgent?: boolean;
+  actionHint?: string;
+  action?: { label: string; onPress: () => void };
 };
 
-type FlashBannerProps = {
-  toast: FlashToast | null;
-  onDismiss: () => void;
+export type FlashToastRecord = FlashToast & { id: string };
+
+type FlashToasterProps = {
+  toasts: FlashToastRecord[];
+  onDismiss: (id: string) => void;
 };
 
-/** Visible long enough to read title + subtitle without feeling sticky. */
-const DISMISS_MS = 4000;
+/** Match web — long enough to read title + subtitle. */
+export const FLASH_DISMISS_MS = 4500;
+const EXIT_MS = 180;
+const MAX_VISIBLE_TOASTS = 5;
 
 /** Matches tab bar content height in `(tabs)/_layout` (tablet 58 / phone 52). */
 function tabBarClearance(isTablet: boolean) {
   return isTablet ? 58 : 52;
 }
 
-/**
- * Bottom snackbar — full-width enough to read, cleared above the tab bar on tabs
- * and tucked into the safe-area gutter on stack screens so it does not sit mid-card.
- */
-export function FlashBanner({ toast, onDismiss }: FlashBannerProps) {
+function toastIcon(variant: FlashVariant, icon?: FlashToast['icon']) {
+  if (icon) return icon;
+  if (variant === 'offline') return 'cloud-offline-outline';
+  if (variant === 'danger') return 'trash-outline';
+  return 'checkmark-circle-outline';
+}
+
+function toastAccent(variant: FlashVariant, colors: ReturnType<typeof useTheme>['colors']) {
+  if (variant === 'offline') return colors.warning;
+  if (variant === 'danger') return colors.error;
+  return colors.success;
+}
+
+const SWIPE_DISMISS_PX = 72;
+
+function FlashToastItem({
+  toast,
+  onDismiss,
+}: {
+  toast: FlashToastRecord;
+  onDismiss: (id: string) => void;
+}) {
+  const { t } = useTranslation();
   const { colors: c, isDark } = useTheme();
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const durationMs = toast.durationMs ?? FLASH_DISMISS_MS;
+  const translateY = useSharedValue(18);
+  const translateX = useSharedValue(0);
+  const opacity = useSharedValue(0);
+  const progress = useSharedValue(1);
+  const dismissingRef = useRef(false);
+  const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onDismissRef = useRef(onDismiss);
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
+    return () => sub.remove();
+  }, []);
+
+  useEffect(() => {
+    onDismissRef.current = onDismiss;
+  }, [onDismiss]);
+
+  const clearTimers = useCallback(() => {
+    if (dismissTimerRef.current) {
+      clearTimeout(dismissTimerRef.current);
+      dismissTimerRef.current = null;
+    }
+    if (exitTimerRef.current) {
+      clearTimeout(exitTimerRef.current);
+      exitTimerRef.current = null;
+    }
+  }, []);
+
+  const finishDismiss = useCallback(() => {
+    dismissingRef.current = false;
+    onDismissRef.current(toast.id);
+  }, [toast.id]);
+
+  const dismiss = useCallback(
+    (immediate = false) => {
+      if (dismissingRef.current) return;
+      dismissingRef.current = true;
+      clearTimers();
+      cancelAnimation(progress);
+
+      if (immediate || reduceMotion) {
+        finishDismiss();
+        return;
+      }
+
+      translateY.value = withTiming(14, { duration: EXIT_MS, easing: Easing.in(Easing.quad) });
+      opacity.value = withTiming(0, { duration: EXIT_MS }, (finished) => {
+        if (finished) runOnJS(finishDismiss)();
+      });
+    },
+    [clearTimers, finishDismiss, opacity, progress, reduceMotion, translateY]
+  );
+
+  const startProgress = useCallback(() => {
+    cancelAnimation(progress);
+    progress.value = 1;
+    progress.value = withTiming(0, { duration: durationMs, easing: Easing.linear });
+  }, [durationMs, progress]);
+
+  const pauseProgress = useCallback(() => {
+    cancelAnimation(progress);
+    clearTimers();
+  }, [clearTimers, progress]);
+
+  const resumeProgress = useCallback(() => {
+    const remaining = Math.max(progress.value * durationMs, 0);
+    if (remaining <= 0) return;
+    progress.value = withTiming(0, { duration: remaining, easing: Easing.linear });
+    dismissTimerRef.current = setTimeout(() => dismiss(false), remaining);
+  }, [dismiss, durationMs, progress]);
+
+  useEffect(() => {
+    dismissingRef.current = false;
+    translateX.value = 0;
+    if (reduceMotion) {
+      translateY.value = 0;
+      opacity.value = 1;
+    } else {
+      translateY.value = withSpring(0, { damping: 18, stiffness: 260, mass: 0.75 });
+      opacity.value = withTiming(1, { duration: 200 });
+    }
+    startProgress();
+    dismissTimerRef.current = setTimeout(() => dismiss(false), durationMs);
+
+    return () => {
+      clearTimers();
+      cancelAnimation(progress);
+    };
+  }, [toast.id, clearTimers, dismiss, durationMs, opacity, progress, reduceMotion, startProgress, translateX, translateY]);
+
+  const dismissRef = useRef(dismiss);
+  useEffect(() => {
+    dismissRef.current = dismiss;
+  }, [dismiss]);
+
+  const hasAction = Boolean(toast.action?.label);
+  const panResponder = useMemo(
+    () =>
+      hasAction
+        ? PanResponder.create({})
+        : PanResponder.create({
+            onMoveShouldSetPanResponder: (_, gesture) =>
+              Math.abs(gesture.dx) > 6 && Math.abs(gesture.dx) > Math.abs(gesture.dy),
+            onPanResponderMove: (_, gesture) => {
+              translateX.value = gesture.dx;
+            },
+            onPanResponderRelease: (_, gesture) => {
+              if (Math.abs(gesture.dx) > SWIPE_DISMISS_PX || Math.abs(gesture.vx) > 0.65) {
+                const offscreen = gesture.dx >= 0 ? 420 : -420;
+                translateX.value = withTiming(offscreen, { duration: 160, easing: Easing.out(Easing.quad) });
+                opacity.value = withTiming(0, { duration: 160 }, (finished) => {
+                  if (finished) runOnJS(() => dismissRef.current(true))();
+                });
+                return;
+              }
+              translateX.value = withSpring(0, { damping: 20, stiffness: 280 });
+            },
+            onPanResponderTerminate: () => {
+              translateX.value = withSpring(0, { damping: 20, stiffness: 280 });
+            },
+          }),
+    [hasAction, opacity, translateX]
+  );
+
+  const shellStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }, { translateX: translateX.value }],
+  }));
+
+  const progressStyle = useAnimatedStyle(() => ({
+    transform: [{ scaleX: Math.max(progress.value, 0) }],
+  }));
+
+  const variant = toast.variant ?? 'success';
+  const accent = toastAccent(variant, c);
+  const iconName = toastIcon(variant, toast.icon);
+  const showSubtitle = Boolean(toast.subtitle);
+  const showAction = Boolean(toast.action?.label);
+  const showHint = Boolean(toast.actionHint);
+  const isUrgent = Boolean(toast.urgent);
+  const accessibilityHint = [toast.subtitle, toast.actionHint].filter(Boolean).join(' ');
+
+  const surface = {
+    backgroundColor: c.card,
+    borderColor: c.border,
+    titleColor: c.text,
+    subtitleColor: c.muted,
+    iconBg: `${accent}22`,
+    shadowOpacity: isDark ? 0.35 : 0.12,
+  };
+
+  return (
+    <Animated.View
+      style={shellStyle}
+      {...panResponder.panHandlers}
+      accessible
+      accessibilityRole={isUrgent ? 'alert' : 'text'}
+      accessibilityLiveRegion={isUrgent ? 'assertive' : 'polite'}
+      accessibilityLabel={toast.title}
+      accessibilityHint={accessibilityHint || undefined}
+    >
+      <View
+        style={[
+          styles.bar,
+          {
+            backgroundColor: surface.backgroundColor,
+            borderColor: surface.borderColor,
+            shadowOpacity: surface.shadowOpacity,
+          },
+        ]}
+      >
+      <Pressable
+        onPressIn={pauseProgress}
+        onPressOut={resumeProgress}
+        style={styles.bodyPress}
+      >
+        <View style={[styles.accent, { backgroundColor: accent }]} />
+
+        <View style={[styles.iconWrap, { backgroundColor: surface.iconBg }]}>
+          <Ionicons name={iconName} size={20} color={accent} />
+        </View>
+
+        <View style={styles.copy}>
+          <Text style={[styles.title, { color: surface.titleColor }]} numberOfLines={2}>
+            {toast.title}
+          </Text>
+          {showSubtitle ? (
+            <Text style={[styles.subtitle, { color: surface.subtitleColor }]} numberOfLines={2}>
+              {toast.subtitle}
+            </Text>
+          ) : null}
+          {showAction ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('flash.undoActionLabel', { action: toast.action?.label })}
+              onPress={() => {
+                toast.action?.onPress();
+                dismiss(true);
+              }}
+              style={({ pressed }) => [
+                styles.actionBtn,
+                { borderColor: `${accent}55`, backgroundColor: `${accent}14` },
+                pressed && { opacity: 0.75 },
+              ]}
+            >
+              <Text style={[styles.actionText, { color: accent }]}>{toast.action?.label}</Text>
+            </Pressable>
+          ) : null}
+          {showHint ? (
+            <Text style={[styles.hint, { color: c.muted }]} numberOfLines={2}>
+              {toast.actionHint}
+            </Text>
+          ) : null}
+        </View>
+      </Pressable>
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={showAction ? t('flash.dismissPending') : t('common.dismiss')}
+          hitSlop={8}
+          onPress={() => dismiss(true)}
+          style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.7 }]}
+        >
+          <Ionicons name="close" size={18} color={c.muted} />
+        </Pressable>
+
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.progressTrack, { backgroundColor: `${accent}22` }]}
+        >
+          {!reduceMotion ? (
+            <Animated.View style={[styles.progressFill, { backgroundColor: accent }, progressStyle]} />
+          ) : (
+            <View style={[styles.progressFill, { backgroundColor: accent, opacity: 0.45 }]} />
+          )}
+        </Animated.View>
+      </View>
+    </Animated.View>
+  );
+}
+
+/**
+ * Bottom snackbar stack — Material-style, above tab bar on tabs.
+ * Newest toast sits closest to the thumb / tab bar.
+ */
+export default function FlashToaster({ toasts, onDismiss }: FlashToasterProps) {
   const insets = useSafeAreaInsets();
   const { isTablet } = useResponsiveLayout();
   const segments = useSegments();
   const onTabs = segments[0] === '(tabs)';
-  const translateY = useSharedValue(32);
-  const opacity = useSharedValue(0);
-  const dismissing = useRef(false);
-
-  const dismissAnimated = () => {
-    if (dismissing.current) return;
-    dismissing.current = true;
-    translateY.value = withTiming(24, { duration: 180, easing: Easing.in(Easing.quad) });
-    opacity.value = withTiming(0, { duration: 180 }, (finished) => {
-      if (finished) runOnJS(onDismiss)();
-    });
-  };
-
-  useEffect(() => {
-    if (!toast) {
-      dismissing.current = false;
-      translateY.value = 32;
-      opacity.value = 0;
-      return undefined;
-    }
-
-    dismissing.current = false;
-    translateY.value = withSpring(0, { damping: 18, stiffness: 260, mass: 0.75 });
-    opacity.value = withTiming(1, { duration: 200 });
-
-    const timer = setTimeout(dismissAnimated, DISMISS_MS);
-    return () => clearTimeout(timer);
-  }, [toast]);
-
-  const shellStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ translateY: translateY.value }],
-  }));
-
-  if (!toast) return null;
-
-  const variant = toast.variant ?? 'success';
-  const accent =
-    variant === 'offline' ? c.warning : variant === 'danger' ? c.error : c.success;
-  const iconName =
-    toast.icon ??
-    (variant === 'offline'
-      ? 'cloud-offline-outline'
-      : variant === 'danger'
-        ? 'trash-outline'
-        : 'checkmark-circle');
-  const showSubtitle = Boolean(toast.subtitle);
   const bottomPad = Math.max(insets.bottom, 12) + (onTabs ? tabBarClearance(isTablet) + 10 : 16);
 
-  const surface = isDark
-    ? {
-        backgroundColor: c.card,
-        borderColor: c.border,
-        titleColor: c.text,
-        subtitleColor: c.muted,
-        iconBg: `${accent}22`,
-        shadowOpacity: 0.35,
-      }
-    : {
-        backgroundColor:
-          variant === 'danger' ? '#fff1f2' : variant === 'offline' ? '#fffbeb' : '#ecfdf5',
-        borderColor:
-          variant === 'danger'
-            ? 'rgba(225,29,72,0.18)'
-            : variant === 'offline'
-              ? 'rgba(217,119,6,0.22)'
-              : 'rgba(5,150,105,0.22)',
-        titleColor: c.text,
-        subtitleColor: c.muted,
-        iconBg:
-          variant === 'danger'
-            ? 'rgba(225,29,72,0.1)'
-            : variant === 'offline'
-              ? 'rgba(217,119,6,0.12)'
-              : 'rgba(5,150,105,0.12)',
-        shadowOpacity: 0.12,
-      };
+  if (!toasts.length) return null;
 
   return (
     <View pointerEvents="box-none" style={[styles.wrap, { bottom: bottomPad }]}>
-      <Animated.View style={shellStyle}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={toast.title}
-          onPress={dismissAnimated}
-          style={[
-            styles.bar,
-            {
-              backgroundColor: surface.backgroundColor,
-              borderColor: surface.borderColor,
-              shadowColor: '#000',
-              shadowOpacity: surface.shadowOpacity,
-            },
-          ]}
-        >
-          <View style={[styles.accent, { backgroundColor: accent }]} />
-          <View style={[styles.iconWrap, { backgroundColor: surface.iconBg }]}>
-            <Ionicons name={iconName} size={22} color={accent} />
-          </View>
-          <View style={styles.copy}>
-            <Text style={[styles.title, { color: surface.titleColor }]} numberOfLines={2}>
-              {toast.title}
-            </Text>
-            {showSubtitle ? (
-              <Text style={[styles.subtitle, { color: surface.subtitleColor }]} numberOfLines={2}>
-                {toast.subtitle}
-              </Text>
-            ) : null}
-          </View>
-        </Pressable>
-      </Animated.View>
+      {toasts.map((toast) => (
+        <FlashToastItem key={toast.id} toast={toast} onDismiss={onDismiss} />
+      ))}
     </View>
   );
 }
+
+export { MAX_VISIBLE_TOASTS };
 
 const styles = StyleSheet.create({
   wrap: {
@@ -169,47 +347,94 @@ const styles = StyleSheet.create({
     right: 14,
     zIndex: 200,
     elevation: 20,
+    gap: 8,
   },
   bar: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 64,
+    minHeight: 58,
     borderRadius: 14,
     borderWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 14,
-    paddingRight: 16,
+    paddingVertical: 12,
+    paddingRight: 8,
     overflow: 'hidden',
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
+    shadowColor: '#000',
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
     elevation: 8,
+  },
+  bodyPress: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    minWidth: 0,
   },
   accent: {
     width: 4,
     alignSelf: 'stretch',
-    marginRight: 12,
+    marginRight: 10,
     borderTopRightRadius: 2,
     borderBottomRightRadius: 2,
   },
   iconWrap: {
-    width: 36,
-    height: 36,
+    width: 34,
+    height: 34,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 10,
   },
   copy: {
     flex: 1,
     minWidth: 0,
-    gap: 3,
+    gap: 2,
+    paddingRight: 4,
   },
   title: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     letterSpacing: -0.2,
   },
   subtitle: {
     fontSize: 13,
     lineHeight: 18,
+  },
+  actionBtn: {
+    alignSelf: 'flex-start',
+    marginTop: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  actionText: {
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: -0.1,
+  },
+  hint: {
+    marginTop: 4,
+    fontSize: 11,
+    lineHeight: 15,
+  },
+  closeBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressTrack: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    width: '100%',
+    transformOrigin: 'left',
   },
 });

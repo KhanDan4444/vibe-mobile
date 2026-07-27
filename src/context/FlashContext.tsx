@@ -1,30 +1,51 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
-import { FlashBanner, type FlashToast } from '@/src/components/FlashBanner';
+import FlashToaster, { MAX_VISIBLE_TOASTS, type FlashToast } from '@/src/components/FlashBanner';
+import { flashHaptic } from '@/src/utils/flashHaptic';
 
 interface FlashContextValue {
   showFlash: (toast: FlashToast | string) => void;
+  dismissToast: (id: string) => void;
+  clearFlash: () => void;
 }
 
 const FlashContext = createContext<FlashContextValue | null>(null);
 
-export function FlashProvider({ children }: { children: React.ReactNode }) {
-  const [toast, setToast] = useState<FlashToast | null>(null);
+function createToastId() {
+  return `toast-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
 
-  const showFlash = useCallback((next: FlashToast | string) => {
-    if (typeof next === 'string') {
-      setToast({ title: next, variant: 'success' });
-      return;
-    }
-    setToast(next);
+export function FlashProvider({ children }: { children: React.ReactNode }) {
+  const [toasts, setToasts] = useState<(FlashToast & { id: string })[]>([]);
+
+  const dismissToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  const dismiss = useCallback(() => setToast(null), []);
-  const value = useMemo(() => ({ showFlash }), [showFlash]);
+  const clearFlash = useCallback(() => setToasts([]), []);
+
+  const showFlash = useCallback((next: FlashToast | string) => {
+    const payload: FlashToast =
+      typeof next === 'string' ? { title: next, variant: 'success' } : { variant: 'success', ...next };
+
+    flashHaptic(payload.variant ?? 'success');
+
+    setToasts((prev) => {
+      const item = { id: createToastId(), ...payload };
+      const stack = [...prev, item];
+      if (stack.length <= MAX_VISIBLE_TOASTS) return stack;
+      return stack.slice(stack.length - MAX_VISIBLE_TOASTS);
+    });
+  }, []);
+
+  const value = useMemo(
+    () => ({ showFlash, dismissToast, clearFlash }),
+    [showFlash, dismissToast, clearFlash]
+  );
 
   return (
     <FlashContext.Provider value={value}>
       {children}
-      <FlashBanner toast={toast} onDismiss={dismiss} />
+      <FlashToaster toasts={toasts} onDismiss={dismissToast} />
     </FlashContext.Provider>
   );
 }

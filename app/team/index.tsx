@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { PageSkeleton } from '@/src/components/Skeleton';
+import { LoadError } from '@/src/components/LoadError';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchTeam, updateStaff } from '@/src/api/team';
@@ -169,6 +170,11 @@ export default function TeamScreen() {
 
       {query.isLoading ? (
         <PageSkeleton variant="list-cards" />
+      ) : query.isError ? (
+        <LoadError
+          message={query.error instanceof Error ? query.error.message : undefined}
+          onRetry={() => void query.refetch()}
+        />
       ) : (
         <FlatList
           key={`team-cols-${listColumns}`}

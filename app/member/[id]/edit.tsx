@@ -17,6 +17,7 @@ import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
 import { fetchMemberPhotoDataUri } from '@/src/utils/memberPhoto';
 import { bumpMemberPhotoCache } from '@/src/utils/memberPhotoCache';
+import { runInBackground } from '@/src/utils/runInBackground';
 import type { UpdateMemberPayload } from '@/src/types/api';
 import { useTranslation } from 'react-i18next';
 
@@ -94,7 +95,7 @@ export default function EditMemberScreen() {
     jobType: 'update-member',
     memberId,
     mutationFn: (payload: UpdateMemberPayload) => updateMember(token!, memberId, payload),
-    onSuccess: async (data) => {
+    onSuccess: (data) => {
       if (isOfflineQueued(data)) {
         bumpMemberPhotoCache(queryClient, memberId);
         flashOffline();
@@ -103,10 +104,14 @@ export default function EditMemberScreen() {
       }
       queryClient.setQueryData(['member', memberId], data);
       bumpMemberPhotoCache(queryClient, memberId);
-      await queryClient.invalidateQueries({ queryKey: ['members'] });
-      await queryClient.refetchQueries({ queryKey: ['member', memberId] });
       flashSaved('flash.memberUpdated');
       router.back();
+      runInBackground(
+        Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['members'] }),
+          queryClient.refetchQueries({ queryKey: ['member', memberId] }),
+        ])
+      );
     },
     onError: (e: Error) => setError(e.message),
   });

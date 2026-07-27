@@ -13,7 +13,7 @@
   "auth": {
     "subtitle": "Gym staff sign in",
     "tagline": "Members, payments & branches — in one place.",
-    "brandSlogan": "Get up, Do It, Be Active",
+    "brandSlogan": "Get up . Do It . Be Active !",
     "signInSubtitle": "Sign in to manage your workspace",
     "identifier": "Username or email",
     "password": "Password",
@@ -76,6 +76,15 @@
     "emptyTitle": "No members yet",
     "emptyBody": "Enroll your first member to track terms and payments."
   },
+  "status": {
+    "active": "Active",
+    "suspended": "Suspended",
+    "expired": "Expired",
+    "trialing": "Trialing",
+    "dueSoon": "Due Soon",
+    "unknown": "Unknown",
+    "unpaid": "Unpaid"
+  },
   "revenue": {
     "search": "Search member",
     "transactions": "Transactions",
@@ -106,10 +115,15 @@
   },
   "forgot": {
     "title": "Reset password",
-    "subtitle": "Enter your username to receive a one-time code by SMS.",
+    "subtitle": "Enter your username or registered phone number to receive a one-time code by SMS.",
     "username": "Username",
     "usernamePlaceholder": "owner or staff username",
     "usernameRequired": "Enter your username.",
+    "identifier": "Username or phone number",
+    "identifierPlaceholder": "username or 09xxxxxxxx",
+    "identifierHint": "Use your login username, or the gym phone on file (09… or +251…).",
+    "identifierRequired": "Enter your username or phone number.",
+    "identifierInvalid": "Enter a valid username or Ethiopian mobile number.",
     "sendOtp": "Send code",
     "otpSent": "We sent a reset code by SMS.",
     "noSession": "Could not start password reset. Try again.",
@@ -194,7 +208,8 @@
     "themeDark": "Dark",
     "language": "Language",
     "english": "English",
-    "amharic": "አማርኛ"
+    "amharic": "አማርኛ",
+    "afanOromo": "Afaan Oromoo"
   },
   "account": {
     "preferences": "Preferences",
@@ -251,6 +266,7 @@
     "ok": "OK",
     "done": "Done",
     "dismiss": "Dismiss",
+    "undo": "Undo",
     "yes": "Yes",
     "no": "No",
     "error": "Error",
@@ -335,9 +351,25 @@
       "title": "Member deleted",
       "subtitle": "Their record and payment history were removed."
     },
+    "memberDeletePending": {
+      "title": "Removing member…",
+      "subtitle": "{{name}} will be deleted unless you undo."
+    },
+    "memberDeleteCancelled": {
+      "title": "Delete cancelled",
+      "subtitle": "{{name}} was kept."
+    },
     "paymentDeleted": {
       "title": "Payment deleted",
       "subtitle": "This payment was removed from revenue."
+    },
+    "paymentDeletePending": {
+      "title": "Removing payment…",
+      "subtitle": "This payment will be deleted unless you undo."
+    },
+    "paymentDeleteCancelled": {
+      "title": "Delete cancelled",
+      "subtitle": "The payment was kept."
     },
     "planDeleted": {
       "title": "Plan deleted",
@@ -346,7 +378,10 @@
     "offline": {
       "title": "Saved offline",
       "subtitle": "Will sync automatically when you are back online."
-    }
+    },
+    "undoHint": "Tap Undo to keep — swiping away won't cancel.",
+    "undoActionLabel": "{{action}} — cancel this change",
+    "dismissPending": "Hide notification — action still continues"
   },
   "member": {
     "invalid": "Invalid member.",

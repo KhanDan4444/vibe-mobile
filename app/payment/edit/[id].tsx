@@ -13,7 +13,8 @@ import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useTranslation } from 'react-i18next';
 import { PAYMENT_METHODS, type PaymentMethod } from '@/src/constants/payments';
-import { useDeleteFlash } from '@/src/hooks/useSaveFlash';
+import { useFlash } from '@/src/context/FlashContext';
+import { scheduleDeleteWithUndo } from '@/src/utils/scheduleWithUndo';
 import { todayString } from '@/src/utils/date';
 import { boundsForPaymentOnTerm } from '@/src/utils/datePickerBounds';
 import { isGymOwner } from '@/src/utils/roles';
@@ -33,7 +34,7 @@ export default function EditPaymentScreen() {
   const queryClient = useQueryClient();
   const { token, user, subscription } = useAuth();
   const { t } = useTranslation();
-  const flashDeleted = useDeleteFlash();
+  const { showFlash } = useFlash();
 
   const [amount, setAmount] = useState(String(params.amount ?? ''));
   const [paymentDate, setPaymentDate] = useState(params.date?.split('T')[0] || todayString());
@@ -86,19 +87,26 @@ export default function EditPaymentScreen() {
 
   const deleteMutation = useMutation({
     mutationFn: () => deletePayment(token!, paymentId),
-    onSuccess: () => {
-      setDeleteOpen(false);
-      queryClient.invalidateQueries({ queryKey: ['payments'] });
-      queryClient.invalidateQueries({ queryKey: ['member-payments', memberId] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      flashDeleted('flash.paymentDeleted');
-      router.back();
-    },
-    onError: (e: Error) => {
-      setDeleteOpen(false);
-      setError(e.message);
-    },
   });
+
+  const runDeletePayment = () => {
+    setDeleteOpen(false);
+    router.back();
+    scheduleDeleteWithUndo({
+      showFlash,
+      t,
+      pendingKey: 'flash.paymentDeletePending',
+      cancelledKey: 'flash.paymentDeleteCancelled',
+      committedKey: 'flash.paymentDeleted',
+      onUndo: () => {},
+      onCommit: async () => {
+        await deleteMutation.mutateAsync();
+        queryClient.invalidateQueries({ queryKey: ['payments'] });
+        queryClient.invalidateQueries({ queryKey: ['member-payments', memberId] });
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      },
+    });
+  };
 
   const canSubmit = useMemo(
     () => Number(amount) >= 0 && Number.isFinite(Number(amount)) && paymentDate.trim().length > 0,
@@ -161,7 +169,7 @@ export default function EditPaymentScreen() {
         destructive
         confirmLoading={deleteMutation.isPending}
         onCancel={() => setDeleteOpen(false)}
-        onConfirm={() => deleteMutation.mutate()}
+        onConfirm={() => runDeletePayment()}
       />
     </Screen>
   );

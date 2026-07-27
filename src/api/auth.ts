@@ -1,5 +1,6 @@
 import { apiRequest } from '@/src/api/client';
 import type { GymSignupCompletePayload, GymSubscription, LoginResponse, PublicSaasPlan } from '@/src/types/api';
+import { normalizeEthiopianPhone } from '@/src/utils/phone';
 
 export function loginRequest(email: string, password: string, rememberMe = true) {
   return apiRequest<LoginResponse>('/auth/login', {
@@ -20,10 +21,12 @@ export function fetchGymSubscription(token: string) {
   return apiRequest<GymSubscription>('/gym/subscription', { token });
 }
 
-export function requestForgotPasswordOtp(username: string) {
+export function requestForgotPasswordOtp(identifier: string) {
+  const trimmed = identifier.trim();
+  const phone = normalizeEthiopianPhone(trimmed);
   return apiRequest<{ message?: string; sessionId?: string }>('/auth/forgot-password/request-otp', {
     method: 'POST',
-    body: JSON.stringify({ username: username.trim().toLowerCase() }),
+    body: JSON.stringify({ username: phone || trimmed.toLowerCase() }),
   });
 }
 

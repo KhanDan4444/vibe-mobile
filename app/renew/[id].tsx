@@ -12,6 +12,7 @@ import { PlanPickerField } from '@/src/components/PlanPickerField';
 import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
 import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { PageSkeleton } from '@/src/components/Skeleton';
+import { LoadError } from '@/src/components/LoadError';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useTranslation } from 'react-i18next';
 import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
@@ -135,6 +136,17 @@ export default function RenewScreen() {
     return (
       <Screen>
         <PageSkeleton variant="form" count={5} />
+      </Screen>
+    );
+  }
+
+  if (memberQuery.isError) {
+    return (
+      <Screen>
+        <LoadError
+          message={memberQuery.error instanceof Error ? memberQuery.error.message : undefined}
+          onRetry={() => void memberQuery.refetch()}
+        />
       </Screen>
     );
   }

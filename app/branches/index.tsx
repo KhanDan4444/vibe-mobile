@@ -2,6 +2,7 @@ import { Redirect, useRouter } from 'expo-router';
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { PageSkeleton } from '@/src/components/Skeleton';
+import { LoadError } from '@/src/components/LoadError';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -161,6 +162,11 @@ export default function BranchesScreen() {
     <View style={styles.container}>
       {query.isLoading ? (
         <PageSkeleton variant="list-cards" />
+      ) : query.isError ? (
+        <LoadError
+          message={query.error instanceof Error ? query.error.message : undefined}
+          onRetry={() => void query.refetch()}
+        />
       ) : (
         <FlatList
           key={`branches-cols-${listColumns}`}

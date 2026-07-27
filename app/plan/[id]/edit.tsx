@@ -9,6 +9,7 @@ import { fetchPlans, updatePlan } from '@/src/api/plans';
 import type { PlanPayload } from '@/src/api/plans';
 import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { PageSkeleton } from '@/src/components/Skeleton';
+import { LoadError } from '@/src/components/LoadError';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { isOfflineQueued } from '@/src/offline/types';
@@ -88,6 +89,17 @@ export default function EditPlanScreen() {
     return (
       <Screen>
         <PageSkeleton variant="form" count={4} />
+      </Screen>
+    );
+  }
+
+  if (plansQuery.isError) {
+    return (
+      <Screen>
+        <LoadError
+          message={plansQuery.error instanceof Error ? plansQuery.error.message : undefined}
+          onRetry={() => void plansQuery.refetch()}
+        />
       </Screen>
     );
   }

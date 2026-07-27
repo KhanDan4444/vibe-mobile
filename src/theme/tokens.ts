@@ -1,5 +1,10 @@
 export type AppTheme = 'light' | 'dark';
 
+/** Shared corner radii — match web design system. */
+export const radiusSm = 8;
+export const radiusMd = 12;
+export const radiusLg = 16;
+
 export type ThemeColors = {
   bg: string;
   card: string;
@@ -31,25 +36,25 @@ export type ThemeColors = {
 };
 
 export const darkTheme: ThemeColors = {
-  bg: '#0f172a',
-  card: '#1e293b',
-  border: '#334155',
-  text: '#f8fafc',
-  muted: '#94a3b8',
+  bg: '#13161c',
+  card: '#22262f',
+  border: '#2a2f3a',
+  text: '#e4e7ee',
+  muted: '#8b93a3',
   dim: '#64748b',
   accent: '#0f766e',
-  accentSoft: 'rgba(15,118,110,0.22)',
-  accentText: '#14b8a6',
+  accentSoft: 'rgba(45,212,191,0.16)',
+  accentText: '#2dd4bf',
   warm: '#fbbf24',
   warmSoft: 'rgba(251,191,36,0.14)',
   warmText: '#fcd34d',
   error: '#fda4af',
   errorBg: 'rgba(244,63,94,0.15)',
-  headerBg: '#1e293b',
-  tabBarBg: '#1e293b',
-  tabBarBorder: '#334155',
-  inputBg: '#0f172a',
-  inputBorder: '#475569',
+  headerBg: '#1a1e26',
+  tabBarBg: '#171a21',
+  tabBarBorder: '#2a2f3a',
+  inputBg: '#1e222b',
+  inputBorder: '#343a46',
   success: '#34d399',
   warning: '#fbbf24',
   statusActive: '#34d399',

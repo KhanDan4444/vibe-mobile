@@ -13,7 +13,7 @@
   "auth": {
     "subtitle": "የጂም ሰራተኞች መግቢያ",
     "tagline": "አባላት፣ ገቢ እና ቅርንጫፎች — በአንድ ቦታ",
-    "brandSlogan": "ተነስ . አድርገው . ንቁ ሁን!",
+    "brandSlogan": "ተነስ . አድርገው . ንቁ ሁን !",
     "signInSubtitle": "የስራ ቦታዎን ለማስተዳደር ይግቡ",
     "identifier": "የተጠቃሚ ስም ወይም ኢሜይል",
     "password": "የይለፍ ቃል",
@@ -76,6 +76,15 @@
     "emptyTitle": "እስካሁን አባል የለም",
     "emptyBody": "ውሎችንና ክፍያዎችን ለመከታተል የመጀመሪያ አባልዎን ያስመዝግቡ።"
   },
+  "status": {
+    "active": "ንቁ",
+    "suspended": "ተቆጥቷል",
+    "expired": "ጊዜው አልፏል",
+    "trialing": "በሙከራ",
+    "dueSoon": "በቅርብ ጊዜ",
+    "unknown": "ያልታወቀ",
+    "unpaid": "ያልተከፈለ"
+  },
   "revenue": {
     "search": "አባል ይፈልጉ",
     "transactions": "ግብይቶች",
@@ -106,10 +115,15 @@
   },
   "forgot": {
     "title": "የይለፍ ቃል ዳግም ያስጀምሩ",
-    "subtitle": "የአንድ ጊዜ ኮድ በSMS ለመቀበል የተጠቃሚ ስምዎን ያስገቡ።",
+    "subtitle": "የአንድ ጊዜ ኮድ በSMS ለመቀበል የተጠቃሚ ስም ወይም የተመዘገበ ስልክ ቁጥር ያስገቡ።",
     "username": "የተጠቃሚ ስም",
     "usernamePlaceholder": "የባለቤት ወይም የሰራተኛ ስም",
     "usernameRequired": "የተጠቃሚ ስም ያስገቡ።",
+    "identifier": "የተጠቃሚ ስም ወይም ስልክ ቁጥር",
+    "identifierPlaceholder": "የተጠቃሚ ስም ወይም 09xxxxxxxx",
+    "identifierHint": "የመግቢያ የተጠቃሚ ስምዎን፣ ወይም በመዝገብ ላይ ያለውን የጂም ስልክ (09… ወይም +251…) ይጠቀሙ።",
+    "identifierRequired": "የተጠቃሚ ስም ወይም ስልክ ቁጥር ያስገቡ።",
+    "identifierInvalid": "ትክክለኛ የተጠቃሚ ስም ወይም የኢትዮጵያ ሞባይል ቁጥር ያስገቡ።",
     "sendOtp": "ኮድ ላክ",
     "otpSent": "የዳግም ማስጀመሪያ ኮድ በSMS ተልኳል።",
     "noSession": "የይለፍ ቃል ዳግም ማስጀመር አልተጀመረም። እንደገና ይሞክሩ።",
@@ -194,7 +208,8 @@
     "themeDark": "ጨለማ",
     "language": "ቋንቋ",
     "english": "English",
-    "amharic": "አማርኛ"
+    "amharic": "አማርኛ",
+    "afanOromo": "Afaan Oromoo"
   },
   "account": {
     "preferences": "ምርጫዎች",
@@ -251,6 +266,7 @@
     "ok": "እሺ",
     "done": "ተከናውኗል",
     "dismiss": "ዝጋ",
+    "undo": "መልስ",
     "yes": "አዎ",
     "no": "አይ",
     "error": "ስህተት",
@@ -335,9 +351,25 @@
       "title": "አባል ተሰርዟል",
       "subtitle": "መዝገባቸው እና የክፍያ ታሪካቸው ተወግዷል።"
     },
+    "memberDeletePending": {
+      "title": "አባል በመሰረዝ ላይ…",
+      "subtitle": "{{name}} ካልመለሱ ይሰረዛል።"
+    },
+    "memberDeleteCancelled": {
+      "title": "መሰረዝ ተሰርዟል",
+      "subtitle": "{{name}} ተጠብቋል።"
+    },
     "paymentDeleted": {
       "title": "ክፍያ ተሰርዟል",
       "subtitle": "ይህ ክፍያ ከገቢ ተወግዷል።"
+    },
+    "paymentDeletePending": {
+      "title": "ክፍያ በመሰረዝ ላይ…",
+      "subtitle": "ያልመለሱ ይህ ክፍያ ይሰረዛል።"
+    },
+    "paymentDeleteCancelled": {
+      "title": "መሰረዝ ተሰርዟል",
+      "subtitle": "ክፍያው ተጠብቋል።"
     },
     "planDeleted": {
       "title": "ዕቅድ ተሰርዟል",
@@ -346,7 +378,10 @@
     "offline": {
       "title": "ከመስመር ውጭ ተቀምጧል",
       "subtitle": "ከመስመር ሲመለሱ በራስ-ሰር ይመሳሰላል።"
-    }
+    },
+    "undoHint": "ለመጠበቅ «መልስ»ን ይጫኑ — ማጥፋት አያስተላልፍም።",
+    "undoActionLabel": "{{action}} — ለውጡን ሰርዝ",
+    "dismissPending": "ማሳወቂያውን ደብቅ — ተግባሩ ይቀጥላል"
   },
   "member": {
     "invalid": "ትክክለኛ ያልሆነ አባል።",

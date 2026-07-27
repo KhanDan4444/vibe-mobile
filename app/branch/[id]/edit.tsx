@@ -9,6 +9,7 @@ import { fetchBranches, updateBranch } from '@/src/api/branches';
 import { OptionPickerField } from '@/src/components/OptionPickerField';
 import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { PageSkeleton } from '@/src/components/Skeleton';
+import { LoadError } from '@/src/components/LoadError';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { isOfflineQueued } from '@/src/offline/types';
@@ -96,6 +97,17 @@ export default function EditBranchScreen() {
     return (
       <Screen>
         <PageSkeleton variant="form" count={4} />
+      </Screen>
+    );
+  }
+
+  if (branchesQuery.isError) {
+    return (
+      <Screen>
+        <LoadError
+          message={branchesQuery.error instanceof Error ? branchesQuery.error.message : undefined}
+          onRetry={() => void branchesQuery.refetch()}
+        />
       </Screen>
     );
   }

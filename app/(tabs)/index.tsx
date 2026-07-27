@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View, type DimensionValue } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -20,6 +20,9 @@ import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { isGymOwner, isGymStaff } from '@/src/utils/roles';
 import { ResponsiveContent } from '@/src/components/ResponsiveContent';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
+import StatusBadge from '@/src/components/StatusBadge';
+import Card from '@/src/components/ui/Card';
+import { SecondaryButton } from '@/src/components/ui/Button';
 
 type StatFilter = 'due_soon' | 'expired' | 'unpaid';
 
@@ -34,7 +37,7 @@ function StatCard({
   label,
   value,
   accent,
-  cardStyle,
+  widthPercent,
   valueStyle,
   labelStyle,
   onPress,
@@ -42,7 +45,7 @@ function StatCard({
   label: string;
   value: string | number;
   accent?: string;
-  cardStyle: object;
+  widthPercent: string;
   valueStyle: object;
   labelStyle: object;
   onPress?: () => void;
@@ -54,22 +57,17 @@ function StatCard({
     </>
   );
 
+  const cardStyle = [styles.statCard, { width: widthPercent as DimensionValue }];
+
   if (!onPress) {
-    return <View style={cardStyle}>{content}</View>;
+    return <Card style={cardStyle}>{content}</Card>;
   }
 
   return (
-    <Pressable style={cardStyle} onPress={onPress}>
-      {content}
+    <Pressable onPress={onPress}>
+      <Card style={cardStyle}>{content}</Card>
     </Pressable>
   );
-}
-
-function alertAccent(status: string) {
-  const s = status.toLowerCase();
-  if (s === 'due soon') return '#fbbf24';
-  if (s === 'expired') return '#f87171';
-  return '#fb923c';
 }
 
 function AlertMemberRow({
@@ -100,7 +98,7 @@ function AlertMemberRow({
         </Text>
       </View>
       <View style={styles.alertRight}>
-        <Text style={[styles.alertStatus, { color: alertAccent(member.status) }]}>{member.status}</Text>
+        <StatusBadge status={member.status} />
         {onAction ? (
           <Pressable style={[styles.alertAction, { backgroundColor: colors.accentSoft }]} onPress={onAction}>
             <Text style={[styles.alertActionText, { color: colors.accentText }]}>{t('dashboard.renew')}</Text>
@@ -160,10 +158,6 @@ export default function DashboardScreen() {
     });
   };
 
-  const cardStyle = [
-    styles.statCard,
-    { width: statCardWidthPercent, backgroundColor: c.card, borderColor: c.border },
-  ];
   const valueStyle = [styles.statValue, { color: c.text }];
   const labelStyle = [styles.statLabel, { color: c.muted }];
   const alertMembers = (data?.alertMembers ?? []).slice(0, 5);
@@ -178,29 +172,36 @@ export default function DashboardScreen() {
         : 'due_soon';
 
   const summaryBlock = data ? (
-    <View style={[styles.summary, { backgroundColor: c.card, borderColor: c.border }]}>
-      <Pressable onPress={() => router.push('/(tabs)/revenue')}>
-        <Text style={[styles.summaryTitle, { color: c.muted }]}>{t('dashboard.thisMonth')}</Text>
-        <Text style={[styles.income, { color: c.text }]}>
-          {formatEtb(Number(data.monthlyIncome || 0), { forceCompact: false })}
-        </Text>
-        {trendLabel ? <Text style={[styles.trend, { color: c.success }]}>{trendLabel}</Text> : null}
-        <Text style={[styles.muted, { color: c.dim }]}>
-          {t('dashboard.membersTotal', { count: data.totalMembers })}
-          {data.newMembersThisMonth != null
-            ? ` · ${t('dashboard.newThisMonth', { count: data.newMembersThisMonth })}`
-            : ''}
-        </Text>
+    <Card style={styles.summary}>
+      <Pressable
+        onPress={() => router.push('/(tabs)/revenue')}
+        hitSlop={8}
+        accessibilityRole="link"
+        accessibilityLabel={t('dashboard.thisMonth')}
+        style={styles.summaryTitleRow}
+      >
+        <Text style={[styles.summaryTitle, { color: c.accentText }]}>{t('dashboard.thisMonth')}</Text>
+        <Text style={[styles.summaryTitleChevron, { color: c.accentText }]}>›</Text>
       </Pressable>
+      <Text style={[styles.income, { color: c.text }]}>
+        {formatEtb(Number(data.monthlyIncome || 0), { forceCompact: false })}
+      </Text>
+      {trendLabel ? <Text style={[styles.trend, { color: c.success }]}>{trendLabel}</Text> : null}
+      <Text style={[styles.muted, { color: c.dim }]}>
+        {t('dashboard.membersTotal', { count: data.totalMembers })}
+        {data.newMembersThisMonth != null
+          ? ` · ${t('dashboard.newThisMonth', { count: data.newMembersThisMonth })}`
+          : ''}
+      </Text>
       {owner ? (
         <MiniBarChart data={data.revenueChart ?? []} height={chartHeight} />
       ) : null}
-    </View>
+    </Card>
   ) : null;
 
   const attentionBlock =
     data && owner && (attentionHasContent || !isTablet) ? (
-      <View style={[styles.alertCard, { backgroundColor: c.card, borderColor: c.border }]}>
+      <Card style={styles.alertCard}>
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: c.text }]}>{t('dashboard.attentionTitle')}</Text>
           {attentionHasContent ? (
@@ -242,7 +243,7 @@ export default function DashboardScreen() {
         ) : (
           <Text style={[styles.muted, { color: c.dim }]}>{t('dashboard.noAttention')}</Text>
         )}
-      </View>
+      </Card>
     ) : null;
 
   return (
@@ -267,12 +268,7 @@ export default function DashboardScreen() {
           <Text style={[styles.errorText, { color: c.error }]}>
             {error instanceof Error ? error.message : t('gymBoot.errorBody')}
           </Text>
-          <Pressable
-            style={[styles.retryBtn, { borderColor: c.border, backgroundColor: c.card }]}
-            onPress={() => void refetch()}
-          >
-            <Text style={[styles.retryText, { color: c.accentText }]}>{t('gymBoot.retry')}</Text>
-          </Pressable>
+          <SecondaryButton label={t('gymBoot.retry')} onPress={() => void refetch()} />
         </View>
       ) : data ? (
         <>
@@ -281,7 +277,7 @@ export default function DashboardScreen() {
               label={t('dashboard.active')}
               value={data.activeMembers ?? 0}
               accent={c.statusActive}
-              cardStyle={cardStyle}
+              widthPercent={statCardWidthPercent}
               valueStyle={valueStyle}
               labelStyle={labelStyle}
               onPress={() => goMembers()}
@@ -290,7 +286,7 @@ export default function DashboardScreen() {
               label={t('dashboard.dueSoon')}
               value={data.dueSoonMembers ?? 0}
               accent={c.statusDueSoon}
-              cardStyle={cardStyle}
+              widthPercent={statCardWidthPercent}
               valueStyle={valueStyle}
               labelStyle={labelStyle}
               onPress={() => goMembers('due_soon')}
@@ -299,7 +295,7 @@ export default function DashboardScreen() {
               label={t('dashboard.expired')}
               value={data.expiredMembers ?? 0}
               accent={c.statusExpired}
-              cardStyle={cardStyle}
+              widthPercent={statCardWidthPercent}
               valueStyle={valueStyle}
               labelStyle={labelStyle}
               onPress={() => goMembers('expired')}
@@ -308,7 +304,7 @@ export default function DashboardScreen() {
               label={t('dashboard.unpaid')}
               value={data.unpaidCount ?? 0}
               accent={c.statusUnpaid}
-              cardStyle={cardStyle}
+              widthPercent={statCardWidthPercent}
               valueStyle={valueStyle}
               labelStyle={labelStyle}
               onPress={() => goMembers('unpaid')}
@@ -344,39 +340,31 @@ const styles = StyleSheet.create({
   },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
   statCard: {
-    borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 12,
-    borderWidth: StyleSheet.hairlineWidth,
   },
   statValue: { fontSize: 22, fontWeight: '700' },
   statLabel: { marginTop: 2, fontSize: 12 },
   summary: {
     marginTop: 16,
-    borderRadius: 14,
     padding: 18,
-    borderWidth: StyleSheet.hairlineWidth,
   },
   summaryTitle: { fontSize: 13, fontWeight: '600' },
+  summaryTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 4,
+  },
+  summaryTitleChevron: { fontSize: 16, fontWeight: '700', lineHeight: 18 },
   income: { marginTop: 6, fontSize: 34, fontWeight: '700', letterSpacing: -0.5 },
   trend: { marginTop: 6, fontSize: 13, fontWeight: '600' },
   muted: { marginTop: 8, fontSize: 14 },
   errorWrap: { alignItems: 'center', paddingTop: 32, gap: 12 },
   errorText: { textAlign: 'center', fontSize: 15 },
-  retryBtn: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    minHeight: 44,
-    justifyContent: 'center',
-  },
-  retryText: { fontSize: 14, fontWeight: '600' },
   alertCard: {
     marginTop: 16,
-    borderRadius: 12,
     padding: 14,
-    borderWidth: StyleSheet.hairlineWidth,
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
   sectionTitle: { fontSize: 16, fontWeight: '700' },
