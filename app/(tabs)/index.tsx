@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, View, type DimensionValue } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -23,6 +23,7 @@ import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import StatusBadge from '@/src/components/StatusBadge';
 import Card from '@/src/components/ui/Card';
 import { SecondaryButton } from '@/src/components/ui/Button';
+import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 
 type StatFilter = 'due_soon' | 'expired' | 'unpaid';
 
@@ -37,7 +38,7 @@ function StatCard({
   label,
   value,
   accent,
-  widthPercent,
+  layoutStyle,
   valueStyle,
   labelStyle,
   onPress,
@@ -45,7 +46,7 @@ function StatCard({
   label: string;
   value: string | number;
   accent?: string;
-  widthPercent: string;
+  layoutStyle: object;
   valueStyle: object;
   labelStyle: object;
   onPress?: () => void;
@@ -57,15 +58,15 @@ function StatCard({
     </>
   );
 
-  const cardStyle = [styles.statCard, { width: widthPercent as DimensionValue }];
+  const card = <Card style={styles.statCard}>{content}</Card>;
 
   if (!onPress) {
-    return <Card style={cardStyle}>{content}</Card>;
+    return <View style={layoutStyle}>{card}</View>;
   }
 
   return (
-    <Pressable onPress={onPress}>
-      <Card style={cardStyle}>{content}</Card>
+    <Pressable onPress={onPress} style={layoutStyle}>
+      {card}
     </Pressable>
   );
 }
@@ -119,7 +120,7 @@ export default function DashboardScreen() {
   const owner = isGymOwner(user?.role);
   const staffUser = isGymStaff(user?.role);
   const { readOnly } = useGymReadOnly();
-  const { statCardWidthPercent, isTablet, pagePadding, chartHeight } = useResponsiveLayout();
+  const { statCardLayoutStyle, isTablet, pagePadding, chartHeight } = useResponsiveLayout();
   const staffBranchLabel = staffUser
     ? user?.branch_name || (user?.branch_id ? `Branch #${user.branch_id}` : null)
     : null;
@@ -266,7 +267,7 @@ export default function DashboardScreen() {
       ) : isError ? (
         <View style={styles.errorWrap}>
           <Text style={[styles.errorText, { color: c.error }]}>
-            {error instanceof Error ? error.message : t('gymBoot.errorBody')}
+            {userFacingApiMessage(error, t('gymBoot.errorBody'), t('gymBoot.errorBody'))}
           </Text>
           <SecondaryButton label={t('gymBoot.retry')} onPress={() => void refetch()} />
         </View>
@@ -277,7 +278,7 @@ export default function DashboardScreen() {
               label={t('dashboard.active')}
               value={data.activeMembers ?? 0}
               accent={c.statusActive}
-              widthPercent={statCardWidthPercent}
+              layoutStyle={statCardLayoutStyle}
               valueStyle={valueStyle}
               labelStyle={labelStyle}
               onPress={() => goMembers()}
@@ -286,7 +287,7 @@ export default function DashboardScreen() {
               label={t('dashboard.dueSoon')}
               value={data.dueSoonMembers ?? 0}
               accent={c.statusDueSoon}
-              widthPercent={statCardWidthPercent}
+              layoutStyle={statCardLayoutStyle}
               valueStyle={valueStyle}
               labelStyle={labelStyle}
               onPress={() => goMembers('due_soon')}
@@ -295,7 +296,7 @@ export default function DashboardScreen() {
               label={t('dashboard.expired')}
               value={data.expiredMembers ?? 0}
               accent={c.statusExpired}
-              widthPercent={statCardWidthPercent}
+              layoutStyle={statCardLayoutStyle}
               valueStyle={valueStyle}
               labelStyle={labelStyle}
               onPress={() => goMembers('expired')}
@@ -304,7 +305,7 @@ export default function DashboardScreen() {
               label={t('dashboard.unpaid')}
               value={data.unpaidCount ?? 0}
               accent={c.statusUnpaid}
-              widthPercent={statCardWidthPercent}
+              layoutStyle={statCardLayoutStyle}
               valueStyle={valueStyle}
               labelStyle={labelStyle}
               onPress={() => goMembers('unpaid')}
@@ -340,6 +341,7 @@ const styles = StyleSheet.create({
   },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
   statCard: {
+    flex: 1,
     paddingVertical: 10,
     paddingHorizontal: 12,
   },

@@ -11,20 +11,20 @@ export function GymBootError() {
 
   if (!bootError || booting) return null;
 
+  const showDevDetail = typeof __DEV__ !== 'undefined' && __DEV__;
+
   return (
     <View style={[styles.wrap, { backgroundColor: c.bg }]}>
       <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
         <Text style={[styles.title, { color: c.text }]}>{t('gymBoot.errorTitle')}</Text>
         <Text style={[styles.body, { color: c.muted }]}>{t('gymBoot.errorBody')}</Text>
-        {bootError.message ? (
+        {showDevDetail && bootError.message ? (
           <Text style={[styles.detail, { color: c.dim }]} selectable>
             {bootError.message}
           </Text>
         ) : null}
-        {bootError.message?.includes('localhost') ? (
-          <Text style={[styles.hint, { color: c.muted }]}>
-            {t('gymBoot.usbHint')}
-          </Text>
+        {showDevDetail && bootError.message?.includes('localhost') ? (
+          <Text style={[styles.hint, { color: c.muted }]}>{t('gymBoot.usbHint')}</Text>
         ) : null}
         <Pressable style={[styles.btn, { backgroundColor: c.accent }]} onPress={retryBoot}>
           <Text style={styles.btnText}>{t('gymBoot.retry')}</Text>

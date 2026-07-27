@@ -84,16 +84,18 @@ function ListCardSkeleton() {
 
 function StatSkeleton() {
   const { colors: c } = useTheme();
-  const { statCardWidthPercent } = useResponsiveLayout();
+  const { statCardLayoutStyle } = useResponsiveLayout();
   return (
-    <View
-      style={[
-        styles.stat,
-        { backgroundColor: c.card, borderColor: c.border, width: statCardWidthPercent as `${number}%` },
-      ]}
-    >
-      <SkeletonBone width={36} height={22} />
-      <SkeletonBone width="70%" height={11} style={{ marginTop: 10 }} />
+    <View style={statCardLayoutStyle}>
+      <View
+        style={[
+          styles.stat,
+          { backgroundColor: c.card, borderColor: c.border },
+        ]}
+      >
+        <SkeletonBone width={36} height={22} />
+        <SkeletonBone width="70%" height={11} style={{ marginTop: 10 }} />
+      </View>
     </View>
   );
 }
@@ -236,6 +238,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   stat: {
+    flex: 1,
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: 8,
     padding: 14,

@@ -25,6 +25,7 @@
     "adminBlocked": "Akkaawuntiin bulchaa platformii marsariitii fayyadama. Akkaawuntii abbaa jimii ykn hojjettootaa waliin seenaa.",
     "accessDenied": "Akkaawuntiin kun apiliikeeshinii mobaalaa fayyadamuu hin danda'u.",
     "loginFailed": "Seensaan hin milkoofne.",
+    "connectionFailed": "Sarvarii wajjin walqunnamuu hin dandeenye. Intarneetii keessan sakatta'aa fi irra deebi'ii yaali.",
     "newGymOwner": "Abbaa jimii haaraa?",
     "registerGym": "Jimii keessan galmeessaa"
   },

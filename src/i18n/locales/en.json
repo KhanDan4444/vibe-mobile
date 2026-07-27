@@ -25,6 +25,7 @@
     "adminBlocked": "Platform admin accounts use the web dashboard. Sign in with a gym owner or staff account.",
     "accessDenied": "This account cannot use the mobile app.",
     "loginFailed": "Login failed.",
+    "connectionFailed": "Could not connect to the server. Check your internet and try again.",
     "newGymOwner": "New Gym Owner?",
     "registerGym": "Register your Gym"
   },

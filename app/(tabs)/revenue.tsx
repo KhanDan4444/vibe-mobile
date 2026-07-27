@@ -27,6 +27,7 @@ import { DEFAULT_REVENUE_SORT, type RevenueSortId } from '@/src/utils/listSort';
 import { paymentSourceLabel } from '@/src/utils/paymentSources';
 import { isGymOwner } from '@/src/utils/roles';
 import { SecondaryButton } from '@/src/components/ui/Button';
+import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import type { PaymentListRow, UnpaidMemberSummary } from '@/src/types/api';
 
 type PaymentPreset = 'today' | 'this_week' | 'this_month' | 'last_month' | 'last_30_days' | 'this_year';
@@ -535,7 +536,7 @@ export default function RevenueScreen() {
           {listHeader}
           <View style={styles.errorWrap}>
             <Text style={appTextStyle(language, styles.errorText)}>
-              {query.error instanceof Error ? query.error.message : t('gymBoot.errorBody')}
+              {userFacingApiMessage(query.error, t('gymBoot.errorBody'), t('gymBoot.errorBody'))}
             </Text>
             <SecondaryButton label={t('gymBoot.retry')} onPress={() => void query.refetch()} />
           </View>

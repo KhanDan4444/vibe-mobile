@@ -211,9 +211,8 @@ function FlashToastItem({
   const variant = toast.variant ?? 'success';
   const accent = toastAccent(variant, c);
   const iconName = toastIcon(variant, toast.icon);
-  const showSubtitle = Boolean(toast.subtitle);
-  const showAction = Boolean(toast.action?.label);
-  const showHint = Boolean(toast.actionHint);
+  const showSubtitle = Boolean(toast.subtitle) && !hasAction;
+  const showAction = hasAction;
   const isUrgent = Boolean(toast.urgent);
   const accessibilityHint = [toast.subtitle, toast.actionHint].filter(Boolean).join(' ');
 
@@ -253,43 +252,38 @@ function FlashToastItem({
       >
         <View style={[styles.accent, { backgroundColor: accent }]} />
 
-        <View style={[styles.iconWrap, { backgroundColor: surface.iconBg }]}>
-          <Ionicons name={iconName} size={20} color={accent} />
-        </View>
+        {!showAction ? (
+          <View style={[styles.iconWrap, { backgroundColor: surface.iconBg }]}>
+            <Ionicons name={iconName} size={18} color={accent} />
+          </View>
+        ) : null}
 
         <View style={styles.copy}>
-          <Text style={[styles.title, { color: surface.titleColor }]} numberOfLines={2}>
+          <Text style={[styles.title, { color: surface.titleColor }]} numberOfLines={1}>
             {toast.title}
           </Text>
           {showSubtitle ? (
-            <Text style={[styles.subtitle, { color: surface.subtitleColor }]} numberOfLines={2}>
+            <Text style={[styles.subtitle, { color: surface.subtitleColor }]} numberOfLines={1}>
               {toast.subtitle}
-            </Text>
-          ) : null}
-          {showAction ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('flash.undoActionLabel', { action: toast.action?.label })}
-              onPress={() => {
-                toast.action?.onPress();
-                dismiss(true);
-              }}
-              style={({ pressed }) => [
-                styles.actionBtn,
-                { borderColor: `${accent}55`, backgroundColor: `${accent}14` },
-                pressed && { opacity: 0.75 },
-              ]}
-            >
-              <Text style={[styles.actionText, { color: accent }]}>{toast.action?.label}</Text>
-            </Pressable>
-          ) : null}
-          {showHint ? (
-            <Text style={[styles.hint, { color: c.muted }]} numberOfLines={2}>
-              {toast.actionHint}
             </Text>
           ) : null}
         </View>
       </Pressable>
+
+        {showAction ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('flash.undoActionLabel', { action: toast.action?.label })}
+            onPress={() => {
+              toast.action?.onPress();
+              dismiss(true);
+            }}
+            hitSlop={6}
+            style={({ pressed }) => [styles.undoBtn, pressed && { opacity: 0.7 }]}
+          >
+            <Text style={[styles.undoText, { color: accent }]}>{toast.action?.label}</Text>
+          </Pressable>
+        ) : null}
 
         <Pressable
           accessibilityRole="button"
@@ -352,11 +346,11 @@ const styles = StyleSheet.create({
   bar: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 58,
-    borderRadius: 14,
+    minHeight: 52,
+    borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 12,
-    paddingRight: 8,
+    paddingVertical: 10,
+    paddingRight: 4,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowRadius: 14,
@@ -370,16 +364,16 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   accent: {
-    width: 4,
+    width: 3,
     alignSelf: 'stretch',
     marginRight: 10,
     borderTopRightRadius: 2,
     borderBottomRightRadius: 2,
   },
   iconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
+    width: 30,
+    height: 30,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
@@ -387,40 +381,32 @@ const styles = StyleSheet.create({
   copy: {
     flex: 1,
     minWidth: 0,
-    gap: 2,
+    gap: 1,
     paddingRight: 4,
   },
   title: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
     letterSpacing: -0.2,
   },
   subtitle: {
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 12,
+    lineHeight: 16,
   },
-  actionBtn: {
-    alignSelf: 'flex-start',
-    marginTop: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: StyleSheet.hairlineWidth,
+  undoBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    justifyContent: 'center',
   },
-  actionText: {
+  undoText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
     letterSpacing: -0.1,
   },
-  hint: {
-    marginTop: 4,
-    fontSize: 11,
-    lineHeight: 15,
-  },
   closeBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },

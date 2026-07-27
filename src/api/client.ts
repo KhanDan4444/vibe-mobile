@@ -49,9 +49,12 @@ export async function apiRequest<T>(
       headers,
     });
   } catch {
+    // Client-facing copy only — never expose API host or env var names.
     throw new ApiError(
-      `Cannot reach the server at ${API_BASE_URL}. Check EXPO_PUBLIC_API_URL and that the backend is running.`,
-      0
+      'Could not connect to the server. Check your internet and try again.',
+      0,
+      undefined,
+      'NETWORK'
     );
   }
 

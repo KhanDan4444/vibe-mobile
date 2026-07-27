@@ -22,6 +22,7 @@ import { runInBackground } from '@/src/utils/runInBackground';
 import { formatPlanDuration } from '@/src/utils/planFormat';
 import { SecondaryButton } from '@/src/components/ui/Button';
 import type { PlanRow } from '@/src/types/api';
+import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 
 function PlanCard({
   plan,
@@ -219,7 +220,7 @@ export default function PlansScreen() {
       ) : query.isError ? (
         <View style={styles.errorWrap}>
           <Text style={styles.errorText}>
-            {query.error instanceof Error ? query.error.message : t('gymBoot.errorBody')}
+            {userFacingApiMessage(query.error, t('gymBoot.errorBody'), t('gymBoot.errorBody'))}
           </Text>
           <SecondaryButton label={t('gymBoot.retry')} onPress={() => void query.refetch()} />
         </View>

@@ -1,14 +1,16 @@
+import { useState } from 'react';
 import { Redirect, useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
+import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
 import { ResponsiveContent } from '@/src/components/ResponsiveContent';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
-import { nextLanguage, LANGUAGE_LABEL_KEYS } from '@/src/i18n';
+import { APP_LANGUAGES, LANGUAGE_LABEL_KEYS, type AppLanguage } from '@/src/i18n';
 import { initialsFrom, roleSubtitle } from '@/src/utils/userDisplay';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
 
@@ -17,17 +19,23 @@ type RowProps = {
   label: string;
   value?: string;
   danger?: boolean;
+  /** When true, shows a down chevron (dropdown). Default forward chevron when no value. */
+  dropdown?: boolean;
   onPress: () => void;
 };
 
-function AccountRow({ icon, label, value, danger, onPress }: RowProps) {
+function AccountRow({ icon, label, value, danger, dropdown, onPress }: RowProps) {
   const { colors: c } = useTheme();
   return (
     <Pressable style={[styles.row, { backgroundColor: c.card, borderColor: c.border }]} onPress={onPress}>
       <Ionicons name={icon} size={22} color={danger ? c.error : c.muted} style={styles.rowIcon} />
       <Text style={[styles.rowLabel, { color: danger ? c.error : c.text }]}>{label}</Text>
       {value ? <Text style={[styles.rowValue, { color: c.dim }]}>{value}</Text> : null}
-      {!value ? <Ionicons name="chevron-forward" size={18} color={c.dim} /> : null}
+      {dropdown ? (
+        <Ionicons name="chevron-down" size={18} color={c.dim} style={styles.rowCaret} />
+      ) : !value ? (
+        <Ionicons name="chevron-forward" size={18} color={c.dim} />
+      ) : null}
     </Pressable>
   );
 }
@@ -40,6 +48,7 @@ export default function AccountScreen() {
   const { t } = useTranslation();
   const { isTablet, pagePadding } = useResponsiveLayout();
   const owner = isGymOwner(user?.role);
+  const [langOpen, setLangOpen] = useState(false);
 
   if (!user || !hasGymPortalAccess(user.role)) {
     return <Redirect href="/login" />;
@@ -49,8 +58,9 @@ export default function AccountScreen() {
   const themeLabel = theme === 'dark' ? t('profile.themeDark') : t('profile.themeLight');
   const langLabel = t(LANGUAGE_LABEL_KEYS[language]);
 
-  const toggleLanguage = () => {
-    void setLanguage(nextLanguage(language));
+  const pickLanguage = (lng: AppLanguage) => {
+    void setLanguage(lng);
+    setLangOpen(false);
   };
 
   const handleLogout = () => {
@@ -80,7 +90,13 @@ export default function AccountScreen() {
         <View style={isTablet ? styles.menuColumn : undefined}>
           <Text style={[styles.section, { color: c.dim }]}>{t('account.preferences')}</Text>
           <AccountRow icon={theme === 'dark' ? 'moon-outline' : 'sunny-outline'} label={t('profile.appearance')} value={themeLabel} onPress={cycleTheme} />
-          <AccountRow icon="language-outline" label={t('profile.language')} value={langLabel} onPress={toggleLanguage} />
+          <AccountRow
+            icon="language-outline"
+            label={t('profile.language')}
+            value={langLabel}
+            dropdown
+            onPress={() => setLangOpen(true)}
+          />
           {isTablet ? (
             <>
               <Text style={[styles.section, { color: c.dim }]}>{t('account.session')}</Text>
@@ -106,6 +122,17 @@ export default function AccountScreen() {
       ) : null}
       </ResponsiveContent>
     </ScrollView>
+
+    <BottomSheet visible={langOpen} title={t('profile.language')} onClose={() => setLangOpen(false)}>
+      {APP_LANGUAGES.map((lng) => (
+        <SheetOption
+          key={lng}
+          label={t(LANGUAGE_LABEL_KEYS[lng])}
+          selected={lng === language}
+          onPress={() => pickLanguage(lng)}
+        />
+      ))}
+    </BottomSheet>
     </TabScreenFrame>
   );
 }
@@ -145,7 +172,8 @@ const styles = StyleSheet.create({
   },
   rowIcon: { marginRight: 12 },
   rowLabel: { flex: 1, fontSize: 16, fontWeight: '600' },
-  rowValue: { fontSize: 13, fontWeight: '700' },
+  rowValue: { fontSize: 13, fontWeight: '700', marginRight: 4 },
+  rowCaret: { marginLeft: 2 },
   menuGrid: { gap: 0 },
   menuGridTablet: { flexDirection: 'row', gap: 20, alignItems: 'flex-start' },
   menuColumn: { width: '48.5%', flexGrow: 0 },

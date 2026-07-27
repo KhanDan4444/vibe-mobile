@@ -21,12 +21,12 @@ import { AppText as Text, AppTextInput as TextInput } from '@/src/components/App
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
-import { ApiError } from '@/src/api/client';
 import { AuthScreen } from '@/src/components/AuthScreen';
 import { LoginBrandPanel } from '@/src/components/LoginBrandPanel';
 import { useBootSplash } from '@/src/context/BootSplashContext';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
+import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { hasGymPortalAccess, isPlatformAdmin } from '@/src/utils/roles';
 import { API_BASE_URL } from '@/src/config/api';
 
@@ -76,9 +76,14 @@ export default function LoginScreen() {
     transform: [{ scale: 1 - pressed.value * 0.02 }],
   }));
 
+  const fieldRing = (field: Field) => ({
+    // Filled pad (not a stroked border) — Android draws rounded strokes unevenly at corners.
+    backgroundColor: focused === field ? 'rgba(45, 212, 191, 0.28)' : 'transparent',
+  });
+
   const fieldColors = (field: Field) => ({
-    backgroundColor: focused === field ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.07)',
-    borderColor: focused === field ? 'rgba(45, 212, 191, 0.55)' : 'rgba(255, 255, 255, 0.14)',
+    backgroundColor: focused === field ? 'rgba(255, 255, 255, 0.14)' : 'rgba(255, 255, 255, 0.07)',
+    borderColor: focused === field ? 'rgba(94, 234, 212, 0.55)' : 'rgba(255, 255, 255, 0.2)',
   });
 
   const handleSubmit = async () => {
@@ -101,7 +106,9 @@ export default function LoginScreen() {
       }
       router.replace('/(tabs)');
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : t('auth.loginFailed'));
+      setError(
+        userFacingApiMessage(err, t('auth.connectionFailed'), t('auth.loginFailed'))
+      );
     } finally {
       setLoading(false);
     }
@@ -128,57 +135,61 @@ export default function LoginScreen() {
                 </Text>
               ) : null}
 
-              <View style={[s.inputShell, fieldColors('identifier')]}>
-                <TextInput
-                  latin={identifierLatin}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  autoComplete="username"
-                  keyboardType="email-address"
-                  returnKeyType="next"
-                  value={identifier}
-                  onChangeText={setIdentifier}
-                  onFocus={() => setFocused('identifier')}
-                  onBlur={() => setFocused(null)}
-                  onSubmitEditing={() => passwordRef.current?.focus()}
-                  style={[s.inputField, { color: '#f8fafc' }]}
-                  placeholder={t('auth.identifier')}
-                  placeholderTextColor="rgba(226, 232, 240, 0.45)"
-                  accessibilityLabel={t('auth.identifier')}
-                />
+              <View style={[s.inputRing, fieldRing('identifier')]}>
+                <View style={[s.inputShell, fieldColors('identifier')]}>
+                  <TextInput
+                    latin={identifierLatin}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    autoComplete="username"
+                    keyboardType="email-address"
+                    returnKeyType="next"
+                    value={identifier}
+                    onChangeText={setIdentifier}
+                    onFocus={() => setFocused('identifier')}
+                    onBlur={() => setFocused(null)}
+                    onSubmitEditing={() => passwordRef.current?.focus()}
+                    style={[s.inputField, { color: '#f8fafc' }]}
+                    placeholder={t('auth.identifier')}
+                    placeholderTextColor="rgba(226, 232, 240, 0.45)"
+                    accessibilityLabel={t('auth.identifier')}
+                  />
+                </View>
               </View>
 
-              <View style={[s.inputShell, s.inputShellTight, fieldColors('password')]}>
-                <TextInput
-                  latin={passwordLatin}
-                  ref={passwordRef}
-                  secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                  autoComplete="password"
-                  returnKeyType="go"
-                  value={password}
-                  onChangeText={setPassword}
-                  onFocus={() => setFocused('password')}
-                  onBlur={() => setFocused(null)}
-                  onSubmitEditing={handleSubmit}
-                  style={[s.inputField, { color: '#f8fafc' }]}
-                  placeholder={t('auth.password')}
-                  placeholderTextColor="rgba(226, 232, 240, 0.45)"
-                  accessibilityLabel={t('auth.password')}
-                />
-                <Pressable
-                  onPress={() => setShowPassword((v) => !v)}
-                  hitSlop={12}
-                  style={s.eyeButton}
-                  accessibilityRole="button"
-                  accessibilityLabel={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
-                >
-                  <Ionicons
-                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                    size={isTablet ? 22 : 20}
-                    color={focused === 'password' ? c.accentText : 'rgba(226, 232, 240, 0.45)'}
+              <View style={[s.inputRing, s.inputRingTight, fieldRing('password')]}>
+                <View style={[s.inputShell, fieldColors('password')]}>
+                  <TextInput
+                    latin={passwordLatin}
+                    ref={passwordRef}
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                    autoComplete="password"
+                    returnKeyType="go"
+                    value={password}
+                    onChangeText={setPassword}
+                    onFocus={() => setFocused('password')}
+                    onBlur={() => setFocused(null)}
+                    onSubmitEditing={handleSubmit}
+                    style={[s.inputField, { color: '#f8fafc' }]}
+                    placeholder={t('auth.password')}
+                    placeholderTextColor="rgba(226, 232, 240, 0.45)"
+                    accessibilityLabel={t('auth.password')}
                   />
-                </Pressable>
+                  <Pressable
+                    onPress={() => setShowPassword((v) => !v)}
+                    hitSlop={12}
+                    style={s.eyeButton}
+                    accessibilityRole="button"
+                    accessibilityLabel={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+                  >
+                    <Ionicons
+                      name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                      size={isTablet ? 22 : 20}
+                      color={focused === 'password' ? c.accentText : 'rgba(226, 232, 240, 0.45)'}
+                    />
+                  </Pressable>
+                </View>
               </View>
 
               <Pressable style={s.forgotLink} hitSlop={8} onPress={() => router.push('/forgot-password' as never)}>
@@ -247,16 +258,20 @@ const phoneStyles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 4,
   },
+  inputRing: {
+    borderRadius: 16,
+    padding: 2,
+    marginBottom: 12,
+  },
+  inputRingTight: {
+    marginBottom: 8,
+  },
   inputShell: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 16,
+    borderWidth: 1,
+    borderRadius: 14,
     paddingHorizontal: 16,
-    marginBottom: 12,
-  },
-  inputShellTight: {
-    marginBottom: 8,
   },
   inputField: {
     flex: 1,
@@ -311,16 +326,20 @@ const tabletStyles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 8,
   },
+  inputRing: {
+    borderRadius: 18,
+    padding: 2,
+    marginBottom: 14,
+  },
+  inputRingTight: {
+    marginBottom: 10,
+  },
   inputShell: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 18,
+    borderWidth: 1,
+    borderRadius: 16,
     paddingHorizontal: 18,
-    marginBottom: 14,
-  },
-  inputShellTight: {
-    marginBottom: 10,
   },
   inputField: {
     flex: 1,

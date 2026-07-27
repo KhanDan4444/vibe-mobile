@@ -9,6 +9,7 @@ import { ErrorBanner, Field, FormScroll, Label, PrimaryButton } from '@/src/comp
 import { AuthScreen } from '@/src/components/AuthScreen';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { isValidEthiopianPhone } from '@/src/utils/phone';
+import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 
 const USERNAME_RE = /^[a-z0-9._]+$/i;
 
@@ -51,7 +52,7 @@ export default function ForgotPasswordScreen() {
       setStep('reset');
       setMessage(data.message || t('forgot.otpSent'));
     } catch (e) {
-      setError(e instanceof Error ? e.message : t('forgot.requestFailed'));
+      setError(userFacingApiMessage(e, t('auth.connectionFailed'), t('forgot.requestFailed')));
     } finally {
       setLoading(false);
     }
@@ -77,7 +78,7 @@ export default function ForgotPasswordScreen() {
       setSuccessMessage(data.message || t('forgot.updatedBody'));
       setSuccessOpen(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : t('forgot.resetFailed'));
+      setError(userFacingApiMessage(e, t('auth.connectionFailed'), t('forgot.resetFailed')));
     } finally {
       setLoading(false);
     }

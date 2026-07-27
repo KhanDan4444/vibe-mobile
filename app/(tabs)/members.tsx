@@ -27,6 +27,7 @@ import type { ThemeColors } from '@/src/theme/tokens';
 import { radiusMd } from '@/src/theme/tokens';
 import { DEFAULT_MEMBER_SORT, MEMBER_SORT_OPTIONS, type MemberSortId } from '@/src/utils/listSort';
 import { isGymOwner } from '@/src/utils/roles';
+import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import type { MemberRow } from '@/src/types/api';
 
 type MemberFilter = 'all' | 'active' | 'due_soon' | 'expired' | 'unpaid';
@@ -375,7 +376,7 @@ export default function MembersScreen() {
       ) : query.isError ? (
         <View style={styles.errorWrap}>
           <Text style={styles.errorText}>
-            {query.error instanceof Error ? query.error.message : t('gymBoot.errorBody')}
+            {userFacingApiMessage(query.error, t('gymBoot.errorBody'), t('gymBoot.errorBody'))}
           </Text>
           <SecondaryButton label={t('gymBoot.retry')} onPress={() => void query.refetch()} />
         </View>

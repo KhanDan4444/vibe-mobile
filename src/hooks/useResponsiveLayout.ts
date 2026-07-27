@@ -16,9 +16,20 @@ export function useResponsiveLayout() {
   const listColumns = isTablet ? 2 : 1;
   const statColumns = isTablet ? 4 : 2;
 
-  /** Width % for stat cards in a wrapping row (gap handled separately). */
+  /**
+   * Stat cards in a wrapping row with `gap`. Use flex grow (not fixed %) so the
+   * last column lines up with full-width cards above/below.
+   */
+  const statCardLayoutStyle =
+    statColumns === 4
+      ? ({ flexGrow: 1, flexBasis: '21%', minWidth: '21%' } as const)
+      : ({ flexGrow: 1, flexBasis: '40%', minWidth: '40%' } as const);
+  /** @deprecated Prefer statCardLayoutStyle — kept for older call sites. */
   const statCardWidthPercent = statColumns === 4 ? '23.5%' : '47%';
   /** Reports has 5 cards — prefer 3+2 over a lonely stretched fifth. */
+  const reportStatLayoutStyle = isTablet
+    ? ({ flexGrow: 1, flexBasis: '30%', minWidth: '30%', maxWidth: '32.5%' } as const)
+    : ({ flexGrow: 1, flexBasis: '40%', minWidth: '40%', maxWidth: '48.5%' } as const);
   const reportStatWidthPercent = isTablet ? '31.5%' : '47%';
 
   const formMaxWidth = isTablet ? 440 : width;
@@ -49,7 +60,9 @@ export function useResponsiveLayout() {
     pagePadding,
     listColumns,
     statColumns,
+    statCardLayoutStyle,
     statCardWidthPercent,
+    reportStatLayoutStyle,
     reportStatWidthPercent,
     formMaxWidth,
     tabIconSize,
