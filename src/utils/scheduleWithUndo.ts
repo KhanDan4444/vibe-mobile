@@ -36,7 +36,7 @@ export function scheduleDeleteWithUndo({
         title: t(`${committedKey}.title`),
         subtitle: t(`${committedKey}.subtitle`, subtitleParams),
         variant: 'danger',
-        durationMs: 1500,
+        durationMs: 1000,
       });
     } catch (err) {
       onUndo();
