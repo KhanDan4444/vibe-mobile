@@ -24,7 +24,7 @@ export function fetchGymSubscription(token: string) {
 export function requestForgotPasswordOtp(identifier: string) {
   const trimmed = identifier.trim();
   const phone = normalizeEthiopianPhone(trimmed);
-  return apiRequest<{ message?: string; sessionId?: string }>('/auth/forgot-password/request-otp', {
+  return apiRequest<{ message?: string; sessionId: string; expiresAt?: string }>('/auth/forgot-password/request-otp', {
     method: 'POST',
     body: JSON.stringify({ username: phone || trimmed.toLowerCase() }),
   });

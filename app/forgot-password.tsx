@@ -47,7 +47,6 @@ export default function ForgotPasswordScreen() {
     setLoading(true);
     try {
       const data = await requestForgotPasswordOtp(trimmed);
-      if (!data.sessionId) throw new Error(t('forgot.noSession'));
       setSessionId(data.sessionId);
       setStep('reset');
       setMessage(data.message || t('forgot.otpSent'));
