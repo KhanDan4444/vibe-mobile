@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 
-const APP_ICON = require('@/assets/images/icon.png');
+const APP_ICON = require('@/assets/images/login-mark.png');
 
 export function LoginBrandPanel() {
   const { t, i18n } = useTranslation();
@@ -16,7 +16,7 @@ export function LoginBrandPanel() {
 
   return (
     <View style={s.wrap}>
-      {/* Same asset as the home-screen / launcher icon */}
+      {/* Flat mark only — no squircle plate (avoids edge line on the login gradient) */}
       <Image source={APP_ICON} style={s.icon} resizeMode="contain" accessibilityLabel="ንቁ" />
       <Text latin={sloganLatin} style={[s.slogan, { color: c.accentText }]}>
         {t('auth.brandSlogan')}
