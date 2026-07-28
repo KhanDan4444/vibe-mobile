@@ -34,17 +34,13 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 type Field = 'identifier' | 'password';
 
-/** Match web login: border-teal-300/55, bg-white/14, ring-teal-400/25 */
+/** Focus: teal border only — no inner fill or outer glow. */
 const LOGIN_FIELD = {
-  blur: {
+  shell: {
     backgroundColor: 'rgba(255, 255, 255, 0.07)',
     borderColor: 'rgba(255, 255, 255, 0.2)',
   },
-  focus: {
-    backgroundColor: 'rgba(255, 255, 255, 0.14)',
-    borderColor: 'rgba(94, 234, 212, 0.55)',
-  },
-  ring: 'rgba(45, 212, 191, 0.25)',
+  focusBorder: 'rgba(94, 234, 212, 0.55)',
 } as const;
 
 export default function LoginScreen() {
@@ -89,11 +85,10 @@ export default function LoginScreen() {
     transform: [{ scale: 1 - pressed.value * 0.02 }],
   }));
 
-  const fieldRing = (field: Field) => ({
-    backgroundColor: focused === field ? LOGIN_FIELD.ring : 'transparent',
+  const fieldShell = (field: Field) => ({
+    backgroundColor: LOGIN_FIELD.shell.backgroundColor,
+    borderColor: focused === field ? LOGIN_FIELD.focusBorder : LOGIN_FIELD.shell.borderColor,
   });
-
-  const fieldShell = (field: Field) => (focused === field ? LOGIN_FIELD.focus : LOGIN_FIELD.blur);
 
   const handleSubmit = async () => {
     setError('');
@@ -144,7 +139,7 @@ export default function LoginScreen() {
                 </Text>
               ) : null}
 
-              <View style={[s.inputRing, fieldRing('identifier')]}>
+              <View style={s.inputRing}>
                 <View style={[s.inputShell, fieldShell('identifier')]}>
                   <TextInput
                     latin={identifierLatin}
@@ -168,7 +163,7 @@ export default function LoginScreen() {
                 </View>
               </View>
 
-              <View style={[s.inputRing, s.inputRingTight, fieldRing('password')]}>
+              <View style={[s.inputRing, s.inputRingTight]}>
                 <View style={[s.inputShell, fieldShell('password')]}>
                   <TextInput
                     latin={passwordLatin}
@@ -273,7 +268,6 @@ const phoneStyles = StyleSheet.create({
   },
   inputRing: {
     borderRadius: 16,
-    padding: 2,
     marginBottom: 12,
   },
   inputRingTight: {
@@ -341,7 +335,6 @@ const tabletStyles = StyleSheet.create({
   },
   inputRing: {
     borderRadius: 18,
-    padding: 2,
     marginBottom: 14,
   },
   inputRingTight: {
