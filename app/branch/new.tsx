@@ -64,17 +64,17 @@ export default function NewBranchScreen() {
         <FormScroll>
           <ErrorBanner message={error} />
 
-          <Label>Branch name</Label>
+          <Label>{t('branchEdit.name')}</Label>
           <Field value={name} onChangeText={setName} autoCapitalize="words" />
 
-          <Label>Phone (optional)</Label>
+          <Label>{t('branchEdit.phone')}</Label>
           <Field value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
 
-          <Label>Address (optional)</Label>
+          <Label>{t('branchEdit.address')}</Label>
           <Field value={address} onChangeText={setAddress} autoCapitalize="sentences" />
 
           <PrimaryButton
-            label={t('common.create')}
+            label={t('screens.newBranch')}
             onPress={() => {
               setError('');
               mutation.mutate({

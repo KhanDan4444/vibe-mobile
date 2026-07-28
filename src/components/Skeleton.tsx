@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -112,6 +113,7 @@ type PageSkeletonProps = {
 
 /** Full-page / section skeleton for initial data loads (replaces spinners). */
 export function PageSkeleton({ variant = 'list-rows', count, padded = true, style }: PageSkeletonProps) {
+  const { t } = useTranslation();
   const { pagePadding } = useResponsiveLayout();
   const { colors: c } = useTheme();
   const n = count ?? defaultCount(variant);
@@ -187,7 +189,7 @@ export function PageSkeleton({ variant = 'list-rows', count, padded = true, styl
   return (
     <View
       style={[padded ? { paddingHorizontal: pagePadding, paddingTop: 8 } : null, style]}
-      accessibilityLabel="Loading"
+      accessibilityLabel={t('common.loading')}
       accessibilityRole="progressbar"
     >
       {body}

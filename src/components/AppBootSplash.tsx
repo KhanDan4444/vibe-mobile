@@ -1,6 +1,7 @@
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Animated, {
   Easing,
   interpolate,
@@ -26,6 +27,7 @@ type Props = {
 };
 
 export function AppBootSplash({ releaseNative = true }: Props) {
+  const { t } = useTranslation();
   // Starts at 1 so the native → JS handoff is pixel-stable, then breathes gently.
   const breathe = useSharedValue(1);
   const glow = useSharedValue(0);
@@ -68,7 +70,7 @@ export function AppBootSplash({ releaseNative = true }: Props) {
   }));
 
   return (
-    <View style={styles.root} accessibilityLabel="Loading">
+    <View style={styles.root} accessibilityLabel={t('common.loading')}>
       {/* Soft teal ambience so the field reads as brand-dark, not flat black */}
       <Animated.View style={[StyleSheet.absoluteFill, glowAnim]} pointerEvents="none">
         <Svg width="100%" height="100%">

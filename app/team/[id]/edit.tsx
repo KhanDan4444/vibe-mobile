@@ -1,6 +1,7 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { AppText as Text } from '@/src/components/AppText';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -15,6 +16,7 @@ import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { isGymOwner } from '@/src/utils/roles';
 
 export default function EditStaffScreen() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const staffId = Number(id);
   const router = useRouter();
@@ -90,7 +92,9 @@ export default function EditStaffScreen() {
     onSuccess: () => {
       setResetPassword('');
       setError('');
-      setResetNotice(`${staff?.name || 'Staff'} can sign in with the new password.`);
+      setResetNotice(
+        t('team.passwordUpdatedBody', { name: staff?.name || t('team.staffFallback') }),
+      );
     },
     onError: (e: Error) => setError(e.message),
   });
@@ -105,7 +109,7 @@ export default function EditStaffScreen() {
   if (subscription?.readOnly) {
     return (
       <Screen>
-        <Text style={styles.readOnly}>Gym is read-only.</Text>
+        <Text style={styles.readOnly}>{t('common.readOnlyShort')}</Text>
       </Screen>
     );
   }
@@ -132,7 +136,7 @@ export default function EditStaffScreen() {
   if (!staff) {
     return (
       <Screen>
-        <Text style={styles.readOnly}>Staff account not found.</Text>
+        <Text style={styles.readOnly}>{t('team.notFound')}</Text>
       </Screen>
     );
   }
@@ -143,19 +147,19 @@ export default function EditStaffScreen() {
         <FormScroll>
           <ErrorBanner message={error} />
 
-          <Label>Name</Label>
+          <Label>{t('forms.name')}</Label>
           <Field value={name} onChangeText={setName} autoCapitalize="words" />
 
-          <Label>Username</Label>
+          <Label>{t('forms.username')}</Label>
           <Field value={username} onChangeText={setUsername} autoCapitalize="none" />
 
-          <Label>Email (optional)</Label>
+          <Label>{t('forms.emailOptional')}</Label>
           <Field value={email} onChangeText={setEmail} autoCapitalize="none" />
 
           <BranchPicker branches={branches} value={branchId} onChange={setBranchId} />
 
           <PrimaryButton
-            label="Save changes"
+            label={t('common.save')}
             onPress={() => {
               setError('');
               saveMutation.mutate();
@@ -165,10 +169,10 @@ export default function EditStaffScreen() {
           />
 
           <View style={styles.divider} />
-          <Text style={styles.sectionTitle}>Reset password</Text>
-          <Text style={styles.sectionHint}>Set a new login password for this staff member.</Text>
+          <Text style={styles.sectionTitle}>{t('team.resetPassword')}</Text>
+          <Text style={styles.sectionHint}>{t('team.resetPasswordHint')}</Text>
 
-          <Label>New password</Label>
+          <Label>{t('forgot.newPassword')}</Label>
           <Field
             value={resetPassword}
             onChangeText={setResetPassword}
@@ -184,13 +188,15 @@ export default function EditStaffScreen() {
             }}
             disabled={!canReset || resetMutation.isPending}
           >
-            <Text style={styles.resetBtnText}>{resetMutation.isPending ? 'Updating…' : 'Reset password'}</Text>
+            <Text style={styles.resetBtnText}>
+              {resetMutation.isPending ? t('common.updating') : t('team.resetPassword')}
+            </Text>
           </Pressable>
         </FormScroll>
       </KeyboardAvoidingView>
       <ConfirmDialog
         visible={Boolean(resetNotice)}
-        title="Password updated"
+        title={t('team.passwordUpdatedTitle')}
         message={resetNotice}
         alertOnly
         destructive={false}

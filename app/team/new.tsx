@@ -1,6 +1,7 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { AppText as Text } from '@/src/components/AppText';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -12,6 +13,7 @@ import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { isGymOwner } from '@/src/utils/roles';
 
 export default function NewStaffScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { token, user, subscription } = useAuth();
@@ -71,7 +73,7 @@ export default function NewStaffScreen() {
   if (subscription?.readOnly) {
     return (
       <Screen>
-        <Text style={styles.readOnly}>Gym is read-only.</Text>
+        <Text style={styles.readOnly}>{t('common.readOnlyShort')}</Text>
       </Screen>
     );
   }
@@ -82,22 +84,22 @@ export default function NewStaffScreen() {
         <FormScroll>
           <ErrorBanner message={error} />
 
-          <Label>Name</Label>
+          <Label>{t('forms.name')}</Label>
           <Field value={name} onChangeText={setName} autoCapitalize="words" />
 
-          <Label>Username</Label>
+          <Label>{t('forms.username')}</Label>
           <Field value={username} onChangeText={setUsername} autoCapitalize="none" />
 
-          <Label>Email (optional)</Label>
+          <Label>{t('forms.emailOptional')}</Label>
           <Field value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
 
-          <Label>Password</Label>
+          <Label>{t('forms.password')}</Label>
           <Field value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />
 
           <BranchPicker branches={branches} value={branchId} onChange={setBranchId} />
 
           <PrimaryButton
-            label="Create staff account"
+            label={t('screens.addStaff')}
             onPress={() => {
               setError('');
               mutation.mutate();

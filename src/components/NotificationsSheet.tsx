@@ -47,6 +47,7 @@ function NotificationRow({
   onDismiss: () => void;
   isLast: boolean;
 }) {
+  const { t } = useTranslation();
   const action = !readOnly ? notificationAction(item) : null;
   const palette = colorsForType(item.type, c);
 
@@ -85,7 +86,7 @@ function NotificationRow({
         ) : null}
       </Pressable>
 
-      <Pressable onPress={onDismiss} hitSlop={10} style={styles.dismissBtn} accessibilityLabel="Dismiss">
+      <Pressable onPress={onDismiss} hitSlop={10} style={styles.dismissBtn} accessibilityLabel={t('common.dismiss')}>
         <Ionicons name="close" size={16} color={c.dim} />
       </Pressable>
     </View>

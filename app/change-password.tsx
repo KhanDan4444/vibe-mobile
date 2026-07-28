@@ -39,11 +39,11 @@ export default function ChangePasswordScreen() {
   const handleSubmit = () => {
     setError('');
     if (newPassword !== confirmPassword) {
-      setError('New passwords do not match.');
+      setError(t('forgot.passwordMismatch'));
       return;
     }
     if (newPassword === currentPassword) {
-      setError('New password must be different from the current password.');
+      setError(t('forms.passwordSame'));
       return;
     }
     mutation.mutate();
@@ -64,17 +64,17 @@ export default function ChangePasswordScreen() {
             <View style={{ width: '100%', maxWidth: formMaxWidth }}>
               <ErrorBanner message={error} />
 
-              <Label>Current password</Label>
+              <Label>{t('forms.currentPassword')}</Label>
               <Field value={currentPassword} onChangeText={setCurrentPassword} secureTextEntry autoCapitalize="none" />
 
-              <Label>New password</Label>
+              <Label>{t('forgot.newPassword')}</Label>
               <Field value={newPassword} onChangeText={setNewPassword} secureTextEntry autoCapitalize="none" />
 
-              <Label>Confirm new password</Label>
+              <Label>{t('forms.confirmNewPassword')}</Label>
               <Field value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry autoCapitalize="none" />
 
               <PrimaryButton
-                label="Update password"
+                label={t('forgot.updatePassword')}
                 onPress={handleSubmit}
                 loading={mutation.isPending}
                 disabled={!canSubmit}
@@ -85,8 +85,8 @@ export default function ChangePasswordScreen() {
       </TabScreenFrame>
       <ConfirmDialog
         visible={successOpen}
-        title="Password updated"
-        message="Your password has been changed."
+        title={t('forgot.updatedTitle')}
+        message={t('forms.passwordChangedBody')}
         alertOnly
         destructive={false}
         confirmLabel={t('common.ok')}

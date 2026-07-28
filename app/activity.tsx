@@ -38,6 +38,7 @@ function ActivityItem({
   multiColumn?: boolean;
   columnStyle?: object;
 }) {
+  const { t } = useTranslation();
   const styles = useThemedStyles((c) => ({
     card: {
       backgroundColor: c.card,
@@ -56,18 +57,18 @@ function ActivityItem({
     actor: { marginTop: 8, fontSize: 12, color: c.dim },
   }));
 
-  const details = formatAuditDetails(entry);
+  const details = formatAuditDetails(entry, t);
 
   return (
     <View style={[styles.card, multiColumn && styles.cardColumn, multiColumn && columnStyle]}>
       <View style={styles.cardHeader}>
-        <Text style={styles.action}>{formatAuditAction(entry.action)}</Text>
+        <Text style={styles.action}>{formatAuditAction(entry.action, t)}</Text>
         <Text style={styles.time}>{formatDisplayDateTime(entry.created_at)}</Text>
       </View>
       {entry.entity_label ? <Text style={styles.entity}>{entry.entity_label}</Text> : null}
       {details ? <Text style={styles.details}>{details}</Text> : null}
       <Text style={styles.actor}>
-        {entry.actor_name || entry.actor_email} · {formatActorRole(entry.actor_role)}
+        {entry.actor_name || entry.actor_email} · {formatActorRole(entry.actor_role, t)}
         {entry.branch_name ? ` · ${entry.branch_name}` : ''}
       </Text>
     </View>

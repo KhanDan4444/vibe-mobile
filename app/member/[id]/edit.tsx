@@ -185,9 +185,7 @@ export default function EditMemberScreen() {
             </View>
           ) : null}
 
-          <Text style={[styles.hint, { color: c.dim }]}>
-            Plan and dates cannot be edited here. Use Renew or Change plan on the member screen.
-          </Text>
+          <Text style={[styles.hint, { color: c.dim }]}>{t('member.planDatesLocked')}</Text>
 
           <PrimaryButton
             label={t('common.save')}

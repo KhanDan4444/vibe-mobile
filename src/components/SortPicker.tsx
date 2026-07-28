@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 
-type SortOption = { id: string; label: string };
+type SortOption = { id: string; label?: string; labelKey?: string };
 
 export function SortPicker<T extends string>({
   label,
@@ -34,7 +34,13 @@ export function SortPicker<T extends string>({
     btnText: { color: c.accentText, fontSize: 13, fontWeight: '600' as const },
   }));
 
-  const current = options.find((o) => o.id === value)?.label ?? label;
+  const resolve = (opt: SortOption | undefined) => {
+    if (!opt) return label;
+    if (opt.labelKey) return t(opt.labelKey);
+    return opt.label ?? label;
+  };
+
+  const current = resolve(options.find((o) => o.id === value));
 
   return (
     <>
@@ -46,7 +52,7 @@ export function SortPicker<T extends string>({
         {options.map((opt) => (
           <SheetOption
             key={opt.id}
-            label={opt.label}
+            label={resolve(opt)}
             selected={opt.id === value}
             onPress={() => {
               onChange(opt.id as T);

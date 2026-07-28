@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Niku",
-    "slug": "vibe-mobile",
+    "slug": "gym-saas",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -69,9 +69,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "d673a5a3-fbed-4a89-a1a5-d59486b1a4b9"
+        "projectId": "0991c1d0-7ba7-478f-9749-de78e24eacb9"
       }
     },
-    "owner": "danzol"
+    "owner": "mmoney1212s-team"
   }
 }

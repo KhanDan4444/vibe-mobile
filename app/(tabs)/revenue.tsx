@@ -15,7 +15,7 @@ import { BranchFilterBar } from '@/src/components/BranchFilterBar';
 import { RevenueFiltersSheet } from '@/src/components/RevenueFiltersSheet';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { EmptyState } from '@/src/components/EmptyState';
-import { PAYMENT_METHODS, paymentMethodBadgeStyle } from '@/src/constants/payments';
+import { PAYMENT_METHODS, paymentMethodBadgeStyle, paymentMethodLabelKey } from '@/src/constants/payments';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
@@ -126,7 +126,9 @@ function PaymentRowItem({
           {source ? ` · ${source}` : ''}
         </Text>
         <View style={[styles.methodBadge, { backgroundColor: badge.bg }]}>
-          <Text style={appTextStyle(language, { ...styles.methodBadgeText, color: badge.text })}>{payment.method}</Text>
+          <Text style={appTextStyle(language, { ...styles.methodBadgeText, color: badge.text })}>
+            {paymentMethodLabelKey(payment.method) ? t(paymentMethodLabelKey(payment.method)!) : payment.method}
+          </Text>
         </View>
       </View>
       <View style={styles.rowAmountCol}>
@@ -408,7 +410,11 @@ export default function RevenueScreen() {
         {Object.keys(byMethod).length > 0 ? (
           <View style={styles.methodStats}>
             {PAYMENT_METHODS.map((m) => (
-              <MethodStat key={m} label={m} amount={Number(byMethod[m] || 0)} />
+              <MethodStat
+                key={m}
+                label={t(paymentMethodLabelKey(m)!)}
+                amount={Number(byMethod[m] || 0)}
+              />
             ))}
           </View>
         ) : null}

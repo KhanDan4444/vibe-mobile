@@ -195,7 +195,7 @@ export default function ReportsScreen() {
       const { members, payments } = await loadFullExportData();
       const showBranch = showBranchFilter;
       let body = '';
-      let title = 'Vibe report';
+      let title = t('reports.vibeReport');
 
       if (kind === 'members') {
         body = membersToCsv(members, showBranch);
@@ -230,7 +230,7 @@ export default function ReportsScreen() {
       const { members, payments, revenueSummary: exportSummary } = await loadFullExportData();
       const showBranch = showBranchFilter;
       let html = '';
-      let title = 'Report';
+      let title = t('reports.shareTitle');
 
       if (kind === 'members') {
         html = buildMembersPdfHtml({
@@ -240,7 +240,7 @@ export default function ReportsScreen() {
           members,
           showBranch,
         });
-        title = 'Members report';
+        title = t('reports.membersReport');
       } else if (kind === 'revenue') {
         html = buildRevenuePdfHtml({
           gymName: displayGym,
@@ -250,7 +250,7 @@ export default function ReportsScreen() {
           summary: exportSummary,
           showBranch,
         });
-        title = 'Revenue report';
+        title = t('reports.revenueReport');
       } else {
         html = buildFullReportPdfHtml({
           gymName: displayGym,
@@ -262,7 +262,7 @@ export default function ReportsScreen() {
           revenueSummary: exportSummary,
           showBranch,
         });
-        title = 'Full gym report';
+        title = t('reports.fullGymReport');
       }
 
       await sharePdfFromHtml(html, title);

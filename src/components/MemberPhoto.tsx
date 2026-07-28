@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ActivityIndicator, Image, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { AppText as Text } from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
@@ -23,6 +24,7 @@ export function MemberPhoto({
   hasPhoto?: boolean;
   expandable?: boolean;
 }) {
+  const { t } = useTranslation();
   const { colors: c } = useTheme();
   const { data: cacheBust = 0 } = useQuery<number>({
     queryKey: memberPhotoBustQueryKey(memberId),
@@ -104,7 +106,7 @@ export function MemberPhoto({
     return (
       <>
         {canExpand ? (
-          <Pressable onPress={() => setExpanded(true)} accessibilityRole="button" accessibilityLabel={`View ${name} photo`}>
+          <Pressable onPress={() => setExpanded(true)} accessibilityRole="button" accessibilityLabel={t('photo.viewPhoto', { name })}>
             {image}
           </Pressable>
         ) : (
@@ -115,7 +117,7 @@ export function MemberPhoto({
           <Modal visible={expanded} transparent animationType="fade" onRequestClose={() => setExpanded(false)}>
             <View style={styles.lightbox}>
               <Pressable style={StyleSheet.absoluteFillObject} onPress={() => setExpanded(false)} />
-              <Pressable style={styles.closeBtn} onPress={() => setExpanded(false)} accessibilityRole="button" accessibilityLabel="Close photo">
+              <Pressable style={styles.closeBtn} onPress={() => setExpanded(false)} accessibilityRole="button" accessibilityLabel={t('common.closePhoto')}>
                 <Ionicons name="close" size={24} color="#fff" />
               </Pressable>
               <Image source={{ uri: src }} style={styles.lightboxImage} resizeMode="contain" />

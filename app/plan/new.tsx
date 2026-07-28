@@ -69,17 +69,17 @@ export default function NewPlanScreen() {
         <FormScroll>
           <ErrorBanner message={error} />
 
-          <Label>Plan name</Label>
-          <Field value={name} onChangeText={setName} autoCapitalize="words" placeholder="e.g. Monthly" />
+          <Label>{t('plans.nameLabel')}</Label>
+          <Field value={name} onChangeText={setName} autoCapitalize="words" placeholder={t('plans.namePlaceholder')} />
 
-          <Label>Duration (months)</Label>
+          <Label>{t('plans.durationLabel')}</Label>
           <Field value={duration} onChangeText={setDuration} keyboardType="numeric" placeholder="1" />
 
-          <Label>Price (ETB)</Label>
+          <Label>{t('plans.priceLabel')}</Label>
           <Field value={price} onChangeText={setPrice} keyboardType="decimal-pad" placeholder="0" />
 
           <PrimaryButton
-            label={t('common.create')}
+            label={t('screens.newPlan')}
             onPress={() => {
               setError('');
               mutation.mutate({

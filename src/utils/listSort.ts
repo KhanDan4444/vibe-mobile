@@ -1,15 +1,15 @@
 export const MEMBER_SORT_OPTIONS = [
-  { id: 'name_asc', label: 'Name A–Z' },
-  { id: 'name_desc', label: 'Name Z–A' },
-  { id: 'expiry_asc', label: 'Expiry soonest' },
-  { id: 'expiry_desc', label: 'Expiry latest' },
+  { id: 'name_asc', labelKey: 'common.sortNameAsc' },
+  { id: 'name_desc', labelKey: 'common.sortNameDesc' },
+  { id: 'expiry_asc', labelKey: 'common.sortExpiryAsc' },
+  { id: 'expiry_desc', labelKey: 'common.sortExpiryDesc' },
 ] as const;
 
 export const REVENUE_SORT_OPTIONS = [
-  { id: 'date_desc', label: 'Newest first' },
-  { id: 'date_asc', label: 'Oldest first' },
-  { id: 'name_asc', label: 'Member A–Z' },
-  { id: 'name_desc', label: 'Member Z–A' },
+  { id: 'date_desc', labelKey: 'common.sortNewest' },
+  { id: 'date_asc', labelKey: 'common.sortOldest' },
+  { id: 'name_asc', labelKey: 'revenue.sortMemberAsc' },
+  { id: 'name_desc', labelKey: 'revenue.sortMemberDesc' },
 ] as const;
 
 export type MemberSortId = (typeof MEMBER_SORT_OPTIONS)[number]['id'];

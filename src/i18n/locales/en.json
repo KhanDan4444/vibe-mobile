@@ -112,7 +112,18 @@
     "attentionTitle": "Unpaid attention",
     "viewUnpaid": "View unpaid",
     "emptyTitle": "No payments yet",
-    "emptyBody": "Payments show up here once members enroll or renew."
+    "emptyBody": "Payments show up here once members enroll or renew.",
+    "sortLabel": "Sort",
+    "paymentMethodLabel": "Payment method",
+    "customDateRange": "Custom date range",
+    "customRangeOn": "Custom range on",
+    "useCustomRange": "Use custom range",
+    "allMethods": "All methods",
+    "sortMemberAsc": "Member A–Z",
+    "sortMemberDesc": "Member Z–A",
+    "methodCash": "Cash",
+    "methodCard": "Card",
+    "methodBankTransfer": "Bank Transfer"
   },
   "forgot": {
     "title": "Reset password",
@@ -210,7 +221,9 @@
     "language": "Language",
     "english": "English",
     "amharic": "አማርኛ",
-    "afanOromo": "Afaan Oromoo"
+    "afanOromo": "Afaan Oromoo",
+    "gymSection": "Gym",
+    "loginSection": "Login"
   },
   "account": {
     "preferences": "Preferences",
@@ -288,7 +301,10 @@
     "preparing": "Preparing…",
     "actions": "Actions",
     "month_one": "{{count}} month",
-    "month_other": "{{count}} months"
+    "month_other": "{{count}} months",
+    "updating": "Updating…",
+    "sort": "Sort",
+    "closePhoto": "Close photo"
   },
   "branch": {
     "allBranches": "All branches",
@@ -406,7 +422,8 @@
     "deleteFailed": "Could not delete member.",
     "paymentHistory": "Payment history",
     "noPayments": "No payments yet.",
-    "manage": "Manage"
+    "manage": "Manage",
+    "planDatesLocked": "Plan and dates cannot be edited here. Use Renew or Change plan on the member screen."
   },
   "screens": {
     "account": "Account",
@@ -507,7 +524,17 @@
     "termPaymentAlreadyCollected": "Already collected",
     "termPaymentThisChange": "This plan change",
     "termPaymentTotalAfter": "Total after submit",
-    "termPaymentRevenueNote": "Each payment appears as its own row in Revenue. Changing plan more than once adds multiple payments — totals are the sum of cash collected."
+    "termPaymentRevenueNote": "Each payment appears as its own row in Revenue. Changing plan more than once adds multiple payments — totals are the sum of cash collected.",
+    "email": "Email",
+    "emailOptional": "Email (optional)",
+    "username": "Username",
+    "password": "Password",
+    "currentPassword": "Current password",
+    "confirmNewPassword": "Confirm new password",
+    "gymName": "Gym name",
+    "ownerName": "Owner name",
+    "passwordSame": "New password must be different from the current password.",
+    "passwordChangedBody": "Your password has been changed."
   },
   "validation": {
     "selectPlanAndDates": "Select a plan and valid dates.",
@@ -534,7 +561,8 @@
     "permissionBody": "Allow photo library access to add a member photo.",
     "cameraPermissionTitle": "Camera permission needed",
     "cameraPermissionBody": "Allow camera access to take a member photo.",
-    "errorTitle": "Photo error"
+    "errorTitle": "Photo error",
+    "viewPhoto": "View {{name}} photo"
   },
   "reports": {
     "title": "Reports",
@@ -553,7 +581,12 @@
     "exportFailed": "Export failed",
     "exportFailedBody": "Could not create PDF.",
     "shareReport": "Share report",
-    "shareReportSub": "Export members ({{memberFilter}}) and revenue ({{period}})"
+    "shareReportSub": "Export members ({{memberFilter}}) and revenue ({{period}})",
+    "shareTitle": "Report",
+    "vibeReport": "Vibe report",
+    "membersReport": "Members report",
+    "revenueReport": "Revenue report",
+    "fullGymReport": "Full gym report"
   },
   "activity": {
     "everyone": "Everyone",
@@ -562,7 +595,35 @@
     "empty": "No activity yet.",
     "filterLabel": "Show activity from",
     "emptyTitle": "No activity yet",
-    "emptyBody": "Events appear here as you enroll, renew, and collect payments."
+    "emptyBody": "Events appear here as you enroll, renew, and collect payments.",
+    "actions": {
+      "member_created": "Member created",
+      "member_enrolled": "Member enrolled",
+      "member_renewed": "Membership renewed",
+      "member_plan_changed": "Plan changed",
+      "member_updated": "Member updated",
+      "member_transferred": "Member transferred",
+      "member_deleted": "Member deleted",
+      "payment_recorded": "Payment recorded",
+      "payment_updated": "Payment updated",
+      "payment_deleted": "Payment deleted",
+      "plan_created": "Plan created",
+      "plan_updated": "Plan updated",
+      "plan_deleted": "Plan deleted",
+      "staff_created": "Staff added",
+      "staff_updated": "Staff updated"
+    },
+    "roles": {
+      "owner": "Owner",
+      "staff": "Staff",
+      "user": "User"
+    },
+    "details": {
+      "noPayment": "No payment recorded",
+      "accountDisabled": "Account disabled",
+      "accountEnabled": "Account enabled",
+      "role": "Role: {{role}}"
+    }
   },
   "messages": {
     "empty": "No SMS messages yet.",
@@ -588,7 +649,13 @@
     "enableBody": "Allow {{name}} to sign in?",
     "disableBody": "Block {{name}} from signing in?",
     "emptyTitle": "No staff yet",
-    "emptyBody": "Add help desk staff to manage members at the desk."
+    "emptyBody": "Add help desk staff to manage members at the desk.",
+    "notFound": "Staff account not found.",
+    "resetPassword": "Reset password",
+    "resetPasswordHint": "Set a new login password for this staff member.",
+    "passwordUpdatedTitle": "Password updated",
+    "passwordUpdatedBody": "{{name}} can sign in with the new password.",
+    "staffFallback": "Staff"
   },
   "plans": {
     "deleteTitle": "Delete plan",
@@ -601,7 +668,11 @@
     "activeMembers": "{{count}} active member(s)",
     "noActiveMembers": "No active members",
     "emptyTitle": "No plans yet",
-    "emptyBody": "Create a membership tier before enrolling members."
+    "emptyBody": "Create a membership tier before enrolling members.",
+    "nameLabel": "Plan name",
+    "namePlaceholder": "e.g. Monthly",
+    "durationLabel": "Duration (months)",
+    "priceLabel": "Price (ETB)"
   },
   "statusBreakdown": {
     "active": "Active",
@@ -612,6 +683,13 @@
   "branches": {
     "emptyTitle": "No branches yet",
     "emptyBody": "Add your first location to organize members by branch.",
-    "empty": "No branches found."
+    "empty": "No branches found.",
+    "membersCount": "{{count}} members",
+    "staffCount": "{{count}} staff"
+  },
+  "notFound": {
+    "title": "Oops!",
+    "body": "This screen doesn't exist.",
+    "goHome": "Go to home screen!"
   }
 }

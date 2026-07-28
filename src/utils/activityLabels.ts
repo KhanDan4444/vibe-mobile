@@ -1,34 +1,36 @@
+import type { TFunction } from 'i18next';
 import type { ActivityLogRow } from '@/src/types/api';
 
-const ACTION_LABELS: Record<string, string> = {
-  'member.created': 'Member created',
-  'member.enrolled': 'Member enrolled',
-  'member.renewed': 'Membership renewed',
-  'member.plan_changed': 'Plan changed',
-  'member.updated': 'Member updated',
-  'member.transferred': 'Member transferred',
-  'member.deleted': 'Member deleted',
-  'payment.recorded': 'Payment recorded',
-  'payment.updated': 'Payment updated',
-  'payment.deleted': 'Payment deleted',
-  'plan.created': 'Plan created',
-  'plan.updated': 'Plan updated',
-  'plan.deleted': 'Plan deleted',
-  'staff.created': 'Staff added',
-  'staff.updated': 'Staff updated',
+const ACTION_KEYS: Record<string, string> = {
+  'member.created': 'activity.actions.member_created',
+  'member.enrolled': 'activity.actions.member_enrolled',
+  'member.renewed': 'activity.actions.member_renewed',
+  'member.plan_changed': 'activity.actions.member_plan_changed',
+  'member.updated': 'activity.actions.member_updated',
+  'member.transferred': 'activity.actions.member_transferred',
+  'member.deleted': 'activity.actions.member_deleted',
+  'payment.recorded': 'activity.actions.payment_recorded',
+  'payment.updated': 'activity.actions.payment_updated',
+  'payment.deleted': 'activity.actions.payment_deleted',
+  'plan.created': 'activity.actions.plan_created',
+  'plan.updated': 'activity.actions.plan_updated',
+  'plan.deleted': 'activity.actions.plan_deleted',
+  'staff.created': 'activity.actions.staff_created',
+  'staff.updated': 'activity.actions.staff_updated',
 };
 
-export function formatAuditAction(action: string) {
-  return ACTION_LABELS[action] || action;
+export function formatAuditAction(action: string, t: TFunction) {
+  const key = ACTION_KEYS[action];
+  return key ? t(key) : action;
 }
 
-export function formatActorRole(role: string | null | undefined) {
-  if (role === 'Gym Owner') return 'Owner';
-  if (role === 'Gym Staff' || role === 'Help Desk') return 'Staff';
-  return role || 'User';
+export function formatActorRole(role: string | null | undefined, t: TFunction) {
+  if (role === 'Gym Owner') return t('activity.roles.owner');
+  if (role === 'Gym Staff' || role === 'Help Desk') return t('activity.roles.staff');
+  return role || t('activity.roles.user');
 }
 
-export function formatAuditDetails(entry: ActivityLogRow): string | null {
+export function formatAuditDetails(entry: ActivityLogRow, t: TFunction): string | null {
   const d = entry.details || {};
   const parts: string[] = [];
 
@@ -36,10 +38,10 @@ export function formatAuditDetails(entry: ActivityLogRow): string | null {
     const method = d.payment_method ? ` · ${d.payment_method}` : '';
     parts.push(`${Number(d.payment_amount).toLocaleString()} ETB${method}`);
   }
-  if (d.skip_payment) parts.push('No payment recorded');
-  if (d.staff_role) parts.push(`Role: ${d.staff_role}`);
-  if (d.is_active === false) parts.push('Account disabled');
-  if (d.is_active === true && entry.action === 'staff.updated') parts.push('Account enabled');
+  if (d.skip_payment) parts.push(t('activity.details.noPayment'));
+  if (d.staff_role) parts.push(t('activity.details.role', { role: d.staff_role }));
+  if (d.is_active === false) parts.push(t('activity.details.accountDisabled'));
+  if (d.is_active === true && entry.action === 'staff.updated') parts.push(t('activity.details.accountEnabled'));
   if (d.email && entry.entity_type === 'staff') parts.push(String(d.email));
   if (d.from_branch_name && d.to_branch_name) {
     parts.push(`${d.from_branch_name} → ${d.to_branch_name}`);

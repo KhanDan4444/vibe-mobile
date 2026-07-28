@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DateField } from '@/src/components/DateField';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { boundsForCustomRangeFrom, boundsForCustomRangeTo } from '@/src/utils/datePickerBounds';
-import { PAYMENT_METHODS } from '@/src/constants/payments';
+import { PAYMENT_METHODS, paymentMethodLabelKey } from '@/src/constants/payments';
 import { REVENUE_SORT_OPTIONS, type RevenueSortId } from '@/src/utils/listSort';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 
@@ -121,7 +121,7 @@ export function RevenueFiltersSheet({
           <Text style={styles.title}>{t('revenue.filters')}</Text>
 
           <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-            <Text style={styles.sectionLabel}>Sort</Text>
+            <Text style={styles.sectionLabel}>{t('revenue.sortLabel')}</Text>
             <View style={styles.optionGroup}>
               {REVENUE_SORT_OPTIONS.map((opt) => (
                 <Pressable
@@ -129,12 +129,14 @@ export function RevenueFiltersSheet({
                   style={[styles.option, sort === opt.id && styles.optionActive]}
                   onPress={() => onSortChange(opt.id)}
                 >
-                  <Text style={[styles.optionText, sort === opt.id && styles.optionTextActive]}>{opt.label}</Text>
+                  <Text style={[styles.optionText, sort === opt.id && styles.optionTextActive]}>
+                    {t(opt.labelKey)}
+                  </Text>
                 </Pressable>
               ))}
             </View>
 
-            <Text style={styles.sectionLabel}>Payment method</Text>
+            <Text style={styles.sectionLabel}>{t('revenue.paymentMethodLabel')}</Text>
             <View style={styles.optionGroup}>
               {(['All methods', ...PAYMENT_METHODS] as const).map((method) => (
                 <Pressable
@@ -142,17 +144,23 @@ export function RevenueFiltersSheet({
                   style={[styles.option, methodFilter === method && styles.optionActive]}
                   onPress={() => onMethodChange(method)}
                 >
-                  <Text style={[styles.optionText, methodFilter === method && styles.optionTextActive]}>{method}</Text>
+                  <Text style={[styles.optionText, methodFilter === method && styles.optionTextActive]}>
+                    {method === 'All methods'
+                      ? t('revenue.allMethods')
+                      : t(paymentMethodLabelKey(method)!)}
+                  </Text>
                 </Pressable>
               ))}
             </View>
 
-            <Text style={styles.sectionLabel}>Custom date range</Text>
+            <Text style={styles.sectionLabel}>{t('revenue.customDateRange')}</Text>
             <Pressable
               style={[styles.toggle, useCustomRange && styles.toggleActive]}
               onPress={() => onUseCustomRange(!useCustomRange)}
             >
-              <Text style={styles.toggleText}>{useCustomRange ? 'Custom range on' : 'Use custom range'}</Text>
+              <Text style={styles.toggleText}>
+                {useCustomRange ? t('revenue.customRangeOn') : t('revenue.useCustomRange')}
+              </Text>
             </Pressable>
             {useCustomRange ? (
               <View style={styles.dateRow}>

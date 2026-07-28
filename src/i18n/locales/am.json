@@ -112,7 +112,18 @@
     "attentionTitle": "ያልተከፈሉ ትኩረት",
     "viewUnpaid": "ያልተከፈሉን ይመልከቱ",
     "emptyTitle": "እስካሁን ክፍያ የለም",
-    "emptyBody": "አባላት ሲመዘገቡ ወይም ሲያድሱ ክፍያዎች እዚህ ይታያሉ።"
+    "emptyBody": "አባላት ሲመዘገቡ ወይም ሲያድሱ ክፍያዎች እዚህ ይታያሉ።",
+    "sortLabel": "ደርድር",
+    "paymentMethodLabel": "የክፍያ ዘዴ",
+    "customDateRange": "ብጁ የቀን ክልል",
+    "customRangeOn": "ብጁ ክልል በርቷል",
+    "useCustomRange": "ብጁ ክልል ተጠቀም",
+    "allMethods": "ሁሉም ዘዴዎች",
+    "sortMemberAsc": "አባል ሀ–ፐ",
+    "sortMemberDesc": "አባል ፐ–ሀ",
+    "methodCash": "ጥሬ ገንዘብ",
+    "methodCard": "ካርድ",
+    "methodBankTransfer": "የባንክ ዝውውር"
   },
   "forgot": {
     "title": "የይለፍ ቃል ዳግም ያስጀምሩ",
@@ -210,7 +221,9 @@
     "language": "ቋንቋ",
     "english": "English",
     "amharic": "አማርኛ",
-    "afanOromo": "Afaan Oromoo"
+    "afanOromo": "Afaan Oromoo",
+    "gymSection": "ጂም",
+    "loginSection": "መግቢያ"
   },
   "account": {
     "preferences": "ምርጫዎች",
@@ -229,7 +242,7 @@
     "branchesSub": "ቦታዎች እና ነባሪዎች",
     "messages": "የአባል SMS",
     "messagesSub": "የተላኩ ማስታወሻ መልዕክቶች",
-    "reports": "ሪፖርቶች",
+    "reports": "ሪፖርት",
     "reportsSub": "አባላትን እና ገቢን ወደ ውጭ ላክ"
   },
   "offline": {
@@ -261,7 +274,7 @@
   },
   "common": {
     "save": "ለውጦችን አስቀምጥ",
-    "create": "ፍጠር",
+    "create": "መዝግብ",
     "cancel": "ሰርዝ",
     "confirm": "አረጋግጥ",
     "ok": "እሺ",
@@ -288,7 +301,10 @@
     "preparing": "በማዘጋጀት ላይ…",
     "actions": "ተግባሮች",
     "month_one": "{{count}} ወር",
-    "month_other": "{{count}} ወራት"
+    "month_other": "{{count}} ወራት",
+    "updating": "በማዘመን ላይ…",
+    "sort": "ደርድር",
+    "closePhoto": "ፎቶ ዝጋ"
   },
   "branch": {
     "allBranches": "ሁሉም ቅርንጫፎች",
@@ -406,7 +422,8 @@
     "deleteFailed": "አባሉን መሰረዝ አልተቻለም።",
     "paymentHistory": "የክፍያ ታሪክ",
     "noPayments": "እስካሁን ክፍያ የለም።",
-    "manage": "አስተዳድር"
+    "manage": "አስተዳድር",
+    "planDatesLocked": "ዕቅድ እና ቀኖች እዚህ ሊታረሙ አይችሉም። በአባሉ ገጽ ላይ አድስ ወይም ዕቅድ ቀይር ይጠቀሙ።"
   },
   "screens": {
     "account": "መለያ",
@@ -417,19 +434,19 @@
     "changePlan": "ዕቅድ ቀይር",
     "editMember": "አባል አርትዕ",
     "transfer": "ቅርንጫፍ ቀይር",
-    "newPlan": "አዲስ ዕቅድ",
+    "newPlan": "ዕቅድ መዝግብ",
     "editPlan": "ዕቅድ አርትዕ",
     "editPayment": "ክፍያ አርትዕ",
     "team": "ሰራተኞች",
-    "addStaff": "ሰራተኛ ጨምር",
+    "addStaff": "ሰራተኛ መዝግብ",
     "editStaff": "ሰራተኛ አርትዕ",
     "branches": "ቅርንጫፎች",
-    "newBranch": "አዲስ ቅርንጫፍ",
+    "newBranch": "ቅርንጫፍ መዝግብ",
     "editBranch": "ቅርንጫፍ አርትዕ",
     "memberSms": "የአባል SMS",
     "gymProfile": "የጂም መገለጫ",
     "changePassword": "የይለፍ ቃል ይቀይሩ",
-    "reports": "ሪፖርቶች"
+    "reports": "ሪፖርት"
   },
   "forms": {
     "name": "ስም",
@@ -507,7 +524,17 @@
     "termPaymentAlreadyCollected": "ቀድሞ የተሰበሰበ",
     "termPaymentThisChange": "ይህ ዕቅድ ለውጥ",
     "termPaymentTotalAfter": "ከማስገባት በኋላ ጠቅላላ",
-    "termPaymentRevenueNote": "እያንዳንዱ ክፍያ በገቢ ውስጥ በተለያየ ረድፍ ይታያል። ዕቅድ ከአንድ በላይ መቀየር ብዙ ክፍያዎችን ይጨምራል — ጠቅላላው የተሰበሰበ ገንዘብ ነው።"
+    "termPaymentRevenueNote": "እያንዳንዱ ክፍያ በገቢ ውስጥ በተለያየ ረድፍ ይታያል። ዕቅድ ከአንድ በላይ መቀየር ብዙ ክፍያዎችን ይጨምራል — ጠቅላላው የተሰበሰበ ገንዘብ ነው።",
+    "email": "ኢሜይል",
+    "emailOptional": "ኢሜይል (አማራጭ)",
+    "username": "የተጠቃሚ ስም",
+    "password": "የይለፍ ቃል",
+    "currentPassword": "የአሁኑ የይለፍ ቃል",
+    "confirmNewPassword": "አዲሱን የይለፍ ቃል አረጋግጥ",
+    "gymName": "የጂም ስም",
+    "ownerName": "የባለቤት ስም",
+    "passwordSame": "አዲሱ የይለፍ ቃል ከአሁኑ የተለየ መሆን አለበት።",
+    "passwordChangedBody": "የይለፍ ቃልዎ ተቀይሯል።"
   },
   "validation": {
     "selectPlanAndDates": "ዕቅድ እና ትክክለኛ ቀኖችን ይምረጡ።",
@@ -534,10 +561,11 @@
     "permissionBody": "የአባል ፎቶ ለመጨመር የፎቶ ቤተ-መጽሐፍት መዳረሻ ይፍቀዱ።",
     "cameraPermissionTitle": "የካሜራ ፈቃድ ያስፈልጋል",
     "cameraPermissionBody": "የአባል ፎቶ ለማንሳት የካሜራ መዳረሻ ይፍቀዱ።",
-    "errorTitle": "የፎቶ ስህተት"
+    "errorTitle": "የፎቶ ስህተት",
+    "viewPhoto": "የ{{name}} ፎቶ ይመልከቱ"
   },
   "reports": {
-    "title": "ሪፖርቶች",
+    "title": "ሪፖርት",
     "yourGym": "ጂምዎ",
     "membersSection": "አባላት",
     "revenueSection": "ገቢ",
@@ -553,7 +581,12 @@
     "exportFailed": "ማስ่ง አልተሳካም",
     "exportFailedBody": "PDF መፍጠር አልተቻለም።",
     "shareReport": "ሪፖርት አጋራ",
-    "shareReportSub": "አባላት ({{memberFilter}}) እና ገቢ ({{period}}) ላክ"
+    "shareReportSub": "አባላት ({{memberFilter}}) እና ገቢ ({{period}}) ላክ",
+    "shareTitle": "ሪፖርት",
+    "vibeReport": "የVibe ሪፖርት",
+    "membersReport": "የአባላት ሪፖርት",
+    "revenueReport": "የገቢ ሪፖርት",
+    "fullGymReport": "ሙሉ የጂም ሪፖርት"
   },
   "activity": {
     "everyone": "ሁሉም",
@@ -562,7 +595,35 @@
     "empty": "እንቅስቃሴ እስካሁን የለም።",
     "filterLabel": "እንቅስቃሴ ከ",
     "emptyTitle": "እስካሁን እንቅስቃሴ የለም",
-    "emptyBody": "ሲመዘግቡ፣ ሲያድሱ እና ክፍያ ሲሰበስቡ ክስተቶች እዚህ ይታያሉ።"
+    "emptyBody": "ሲመዘግቡ፣ ሲያድሱ እና ክፍያ ሲሰበስቡ ክስተቶች እዚህ ይታያሉ።",
+    "actions": {
+      "member_created": "አባል ተፈጥሯል",
+      "member_enrolled": "አባል ተመዝግቧል",
+      "member_renewed": "አባልነት ታድሷል",
+      "member_plan_changed": "ዕቅድ ተቀይሯል",
+      "member_updated": "አባል ተዘምኗል",
+      "member_transferred": "አባል ተዛውሯል",
+      "member_deleted": "አባል ተሰርዟል",
+      "payment_recorded": "ክፍያ ተመዝግቧል",
+      "payment_updated": "ክፍያ ተዘምኗል",
+      "payment_deleted": "ክፍያ ተሰርዟል",
+      "plan_created": "ዕቅድ ተፈጥሯል",
+      "plan_updated": "ዕቅድ ተዘምኗል",
+      "plan_deleted": "ዕቅድ ተሰርዟል",
+      "staff_created": "ሰራተኛ ታክሏል",
+      "staff_updated": "ሰራተኛ ተዘምኗል"
+    },
+    "roles": {
+      "owner": "ባለቤት",
+      "staff": "ሰራተኛ",
+      "user": "ተጠቃሚ"
+    },
+    "details": {
+      "noPayment": "ክፍያ አልተመዘገበም",
+      "accountDisabled": "መለያ ቦዝኗል",
+      "accountEnabled": "መለያ ነቅቷል",
+      "role": "ሚና: {{role}}"
+    }
   },
   "messages": {
     "empty": "SMS መልዕክት እስካሁን የለም።",
@@ -582,13 +643,19 @@
     "enable": "አንቃ",
     "disable": "አሰናክል",
     "empty": "ሰራተኛ መለያ እስካሁን የለም።",
-    "addStaff": "ሰራተኛ ጨምር",
+    "addStaff": "ሰራተኛ መዝግብ",
     "enableTitle": "ሰራተኛ አንቃ",
     "disableTitle": "ሰራተኛ አሰናክል",
     "enableBody": "{{name}} መግባት ይፈቀድ?",
     "disableBody": "{{name}} መግባት ይከለክል?",
     "emptyTitle": "እስካሁን ሰራተኛ የለም",
-    "emptyBody": "በዴስክ አባላትን እንዲያስተዳድሩ የእገዛ ዴስክ ሰራተኞችን ያክሉ።"
+    "emptyBody": "በዴስክ አባላትን እንዲያስተዳድሩ የእገዛ ዴስክ ሰራተኞችን ያክሉ።",
+    "notFound": "የሰራተኛ መለያ አልተገኘም።",
+    "resetPassword": "የይለፍ ቃል ዳግም አስጀምር",
+    "resetPasswordHint": "ለዚህ ሰራተኛ አዲስ የመግቢያ ይለፍ ቃል ያዘጋጁ።",
+    "passwordUpdatedTitle": "የይለፍ ቃል ተዘምኗል",
+    "passwordUpdatedBody": "{{name}} በአዲሱ የይለፍ ቃል መግባት ይችላል።",
+    "staffFallback": "ሰራተኛ"
   },
   "plans": {
     "deleteTitle": "ዕቅድ ሰርዝ",
@@ -601,7 +668,11 @@
     "activeMembers": "{{count}} ንቁ አባል(ዎች)",
     "noActiveMembers": "ንቁ አባል የለም",
     "emptyTitle": "እስካሁን ዕቅድ የለም",
-    "emptyBody": "አባላትን ከማስመዝገብዎ በፊት የአባልነት ደረጃ ይፍጠሩ።"
+    "emptyBody": "አባላትን ከማስመዝገብዎ በፊት የአባልነት ደረጃ ይፍጠሩ።",
+    "nameLabel": "የዕቅድ ስም",
+    "namePlaceholder": "ለምሳሌ፦ ወርሃዊ",
+    "durationLabel": "ጊዜ (ወራት)",
+    "priceLabel": "ዋጋ (ETB)"
   },
   "statusBreakdown": {
     "active": "ንቁ",
@@ -612,6 +683,13 @@
   "branches": {
     "emptyTitle": "እስካሁን ቅርንጫፍ የለም",
     "emptyBody": "አባላትን በቅርንጫፍ ለማደራጀት የመጀመሪያ ቦታዎን ያክሉ።",
-    "empty": "ቅርንጫፍ አልተገኘም።"
+    "empty": "ቅርንጫፍ አልተገኘም።",
+    "membersCount": "{{count}} አባላት",
+    "staffCount": "{{count}} ሰራተኞች"
+  },
+  "notFound": {
+    "title": "ውይ!",
+    "body": "ይህ ማያ አልተገኘም።",
+    "goHome": "ወደ መነሻ ገጽ ሂድ!"
   }
 }

@@ -114,21 +114,21 @@ export default function ProfileScreen() {
           <View style={{ width: '100%', maxWidth: formMaxWidth }}>
           <ErrorBanner message={error} />
 
-          <Text style={[styles.section, { color: c.muted }]}>Gym</Text>
-          <Label>Gym name</Label>
+          <Text style={[styles.section, { color: c.muted }]}>{t('profile.gymSection')}</Text>
+          <Label>{t('forms.gymName')}</Label>
           <Field value={gymName} onChangeText={setGymName} autoCapitalize="words" />
 
-          <Label>Owner name</Label>
+          <Label>{t('forms.ownerName')}</Label>
           <Field value={ownerName} onChangeText={setOwnerName} autoCapitalize="words" />
 
-          <Label>Phone</Label>
+          <Label>{t('forms.phone')}</Label>
           <Field value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
 
-          <Text style={[styles.section, { color: c.muted }]}>Login</Text>
-          <Label>Email</Label>
+          <Text style={[styles.section, { color: c.muted }]}>{t('profile.loginSection')}</Text>
+          <Label>{t('forms.email')}</Label>
           <Field value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
 
-          <Label>Username</Label>
+          <Label>{t('forms.username')}</Label>
           <Field value={username} onChangeText={setUsername} autoCapitalize="none" />
 
           <PrimaryButton

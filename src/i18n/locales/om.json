@@ -6,8 +6,8 @@
     "dashboard": "Daashboordii",
     "members": "Miseensota",
     "revenue": "Galii",
-    "plans": "Kaffaltii Dhiheessaa",
-    "more": "Daashboordii",
+    "plans": "Karoora",
+    "more": "Dabalata",
     "activity": "Sochii"
   },
   "auth": {
@@ -112,7 +112,18 @@
     "attentionTitle": "Miseensota hin kaffalle yeroo kana — dursi kaffaltii sassaabi",
     "viewUnpaid": "Kan hin kaffalle ilaali",
     "emptyTitle": "Kaffaltiin ammaaf hin jiru",
-    "emptyBody": "Miseensonni erga galmaa'anii ykn haaromsanii booda kaffaltiin asitti mul'ata."
+    "emptyBody": "Miseensonni erga galmaa'anii ykn haaromsanii booda kaffaltiin asitti mul'ata.",
+    "sortLabel": "Tartiibessi",
+    "paymentMethodLabel": "Mala kaffaltii",
+    "customDateRange": "Giddu-galeessa guyyaa ofii keetii",
+    "customRangeOn": "Giddu-galeessi ofii banaa dha",
+    "useCustomRange": "Giddu-galeessa ofii fayyadami",
+    "allMethods": "Malawwan hunda",
+    "sortMemberAsc": "Miseensa A–Z",
+    "sortMemberDesc": "Miseensa Z–A",
+    "methodCash": "Callaa",
+    "methodCard": "Kaardii",
+    "methodBankTransfer": "Bankii dabarsuu"
   },
   "forgot": {
     "title": "Jecha icchitii dagattee?",
@@ -210,7 +221,9 @@
     "language": "Afaan",
     "english": "English",
     "amharic": "አማርኛ",
-    "afanOromo": "Afaan Oromoo"
+    "afanOromo": "Afaan Oromoo",
+    "gymSection": "Jimii",
+    "loginSection": "Seensa"
   },
   "account": {
     "preferences": "Filannoo",
@@ -229,7 +242,7 @@
     "branchesSub": "Bakkeewwan fi dhiyeessitoota",
     "messages": "SMS Miseensaa",
     "messagesSub": "Ergaawwan yaadachiisaa ergaman",
-    "reports": "Gabaasota",
+    "reports": "Gabaasa",
     "reportsSub": "Miseensota fi galii ergi"
   },
   "offline": {
@@ -261,7 +274,7 @@
   },
   "common": {
     "save": "Olkaa'i",
-    "create": "Uumi",
+    "create": "Galmeessi",
     "cancel": "Dhiisi",
     "confirm": "Mirkaneessi",
     "ok": "Tole",
@@ -288,7 +301,10 @@
     "preparing": "Qophii jira…",
     "actions": "Tarkaanfiiwwan",
     "month_one": "Ji'a {{count}}",
-    "month_other": "Ji'oota {{count}}"
+    "month_other": "Ji'oota {{count}}",
+    "updating": "Haaromsaa jira…",
+    "sort": "Tartiibessi",
+    "closePhoto": "Suuraa cufi"
   },
   "branch": {
     "allBranches": "Dameewwan hunda",
@@ -390,11 +406,11 @@
     "goBack": "Deebi'i",
     "paymentRequired": "Kaffaltiin barbaachisaadha",
     "membership": "Miseensummaa",
-    "plan": "Kaffaltii",
+    "plan": "Karoora",
     "start": "Jallaba",
     "end": "Dhuma",
     "branch": "Damee",
-    "changePlan": "Karoora jijjiiri",
+    "changePlan": "Karoora jijjiri",
     "renew": "Miseensummaa haaromsi",
     "collectPayment": "Kaffaltii sassaabi",
     "recordPayment": "Kaffaltii sassaabi",
@@ -406,7 +422,8 @@
     "deleteFailed": "Miseensa haquu hin dandeenye.",
     "paymentHistory": "Seenaa kaffaltii",
     "noPayments": "Kaffaltiin galmeeffame hin jiru.",
-    "manage": "Bulchi"
+    "manage": "Bulchi",
+    "planDatesLocked": "Karoora fi guyyaawwan as irratti gulaalamuu hin danda'an. Fuula miseensaa irratti Haaromsi ykn Karoora jijjiiri fayyadami."
   },
   "screens": {
     "account": "Akkaawuntii",
@@ -414,27 +431,27 @@
     "enroll": "Miseensa Galmeessi",
     "renew": "Miseensummaa haaromsi",
     "recordPayment": "Kaffaltii sassaabi",
-    "changePlan": "Karoora jijjiiri",
+    "changePlan": "Karoora jijjiri",
     "editMember": "Miseensa gulaali",
     "transfer": "Miseensa ceesisi",
-    "newPlan": "Karoora uumi",
+    "newPlan": "Karoora Galmeessi",
     "editPlan": "Karoora gulaali",
     "editPayment": "Kaffaltii gulaali",
     "team": "Hojjettoota",
-    "addStaff": "Hojjeetaa dabali",
+    "addStaff": "Hojjetaa Galmeessi",
     "editStaff": "Hojjeetaa gulaali",
     "branches": "Dameewwan",
-    "newBranch": "Damee dabali",
+    "newBranch": "Damee Galmeessi",
     "editBranch": "Damee gulaali",
     "memberSms": "SMS Miseensaa",
     "gymProfile": "Profaayilii jimii",
     "changePassword": "Jecha icchitii jijjiiri",
-    "reports": "Gabaasota"
+    "reports": "Gabaasa"
   },
   "forms": {
     "name": "Maqaa",
     "phone": "Bilbila",
-    "plan": "Kaffaltii",
+    "plan": "Karoora",
     "startDate": "Guyyaa jalqabaa",
     "amount": "Hangam (ETB)",
     "amountFromPlan": "Karoora filatame irraa fudhatame — galmee irratti hin gulaalamu.",
@@ -451,14 +468,14 @@
     "noPlans": "Karoorri hin jiru.",
     "renewMembership": "Miseensummaa haaromsi",
     "recordPayment": "Kaffaltii sassaabi",
-    "changePlan": "Kaffaltii jijjiiri",
+    "changePlan": "Karoora jijjiri",
     "transferMember": "Miseensa ceesisi",
     "targetBranch": "Damee gahaa",
     "newPlan": "Karoora haarawa",
     "renewFor": "Haaromsi: {{name}}",
     "paymentFor": "Kaffaltii: {{name}}",
-    "changePlanFor": "Karoora jijjiiri: {{name}}",
-    "changePlanSubtitle": "{{name}} gara karoora biraatti jijjiiri.",
+    "changePlanFor": "Karoora jijjiri: {{name}}",
+    "changePlanSubtitle": "{{name}} gara karoora biraatti jijjiri.",
     "transferBody": "{{name}}{{from}} gara damee biraatti darbi.",
     "transferFrom": " irraa {{branch}}",
     "noOtherBranches": "Dameewwan si'aawaa biraan hin jiran.",
@@ -507,7 +524,17 @@
     "termPaymentAlreadyCollected": "Kanaan dura kan sassaabame",
     "termPaymentThisChange": "Jijjiirama karoora kanaa",
     "termPaymentTotalAfter": "Erga galchiteen booda dabalata",
-    "termPaymentRevenueNote": "Kaffaltiin dabalataa galii keessatti akka tarree mataa isaatti mul'ata. Karoora al tokkoo ol jijjiiruun kaffaltiiwwan dabalataa dabala — waliigalti maallaqa sassaabamee idaatamaa ta'a."
+    "termPaymentRevenueNote": "Kaffaltiin dabalataa galii keessatti akka tarree mataa isaatti mul'ata. Karoora al tokkoo ol jijjiiruun kaffaltiiwwan dabalataa dabala — waliigalti maallaqa sassaabamee idaatamaa ta'a.",
+    "email": "Imeelii",
+    "emailOptional": "Imeelii (filannoo)",
+    "username": "Maqaa fayyadamaa",
+    "password": "Jecha icchitii",
+    "currentPassword": "Jecha icchitii ammaa",
+    "confirmNewPassword": "Jecha icchitii haaraa mirkaneessi",
+    "gymName": "Maqaa jimii",
+    "ownerName": "Maqaa abbaa qabeenyaa",
+    "passwordSame": "Jechi icchitii haaraan kan ammaa irraa adda ta'uu qaba.",
+    "passwordChangedBody": "Jechi icchitii kee jijjiirameera."
   },
   "validation": {
     "selectPlanAndDates": "Karoora haarawa filadhu fi guyyoota sirrii galchi.",
@@ -534,10 +561,11 @@
     "permissionBody": "Suuraa miseensaa dabaluuf kuusaa suuraa hayyami.",
     "cameraPermissionTitle": "Hayyamni kaameraa barbaachisaadha",
     "cameraPermissionBody": "Suuraa miseensaa kaasuuf kaameraa hayyami.",
-    "errorTitle": "Dogoggora suuraa"
+    "errorTitle": "Dogoggora suuraa",
+    "viewPhoto": "Suuraa {{name}} ilaali"
   },
   "reports": {
-    "title": "Gabaasota",
+    "title": "Gabaasa",
     "yourGym": "Jimii keessan",
     "membersSection": "Miseensota",
     "revenueSection": "Galii",
@@ -553,7 +581,12 @@
     "exportFailed": "Ergamni hin milkoofne",
     "exportFailedBody": "PDF uumuun hin dandeenye.",
     "shareReport": "Gabaasa qoodi",
-    "shareReportSub": "Miseensota ({{memberFilter}}) fi galii ({{period}}) ergi"
+    "shareReportSub": "Miseensota ({{memberFilter}}) fi galii ({{period}}) ergi",
+    "shareTitle": "Gabaasa",
+    "vibeReport": "Gabaasa Vibe",
+    "membersReport": "Gabaasa miseensotaa",
+    "revenueReport": "Gabaasa galii",
+    "fullGymReport": "Gabaasa jimii guutuu"
   },
   "activity": {
     "everyone": "Miseensa hunda",
@@ -562,7 +595,35 @@
     "empty": "Ammatti socho'iinsi galmeeffame hin jiru.",
     "filterLabel": "Sochii kan agarsiisu",
     "emptyTitle": "Socho'iinsi hin jiru",
-    "emptyBody": "Gochooti miseensotaa fi kaffaltii yeroo hojjettu asitti mul'atu."
+    "emptyBody": "Gochooti miseensotaa fi kaffaltii yeroo hojjettu asitti mul'atu.",
+    "actions": {
+      "member_created": "Miseensi uumameera",
+      "member_enrolled": "Miseensi galmaa'eera",
+      "member_renewed": "Miseensummaan haaromfameera",
+      "member_plan_changed": "Karoora jijjiirameera",
+      "member_updated": "Miseensi haaromfameera",
+      "member_transferred": "Miseensi ceesifameera",
+      "member_deleted": "Miseensi haqameera",
+      "payment_recorded": "Kaffaltiin galmeeffameera",
+      "payment_updated": "Kaffaltiin haaromfameera",
+      "payment_deleted": "Kaffaltiin haqameera",
+      "plan_created": "Karoora uumameera",
+      "plan_updated": "Karoora haaromfameera",
+      "plan_deleted": "Karoora haqameera",
+      "staff_created": "Hojjeetaan dabalameera",
+      "staff_updated": "Hojjeetaan haaromfameera"
+    },
+    "roles": {
+      "owner": "Abbaa qabeenyaa",
+      "staff": "Hojjeetaa",
+      "user": "Fayyadamaa"
+    },
+    "details": {
+      "noPayment": "Kaffaltiin hin galmeeffamne",
+      "accountDisabled": "Akkaantiin cufameera",
+      "accountEnabled": "Akkaantiin baneera",
+      "role": "Gahee: {{role}}"
+    }
   },
   "messages": {
     "empty": "SMSn miseensaa kan ergame hin jiru.",
@@ -582,17 +643,23 @@
     "enable": "Bani",
     "disable": "Cufi",
     "empty": "Ammatti akkaantiin hojjeetaa hin jiru.",
-    "addStaff": "Hojjeetaa dabali",
+    "addStaff": "Hojjetaa Galmeessi",
     "enableTitle": "Akkaantii hojjeetaa hayyamuu?",
     "disableTitle": "Akkaantii hojjeetaa dhaabuu?",
     "enableBody": "{{name}} deebi'ee seenuu danda'a.",
     "disableBody": "{{name}} hanga deebi'ee hayyamamutti seensa dhabu.",
     "emptyTitle": "Hojjettonni hin jiran",
-    "emptyBody": "Hojjettoota gargaarsaa afeeri si'a ta'u miseensota teessuma duraatiin bulchuu danda'u."
+    "emptyBody": "Hojjettoota gargaarsaa afeeri si'a ta'u miseensota teessuma duraatiin bulchuu danda'u.",
+    "notFound": "Akkaantiin hojjeetaa hin argamne.",
+    "resetPassword": "Jecha icchitii deebisi",
+    "resetPasswordHint": "Hojjeetaa kanaaf jecha icchitii seensaa haaraa kaa'i.",
+    "passwordUpdatedTitle": "Jechi icchitii haaromfameera",
+    "passwordUpdatedBody": "{{name}} jecha icchitii haaraan seenuu danda'a.",
+    "staffFallback": "Hojjeetaa"
   },
   "plans": {
-    "deleteTitle": "Kaffaltii haqamuu?",
-    "deleteBody": "Kaffaltii miseensummaa \"{{name}}\" dhaabbataan haqamuu isaatiif mirkanaa'aadhaa? Tarkaanfiin kun deebi'uu hin danda'u.",
+    "deleteTitle": "Karoora haqamuu?",
+    "deleteBody": "Karoora miseensummaa \"{{name}}\" dhaabbataan haqamuu isaatiif mirkanaa'aadhaa? Tarkaanfiin kun deebi'uu hin danda'u.",
     "delete": "Karoora haqi",
     "cannotDeleteTitle": "Haqamuu hin danda'u",
     "cannotDeleteBody": "\"{{name}}\" miseensota si'aawaa {{count}} qaba. Dura isaan gara bakka biraatti darbi.",
@@ -600,8 +667,12 @@
     "empty": "Karoorri ammaaf hin jiru.",
     "activeMembers": "Miseensota si'aawaa {{count}}",
     "noActiveMembers": "Miseensonni si'aawaa hin jiran",
-    "emptyTitle": "Kaffaltiiwwan ammaaf hin jiran",
-    "emptyBody": "Miseensota galmeessuu eegaluuf sadarkaa miseensummaa keessan isa duraa uumaa."
+    "emptyTitle": "Karoorawwan ammaaf hin jiran",
+    "emptyBody": "Miseensota galmeessuu eegaluuf karoora miseensummaa keessan isa duraa uumaa.",
+    "nameLabel": "Maqaa karooraa",
+    "namePlaceholder": "fkn. kan ji'a",
+    "durationLabel": "Turtii (ji'oota)",
+    "priceLabel": "Gatii (ETB)"
   },
   "statusBreakdown": {
     "active": "Si'aawaa",
@@ -612,6 +683,13 @@
   "branches": {
     "emptyTitle": "Ammatti dameen hin jiru",
     "emptyBody": "Miseensota dameen gurmeessuuf bakka hojii kee isa jalqabaa dabali.",
-    "empty": "Ammatti dameen hin jiru. Bakka hojii kee isa jalqabaa dabali."
+    "empty": "Ammatti dameen hin jiru. Bakka hojii kee isa jalqabaa dabali.",
+    "membersCount": "Miseensota {{count}}",
+    "staffCount": "Hojjettoota {{count}}"
+  },
+  "notFound": {
+    "title": "Dhugaa!",
+    "body": "Fuulli kun hin jiru.",
+    "goHome": "Gara fuula jalqabaatti deemi!"
   }
 }

@@ -30,6 +30,7 @@ function BranchCard({
   columnStyle?: object;
   onEdit: () => void;
 }) {
+  const { t } = useTranslation();
   const styles = useThemedStyles((c) => ({
     card: {
       backgroundColor: c.card,
@@ -86,7 +87,7 @@ function BranchCard({
   }));
 
   const menuItems = owner
-    ? [{ id: 'edit', label: 'Edit', onPress: onEdit }]
+    ? [{ id: 'edit', label: t('team.edit'), onPress: onEdit }]
     : [];
 
   return (
@@ -95,14 +96,16 @@ function BranchCard({
         <View style={styles.cardMain}>
           <View style={styles.nameRow}>
             <Text style={styles.name}>{branch.name}</Text>
-            {branch.is_default ? <Text style={styles.defaultBadge}>Default</Text> : null}
+            {branch.is_default ? <Text style={styles.defaultBadge}>{t('common.defaultBranch')}</Text> : null}
           </View>
           {branch.phone ? <Text style={styles.meta}>{branch.phone}</Text> : null}
           {branch.address ? <Text style={styles.meta}>{branch.address}</Text> : null}
           <View style={styles.footer}>
-            <Text style={styles.countBadge}>{branch.member_count ?? 0} members</Text>
-            <Text style={styles.countBadge}>{branch.staff_count ?? 0} staff</Text>
-            {branch.is_active === false ? <Text style={styles.inactive}>Inactive</Text> : null}
+            <Text style={styles.countBadge}>{t('branches.membersCount', { count: branch.member_count ?? 0 })}</Text>
+            <Text style={styles.countBadge}>{t('branches.staffCount', { count: branch.staff_count ?? 0 })}</Text>
+            {branch.is_active === false ? (
+              <Text style={styles.inactive}>{t('branchEdit.statusInactive')}</Text>
+            ) : null}
           </View>
         </View>
         {menuItems.length ? <ActionOverflowMenu items={menuItems} /> : null}
