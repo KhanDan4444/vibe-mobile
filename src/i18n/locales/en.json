@@ -18,7 +18,7 @@
     "identifier": "Username or email",
     "password": "Password",
     "signIn": "Sign in",
-    "forgotPassword": "Forgot Password",
+    "forgotPassword": "Forgot Password?",
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "identifierRequired": "Enter your username/email and password.",

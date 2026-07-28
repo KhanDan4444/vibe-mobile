@@ -32,6 +32,21 @@ import { API_BASE_URL } from '@/src/config/api';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
+type Field = 'identifier' | 'password';
+
+/** Match web login: border-teal-300/55, bg-white/14, ring-teal-400/25 */
+const LOGIN_FIELD = {
+  blur: {
+    backgroundColor: 'rgba(255, 255, 255, 0.07)',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  focus: {
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    borderColor: 'rgba(94, 234, 212, 0.55)',
+  },
+  ring: 'rgba(45, 212, 191, 0.25)',
+} as const;
+
 export default function LoginScreen() {
   const { login, logout } = useAuth();
   const { colors: c } = useTheme();
@@ -43,6 +58,7 @@ export default function LoginScreen() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [focused, setFocused] = useState<Field | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const passwordRef = useRef<RNTextInput>(null);
@@ -73,10 +89,11 @@ export default function LoginScreen() {
     transform: [{ scale: 1 - pressed.value * 0.02 }],
   }));
 
-  const fieldShell = {
-    backgroundColor: 'rgba(255, 255, 255, 0.07)',
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-  };
+  const fieldRing = (field: Field) => ({
+    backgroundColor: focused === field ? LOGIN_FIELD.ring : 'transparent',
+  });
+
+  const fieldShell = (field: Field) => (focused === field ? LOGIN_FIELD.focus : LOGIN_FIELD.blur);
 
   const handleSubmit = async () => {
     setError('');
@@ -127,8 +144,8 @@ export default function LoginScreen() {
                 </Text>
               ) : null}
 
-              <View style={s.inputRing}>
-                <View style={[s.inputShell, fieldShell]}>
+              <View style={[s.inputRing, fieldRing('identifier')]}>
+                <View style={[s.inputShell, fieldShell('identifier')]}>
                   <TextInput
                     latin={identifierLatin}
                     autoCapitalize="none"
@@ -138,19 +155,21 @@ export default function LoginScreen() {
                     returnKeyType="next"
                     value={identifier}
                     onChangeText={setIdentifier}
+                    onFocus={() => setFocused('identifier')}
+                    onBlur={() => setFocused(null)}
                     onSubmitEditing={() => passwordRef.current?.focus()}
                     style={[s.inputField, { color: '#f8fafc' }]}
                     placeholder={t('auth.identifier')}
                     placeholderTextColor="rgba(226, 232, 240, 0.45)"
                     accessibilityLabel={t('auth.identifier')}
-                    selectionColor="rgba(226, 232, 240, 0.35)"
+                    selectionColor="rgba(94, 234, 212, 0.45)"
                     cursorColor="#f8fafc"
                   />
                 </View>
               </View>
 
-              <View style={[s.inputRing, s.inputRingTight]}>
-                <View style={[s.inputShell, fieldShell]}>
+              <View style={[s.inputRing, s.inputRingTight, fieldRing('password')]}>
+                <View style={[s.inputShell, fieldShell('password')]}>
                   <TextInput
                     latin={passwordLatin}
                     ref={passwordRef}
@@ -160,12 +179,14 @@ export default function LoginScreen() {
                     returnKeyType="go"
                     value={password}
                     onChangeText={setPassword}
+                    onFocus={() => setFocused('password')}
+                    onBlur={() => setFocused(null)}
                     onSubmitEditing={handleSubmit}
                     style={[s.inputField, { color: '#f8fafc' }]}
                     placeholder={t('auth.password')}
                     placeholderTextColor="rgba(226, 232, 240, 0.45)"
                     accessibilityLabel={t('auth.password')}
-                    selectionColor="rgba(226, 232, 240, 0.35)"
+                    selectionColor="rgba(94, 234, 212, 0.45)"
                     cursorColor="#f8fafc"
                   />
                   <Pressable
@@ -178,7 +199,7 @@ export default function LoginScreen() {
                     <Ionicons
                       name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                       size={isTablet ? 22 : 20}
-                      color="rgba(226, 232, 240, 0.45)"
+                      color={focused === 'password' ? c.accentText : 'rgba(226, 232, 240, 0.45)'}
                     />
                   </Pressable>
                 </View>
