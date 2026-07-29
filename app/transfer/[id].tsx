@@ -15,10 +15,7 @@ import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { isOfflineQueued } from '@/src/offline/types';
 import { useTranslation } from 'react-i18next';
 import { isGymOwner } from '@/src/utils/roles';
-
-function branchLabel(name: string, isDefault?: boolean) {
-  return isDefault ? `${name} (default)` : name;
-}
+import { branchDisplayName } from '@/src/utils/branchDisplayName';
 
 export default function TransferScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -95,7 +92,9 @@ export default function TransferScreen() {
           <Text style={styles.body}>
             {t('forms.transferBody', {
               name: member.name,
-              from: member.branch_name ? t('forms.transferFrom', { branch: member.branch_name }) : '',
+              from: member.branch_name
+                ? t('forms.transferFrom', { branch: branchDisplayName(member.branch_name) })
+                : '',
             })}
           </Text>
         ) : null}
@@ -112,7 +111,7 @@ export default function TransferScreen() {
               sheetTitle={t('forms.targetBranch')}
               options={activeBranches.map((b) => ({
                 value: String(b.id),
-                label: branchLabel(b.name, b.is_default),
+                label: `${branchDisplayName(b.name)}${b.is_default ? ` ${t('branch.defaultSuffix')}` : ''}`,
               }))}
               value={branchId != null ? String(branchId) : undefined}
               onChange={(v) => setBranchId(Number(v))}

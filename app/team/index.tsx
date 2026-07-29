@@ -17,6 +17,7 @@ import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { isGymOwner } from '@/src/utils/roles';
+import { branchDisplayName } from '@/src/utils/branchDisplayName';
 import type { StaffRow } from '@/src/types/api';
 
 function StaffCard({
@@ -77,7 +78,9 @@ function StaffCard({
         <View style={styles.cardMain}>
           <Text style={styles.name}>{member.name}</Text>
           <Text style={styles.meta}>{member.username || member.email || '—'}</Text>
-          <Text style={styles.meta}>{member.branch_name || t('team.noBranch')}</Text>
+          <Text style={styles.meta}>
+            {member.branch_name ? branchDisplayName(member.branch_name) : t('team.noBranch')}
+          </Text>
           <Text style={[styles.badge, member.is_active ? styles.active : styles.inactive]}>
             {member.is_active ? t('team.active') : t('team.disabled')}
           </Text>

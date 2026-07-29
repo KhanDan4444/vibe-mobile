@@ -2,10 +2,11 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { OptionPickerField } from '@/src/components/OptionPickerField';
 import type { BranchRow } from '@/src/types/api';
+import { branchDisplayName } from '@/src/utils/branchDisplayName';
 
 function branchLabel(branch: BranchRow, t: (key: string) => string): string {
   const suffix = branch.is_default ? ` ${t('branch.defaultSuffix')}` : '';
-  return `${branch.name}${suffix}`;
+  return `${branchDisplayName(branch.name)}${suffix}`;
 }
 
 export function BranchPicker({

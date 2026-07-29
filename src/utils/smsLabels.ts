@@ -1,11 +1,14 @@
-const TYPE_LABELS: Record<string, string> = {
-  member_due_soon: 'Due soon reminder',
-  member_expires_today: 'Expires today',
-  member_expired: 'Expired notice',
+import type { TFunction } from 'i18next';
+
+const TYPE_KEYS: Record<string, string> = {
+  member_due_soon: 'messages.typeDueSoon',
+  member_expires_today: 'messages.typeExpiresToday',
+  member_expired: 'messages.typeExpired',
 };
 
-export function formatSmsType(type: string) {
-  return TYPE_LABELS[type] || type || '—';
+export function formatSmsType(type: string, t: TFunction) {
+  const key = TYPE_KEYS[type];
+  return key ? t(key) : type || '—';
 }
 
 export const SMS_TYPE_FILTER_KEYS = [

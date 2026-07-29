@@ -155,7 +155,7 @@ export default function LoginScreen() {
                     onSubmitEditing={() => passwordRef.current?.focus()}
                     style={[s.inputField, { color: '#f8fafc' }]}
                     placeholder={t('auth.identifier')}
-                    placeholderTextColor="rgba(226, 232, 240, 0.45)"
+                    placeholderTextColor="rgba(226, 232, 240, 0.68)"
                     accessibilityLabel={t('auth.identifier')}
                     selectionColor="rgba(94, 234, 212, 0.45)"
                     cursorColor="#f8fafc"
@@ -179,7 +179,7 @@ export default function LoginScreen() {
                     onSubmitEditing={handleSubmit}
                     style={[s.inputField, { color: '#f8fafc' }]}
                     placeholder={t('auth.password')}
-                    placeholderTextColor="rgba(226, 232, 240, 0.45)"
+                    placeholderTextColor="rgba(226, 232, 240, 0.68)"
                     accessibilityLabel={t('auth.password')}
                     selectionColor="rgba(94, 234, 212, 0.45)"
                     cursorColor="#f8fafc"
@@ -194,7 +194,7 @@ export default function LoginScreen() {
                     <Ionicons
                       name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                       size={isTablet ? 22 : 20}
-                      color={focused === 'password' ? c.accentText : 'rgba(226, 232, 240, 0.45)'}
+                      color={focused === 'password' ? c.accentText : 'rgba(226, 232, 240, 0.62)'}
                     />
                   </Pressable>
                 </View>
@@ -228,7 +228,7 @@ export default function LoginScreen() {
               </AnimatedPressable>
 
               <View style={s.registerRow}>
-                <Text style={[s.registerPrompt, { color: 'rgba(226, 232, 240, 0.72)' }]}>
+                <Text style={[s.registerPrompt, { color: 'rgba(226, 232, 240, 0.82)' }]}>
                   {t('auth.newGymOwner')}{' '}
                 </Text>
                 <Pressable hitSlop={8} onPress={() => router.push('/register-gym' as never)}>

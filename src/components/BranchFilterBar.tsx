@@ -6,9 +6,10 @@ import { useTranslation } from 'react-i18next';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
 import { useBranchScope, type BranchSelection } from '@/src/context/BranchContext';
 import { useTheme } from '@/src/context/PreferencesContext';
+import { branchDisplayName } from '@/src/utils/branchDisplayName';
 
 function branchOptionLabel(name: string, isDefault?: boolean, inactive?: boolean, t?: (key: string) => string) {
-  let label = name;
+  let label = branchDisplayName(name);
   if (isDefault) label += ` ${t?.('branch.defaultSuffix') ?? '(default)'}`;
   if (inactive) label += t?.('branch.inactiveSuffix') ?? ' (inactive)';
   return label;

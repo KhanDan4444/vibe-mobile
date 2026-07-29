@@ -223,7 +223,10 @@
     "amharic": "አማርኛ",
     "afanOromo": "Afaan Oromoo",
     "gymSection": "Gym",
-    "loginSection": "Login"
+    "loginSection": "Login",
+    "roleOwner": "Gym owner",
+    "roleStaff": "Staff",
+    "roleAccount": "Account"
   },
   "account": {
     "preferences": "Preferences",
@@ -312,7 +315,8 @@
     "defaultSuffix": "(default)",
     "inactiveSuffix": " (inactive)",
     "staffAt": "Branch: {{name}}",
-    "pickBranch": "Select branch"
+    "pickBranch": "Select branch",
+    "mainName": "Main"
   },
   "branchEdit": {
     "name": "Branch name",
@@ -633,7 +637,10 @@
     "filterExpiresToday": "Expires today",
     "filterExpired": "Expired",
     "emptyTitle": "No SMS yet",
-    "emptyBody": "Member SMS history shows up after you send the first message."
+    "emptyBody": "Member SMS history shows up after you send the first message.",
+    "typeDueSoon": "Due soon reminder",
+    "typeExpiresToday": "Expires today",
+    "typeExpired": "Expired notice"
   },
   "team": {
     "noBranch": "No branch",

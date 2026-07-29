@@ -5,8 +5,9 @@ export function initialsFrom(name?: string | null, email?: string | null, userna
   return source.charAt(0).toUpperCase();
 }
 
-export function roleSubtitle(role?: string | null) {
-  if (role === 'Gym Owner' || role === 'owner') return 'Gym owner';
-  if (role === 'Help Desk' || role === 'Gym Staff') return 'Staff';
-  return 'Account';
+/** i18n key for the account role subtitle. */
+export function roleSubtitleKey(role?: string | null) {
+  if (role === 'Gym Owner' || role === 'owner') return 'profile.roleOwner';
+  if (role === 'Help Desk' || role === 'Gym Staff') return 'profile.roleStaff';
+  return 'profile.roleAccount';
 }

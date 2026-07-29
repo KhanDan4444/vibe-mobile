@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTheme } from '@/src/context/PreferencesContext';
 import type { ThemeColors } from '@/src/theme/tokens';
+import { statusLabelKey } from '@/src/utils/statusLabels';
 
 type StatusBadgeProps = {
   status: string;
@@ -29,30 +30,16 @@ function badgeColors(key: string, c: ThemeColors) {
   return { bg: `${c.statusNeutral}18`, text: c.statusNeutral, border: `${c.statusNeutral}33`, dot: c.statusNeutral };
 }
 
-const LABEL_KEYS: Record<string, string> = {
-  active: 'status.active',
-  suspended: 'status.suspended',
-  expired: 'status.expired',
-  trialing: 'status.trialing',
-  'due soon': 'status.dueSoon',
-};
-
 export default function StatusBadge({ status, showDot = true }: StatusBadgeProps) {
   const { t } = useTranslation();
   const { colors: c } = useTheme();
   const key = statusKey(status);
   const colors = badgeColors(key, c);
-  const labelKey = LABEL_KEYS[key];
-  const label = labelKey
-    ? t(labelKey)
-    : status
-      ? status.charAt(0).toUpperCase() + status.slice(1)
-      : t('status.unknown');
 
   return (
     <View style={[styles.badge, { backgroundColor: colors.bg, borderColor: colors.border }]}>
       {showDot ? <View style={[styles.dot, { backgroundColor: colors.dot }]} /> : null}
-      <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+      <Text style={[styles.label, { color: colors.text }]}>{t(statusLabelKey(status))}</Text>
     </View>
   );
 }

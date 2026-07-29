@@ -1,5 +1,7 @@
 import type { TFunction } from 'i18next';
 import type { ActivityLogRow } from '@/src/types/api';
+import { paymentMethodLabelKey } from '@/src/constants/payments';
+import { branchDisplayName } from '@/src/utils/branchDisplayName';
 
 const ACTION_KEYS: Record<string, string> = {
   'member.created': 'activity.actions.member_created',
@@ -35,16 +37,25 @@ export function formatAuditDetails(entry: ActivityLogRow, t: TFunction): string 
   const parts: string[] = [];
 
   if (d.payment_amount != null) {
-    const method = d.payment_method ? ` · ${d.payment_method}` : '';
+    const methodKey = d.payment_method ? paymentMethodLabelKey(String(d.payment_method)) : null;
+    const method = methodKey ? ` · ${t(methodKey)}` : d.payment_method ? ` · ${d.payment_method}` : '';
     parts.push(`${Number(d.payment_amount).toLocaleString()} ETB${method}`);
   }
   if (d.skip_payment) parts.push(t('activity.details.noPayment'));
-  if (d.staff_role) parts.push(t('activity.details.role', { role: d.staff_role }));
+  if (d.staff_role) {
+    const role =
+      d.staff_role === 'Help Desk' || d.staff_role === 'Gym Staff'
+        ? t('activity.roles.staff')
+        : String(d.staff_role);
+    parts.push(t('activity.details.role', { role }));
+  }
   if (d.is_active === false) parts.push(t('activity.details.accountDisabled'));
   if (d.is_active === true && entry.action === 'staff.updated') parts.push(t('activity.details.accountEnabled'));
   if (d.email && entry.entity_type === 'staff') parts.push(String(d.email));
   if (d.from_branch_name && d.to_branch_name) {
-    parts.push(`${d.from_branch_name} → ${d.to_branch_name}`);
+    parts.push(
+      `${branchDisplayName(String(d.from_branch_name))} → ${branchDisplayName(String(d.to_branch_name))}`,
+    );
   }
   if (d.previous_plan_name && d.plan_name) {
     parts.push(`${d.previous_plan_name} → ${d.plan_name}`);

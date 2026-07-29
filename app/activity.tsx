@@ -19,6 +19,7 @@ import { formatDisplayDateTime } from '@/src/utils/date';
 import { formatAuditAction, formatAuditDetails, formatActorRole } from '@/src/utils/activityLabels';
 import { useTranslation } from 'react-i18next';
 import { isGymOwner } from '@/src/utils/roles';
+import { branchDisplayName } from '@/src/utils/branchDisplayName';
 import type { ActivityLogRow } from '@/src/types/api';
 
 type ActorFilter = 'all' | 'owner' | 'staff';
@@ -69,7 +70,7 @@ function ActivityItem({
       {details ? <Text style={styles.details}>{details}</Text> : null}
       <Text style={styles.actor}>
         {entry.actor_name || entry.actor_email} · {formatActorRole(entry.actor_role, t)}
-        {entry.branch_name ? ` · ${entry.branch_name}` : ''}
+        {entry.branch_name ? ` · ${branchDisplayName(entry.branch_name)}` : ''}
       </Text>
     </View>
   );

@@ -24,7 +24,8 @@ import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { appTextStyle } from '@/src/theme/typography';
 import { formatDisplayDate } from '@/src/utils/date';
 import { DEFAULT_REVENUE_SORT, type RevenueSortId } from '@/src/utils/listSort';
-import { paymentSourceLabel } from '@/src/utils/paymentSources';
+import { paymentSourceKey } from '@/src/utils/termPayments';
+import { statusLabelKey } from '@/src/utils/statusLabels';
 import { isGymOwner } from '@/src/utils/roles';
 import { SecondaryButton } from '@/src/components/ui/Button';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
@@ -96,7 +97,7 @@ function PaymentRowItem({
   }));
 
   const badge = paymentMethodBadgeStyle(payment.method, c);
-  const source = payment.source ? paymentSourceLabel(payment.source) : null;
+  const source = payment.source ? t(paymentSourceKey(payment.source)) : null;
 
   const menuItems =
     owner && !readOnly
@@ -198,12 +199,15 @@ function AttentionCard({
     attentionStatus: { marginTop: 8, fontSize: 11, fontWeight: '700' as const },
   }));
   const { language } = usePreferences();
+  const { t } = useTranslation();
 
   return (
     <Pressable style={[styles.attentionCard, wide && styles.attentionCardWide]} onPress={onPress}>
       <Text style={appTextStyle(language, styles.attentionName)} numberOfLines={1}>{member.name}</Text>
       <Text style={appTextStyle(language, styles.attentionMeta)}>{formatDisplayDate(member.end_date)}</Text>
-      <Text style={appTextStyle(language, { ...styles.attentionStatus, color: attentionColor(member.status) })}>{member.status}</Text>
+      <Text style={appTextStyle(language, { ...styles.attentionStatus, color: attentionColor(member.status) })}>
+        {t(statusLabelKey(member.status))}
+      </Text>
     </Pressable>
   );
 }
@@ -247,7 +251,10 @@ export default function RevenueScreen() {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.border,
     },
-    periodPillActive: { backgroundColor: colors.accentSoft, borderColor: colors.accentText },
+    periodPillActive: {
+      backgroundColor: colors.accentSoft,
+      borderColor: 'rgba(255, 255, 255, 0.2)',
+    },
     periodPillText: { fontSize: 13, fontWeight: '600' as const, color: colors.muted },
     periodPillTextActive: { color: colors.accentText },
     searchRow: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 10, marginBottom: 8 },

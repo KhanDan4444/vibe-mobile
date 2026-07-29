@@ -28,6 +28,7 @@ import { radiusMd } from '@/src/theme/tokens';
 import { DEFAULT_MEMBER_SORT, MEMBER_SORT_OPTIONS, type MemberSortId } from '@/src/utils/listSort';
 import { isGymOwner } from '@/src/utils/roles';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
+import { branchDisplayName } from '@/src/utils/branchDisplayName';
 import type { MemberRow } from '@/src/types/api';
 
 type MemberFilter = 'all' | 'active' | 'due_soon' | 'expired' | 'unpaid';
@@ -126,7 +127,7 @@ function MemberRowItem({
           </Text>
           {showBranch && member.branch_name ? (
             <Text style={styles.branch} numberOfLines={1}>
-              {member.branch_name}
+              {branchDisplayName(member.branch_name)}
             </Text>
           ) : null}
         </View>

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 
-const APP_ICON = require('@/assets/images/icon.png');
+const LOGIN_BRAND_MARK = require('@/assets/images/login-brand-mark.png');
 
 export function LoginBrandPanel() {
   const { t, i18n } = useTranslation();
@@ -16,7 +16,7 @@ export function LoginBrandPanel() {
 
   return (
     <View style={s.wrap}>
-      <Image source={APP_ICON} style={s.icon} resizeMode="contain" accessibilityLabel="ንቁ" />
+      <Image source={LOGIN_BRAND_MARK} style={s.mark} resizeMode="contain" accessibilityLabel="ንቁ" />
       <Text latin={sloganLatin} style={[s.slogan, { color: c.accentText }]}>
         {t('auth.brandSlogan')}
       </Text>
@@ -29,10 +29,10 @@ const phoneStyles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 30,
   },
-  icon: {
-    width: 104,
+  mark: {
+    width: 84,
     height: 104,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   slogan: {
     fontSize: 14,
@@ -47,10 +47,10 @@ const tabletStyles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 36,
   },
-  icon: {
-    width: 124,
-    height: 124,
-    marginBottom: 18,
+  mark: {
+    width: 104,
+    height: 128,
+    marginBottom: 14,
   },
   slogan: {
     fontSize: 16,

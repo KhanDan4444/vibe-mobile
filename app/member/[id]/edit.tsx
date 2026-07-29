@@ -18,6 +18,7 @@ import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
 import { fetchMemberPhotoDataUri } from '@/src/utils/memberPhoto';
 import { bumpMemberPhotoCache } from '@/src/utils/memberPhotoCache';
 import { runInBackground } from '@/src/utils/runInBackground';
+import { branchDisplayName } from '@/src/utils/branchDisplayName';
 import type { UpdateMemberPayload } from '@/src/types/api';
 import { useTranslation } from 'react-i18next';
 
@@ -181,7 +182,9 @@ export default function EditMemberScreen() {
           ) : member?.branch_name ? (
             <View style={styles.branchReadOnly}>
               <Label>{t('member.branch')}</Label>
-              <Text style={[styles.branchValue, { color: c.text }]}>{member.branch_name}</Text>
+              <Text style={[styles.branchValue, { color: c.text }]}>
+                {branchDisplayName(member.branch_name)}
+              </Text>
             </View>
           ) : null}
 

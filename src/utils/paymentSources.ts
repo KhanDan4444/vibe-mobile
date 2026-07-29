@@ -1,13 +1,10 @@
-const SOURCE_LABELS: Record<string, string> = {
-  enroll: 'Enrollment',
-  renew: 'Renewal',
-  change_plan: 'Plan change',
-  collect: 'Collected',
-};
+import i18n from '@/src/i18n';
+import { paymentSourceKey } from '@/src/utils/termPayments';
 
+/** Localized payment source label (API values stay English). */
 export function paymentSourceLabel(source?: string | null) {
-  if (!source) return 'Recorded';
-  return SOURCE_LABELS[source] ?? 'Recorded';
+  if (!source) return i18n.t('forms.paymentSourceCollect');
+  return i18n.t(paymentSourceKey(source));
 }
 
 /** Quiet muted tone for all sources — text carries meaning, not color. */

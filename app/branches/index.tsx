@@ -15,6 +15,7 @@ import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { isGymOwner } from '@/src/utils/roles';
+import { branchDisplayName } from '@/src/utils/branchDisplayName';
 import type { BranchRow } from '@/src/types/api';
 
 function BranchCard({
@@ -95,7 +96,7 @@ function BranchCard({
       <View style={styles.headerRow}>
         <View style={styles.cardMain}>
           <View style={styles.nameRow}>
-            <Text style={styles.name}>{branch.name}</Text>
+            <Text style={styles.name}>{branchDisplayName(branch.name)}</Text>
             {branch.is_default ? <Text style={styles.defaultBadge}>{t('common.defaultBranch')}</Text> : null}
           </View>
           {branch.phone ? <Text style={styles.meta}>{branch.phone}</Text> : null}

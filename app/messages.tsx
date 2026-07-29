@@ -17,6 +17,7 @@ import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { formatDisplayDateTime } from '@/src/utils/date';
 import { SMS_TYPE_FILTER_KEYS, formatSmsType } from '@/src/utils/smsLabels';
+import { branchDisplayName } from '@/src/utils/branchDisplayName';
 import { useTranslation } from 'react-i18next';
 import { isGymOwner } from '@/src/utils/roles';
 import type { MemberSmsRow } from '@/src/types/api';
@@ -34,6 +35,7 @@ function SmsItem({
   columnStyle?: object;
   onPress: () => void;
 }) {
+  const { t } = useTranslation();
   const styles = useThemedStyles((c) => ({
     card: {
       backgroundColor: c.card,
@@ -58,9 +60,9 @@ function SmsItem({
         <Text style={styles.member}>{row.member_name}</Text>
         <Text style={styles.time}>{formatDisplayDateTime(row.sent_at)}</Text>
       </View>
-      <Text style={styles.type}>{formatSmsType(row.message_type)}</Text>
+      <Text style={styles.type}>{formatSmsType(row.message_type, t)}</Text>
       <Text style={styles.phone}>{row.recipient_phone || row.member_phone || '—'}</Text>
-      {row.branch_name ? <Text style={styles.branch}>{row.branch_name}</Text> : null}
+      {row.branch_name ? <Text style={styles.branch}>{branchDisplayName(row.branch_name)}</Text> : null}
     </Pressable>
   );
 }

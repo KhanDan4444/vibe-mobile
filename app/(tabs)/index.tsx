@@ -24,6 +24,7 @@ import StatusBadge from '@/src/components/StatusBadge';
 import Card from '@/src/components/ui/Card';
 import { SecondaryButton } from '@/src/components/ui/Button';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
+import { branchDisplayName } from '@/src/utils/branchDisplayName';
 
 type StatFilter = 'due_soon' | 'expired' | 'unpaid';
 
@@ -122,7 +123,7 @@ export default function DashboardScreen() {
   const { readOnly } = useGymReadOnly();
   const { statCardLayoutStyle, isTablet, pagePadding, chartHeight } = useResponsiveLayout();
   const staffBranchLabel = staffUser
-    ? user?.branch_name || (user?.branch_id ? `Branch #${user.branch_id}` : null)
+    ? branchDisplayName(user?.branch_name) || (user?.branch_id ? `Branch #${user.branch_id}` : null)
     : null;
 
   const profileQuery = useQuery({

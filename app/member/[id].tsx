@@ -23,8 +23,10 @@ import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import type { ThemeColors } from '@/src/theme/tokens';
 import { appTextStyle } from '@/src/theme/typography';
 import { formatDisplayDate } from '@/src/utils/date';
-import { paymentMethodBadgeStyle } from '@/src/constants/payments';
-import { paymentSourceLabel } from '@/src/utils/paymentSources';
+import { paymentMethodBadgeStyle, paymentMethodLabelKey } from '@/src/constants/payments';
+import { paymentSourceKey } from '@/src/utils/termPayments';
+import { statusLabelKey } from '@/src/utils/statusLabels';
+import { branchDisplayName } from '@/src/utils/branchDisplayName';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
 
 function statusColor(status: string, c: ThemeColors) {
@@ -219,7 +221,9 @@ export default function MemberDetailScreen() {
           <View style={styles.headerText}>
             <Text style={appTextStyle(language, styles.name)}>{member.name}</Text>
             <Text style={appTextStyle(language, styles.phone)}>{member.phone || '—'}</Text>
-            <Text style={appTextStyle(language, { ...styles.status, color: statusColor(member.status, c) })}>{member.status}</Text>
+            <Text style={appTextStyle(language, { ...styles.status, color: statusColor(member.status, c) })}>
+              {t(statusLabelKey(member.status))}
+            </Text>
             {member.is_unpaid ? <Text style={appTextStyle(language, styles.unpaid)}>{t('member.paymentRequired')}</Text> : null}
           </View>
         </View>
@@ -230,7 +234,14 @@ export default function MemberDetailScreen() {
         <Row label={t('member.plan')} value={member.plan_name || '—'} styles={styles} language={language} />
         <Row label={t('member.start')} value={formatDisplayDate(member.start_date)} styles={styles} language={language} />
         <Row label={t('member.end')} value={formatDisplayDate(member.end_date)} styles={styles} language={language} />
-        {member.branch_name ? <Row label={t('member.branch')} value={member.branch_name} styles={styles} language={language} /> : null}
+        {member.branch_name ? (
+          <Row
+            label={t('member.branch')}
+            value={branchDisplayName(member.branch_name)}
+            styles={styles}
+            language={language}
+          />
+        ) : null}
       </View>
       </View>
 
@@ -253,8 +264,9 @@ export default function MemberDetailScreen() {
           <Text style={appTextStyle(language, styles.muted)}>{t('member.noPayments')}</Text>
         ) : (
           payments.map((p) => {
-            const source = p.source ? paymentSourceLabel(p.source) : null;
+            const source = p.source ? t(paymentSourceKey(p.source)) : null;
             const badge = paymentMethodBadgeStyle(p.method, c);
+            const methodKey = paymentMethodLabelKey(p.method);
             return (
             <View key={p.id} style={styles.paymentRow}>
               <View style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
@@ -265,7 +277,9 @@ export default function MemberDetailScreen() {
                 </Text>
               </View>
               <View style={[styles.methodBadge, { backgroundColor: badge.bg }]}>
-                <Text style={appTextStyle(language, { ...styles.methodBadgeText, color: badge.text })}>{p.method}</Text>
+                <Text style={appTextStyle(language, { ...styles.methodBadgeText, color: badge.text })}>
+                  {methodKey ? t(methodKey) : p.method}
+                </Text>
               </View>
             </View>
             );

@@ -11,7 +11,7 @@ import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { APP_LANGUAGES, LANGUAGE_LABEL_KEYS, type AppLanguage } from '@/src/i18n';
-import { initialsFrom, roleSubtitle } from '@/src/utils/userDisplay';
+import { initialsFrom, roleSubtitleKey } from '@/src/utils/userDisplay';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
 
 type RowProps = {
@@ -82,7 +82,7 @@ export default function AccountScreen() {
           <Text style={[styles.meta, { color: c.muted }]} numberOfLines={1}>
             {user.username || user.email}
           </Text>
-          <Text style={[styles.role, { color: c.dim }]}>{roleSubtitle(user.role)}</Text>
+          <Text style={[styles.role, { color: c.dim }]}>{t(roleSubtitleKey(user.role))}</Text>
         </View>
       </View>
 

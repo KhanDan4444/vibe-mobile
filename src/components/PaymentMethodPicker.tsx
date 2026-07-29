@@ -1,5 +1,5 @@
 import { OptionPickerField } from '@/src/components/OptionPickerField';
-import { PAYMENT_METHODS } from '@/src/constants/payments';
+import { PAYMENT_METHODS, paymentMethodLabelKey } from '@/src/constants/payments';
 import { useTranslation } from 'react-i18next';
 
 export function PaymentMethodPicker({
@@ -10,7 +10,10 @@ export function PaymentMethodPicker({
   onChange: (method: (typeof PAYMENT_METHODS)[number]) => void;
 }) {
   const { t } = useTranslation();
-  const options = PAYMENT_METHODS.map((m) => ({ value: m, label: m }));
+  const options = PAYMENT_METHODS.map((m) => ({
+    value: m,
+    label: t(paymentMethodLabelKey(m)!),
+  }));
 
   return (
     <OptionPickerField
