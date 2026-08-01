@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/src/context/PreferencesContext';
@@ -26,7 +26,22 @@ export function GymBootError() {
         {showDevDetail && bootError.message?.includes('localhost') ? (
           <Text style={[styles.hint, { color: c.muted }]}>{t('gymBoot.usbHint')}</Text>
         ) : null}
-        <Pressable style={[styles.btn, { backgroundColor: c.accent }]} onPress={retryBoot}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('gymBoot.retry')}
+          onPress={retryBoot}
+          android_ripple={
+            Platform.OS === 'android' ? { color: 'rgba(255,255,255,0.28)' } : undefined
+          }
+          style={({ pressed }) => [
+            styles.btn,
+            {
+              backgroundColor: c.accent,
+              opacity: pressed ? 0.82 : 1,
+              transform: [{ scale: pressed ? 0.98 : 1 }],
+            },
+          ]}
+        >
           <Text style={styles.btnText}>{t('gymBoot.retry')}</Text>
         </Pressable>
       </View>
@@ -70,14 +85,18 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   btn: {
-    alignSelf: 'flex-start',
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: 10,
+    minHeight: 44,
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 12,
+    overflow: 'hidden',
   },
   btnText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
   },
 });

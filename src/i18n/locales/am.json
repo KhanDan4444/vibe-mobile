@@ -545,7 +545,10 @@
     "paymentForTermStart": "ለዚህ አዲስ የክፍያ ዘመን መጀመሪያ ቀን የተቀበሉትን ክፍያ ያስገቡ።",
     "paymentDateBeforeTermStart": "የክፍያ ቀን ከጊዜ መጀመሪያ ({{date}}) በኋላ መሆን አለበት።",
     "paymentDateFuture": "የክፍያ ቀን በወደፊት መሆን አይችልም።",
-    "changePlanDuplicate": "በዚህ ቀን የዕቅድ ለውጥ ክፍያ ቀድሞ ተመዝግቧል። በገቢ ውስጥ ያርትዑ ወይም ሌላ ቀን ይምረጡ።"
+    "changePlanDuplicate": "በዚህ ቀን የዕቅድ ለውጥ ክፍያ ቀድሞ ተመዝግቧል። በገቢ ውስጥ ያርትዑ ወይም ሌላ ቀን ይምረጡ።",
+    "phoneRequired": "ለSMS ማስታወሻ የስልክ ቁጥር ያስፈልጋል።",
+    "phoneInvalid": "ትክክለኛ የኢትዮጵያ ሞባይል ቁጥር ያስገቡ (09… ወይም +251…)።",
+    "planNotSelected": "ዕቅድ አልተመረጠም።"
   },
   "paymentEdit": {
     "deleteTitle": "ክፍያ ሰርዝ",

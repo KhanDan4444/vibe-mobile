@@ -545,7 +545,10 @@
     "paymentForTermStart": "Enter the payment collected for this new term start date.",
     "paymentDateBeforeTermStart": "Payment date must be on or after the term start ({{date}}).",
     "paymentDateFuture": "Payment date cannot be in the future.",
-    "changePlanDuplicate": "A plan-change payment is already recorded on this date. Edit it in Revenue or pick another date."
+    "changePlanDuplicate": "A plan-change payment is already recorded on this date. Edit it in Revenue or pick another date.",
+    "phoneRequired": "Phone number is required for SMS reminders.",
+    "phoneInvalid": "Enter a valid Ethiopian mobile number (09… or +251…).",
+    "planNotSelected": "Plan is not selected."
   },
   "paymentEdit": {
     "deleteTitle": "Delete payment",

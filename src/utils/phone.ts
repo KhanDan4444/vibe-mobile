@@ -19,3 +19,13 @@ export function normalizeEthiopianPhone(input: string | null | undefined): strin
 export function isValidEthiopianPhone(input: string): boolean {
   return normalizeEthiopianPhone(input) != null;
 }
+
+/** Required Ethiopian mobile for member forms. */
+export function validateRequiredEthiopianPhone(
+  input: string | null | undefined
+): { ok: true } | { ok: false; key: 'validation.phoneRequired' | 'validation.phoneInvalid' } {
+  const trimmed = String(input ?? '').trim();
+  if (!trimmed) return { ok: false, key: 'validation.phoneRequired' };
+  if (!isValidEthiopianPhone(trimmed)) return { ok: false, key: 'validation.phoneInvalid' };
+  return { ok: true };
+}

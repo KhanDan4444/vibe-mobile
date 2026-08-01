@@ -18,6 +18,7 @@ export function OptionPickerField<T extends string>({
   value,
   onChange,
   sheetTitle,
+  error,
 }: {
   label?: string;
   placeholder: string;
@@ -25,6 +26,7 @@ export function OptionPickerField<T extends string>({
   value: T | null | undefined;
   onChange: (value: T) => void;
   sheetTitle?: string;
+  error?: boolean;
 }) {
   const { colors: c } = useTheme();
   const [open, setOpen] = useState(false);
@@ -39,7 +41,7 @@ export function OptionPickerField<T extends string>({
           formStyles.input,
           {
             backgroundColor: c.inputBg,
-            borderColor: c.inputBorder,
+            borderColor: error ? c.error : c.inputBorder,
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',

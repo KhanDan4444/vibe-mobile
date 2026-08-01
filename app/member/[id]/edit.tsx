@@ -1,6 +1,6 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { KeyboardAvoidingView, Platform, StyleSheet, View, type TextInput } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -8,7 +8,7 @@ import { fetchBranches } from '@/src/api/branches';
 import { fetchMember, updateMember } from '@/src/api/members';
 import { BranchPicker } from '@/src/components/BranchPicker';
 import { PhotoPickerField } from '@/src/components/PhotoPickerField';
-import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { useNetwork } from '@/src/offline/NetworkProvider';
@@ -19,6 +19,7 @@ import { fetchMemberPhotoDataUri } from '@/src/utils/memberPhoto';
 import { bumpMemberPhotoCache } from '@/src/utils/memberPhotoCache';
 import { runInBackground } from '@/src/utils/runInBackground';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
+import { validateRequiredEthiopianPhone } from '@/src/utils/phone';
 import type { UpdateMemberPayload } from '@/src/types/api';
 import { useTranslation } from 'react-i18next';
 
@@ -41,6 +42,9 @@ export default function EditMemberScreen() {
   const [photoRemoved, setPhotoRemoved] = useState(false);
   const [photoProcessing, setPhotoProcessing] = useState(false);
   const [error, setError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+  const phoneRef = useRef<TextInput>(null);
+  const phoneRefocusLockRef = useRef(false);
   const flashSaved = useSaveFlash();
   const flashOffline = useOfflineFlash();
   const { isOnline } = useNetwork();
@@ -92,6 +96,26 @@ export default function EditMemberScreen() {
     };
   }, [memberQuery.data, memberId, token]);
 
+  const ensurePhoneValid = useCallback(() => {
+    const result = validateRequiredEthiopianPhone(phone);
+    if (result.ok) {
+      setPhoneError('');
+      return true;
+    }
+    setPhoneError(t(result.key));
+    return false;
+  }, [phone, t]);
+
+  const handlePhoneBlur = () => {
+    if (phoneRefocusLockRef.current) return;
+    if (ensurePhoneValid()) return;
+    phoneRefocusLockRef.current = true;
+    requestAnimationFrame(() => {
+      phoneRef.current?.focus();
+      phoneRefocusLockRef.current = false;
+    });
+  };
+
   const mutation = useOfflineMutation({
     jobType: 'update-member',
     memberId,
@@ -135,7 +159,7 @@ export default function EditMemberScreen() {
 
   const canSubmit = useMemo(() => {
     if (photoBlocksOffline) return false;
-    if (!name.trim() || !phone.trim()) return false;
+    if (!name.trim() || !validateRequiredEthiopianPhone(phone).ok) return false;
     if (showBranchPicker && branchId == null) return false;
     return true;
   }, [photoBlocksOffline, name, phone, showBranchPicker, branchId]);
@@ -161,7 +185,26 @@ export default function EditMemberScreen() {
           <Field value={name} onChangeText={setName} autoCapitalize="words" />
 
           <Label>{t('forms.phone')}</Label>
-          <Field value={phone} onChangeText={setPhone} keyboardType="phone-pad" autoCapitalize="none" />
+          <Field
+            ref={phoneRef}
+            value={phone}
+            onChangeText={(v) => {
+              setPhone(v);
+              if (phoneError) setPhoneError('');
+            }}
+            keyboardType="phone-pad"
+            autoCapitalize="none"
+            returnKeyType="done"
+            blurOnSubmit={false}
+            error={Boolean(phoneError)}
+            onBlur={handlePhoneBlur}
+            onSubmitEditing={() => {
+              if (!ensurePhoneValid()) {
+                phoneRef.current?.focus();
+              }
+            }}
+          />
+          <FieldError message={phoneError} />
 
           <PhotoPickerField
             previewUri={photoPreview}
@@ -194,6 +237,10 @@ export default function EditMemberScreen() {
             label={t('common.save')}
             onPress={() => {
               setError('');
+              if (!ensurePhoneValid()) {
+                phoneRef.current?.focus();
+                return;
+              }
               mutation.mutate(buildPayload());
             }}
             loading={mutation.isPending || photoProcessing}

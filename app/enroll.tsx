@@ -1,6 +1,6 @@
 import { Redirect, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Switch, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { KeyboardAvoidingView, Platform, Switch, View, type TextInput } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -13,7 +13,7 @@ import { DateField } from '@/src/components/DateField';
 import { PhotoPickerField } from '@/src/components/PhotoPickerField';
 import { PlanPickerField } from '@/src/components/PlanPickerField';
 import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
-import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { SkeletonBone } from '@/src/components/Skeleton';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
@@ -31,6 +31,7 @@ import {
   clampPaymentToTerm,
 } from '@/src/utils/datePickerBounds';
 import { formatApiError } from '@/src/utils/paymentValidation';
+import { validateRequiredEthiopianPhone } from '@/src/utils/phone';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
 import type { EnrollPayload, PlanRow } from '@/src/types/api';
 
@@ -56,6 +57,10 @@ export default function EnrollScreen() {
   const [photoPreview, setPhotoPreview] = useState('');
   const [photoProcessing, setPhotoProcessing] = useState(false);
   const [error, setError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+  const [planError, setPlanError] = useState('');
+  const phoneRef = useRef<TextInput>(null);
+  const phoneRefocusLockRef = useRef(false);
   const { colors: c } = useTheme();
   const { t } = useTranslation();
   const styles = useThemedStyles((colors) => ({
@@ -120,6 +125,26 @@ export default function EnrollScreen() {
     }
   }, [selectedPlan, skipPayment]);
 
+  const ensurePhoneValid = useCallback(() => {
+    const result = validateRequiredEthiopianPhone(phone);
+    if (result.ok) {
+      setPhoneError('');
+      return true;
+    }
+    setPhoneError(t(result.key));
+    return false;
+  }, [phone, t]);
+
+  const handlePhoneBlur = () => {
+    if (phoneRefocusLockRef.current) return;
+    if (ensurePhoneValid()) return;
+    phoneRefocusLockRef.current = true;
+    requestAnimationFrame(() => {
+      phoneRef.current?.focus();
+      phoneRefocusLockRef.current = false;
+    });
+  };
+
   const buildPayload = (): EnrollPayload => {
     if (!planId) throw new Error('Select a plan.');
     const planAmount = selectedPlan ? planPrice(selectedPlan) : Number(amount);
@@ -164,9 +189,12 @@ export default function EnrollScreen() {
 
   const canSubmit = useMemo(() => {
     if (photoBlocksOffline) return false;
-    if (!name.trim() || !phone.trim() || !planId || !/^\d{4}-\d{2}-\d{2}$/.test(startDate)) return false;
-    if (skipPayment) return true;
+    if (!name.trim() || !validateRequiredEthiopianPhone(phone).ok || !/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
+      return false;
+    }
     if (showBranchPicker && !branchId) return false;
+    // Allow enroll tap without a plan so we can show the plan field error.
+    if (skipPayment || !planId) return true;
     return Number(amount) > 0 && /^\d{4}-\d{2}-\d{2}$/.test(paymentDate);
   }, [
     photoBlocksOffline,
@@ -214,12 +242,26 @@ export default function EnrollScreen() {
 
           <Label>{t('forms.phone')}</Label>
           <Field
+            ref={phoneRef}
             value={phone}
-            onChangeText={setPhone}
+            onChangeText={(v) => {
+              setPhone(v);
+              if (phoneError) setPhoneError('');
+            }}
             placeholder={t('forms.phonePlaceholder')}
             keyboardType="phone-pad"
             autoCapitalize="none"
+            returnKeyType="done"
+            blurOnSubmit={false}
+            error={Boolean(phoneError)}
+            onBlur={handlePhoneBlur}
+            onSubmitEditing={() => {
+              if (!ensurePhoneValid()) {
+                phoneRef.current?.focus();
+              }
+            }}
           />
+          <FieldError message={phoneError} />
 
           <PhotoPickerField
             previewUri={photoPreview}
@@ -246,7 +288,18 @@ export default function EnrollScreen() {
           ) : plans.length === 0 ? (
             <Text style={styles.hint}>{t('forms.noPlans')}</Text>
           ) : (
-            <PlanPickerField plans={plans} value={planId} onChange={setPlanId} />
+            <>
+              <PlanPickerField
+                plans={plans}
+                value={planId}
+                onChange={(id) => {
+                  setPlanId(id);
+                  if (planError) setPlanError('');
+                }}
+                error={Boolean(planError)}
+              />
+              <FieldError message={planError} />
+            </>
           )}
 
           <Label>{t('forms.startDate')}</Label>
@@ -290,6 +343,15 @@ export default function EnrollScreen() {
             label={t('screens.enroll')}
             onPress={() => {
               setError('');
+              if (!ensurePhoneValid()) {
+                phoneRef.current?.focus();
+                return;
+              }
+              if (!planId) {
+                setPlanError(t('validation.planNotSelected'));
+                return;
+              }
+              setPlanError('');
               mutation.mutate(buildPayload());
             }}
             loading={mutation.isPending || photoProcessing}

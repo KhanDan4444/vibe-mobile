@@ -9,11 +9,13 @@ export function PlanPickerField({
   value,
   onChange,
   label,
+  error,
 }: {
   plans: PlanRow[];
   value: number | null;
   onChange: (id: number) => void;
   label?: string;
+  error?: boolean;
 }) {
   const { t } = useTranslation();
 
@@ -36,6 +38,7 @@ export function PlanPickerField({
       options={options}
       value={value != null ? String(value) : undefined}
       onChange={(v) => onChange(Number(v))}
+      error={error}
     />
   );
 }

@@ -545,7 +545,10 @@
     "paymentForTermStart": "Kaffaltii guyyaa jalqaba yeroo haarawa kanaaf sassaabame galchi.",
     "paymentDateBeforeTermStart": "Guyyaan kaffaltii guyyaa jalqaba yeroo dura ta'uu hin danda'u.",
     "paymentDateFuture": "Guyyaan kaffaltii fuuldura ta'uu hin danda'u.",
-    "changePlanDuplicate": "Kaffaltiin jijjiirama karooraa guyyaa kana irratti kanaan dura galmeeffameera. Galii keessatti gulaali ykn guyyaa biraa filadhu."
+    "changePlanDuplicate": "Kaffaltiin jijjiirama karooraa guyyaa kana irratti kanaan dura galmeeffameera. Galii keessatti gulaali ykn guyyaa biraa filadhu.",
+    "phoneRequired": "SMS yaadachiisaaf lakkoofsi bilbilaa barbaachisaadha.",
+    "phoneInvalid": "Lakkoofsa bilbilaa Itoophiyaa sirrii galchi (09… ykn +251…).",
+    "planNotSelected": "Karoora hin filatamne."
   },
   "paymentEdit": {
     "deleteTitle": "Kaffaltii haqamuu?",

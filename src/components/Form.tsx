@@ -1,3 +1,4 @@
+import React from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText as Text, AppTextInput as TextInput } from '@/src/components/AppText';
@@ -75,27 +76,58 @@ export function Label({ children }: { children: string }) {
   return <Text style={[formStyles.label, { color: c.muted }]}>{children}</Text>;
 }
 
-export function Field({
-  value,
-  onChangeText,
-  placeholder,
-  secureTextEntry,
-  keyboardType,
-  autoCapitalize,
-}: {
-  value: string;
-  onChangeText: (v: string) => void;
-  placeholder?: string;
-  secureTextEntry?: boolean;
-  keyboardType?: 'default' | 'numeric' | 'phone-pad' | 'decimal-pad' | 'email-address';
-  autoCapitalize?: 'none' | 'sentences' | 'words';
-}) {
+export function FieldError({ message }: { message?: string }) {
+  const { colors: c } = useTheme();
+  if (!message) return null;
+  return (
+    <Text style={[formStyles.fieldError, { color: c.error }]} accessibilityRole="alert">
+      {message}
+    </Text>
+  );
+}
+
+export const Field = React.forwardRef<
+  React.ElementRef<typeof TextInput>,
+  {
+    value: string;
+    onChangeText: (v: string) => void;
+    placeholder?: string;
+    secureTextEntry?: boolean;
+    keyboardType?: 'default' | 'numeric' | 'phone-pad' | 'decimal-pad' | 'email-address';
+    autoCapitalize?: 'none' | 'sentences' | 'words';
+    onBlur?: () => void;
+    onSubmitEditing?: () => void;
+    returnKeyType?: 'done' | 'next' | 'go' | 'send' | 'default';
+    blurOnSubmit?: boolean;
+    error?: boolean;
+  }
+>(function Field(
+  {
+    value,
+    onChangeText,
+    placeholder,
+    secureTextEntry,
+    keyboardType,
+    autoCapitalize,
+    onBlur,
+    onSubmitEditing,
+    returnKeyType,
+    blurOnSubmit,
+    error,
+  },
+  ref
+) {
   const { colors: c } = useTheme();
   return (
     <TextInput
+      ref={ref}
       style={[
         formStyles.input,
-        { backgroundColor: c.inputBg, borderColor: c.inputBorder, color: c.text },
+        {
+          backgroundColor: c.inputBg,
+          borderColor: error ? c.error : c.inputBorder,
+          color: c.text,
+        },
       ]}
       value={value}
       onChangeText={onChangeText}
@@ -105,9 +137,13 @@ export function Field({
       keyboardType={keyboardType}
       autoCapitalize={autoCapitalize ?? 'sentences'}
       autoCorrect={false}
+      onBlur={onBlur}
+      onSubmitEditing={onSubmitEditing}
+      returnKeyType={returnKeyType}
+      blurOnSubmit={blurOnSubmit}
     />
   );
-}
+});
 
 export function ErrorBanner({ message }: { message: string }) {
   const { colors: c } = useTheme();
@@ -201,6 +237,11 @@ export const formStyles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 16,
+  },
+  fieldError: {
+    marginTop: 6,
+    fontSize: 12,
+    fontWeight: '500',
   },
   error: {
     borderWidth: 1,
