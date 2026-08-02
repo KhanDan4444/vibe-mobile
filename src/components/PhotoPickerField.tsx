@@ -1,8 +1,12 @@
-import { ActionSheetIOS, Alert, Image, Platform, Pressable, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, Image, Pressable, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useTranslation } from 'react-i18next';
+import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
 import { Label } from '@/src/components/Form';
+import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { compressMemberPhoto } from '@/src/utils/compressMemberPhoto';
 
@@ -30,21 +34,23 @@ export function PhotoPickerField({
   notice?: string;
 }) {
   const { t } = useTranslation();
-  const styles = useThemedStyles((c) => ({
+  const { colors: c } = useTheme();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const styles = useThemedStyles((colors) => ({
     row: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 16, marginTop: 4 },
-    preview: { width: 72, height: 72, borderRadius: 36, backgroundColor: c.border },
+    preview: { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.border },
     placeholder: {
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
       borderWidth: 1,
-      borderColor: c.border,
+      borderColor: colors.border,
     },
-    placeholderText: { color: c.dim, fontSize: 11 },
+    placeholderText: { color: colors.dim, fontSize: 11 },
     actions: { flex: 1, gap: 8 },
     btn: {
-      backgroundColor: c.card,
+      backgroundColor: colors.card,
       borderWidth: 1,
-      borderColor: c.border,
+      borderColor: colors.border,
       borderRadius: 8,
       paddingVertical: 12,
       paddingHorizontal: 14,
@@ -54,16 +60,32 @@ export function PhotoPickerField({
     },
     btnDisabled: { opacity: 0.45 },
     btnSecondary: { backgroundColor: 'transparent' },
-    btnText: { color: c.text, fontSize: 14, fontWeight: '600' as const },
-    btnTextSecondary: { color: c.muted, fontSize: 14 },
+    btnText: { color: colors.text, fontSize: 14, fontWeight: '600' as const },
+    btnTextSecondary: { color: colors.muted, fontSize: 14 },
     notice: {
       marginTop: 8,
       marginBottom: 4,
       fontSize: 13,
       lineHeight: 18,
-      color: c.warning,
+      color: colors.warning,
     },
+    optionRow: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 12,
+    },
+    optionIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 10,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      backgroundColor: colors.accentSoft,
+    },
+    cancelWrap: { marginTop: 8 },
   }));
+
+  const closeSheet = () => setSheetOpen(false);
 
   const applyPickedAsset = async (uri: string) => {
     setProcessing(true);
@@ -78,6 +100,7 @@ export function PhotoPickerField({
   };
 
   const pickFromLibrary = async () => {
+    closeSheet();
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
       Alert.alert(t('photo.permissionTitle'), t('photo.permissionBody'));
@@ -90,6 +113,7 @@ export function PhotoPickerField({
   };
 
   const pickFromCamera = async () => {
+    closeSheet();
     const perm = await ImagePicker.requestCameraPermissionsAsync();
     if (!perm.granted) {
       Alert.alert(t('photo.cameraPermissionTitle'), t('photo.cameraPermissionBody'));
@@ -103,26 +127,7 @@ export function PhotoPickerField({
 
   const openPhotoActions = () => {
     if (processing || pickDisabled) return;
-
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: [t('common.cancel'), t('photo.takePhoto'), t('photo.chooseLibrary')],
-          cancelButtonIndex: 0,
-        },
-        (buttonIndex) => {
-          if (buttonIndex === 1) void pickFromCamera();
-          if (buttonIndex === 2) void pickFromLibrary();
-        },
-      );
-      return;
-    }
-
-    Alert.alert(t('photo.label'), undefined, [
-      { text: t('photo.takePhoto'), onPress: () => void pickFromCamera() },
-      { text: t('photo.chooseLibrary'), onPress: () => void pickFromLibrary() },
-      { text: t('common.cancel'), style: 'cancel' },
-    ]);
+    setSheetOpen(true);
   };
 
   const addLabel = processing ? t('photo.processing') : previewUri ? t('photo.change') : t('photo.add');
@@ -163,6 +168,73 @@ export function PhotoPickerField({
           ) : null}
         </View>
       </View>
+
+      <BottomSheet
+        visible={sheetOpen}
+        title={t('photo.label')}
+        onClose={closeSheet}
+        showCloseButton
+      >
+        <Pressable
+          style={[
+            {
+              paddingVertical: 14,
+              paddingHorizontal: 14,
+              borderRadius: 10,
+              borderWidth: 1,
+              borderColor: c.border,
+              backgroundColor: c.card,
+              marginBottom: 8,
+              minHeight: 56,
+              justifyContent: 'center',
+            },
+          ]}
+          onPress={() => void pickFromCamera()}
+          accessibilityRole="button"
+        >
+          <View style={styles.optionRow}>
+            <View style={styles.optionIcon}>
+              <Ionicons name="camera-outline" size={22} color={c.accentText} />
+            </View>
+            <Text style={{ flex: 1, fontSize: 15, fontWeight: '600', color: c.text }}>
+              {t('photo.takePhoto')}
+            </Text>
+            <Ionicons name="chevron-forward" size={18} color={c.muted} />
+          </View>
+        </Pressable>
+
+        <Pressable
+          style={[
+            {
+              paddingVertical: 14,
+              paddingHorizontal: 14,
+              borderRadius: 10,
+              borderWidth: 1,
+              borderColor: c.border,
+              backgroundColor: c.card,
+              marginBottom: 8,
+              minHeight: 56,
+              justifyContent: 'center',
+            },
+          ]}
+          onPress={() => void pickFromLibrary()}
+          accessibilityRole="button"
+        >
+          <View style={styles.optionRow}>
+            <View style={styles.optionIcon}>
+              <Ionicons name="images-outline" size={22} color={c.accentText} />
+            </View>
+            <Text style={{ flex: 1, fontSize: 15, fontWeight: '600', color: c.text }}>
+              {t('photo.chooseLibrary')}
+            </Text>
+            <Ionicons name="chevron-forward" size={18} color={c.muted} />
+          </View>
+        </Pressable>
+
+        <View style={styles.cancelWrap}>
+          <SheetOption label={t('common.cancel')} onPress={closeSheet} />
+        </View>
+      </BottomSheet>
     </View>
   );
 }

@@ -96,15 +96,28 @@ export default function EditMemberScreen() {
     };
   }, [memberQuery.data, memberId, token]);
 
-  const ensurePhoneValid = useCallback(() => {
-    const result = validateRequiredEthiopianPhone(phone);
-    if (result.ok) {
+  const ensurePhoneValid = useCallback(
+    (value = phone) => {
+      const result = validateRequiredEthiopianPhone(value);
+      if (result.ok) {
+        setPhoneError('');
+        return true;
+      }
+      setPhoneError(t(result.key));
+      return false;
+    },
+    [phone, t]
+  );
+
+  const handlePhoneChange = (value: string) => {
+    setPhone(value);
+    const trimmed = value.trim();
+    if (!trimmed) {
       setPhoneError('');
-      return true;
+      return;
     }
-    setPhoneError(t(result.key));
-    return false;
-  }, [phone, t]);
+    ensurePhoneValid(trimmed);
+  };
 
   const handlePhoneBlur = () => {
     if (phoneRefocusLockRef.current) return;
@@ -188,10 +201,7 @@ export default function EditMemberScreen() {
           <Field
             ref={phoneRef}
             value={phone}
-            onChangeText={(v) => {
-              setPhone(v);
-              if (phoneError) setPhoneError('');
-            }}
+            onChangeText={handlePhoneChange}
             keyboardType="phone-pad"
             autoCapitalize="none"
             returnKeyType="done"
