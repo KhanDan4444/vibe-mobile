@@ -7,6 +7,7 @@ import { ApiError } from '@/src/api/client';
 interface GymBootContextValue {
   booting: boolean;
   bootError: Error | null;
+  retrying: boolean;
   retryBoot: () => void;
 }
 
@@ -36,16 +37,17 @@ export function GymBootProvider({ children }: { children: React.ReactNode }) {
     }
   }, [bootQuery.error, logout]);
 
-  const value = useMemo(
-    () => ({
+  const value = useMemo(() => {
+    const bootError = bootErrorFromQuery(bootQuery.error);
+    return {
       booting: bootQuery.isLoading,
-      bootError: bootErrorFromQuery(bootQuery.error),
+      bootError,
+      retrying: bootQuery.isFetching && bootError !== null,
       retryBoot: () => {
         void bootQuery.refetch();
       },
-    }),
-    [bootQuery.error, bootQuery.isLoading, bootQuery.refetch]
-  );
+    };
+  }, [bootQuery.error, bootQuery.isFetching, bootQuery.isLoading, bootQuery.refetch]);
 
   return <GymBootContext.Provider value={value}>{children}</GymBootContext.Provider>;
 }

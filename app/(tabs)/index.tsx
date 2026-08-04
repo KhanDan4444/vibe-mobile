@@ -7,6 +7,7 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { fetchDashboard } from '@/src/api/dashboard';
 import { fetchGymProfile } from '@/src/api/profile';
 import { BranchFilterBar } from '@/src/components/BranchFilterBar';
+import { MemberPhoto } from '@/src/components/MemberPhoto';
 import { MiniBarChart } from '@/src/components/MiniBarChart';
 import { PageSkeleton } from '@/src/components/Skeleton';
 import { ReadOnlyBanner } from '@/src/components/ReadOnlyBanner';
@@ -75,22 +76,26 @@ function StatCard({
 function AlertMemberRow({
   member,
   colors,
+  token,
   onOpen,
   onAction,
 }: {
   member: DashboardAlertMember;
   colors: ReturnType<typeof useTheme>['colors'];
+  token: string;
   onOpen: () => void;
   onAction?: () => void;
 }) {
   const { t } = useTranslation();
   return (
     <Pressable style={[styles.alertRow, { borderColor: colors.border }]} onPress={onOpen}>
-      <View style={[styles.alertAvatar, { borderColor: colors.border, backgroundColor: colors.card }]}>
-        <Text style={[styles.alertInitial, { color: colors.text }]}>
-          {(member.name || '?').trim().charAt(0).toUpperCase()}
-        </Text>
-      </View>
+      <MemberPhoto
+        memberId={member.id}
+        name={member.name}
+        token={token}
+        size={36}
+        hasPhoto={Boolean(member.photo_url)}
+      />
       <View style={styles.alertBody}>
         <Text style={[styles.alertName, { color: colors.text }]} numberOfLines={1}>
           {member.name}
@@ -221,6 +226,7 @@ export default function DashboardScreen() {
                 key={member.id}
                 member={member}
                 colors={c}
+                token={token!}
                 onOpen={() => goMembers(filterForMemberStatus(member.status))}
                 onAction={readOnly ? undefined : () => router.push(route as never)}
               />
@@ -379,15 +385,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
-  alertAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  alertInitial: { fontSize: 14, fontWeight: '700' },
   alertBody: { flex: 1, minWidth: 0 },
   alertName: { fontSize: 14, fontWeight: '700' },
   alertMeta: { marginTop: 3, fontSize: 12 },

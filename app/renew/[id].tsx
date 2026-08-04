@@ -1,7 +1,7 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -19,7 +19,7 @@ import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
 import { PAYMENT_METHODS } from '@/src/constants/payments';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { isOfflineQueued } from '@/src/offline/types';
-import { todayString } from '@/src/utils/date';
+import { formatDisplayDate, isDateRangeValid, todayString } from '@/src/utils/date';
 import { defaultRenewStartDate } from '@/src/utils/memberRenew';
 import {
   boundsForPaymentOnTerm,
@@ -55,6 +55,15 @@ export default function RenewScreen() {
     center: { flex: 1, alignItems: 'center' as const, justifyContent: 'center' as const },
     memberName: { color: colors.text, fontSize: 17, fontWeight: '600' as const, marginBottom: 8 },
     hint: { color: colors.dim, fontSize: 14 },
+    useTodayBtn: {
+      alignSelf: 'flex-start' as const,
+      marginTop: 8,
+      paddingVertical: 8,
+      paddingHorizontal: 4,
+      minHeight: 44,
+      justifyContent: 'center' as const,
+    },
+    useTodayText: { color: colors.accentText, fontSize: 14, fontWeight: '600' as const },
   }));
 
   const memberQuery = useQuery({
@@ -73,6 +82,10 @@ export default function RenewScreen() {
   const plans = plansQuery.data ?? [];
   const renewStartBounds: DateBounds = member ? boundsForRenewStart(member) : {};
   const paymentBounds = boundsForPaymentOnTerm(startDate);
+  const paymentRangeValid = isDateRangeValid(paymentBounds.minimumDate, paymentBounds.maximumDate);
+  const today = todayString();
+  const minStartIso = member ? defaultRenewStartDate(member) : today;
+  const canSetStartToToday = !paymentRangeValid && today >= minStartIso;
 
   useEffect(() => {
     if (member) {
@@ -124,9 +137,10 @@ export default function RenewScreen() {
       planId != null &&
       Number(amount) > 0 &&
       /^\d{4}-\d{2}-\d{2}$/.test(startDate) &&
-      /^\d{4}-\d{2}-\d{2}$/.test(paymentDate)
+      /^\d{4}-\d{2}-\d{2}$/.test(paymentDate) &&
+      paymentRangeValid
     );
-  }, [memberId, planId, amount, startDate, paymentDate]);
+  }, [memberId, planId, amount, startDate, paymentDate, paymentRangeValid]);
 
   if (!canRenew) {
     return <Redirect href="/login" />;
@@ -183,7 +197,23 @@ export default function RenewScreen() {
             onChange={setPaymentDate}
             minimumDate={paymentBounds.minimumDate}
             maximumDate={paymentBounds.maximumDate}
+            rangeInvalidMessage={t('forms.paymentDateFutureStart', {
+              date: formatDisplayDate(startDate),
+            })}
           />
+          {canSetStartToToday ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('forms.useTodayAsStart')}
+              onPress={() => {
+                setStartDate(today);
+                setPaymentDate(clampPaymentToTerm(today, paymentDate));
+              }}
+              style={({ pressed }) => [styles.useTodayBtn, { opacity: pressed ? 0.7 : 1 }]}
+            >
+              <Text style={styles.useTodayText}>{t('forms.useTodayAsStart')}</Text>
+            </Pressable>
+          ) : null}
 
           <PaymentMethodPicker value={method} onChange={setMethod} />
 

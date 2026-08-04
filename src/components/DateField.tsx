@@ -21,12 +21,15 @@ export function DateField({
   minimumDate,
   maximumDate,
   disabled,
+  rangeInvalidMessage,
 }: {
   value: string;
   onChange: (isoDate: string) => void;
   minimumDate?: Date;
   maximumDate?: Date;
   disabled?: boolean;
+  /** Override the default amber hint when min > max. */
+  rangeInvalidMessage?: string;
 }) {
   const { colors: c } = useTheme();
   const { t } = useTranslation();
@@ -79,7 +82,7 @@ export function DateField({
       </Pressable>
       {!rangeValid ? (
         <Text style={{ color: c.warning, fontSize: 12, marginTop: 6, lineHeight: 17 }}>
-          {t('forms.dateRangeInvalid')}
+          {rangeInvalidMessage || t('forms.dateRangeInvalid')}
         </Text>
       ) : null}
       {open && rangeValid ? (

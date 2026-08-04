@@ -155,6 +155,7 @@ export interface DashboardAlertMember {
   plan_name?: string | null;
   end_date: string;
   status: string;
+  photo_url?: string | null;
 }
 
 export interface DashboardChartPoint {

@@ -60,7 +60,6 @@ export default function EnrollScreen() {
   const [phoneError, setPhoneError] = useState('');
   const [planError, setPlanError] = useState('');
   const phoneRef = useRef<TextInput>(null);
-  const phoneRefocusLockRef = useRef(false);
   const { colors: c } = useTheme();
   const { t } = useTranslation();
   const styles = useThemedStyles((colors) => ({
@@ -150,13 +149,9 @@ export default function EnrollScreen() {
   };
 
   const handlePhoneBlur = () => {
-    if (phoneRefocusLockRef.current) return;
-    if (ensurePhoneValid()) return;
-    phoneRefocusLockRef.current = true;
-    requestAnimationFrame(() => {
-      phoneRef.current?.focus();
-      phoneRefocusLockRef.current = false;
-    });
+    // Show the error, but do not steal focus — pickers (plan, payment, dates)
+    // blur the phone field and must remain usable.
+    ensurePhoneValid();
   };
 
   const buildPayload = (): EnrollPayload => {

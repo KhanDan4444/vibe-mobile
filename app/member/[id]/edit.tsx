@@ -44,7 +44,6 @@ export default function EditMemberScreen() {
   const [error, setError] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const phoneRef = useRef<TextInput>(null);
-  const phoneRefocusLockRef = useRef(false);
   const flashSaved = useSaveFlash();
   const flashOffline = useOfflineFlash();
   const { isOnline } = useNetwork();
@@ -120,13 +119,8 @@ export default function EditMemberScreen() {
   };
 
   const handlePhoneBlur = () => {
-    if (phoneRefocusLockRef.current) return;
-    if (ensurePhoneValid()) return;
-    phoneRefocusLockRef.current = true;
-    requestAnimationFrame(() => {
-      phoneRef.current?.focus();
-      phoneRefocusLockRef.current = false;
-    });
+    // Show the error, but do not steal focus from other controls.
+    ensurePhoneValid();
   };
 
   const mutation = useOfflineMutation({

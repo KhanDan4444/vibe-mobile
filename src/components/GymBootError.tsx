@@ -1,4 +1,4 @@
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/src/context/PreferencesContext';
@@ -7,9 +7,9 @@ import { useGymBoot } from '@/src/context/GymBootContext';
 export function GymBootError() {
   const { t } = useTranslation();
   const { colors: c } = useTheme();
-  const { bootError, booting, retryBoot } = useGymBoot();
+  const { bootError, retrying, retryBoot } = useGymBoot();
 
-  if (!bootError || booting) return null;
+  if (!bootError) return null;
 
   const showDevDetail = typeof __DEV__ !== 'undefined' && __DEV__;
 
@@ -29,20 +29,26 @@ export function GymBootError() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t('gymBoot.retry')}
+          accessibilityState={{ disabled: retrying, busy: retrying }}
+          disabled={retrying}
           onPress={retryBoot}
           android_ripple={
-            Platform.OS === 'android' ? { color: 'rgba(255,255,255,0.28)' } : undefined
+            Platform.OS === 'android' && !retrying ? { color: 'rgba(255,255,255,0.28)' } : undefined
           }
           style={({ pressed }) => [
             styles.btn,
             {
               backgroundColor: c.accent,
-              opacity: pressed ? 0.82 : 1,
-              transform: [{ scale: pressed ? 0.98 : 1 }],
+              opacity: retrying ? 0.72 : pressed ? 0.82 : 1,
+              transform: [{ scale: pressed && !retrying ? 0.98 : 1 }],
             },
           ]}
         >
-          <Text style={styles.btnText}>{t('gymBoot.retry')}</Text>
+          {retrying ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.btnText}>{t('gymBoot.retry')}</Text>
+          )}
         </Pressable>
       </View>
     </View>
