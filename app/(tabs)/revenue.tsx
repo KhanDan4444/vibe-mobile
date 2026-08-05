@@ -152,20 +152,25 @@ function PaymentRowItem({
   );
 }
 
-function MethodStat({ label, amount }: { label: string; amount: number }) {
+function MethodStat({ method, label, amount }: { method: string; label: string; amount: number }) {
   const { language } = usePreferences();
-  const styles = useThemedStyles((c) => ({
+  const { colors: c } = useTheme();
+  const styles = useThemedStyles((colors) => ({
     methodStat: { flex: 1, minWidth: 0 },
-    methodStatLabel: { fontSize: 11, color: c.dim },
-    methodStatValue: { marginTop: 4, fontSize: 15, fontWeight: '700' as const, color: c.muted },
+    methodStatHead: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 4 },
+    methodStatLabel: { flexShrink: 1, fontSize: 11, fontWeight: '600' as const, color: colors.dim },
+    methodStatValue: { marginTop: 5, fontSize: 15, fontWeight: '700' as const, color: colors.text },
   }));
 
   if (!amount) return null;
   return (
     <View style={styles.methodStat}>
-      <Text style={appTextStyle(language, styles.methodStatLabel)} numberOfLines={1}>
-        {label}
-      </Text>
+      <View style={styles.methodStatHead}>
+        <Ionicons name={paymentMethodIcon(method)} size={12} color={c.dim} />
+        <Text style={appTextStyle(language, styles.methodStatLabel)} numberOfLines={1}>
+          {label}
+        </Text>
+      </View>
       <Text style={appTextStyle(language, styles.methodStatValue)}>{amount.toLocaleString()}</Text>
     </View>
   );
@@ -430,6 +435,7 @@ export default function RevenueScreen() {
             {PAYMENT_METHODS.map((m) => (
               <MethodStat
                 key={m}
+                method={m}
                 label={t(paymentMethodLabelKey(m)!)}
                 amount={Number(byMethod[m] || 0)}
               />
