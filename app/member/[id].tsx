@@ -1,8 +1,9 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
+import { Ionicons } from '@expo/vector-icons';
 import { PageSkeleton } from '@/src/components/Skeleton';
 import { LoadError } from '@/src/components/LoadError';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +17,7 @@ import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import type { AppLanguage } from '@/src/i18n';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
+import { useLoadRetry } from '@/src/hooks/useLoadRetry';
 import { useFlash } from '@/src/context/FlashContext';
 import { scheduleDeleteWithUndo } from '@/src/utils/scheduleWithUndo';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
@@ -23,7 +25,7 @@ import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import type { ThemeColors } from '@/src/theme/tokens';
 import { appTextStyle } from '@/src/theme/typography';
 import { formatDisplayDate } from '@/src/utils/date';
-import { paymentMethodBadgeStyle, paymentMethodLabelKey } from '@/src/constants/payments';
+import { paymentMethodBadgeStyle, paymentMethodIcon, paymentMethodLabelKey } from '@/src/constants/payments';
 import { paymentSourceKey } from '@/src/utils/termPayments';
 import { statusLabelKey } from '@/src/utils/statusLabels';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
@@ -32,8 +34,8 @@ import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
 function statusColor(status: string, c: ThemeColors) {
   const s = status.toLowerCase();
   if (s === 'active') return c.success;
-  if (s === 'due soon') return c.warning;
-  if (s === 'expired') return '#f87171';
+  if (s === 'due soon') return c.statusDueSoon;
+  if (s === 'expired') return c.statusExpired;
   return c.muted;
 }
 
@@ -102,8 +104,16 @@ function buildMemberStyles(c: ThemeColors) {
     },
     paymentAmount: { color: c.text, fontSize: 15, fontWeight: '600' as const },
     paymentMeta: { marginTop: 2, color: c.dim, fontSize: 12 },
-    methodBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-    methodBadgeText: { fontSize: 11, fontWeight: '600' as const },
+    methodBadge: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 5,
+      paddingHorizontal: 9,
+      paddingVertical: 4,
+      borderRadius: 8,
+      borderWidth: StyleSheet.hairlineWidth,
+    },
+    methodBadgeText: { fontSize: 11, fontWeight: '700' as const },
     muted: { color: c.dim, fontSize: 14 },
     error: { color: c.error, fontSize: 15, marginBottom: 16 },
     backBtn: { paddingHorizontal: 16, paddingVertical: 10 },
@@ -140,6 +150,8 @@ export default function MemberDetailScreen() {
     enabled: Boolean(token && canViewMember) && Number.isFinite(memberId),
   });
 
+  const loadRetry = useLoadRetry(memberQuery);
+
   if (!canViewMember) {
     return <Redirect href="/login" />;
   }
@@ -152,7 +164,7 @@ export default function MemberDetailScreen() {
     );
   }
 
-  if (memberQuery.isLoading) {
+  if (loadRetry.showLoading) {
     return (
       <TabScreenFrame>
         <PageSkeleton variant="detail" />
@@ -160,7 +172,7 @@ export default function MemberDetailScreen() {
     );
   }
 
-  if (memberQuery.isError || !memberQuery.data) {
+  if (loadRetry.showError || !memberQuery.data) {
     return (
       <TabScreenFrame>
         <LoadError
@@ -169,7 +181,8 @@ export default function MemberDetailScreen() {
               ? memberQuery.error.message
               : t('member.loadFailed')
           }
-          onRetry={() => void memberQuery.refetch()}
+          loading={loadRetry.loading}
+          onRetry={loadRetry.onRetry}
         />
       </TabScreenFrame>
     );
@@ -276,7 +289,8 @@ export default function MemberDetailScreen() {
                   {source ? ` · ${source}` : ''}
                 </Text>
               </View>
-              <View style={[styles.methodBadge, { backgroundColor: badge.bg }]}>
+              <View style={[styles.methodBadge, { backgroundColor: badge.bg, borderColor: badge.border }]}>
+                <Ionicons name={paymentMethodIcon(p.method)} size={13} color={badge.text} />
                 <Text style={appTextStyle(language, { ...styles.methodBadgeText, color: badge.text })}>
                   {methodKey ? t(methodKey) : p.method}
                 </Text>

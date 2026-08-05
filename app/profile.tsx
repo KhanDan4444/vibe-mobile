@@ -15,6 +15,7 @@ import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { isOfflineQueued } from '@/src/offline/types';
 import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
+import { useLoadRetry } from '@/src/hooks/useLoadRetry';
 import { runInBackground } from '@/src/utils/runInBackground';
 import { isGymOwner } from '@/src/utils/roles';
 import type { UpdateProfilePayload } from '@/src/types/api';
@@ -42,6 +43,8 @@ export default function ProfileScreen() {
     queryFn: () => fetchGymProfile(token!),
     enabled: Boolean(token && canEditProfile),
   });
+
+  const loadRetry = useLoadRetry(profileQuery);
 
   useEffect(() => {
     if (!profileQuery.data) return;
@@ -82,7 +85,7 @@ export default function ProfileScreen() {
     );
   }
 
-  if (profileQuery.isLoading) {
+  if (loadRetry.showLoading) {
     return (
       <Screen>
         <PageSkeleton variant="form" />
@@ -90,12 +93,13 @@ export default function ProfileScreen() {
     );
   }
 
-  if (profileQuery.isError) {
+  if (loadRetry.showError) {
     return (
       <Screen>
         <LoadError
           message={profileQuery.error instanceof Error ? profileQuery.error.message : undefined}
-          onRetry={() => void profileQuery.refetch()}
+          loading={loadRetry.loading}
+          onRetry={loadRetry.onRetry}
         />
       </Screen>
     );

@@ -15,7 +15,7 @@ import { BranchFilterBar } from '@/src/components/BranchFilterBar';
 import { RevenueFiltersSheet } from '@/src/components/RevenueFiltersSheet';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { EmptyState } from '@/src/components/EmptyState';
-import { PAYMENT_METHODS, paymentMethodBadgeStyle, paymentMethodLabelKey } from '@/src/constants/payments';
+import { PAYMENT_METHODS, paymentMethodBadgeStyle, paymentMethodIcon, paymentMethodLabelKey } from '@/src/constants/payments';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
@@ -89,8 +89,18 @@ function PaymentRowItem({
     rowBody: { flex: 1, minWidth: 0, marginRight: 8 },
     memberName: { fontSize: 15, fontWeight: '600' as const, color: colors.text },
     rowSub: { marginTop: 3, fontSize: 12, color: colors.dim },
-    methodBadge: { alignSelf: 'flex-start' as const, marginTop: 6, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-    methodBadgeText: { fontSize: 11, fontWeight: '600' as const },
+    methodBadge: {
+      alignSelf: 'flex-start' as const,
+      marginTop: 6,
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 5,
+      paddingHorizontal: 9,
+      paddingVertical: 4,
+      borderRadius: 8,
+      borderWidth: StyleSheet.hairlineWidth,
+    },
+    methodBadgeText: { fontSize: 11, fontWeight: '700' as const },
     rowAmountCol: { alignItems: 'flex-end' as const, justifyContent: 'center' as const },
     rowAmount: { fontSize: 16, fontWeight: '700' as const, color: colors.accentText },
     rowCurrency: { fontSize: 10, fontWeight: '600' as const, color: colors.dim, marginTop: 2 },
@@ -126,7 +136,8 @@ function PaymentRowItem({
           {formatDisplayDate(payment.date)}
           {source ? ` · ${source}` : ''}
         </Text>
-        <View style={[styles.methodBadge, { backgroundColor: badge.bg }]}>
+        <View style={[styles.methodBadge, { backgroundColor: badge.bg, borderColor: badge.border }]}>
+          <Ionicons name={paymentMethodIcon(payment.method)} size={13} color={badge.text} />
           <Text style={appTextStyle(language, { ...styles.methodBadgeText, color: badge.text })}>
             {paymentMethodLabelKey(payment.method) ? t(paymentMethodLabelKey(payment.method)!) : payment.method}
           </Text>

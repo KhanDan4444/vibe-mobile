@@ -6,6 +6,7 @@ import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import type { ThemeColors } from '@/src/theme/tokens';
 import { appTextStyle } from '@/src/theme/typography';
+import { dismissKeyboard } from '@/src/utils/dismissKeyboard';
 
 /** @deprecated Use useTheme().colors in new code. */
 export const colors = {
@@ -65,6 +66,8 @@ export function FormScroll({
       style={style}
       contentContainerStyle={[scrollPad, contentContainerStyle]}
       keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+      onScrollBeginDrag={dismissKeyboard}
     >
       <View style={{ width: '100%', maxWidth: formMaxWidth }}>{children}</View>
     </ScrollView>

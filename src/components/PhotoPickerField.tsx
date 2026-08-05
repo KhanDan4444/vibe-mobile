@@ -9,6 +9,7 @@ import { Label } from '@/src/components/Form';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { compressMemberPhoto } from '@/src/utils/compressMemberPhoto';
+import { dismissKeyboard } from '@/src/utils/dismissKeyboard';
 
 const PICKER_OPTIONS = {
   mediaTypes: ['images'] as ImagePicker.MediaType[],
@@ -127,6 +128,7 @@ export function PhotoPickerField({
 
   const openPhotoActions = () => {
     if (processing || pickDisabled) return;
+    dismissKeyboard();
     setSheetOpen(true);
   };
 

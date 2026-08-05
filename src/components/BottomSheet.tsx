@@ -7,6 +7,8 @@ import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { appTextStyle } from '@/src/theme/typography';
+import { useEffect } from 'react';
+import { dismissKeyboard } from '@/src/utils/dismissKeyboard';
 
 export function BottomSheet({
   visible,
@@ -32,6 +34,11 @@ export function BottomSheet({
   const { isTablet, formMaxWidth } = useResponsiveLayout();
   const sheetMaxWidth = formMaxWidth + 40;
   const closeLabel = t('common.cancel');
+
+  useEffect(() => {
+    if (visible) dismissKeyboard();
+  }, [visible]);
+
   const styles = useThemedStyles((colors) => ({
     overlay: { flex: 1, justifyContent: 'flex-end' as const },
     backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.5)' },

@@ -17,6 +17,7 @@ import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
 import { fetchMemberPhotoDataUri } from '@/src/utils/memberPhoto';
 import { bumpMemberPhotoCache } from '@/src/utils/memberPhotoCache';
+import { dismissKeyboard } from '@/src/utils/dismissKeyboard';
 import { runInBackground } from '@/src/utils/runInBackground';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
 import { validateRequiredEthiopianPhone } from '@/src/utils/phone';
@@ -199,13 +200,11 @@ export default function EditMemberScreen() {
             keyboardType="phone-pad"
             autoCapitalize="none"
             returnKeyType="done"
-            blurOnSubmit={false}
+            blurOnSubmit
             error={Boolean(phoneError)}
             onBlur={handlePhoneBlur}
             onSubmitEditing={() => {
-              if (!ensurePhoneValid()) {
-                phoneRef.current?.focus();
-              }
+              ensurePhoneValid();
             }}
           />
           <FieldError message={phoneError} />
@@ -240,9 +239,10 @@ export default function EditMemberScreen() {
           <PrimaryButton
             label={t('common.save')}
             onPress={() => {
+              dismissKeyboard();
               setError('');
               if (!ensurePhoneValid()) {
-                phoneRef.current?.focus();
+                requestAnimationFrame(() => phoneRef.current?.focus());
                 return;
               }
               mutation.mutate(buildPayload());

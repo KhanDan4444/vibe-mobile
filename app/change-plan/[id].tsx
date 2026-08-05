@@ -17,6 +17,7 @@ import { LoadError } from '@/src/components/LoadError';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useTranslation } from 'react-i18next';
 import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
+import { useLoadRetry } from '@/src/hooks/useLoadRetry';
 import { PAYMENT_METHODS } from '@/src/constants/payments';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { isOfflineQueued } from '@/src/offline/types';
@@ -113,6 +114,8 @@ export default function ChangePlanScreen() {
     queryFn: () => fetchPlans(token!),
     enabled: Boolean(token && canChangePlan),
   });
+
+  const loadRetry = useLoadRetry(memberQuery);
 
   const member = memberQuery.data;
   const plans = plansQuery.data ?? [];
@@ -282,7 +285,7 @@ export default function ChangePlanScreen() {
     return <Redirect href="/login" />;
   }
 
-  if (memberQuery.isLoading) {
+  if (loadRetry.showLoading) {
     return (
       <Screen>
         <PageSkeleton variant="form" count={6} />
@@ -290,12 +293,13 @@ export default function ChangePlanScreen() {
     );
   }
 
-  if (memberQuery.isError) {
+  if (loadRetry.showError) {
     return (
       <Screen>
         <LoadError
           message={memberQuery.error instanceof Error ? memberQuery.error.message : undefined}
-          onRetry={() => void memberQuery.refetch()}
+          loading={loadRetry.loading}
+          onRetry={loadRetry.onRetry}
         />
       </Screen>
     );

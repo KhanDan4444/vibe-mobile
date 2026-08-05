@@ -25,6 +25,7 @@ import { useNetwork } from '@/src/offline/NetworkProvider';
 import { isOfflineQueued } from '@/src/offline/types';
 import { bumpMemberPhotoCache } from '@/src/utils/memberPhotoCache';
 import { todayString } from '@/src/utils/date';
+import { dismissKeyboard } from '@/src/utils/dismissKeyboard';
 import {
   boundsForEnrollStart,
   boundsForPaymentOnTerm,
@@ -258,13 +259,11 @@ export default function EnrollScreen() {
             keyboardType="phone-pad"
             autoCapitalize="none"
             returnKeyType="done"
-            blurOnSubmit={false}
+            blurOnSubmit
             error={Boolean(phoneError)}
             onBlur={handlePhoneBlur}
             onSubmitEditing={() => {
-              if (!ensurePhoneValid()) {
-                phoneRef.current?.focus();
-              }
+              ensurePhoneValid();
             }}
           />
           <FieldError message={phoneError} />
@@ -322,7 +321,10 @@ export default function EnrollScreen() {
             <Text style={styles.switchLabel}>{t('forms.enrollWithoutPayment')}</Text>
             <Switch
               value={skipPayment}
-              onValueChange={setSkipPayment}
+              onValueChange={(v) => {
+                dismissKeyboard();
+                setSkipPayment(v);
+              }}
               trackColor={{ false: c.border, true: c.accent }}
             />
           </View>
@@ -348,9 +350,11 @@ export default function EnrollScreen() {
           <PrimaryButton
             label={t('screens.enroll')}
             onPress={() => {
+              dismissKeyboard();
               setError('');
               if (!ensurePhoneValid()) {
-                phoneRef.current?.focus();
+                // Only pull focus back when they try to enroll with a bad phone.
+                requestAnimationFrame(() => phoneRef.current?.focus());
                 return;
               }
               if (!planId) {

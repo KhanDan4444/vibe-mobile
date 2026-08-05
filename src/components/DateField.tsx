@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { formStyles } from '@/src/components/Form';
 import { clampIsoDate, dateToIso, formatDisplayDate, isDateRangeValid, isoToLocalDate, toDateString } from '@/src/utils/date';
+import { dismissKeyboard } from '@/src/utils/dismissKeyboard';
 
 function parseIsoDate(value: string): Date {
   return isoToLocalDate(value || todayFallback());
@@ -72,7 +73,9 @@ export function DateField({
           },
         ]}
         onPress={() => {
-          if (!pickerDisabled) setOpen(true);
+          if (pickerDisabled) return;
+          dismissKeyboard();
+          setOpen(true);
         }}
         disabled={pickerDisabled}
         accessibilityRole="button"

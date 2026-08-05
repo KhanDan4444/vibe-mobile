@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchDashboard } from '@/src/api/dashboard';
@@ -22,6 +22,9 @@ function bootErrorFromQuery(error: unknown): Error | null {
 
 export function GymBootProvider({ children }: { children: React.ReactNode }) {
   const { token, logout } = useAuth();
+  const [retrying, setRetrying] = useState(false);
+  /** Keep the last boot error visible while a retry is in flight (query may clear error briefly). */
+  const [heldError, setHeldError] = useState<Error | null>(null);
 
   const bootQuery = useQuery({
     queryKey: ['gym-boot', token],
@@ -31,23 +34,50 @@ export function GymBootProvider({ children }: { children: React.ReactNode }) {
     staleTime: 1000 * 60,
   });
 
+  const queryError = bootErrorFromQuery(bootQuery.error);
+
   useEffect(() => {
     if (bootQuery.error instanceof ApiError && bootQuery.error.status === 401) {
       void logout();
     }
   }, [bootQuery.error, logout]);
 
-  const value = useMemo(() => {
-    const bootError = bootErrorFromQuery(bootQuery.error);
-    return {
+  useEffect(() => {
+    if (!token) {
+      setHeldError(null);
+      setRetrying(false);
+      return;
+    }
+    if (queryError) setHeldError(queryError);
+  }, [token, queryError]);
+
+  useEffect(() => {
+    // Only dismiss the overlay after a successful boot finishes.
+    if (token && bootQuery.isSuccess && !bootQuery.isFetching && !queryError) {
+      setHeldError(null);
+    }
+  }, [token, bootQuery.isSuccess, bootQuery.isFetching, queryError]);
+
+  const retryBoot = useCallback(() => {
+    if (retrying) return;
+    setRetrying(true);
+    void bootQuery
+      .refetch()
+      .finally(() => {
+        setRetrying(false);
+      });
+  }, [retrying, bootQuery.refetch]);
+
+  const value = useMemo(
+    () => ({
       booting: bootQuery.isLoading,
-      bootError,
-      retrying: bootQuery.isFetching && bootError !== null,
-      retryBoot: () => {
-        void bootQuery.refetch();
-      },
-    };
-  }, [bootQuery.error, bootQuery.isFetching, bootQuery.isLoading, bootQuery.refetch]);
+      // Sticky error: stay on the error UI during retry instead of flashing the tabs.
+      bootError: heldError,
+      retrying,
+      retryBoot,
+    }),
+    [bootQuery.isLoading, heldError, retrying, retryBoot]
+  );
 
   return <GymBootContext.Provider value={value}>{children}</GymBootContext.Provider>;
 }
