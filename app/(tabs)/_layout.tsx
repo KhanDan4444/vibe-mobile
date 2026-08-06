@@ -1,6 +1,6 @@
 import { Redirect, Tabs, router, usePathname } from 'expo-router';
 import { useCallback } from 'react';
-import { View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { AppBootSplash } from '@/src/components/AppBootSplash';
@@ -34,7 +34,7 @@ function activeTabIndex(pathname: string) {
 
 export default function TabLayout() {
   const { user, loading } = useAuth();
-  const { colors: c, isDark } = useTheme();
+  const { colors: c } = useTheme();
   const { language } = usePreferences();
   const { t } = useTranslation();
   const { isOnline } = useNetwork();
@@ -80,32 +80,18 @@ export default function TabLayout() {
             tabBarStyle: {
               backgroundColor: c.tabBarBg,
               borderTopColor: c.tabBarBorder,
-              borderTopWidth: 1,
+              borderTopWidth: StyleSheet.hairlineWidth,
               paddingBottom: tabBarBottom,
               height: (isTablet ? 58 : 52) + tabBarBottom,
-              ...(!isDark
-                ? {
-                    elevation: 10,
-                    shadowColor: '#0c1211',
-                    shadowOffset: { width: 0, height: -3 },
-                    shadowOpacity: 0.07,
-                    shadowRadius: 8,
-                  }
-                : null),
+              elevation: 0,
+              shadowOpacity: 0,
             },
             headerStyle: {
               backgroundColor: c.headerBg,
-              borderBottomWidth: 1,
+              borderBottomWidth: StyleSheet.hairlineWidth,
               borderBottomColor: c.tabBarBorder,
-              ...(!isDark
-                ? {
-                    shadowColor: '#0c1211',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.04,
-                    shadowRadius: 4,
-                    elevation: 2,
-                  }
-                : null),
+              elevation: 0,
+              shadowOpacity: 0,
             },
             headerTintColor: c.text,
             headerTitleStyle:

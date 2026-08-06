@@ -27,7 +27,6 @@ import Card from '@/src/components/ui/Card';
 import { SecondaryButton } from '@/src/components/ui/Button';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
-import { radiusSm } from '@/src/theme/tokens';
 
 type StatFilter = 'due_soon' | 'expired' | 'unpaid';
 
@@ -99,34 +98,27 @@ function AlertMemberRow({
         hasPhoto={Boolean(member.photo_url)}
       />
       <View style={styles.alertBody}>
-        <View style={styles.alertTitleRow}>
-          <Text style={[styles.alertName, { color: colors.text }]} numberOfLines={1}>
-            {member.name}
-          </Text>
-          <StatusBadge status={member.status} />
-        </View>
+        <Text style={[styles.alertName, { color: colors.text }]} numberOfLines={1}>
+          {member.name}
+        </Text>
         <Text style={[styles.alertMeta, { color: colors.dim }]} numberOfLines={1}>
           {(member.plan_name || t('members.noPlan'))} · {t('dashboard.expires', { date: formatDisplayDate(member.end_date) })}
         </Text>
+      </View>
+      <View style={styles.alertRight}>
+        <StatusBadge status={member.status} />
         {onAction ? (
           <Pressable
             accessibilityRole="button"
-            hitSlop={6}
+            hitSlop={8}
             onPress={(e) => {
               e.stopPropagation?.();
               onAction();
             }}
-            style={({ pressed }) => [
-              styles.alertAction,
-              {
-                backgroundColor: colors.accentSoft,
-                borderColor: colors.accentCta,
-                opacity: pressed ? 0.75 : 1,
-              },
-            ]}
+            style={({ pressed }) => [styles.alertAction, { opacity: pressed ? 0.65 : 1 }]}
           >
-            <Ionicons name="refresh" size={13} color={colors.accentCta} />
-            <Text latin style={[styles.alertActionText, { color: colors.accentCta }]}>
+            <Ionicons name="refresh" size={13} color={colors.accentText} />
+            <Text latin style={[styles.alertActionText, { color: colors.accentText }]}>
               {t('dashboard.renew')}
             </Text>
           </Pressable>
@@ -396,32 +388,21 @@ const styles = StyleSheet.create({
   viewAll: { fontSize: 13, fontWeight: '600' },
   alertRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: 10,
     paddingVertical: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   alertBody: { flex: 1, minWidth: 0 },
-  alertTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  alertName: { flex: 1, minWidth: 0, fontSize: 14, fontWeight: '700' },
+  alertName: { fontSize: 14, fontWeight: '700' },
   alertMeta: { marginTop: 3, fontSize: 12 },
+  alertRight: { alignItems: 'flex-end', gap: 8 },
   alertAction: {
-    alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    marginTop: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: radiusSm,
-    borderWidth: 1.5,
+    gap: 4,
   },
-  alertActionText: { fontSize: 12, fontWeight: '600', letterSpacing: 0.2 },
+  alertActionText: { fontSize: 12, fontWeight: '600' },
   attentionShortcut: {
     flexDirection: 'row',
     alignItems: 'center',
