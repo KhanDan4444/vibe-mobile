@@ -104,12 +104,3 @@ export const lightTheme: ThemeColors = {
 export function colorsForTheme(theme: AppTheme): ThemeColors {
   return theme === 'dark' ? darkTheme : lightTheme;
 }
-
-/** Subtle lift for list/card surfaces in light mode. */
-export const lightCardLift = {
-  shadowColor: '#0c1211',
-  shadowOffset: { width: 0, height: 1 },
-  shadowOpacity: 0.05,
-  shadowRadius: 3,
-  elevation: 1,
-} as const;

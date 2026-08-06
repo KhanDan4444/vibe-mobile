@@ -23,7 +23,7 @@ import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import StatusBadge from '@/src/components/StatusBadge';
 import { SecondaryButton } from '@/src/components/ui/Button';
-import { radiusMd, lightCardLift, type ThemeColors } from '@/src/theme/tokens';
+import { radiusMd, type ThemeColors } from '@/src/theme/tokens';
 import { DEFAULT_MEMBER_SORT, MEMBER_SORT_OPTIONS, type MemberSortId } from '@/src/utils/listSort';
 import { isGymOwner } from '@/src/utils/roles';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
@@ -93,7 +93,6 @@ function MemberRowItem({
   multiColumn,
   colors,
   columnStyle,
-  listCardLift,
 }: {
   member: MemberRow;
   onPress: () => void;
@@ -103,18 +102,11 @@ function MemberRowItem({
   multiColumn?: boolean;
   colors: ThemeColors;
   columnStyle?: object;
-  listCardLift?: object;
 }) {
   const { t } = useTranslation();
   return (
     <Pressable
-      style={[
-        styles.row,
-        listCardLift,
-        multiColumn && styles.rowColumn,
-        multiColumn && columnStyle,
-        multiColumn && styles.rowStacked,
-      ]}
+      style={[styles.row, multiColumn && styles.rowColumn, multiColumn && columnStyle, multiColumn && styles.rowStacked]}
       onPress={onPress}
     >
       <View style={styles.rowTop}>
@@ -172,8 +164,7 @@ export default function MembersScreen() {
   const { readOnly } = useGymReadOnly();
   const owner = isGymOwner(user?.role);
   const showBranchColumn = owner && selectedBranchId === 'all';
-  const { colors: c, isDark } = useTheme();
-  const listCardLift = isDark ? undefined : lightCardLift;
+  const { colors: c } = useTheme();
   const { language } = usePreferences();
   const { t } = useTranslation();
   const styles = useThemedStyles(createStyles);
@@ -404,7 +395,6 @@ export default function MembersScreen() {
               multiColumn={listColumns > 1}
               columnStyle={listColumnItemStyle}
               colors={c}
-              listCardLift={listCardLift}
               onPress={() => router.push(`/member/${item.id}`)}
             />
           )}

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -26,6 +27,7 @@ import Card from '@/src/components/ui/Card';
 import { SecondaryButton } from '@/src/components/ui/Button';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
+import { radiusSm } from '@/src/theme/tokens';
 
 type StatFilter = 'due_soon' | 'expired' | 'unpaid';
 
@@ -77,14 +79,12 @@ function AlertMemberRow({
   member,
   colors,
   token,
-  isDark,
   onOpen,
   onAction,
 }: {
   member: DashboardAlertMember;
   colors: ReturnType<typeof useTheme>['colors'];
   token: string;
-  isDark: boolean;
   onOpen: () => void;
   onAction?: () => void;
 }) {
@@ -99,39 +99,36 @@ function AlertMemberRow({
         hasPhoto={Boolean(member.photo_url)}
       />
       <View style={styles.alertBody}>
-        <Text style={[styles.alertName, { color: colors.text }]} numberOfLines={1}>
-          {member.name}
-        </Text>
+        <View style={styles.alertTitleRow}>
+          <Text style={[styles.alertName, { color: colors.text }]} numberOfLines={1}>
+            {member.name}
+          </Text>
+          <StatusBadge status={member.status} />
+        </View>
         <Text style={[styles.alertMeta, { color: colors.dim }]} numberOfLines={1}>
           {(member.plan_name || t('members.noPlan'))} · {t('dashboard.expires', { date: formatDisplayDate(member.end_date) })}
         </Text>
-      </View>
-      <View style={styles.alertRight}>
-        <StatusBadge status={member.status} />
         {onAction ? (
           <Pressable
+            accessibilityRole="button"
+            hitSlop={6}
             onPress={(e) => {
-              e.stopPropagation();
+              e.stopPropagation?.();
               onAction();
             }}
             style={({ pressed }) => [
               styles.alertAction,
               {
-                backgroundColor: colors.accentCta,
-                opacity: pressed ? 0.9 : 1,
-                ...(!isDark
-                  ? {
-                      shadowColor: '#0f766e',
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.28,
-                      shadowRadius: 4,
-                      elevation: 3,
-                    }
-                  : null),
+                backgroundColor: colors.accentSoft,
+                borderColor: colors.accentCta,
+                opacity: pressed ? 0.75 : 1,
               },
             ]}
           >
-            <Text style={[styles.alertActionText, { color: '#fff' }]}>{t('dashboard.renew')}</Text>
+            <Ionicons name="refresh" size={13} color={colors.accentCta} />
+            <Text latin style={[styles.alertActionText, { color: colors.accentCta }]}>
+              {t('dashboard.renew')}
+            </Text>
           </Pressable>
         ) : null}
       </View>
@@ -143,7 +140,7 @@ export default function DashboardScreen() {
   const router = useRouter();
   const { token, user, gymName: cachedGymName } = useAuth();
   const { selectedBranchId } = useBranchScope();
-  const { colors: c, isDark } = useTheme();
+  const { colors: c } = useTheme();
   const { t } = useTranslation();
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
   const owner = isGymOwner(user?.role);
@@ -247,7 +244,6 @@ export default function DashboardScreen() {
                 key={member.id}
                 member={member}
                 colors={c}
-                isDark={isDark}
                 token={token!}
                 onOpen={() => goMembers(filterForMemberStatus(member.status))}
                 onAction={readOnly ? undefined : () => router.push(route as never)}
@@ -400,24 +396,32 @@ const styles = StyleSheet.create({
   viewAll: { fontSize: 13, fontWeight: '600' },
   alertRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 10,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   alertBody: { flex: 1, minWidth: 0 },
-  alertName: { fontSize: 14, fontWeight: '700' },
-  alertMeta: { marginTop: 3, fontSize: 12 },
-  alertRight: { alignItems: 'flex-end', gap: 6 },
-  alertStatus: { fontSize: 11, fontWeight: '700', textTransform: 'capitalize' },
-  alertAction: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 8,
-    minWidth: 68,
+  alertTitleRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
   },
-  alertActionText: { fontSize: 12, fontWeight: '700' },
+  alertName: { flex: 1, minWidth: 0, fontSize: 14, fontWeight: '700' },
+  alertMeta: { marginTop: 3, fontSize: 12 },
+  alertAction: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radiusSm,
+    borderWidth: 1.5,
+  },
+  alertActionText: { fontSize: 12, fontWeight: '600', letterSpacing: 0.2 },
   attentionShortcut: {
     flexDirection: 'row',
     alignItems: 'center',
