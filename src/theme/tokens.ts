@@ -9,6 +9,8 @@ export type ThemeColors = {
   bg: string;
   card: string;
   border: string;
+  /** Slightly stronger edge for white cards sitting on page bg. */
+  cardEdge: string;
   text: string;
   muted: string;
   dim: string;
@@ -41,6 +43,7 @@ export const darkTheme: ThemeColors = {
   bg: '#13161c',
   card: '#22262f',
   border: '#2a2f3a',
+  cardEdge: '#2a2f3a',
   text: '#e4e7ee',
   muted: '#8b93a3',
   dim: '#64748b',
@@ -71,6 +74,7 @@ export const lightTheme: ThemeColors = {
   bg: '#f4f7f5',
   card: '#ffffff',
   border: '#e3e9e6',
+  cardEdge: '#d0dbd6',
   text: '#0c1211',
   muted: '#5c6b66',
   dim: '#7a8a84',
@@ -100,3 +104,12 @@ export const lightTheme: ThemeColors = {
 export function colorsForTheme(theme: AppTheme): ThemeColors {
   return theme === 'dark' ? darkTheme : lightTheme;
 }
+
+/** Subtle lift for list/card surfaces in light mode. */
+export const lightCardLift = {
+  shadowColor: '#0c1211',
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.05,
+  shadowRadius: 3,
+  elevation: 1,
+} as const;

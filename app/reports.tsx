@@ -91,10 +91,10 @@ function buildReportStyles(colors: ThemeColors, statCardWidthPercent: string) {
       borderWidth: 1,
       borderColor: colors.inputBorder,
     },
-    exportBtnPrimary: { backgroundColor: colors.accentSoft, borderColor: colors.accentText },
+    exportBtnPrimary: { backgroundColor: colors.accentCta, borderColor: colors.accentCta },
     exportDisabled: { opacity: 0.45 },
     exportText: { color: colors.accentText, fontSize: 14, fontWeight: '600' as const },
-    exportTextPrimary: { color: colors.text },
+    exportTextPrimary: { color: '#fff' },
     revenueSummary: {
       marginTop: 16,
       backgroundColor: colors.card,

@@ -93,7 +93,20 @@ export default function TabLayout() {
                   }
                 : null),
             },
-            headerStyle: { backgroundColor: c.headerBg },
+            headerStyle: {
+              backgroundColor: c.headerBg,
+              borderBottomWidth: 1,
+              borderBottomColor: c.tabBarBorder,
+              ...(!isDark
+                ? {
+                    shadowColor: '#0c1211',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.04,
+                    shadowRadius: 4,
+                    elevation: 2,
+                  }
+                : null),
+            },
             headerTintColor: c.text,
             headerTitleStyle:
               language === 'am'

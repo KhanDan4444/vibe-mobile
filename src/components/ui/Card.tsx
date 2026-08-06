@@ -1,6 +1,6 @@
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useTheme } from '@/src/context/PreferencesContext';
-import { radiusMd } from '@/src/theme/tokens';
+import { lightCardLift, radiusMd } from '@/src/theme/tokens';
 
 type CardProps = {
   children: React.ReactNode;
@@ -11,7 +11,7 @@ type CardProps = {
 
 /** Softer surface for nested metrics / list sections (surface tier in light). */
 export default function Card({ children, style, quiet = false }: CardProps) {
-  const { colors: c } = useTheme();
+  const { colors: c, isDark } = useTheme();
 
   return (
     <View
@@ -19,9 +19,10 @@ export default function Card({ children, style, quiet = false }: CardProps) {
         styles.base,
         {
           backgroundColor: quiet ? c.inputBg : c.card,
-          borderColor: c.border,
+          borderColor: c.cardEdge,
           borderRadius: radiusMd,
         },
+        !isDark && !quiet ? lightCardLift : null,
         style,
       ]}
     >
@@ -32,6 +33,6 @@ export default function Card({ children, style, quiet = false }: CardProps) {
 
 const styles = StyleSheet.create({
   base: {
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
   },
 });
