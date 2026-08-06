@@ -15,6 +15,8 @@ export type ThemeColors = {
   accent: string;
   accentSoft: string;
   accentText: string;
+  /** Brighter teal fill for small primary CTAs (renew chips, etc.). */
+  accentCta: string;
   /** Brand signature — empty states / highlights, not primary CTAs. */
   warm: string;
   warmSoft: string;
@@ -45,6 +47,7 @@ export const darkTheme: ThemeColors = {
   accent: '#0f766e',
   accentSoft: 'rgba(45,212,191,0.16)',
   accentText: '#2dd4bf',
+  accentCta: '#14b8a6',
   warm: '#fbbf24',
   warmSoft: 'rgba(251,191,36,0.14)',
   warmText: '#fcd34d',
@@ -65,24 +68,25 @@ export const darkTheme: ThemeColors = {
 };
 
 export const lightTheme: ThemeColors = {
-  bg: '#eef1ef',
+  bg: '#f4f7f5',
   card: '#ffffff',
-  border: '#dce3df',
+  border: '#e3e9e6',
   text: '#0c1211',
   muted: '#5c6b66',
   dim: '#7a8a84',
   accent: '#0f766e',
   accentSoft: 'rgba(15,118,110,0.12)',
   accentText: '#115e59',
+  accentCta: '#0d9488',
   warm: '#b45309',
   warmSoft: 'rgba(180,83,9,0.12)',
   warmText: '#92400e',
   error: '#e11d48',
   errorBg: 'rgba(225,29,72,0.08)',
-  headerBg: '#f6f8f7',
-  tabBarBg: '#f6f8f7',
-  tabBarBorder: '#dce3df',
-  inputBg: '#f6f8f7',
+  headerBg: '#fafcfb',
+  tabBarBg: '#fafcfb',
+  tabBarBorder: '#e3e9e6',
+  inputBg: '#fafcfb',
   inputBorder: '#c5d0cb',
   success: '#059669',
   warning: '#d97706',

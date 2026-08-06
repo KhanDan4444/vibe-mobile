@@ -77,12 +77,14 @@ function AlertMemberRow({
   member,
   colors,
   token,
+  isDark,
   onOpen,
   onAction,
 }: {
   member: DashboardAlertMember;
   colors: ReturnType<typeof useTheme>['colors'];
   token: string;
+  isDark: boolean;
   onOpen: () => void;
   onAction?: () => void;
 }) {
@@ -107,8 +109,29 @@ function AlertMemberRow({
       <View style={styles.alertRight}>
         <StatusBadge status={member.status} />
         {onAction ? (
-          <Pressable style={[styles.alertAction, { backgroundColor: colors.accentSoft }]} onPress={onAction}>
-            <Text style={[styles.alertActionText, { color: colors.accentText }]}>{t('dashboard.renew')}</Text>
+          <Pressable
+            onPress={(e) => {
+              e.stopPropagation();
+              onAction();
+            }}
+            style={({ pressed }) => [
+              styles.alertAction,
+              {
+                backgroundColor: colors.accentCta,
+                opacity: pressed ? 0.9 : 1,
+                ...(!isDark
+                  ? {
+                      shadowColor: '#0f766e',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.28,
+                      shadowRadius: 4,
+                      elevation: 3,
+                    }
+                  : null),
+              },
+            ]}
+          >
+            <Text style={[styles.alertActionText, { color: '#fff' }]}>{t('dashboard.renew')}</Text>
           </Pressable>
         ) : null}
       </View>
@@ -120,7 +143,7 @@ export default function DashboardScreen() {
   const router = useRouter();
   const { token, user, gymName: cachedGymName } = useAuth();
   const { selectedBranchId } = useBranchScope();
-  const { colors: c } = useTheme();
+  const { colors: c, isDark } = useTheme();
   const { t } = useTranslation();
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
   const owner = isGymOwner(user?.role);
@@ -200,15 +223,11 @@ export default function DashboardScreen() {
           ? ` · ${t('dashboard.newThisMonth', { count: data.newMembersThisMonth })}`
           : ''}
       </Text>
+      {owner ? (
+        <MiniBarChart data={data.revenueChart ?? []} height={chartHeight} />
+      ) : null}
     </Card>
   ) : null;
-
-  const chartBlock =
-    data && owner ? (
-      <Card quiet style={styles.chartCard}>
-        <MiniBarChart data={data.revenueChart ?? []} height={chartHeight} />
-      </Card>
-    ) : null;
 
   const attentionBlock =
     data && owner && attentionHasContent ? (
@@ -228,6 +247,7 @@ export default function DashboardScreen() {
                 key={member.id}
                 member={member}
                 colors={c}
+                isDark={isDark}
                 token={token!}
                 onOpen={() => goMembers(filterForMemberStatus(member.status))}
                 onAction={readOnly ? undefined : () => router.push(route as never)}
@@ -320,7 +340,6 @@ export default function DashboardScreen() {
           </View>
           {summaryBlock}
           {owner ? attentionBlock : null}
-          {owner ? chartBlock : null}
         </>
       ) : null}
 
@@ -372,10 +391,6 @@ const styles = StyleSheet.create({
   muted: { marginTop: 8, fontSize: 14 },
   errorWrap: { alignItems: 'center', paddingTop: 32, gap: 12 },
   errorText: { textAlign: 'center', fontSize: 15 },
-  chartCard: {
-    marginTop: 12,
-    padding: 12,
-  },
   alertCard: {
     marginTop: 14,
     padding: 14,
@@ -395,7 +410,13 @@ const styles = StyleSheet.create({
   alertMeta: { marginTop: 3, fontSize: 12 },
   alertRight: { alignItems: 'flex-end', gap: 6 },
   alertStatus: { fontSize: 11, fontWeight: '700', textTransform: 'capitalize' },
-  alertAction: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  alertAction: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+    minWidth: 68,
+    alignItems: 'center',
+  },
   alertActionText: { fontSize: 12, fontWeight: '700' },
   attentionShortcut: {
     flexDirection: 'row',

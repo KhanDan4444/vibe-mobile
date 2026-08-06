@@ -34,7 +34,7 @@ function activeTabIndex(pathname: string) {
 
 export default function TabLayout() {
   const { user, loading } = useAuth();
-  const { colors: c } = useTheme();
+  const { colors: c, isDark } = useTheme();
   const { language } = usePreferences();
   const { t } = useTranslation();
   const { isOnline } = useNetwork();
@@ -80,8 +80,18 @@ export default function TabLayout() {
             tabBarStyle: {
               backgroundColor: c.tabBarBg,
               borderTopColor: c.tabBarBorder,
+              borderTopWidth: 1,
               paddingBottom: tabBarBottom,
               height: (isTablet ? 58 : 52) + tabBarBottom,
+              ...(!isDark
+                ? {
+                    elevation: 10,
+                    shadowColor: '#0c1211',
+                    shadowOffset: { width: 0, height: -3 },
+                    shadowOpacity: 0.07,
+                    shadowRadius: 8,
+                  }
+                : null),
             },
             headerStyle: { backgroundColor: c.headerBg },
             headerTintColor: c.text,

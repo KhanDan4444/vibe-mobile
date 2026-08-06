@@ -8,7 +8,7 @@ type RetryableQuery = {
   refetch: () => Promise<unknown>;
 };
 
-const MIN_BUSY_MS = 650;
+const MIN_BUSY_MS = 5000;
 
 /**
  * Keeps the LoadError UI mounted while a retry is in flight so the screen

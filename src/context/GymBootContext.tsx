@@ -62,7 +62,7 @@ export function GymBootProvider({ children }: { children: React.ReactNode }) {
     if (retrying) return;
     setRetrying(true);
     const started = Date.now();
-    const MIN_BUSY_MS = 650;
+    const MIN_BUSY_MS = 5000;
     void bootQuery
       .refetch()
       .finally(async () => {
