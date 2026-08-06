@@ -117,8 +117,8 @@ function AlertMemberRow({
             }}
             style={({ pressed }) => [styles.alertAction, { opacity: pressed ? 0.65 : 1 }]}
           >
-            <Ionicons name="refresh" size={13} color={colors.accentText} />
-            <Text latin style={[styles.alertActionText, { color: colors.accentText }]}>
+            <Ionicons name="refresh" size={15} color={colors.statusActive} />
+            <Text latin style={[styles.alertActionText, { color: colors.statusActive }]}>
               {t('dashboard.renew')}
             </Text>
           </Pressable>
@@ -224,7 +224,7 @@ export default function DashboardScreen() {
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: c.text }]}>{t('dashboard.attentionTitle')}</Text>
           <Pressable onPress={() => goMembers(alertFilter)}>
-            <Text style={[styles.viewAll, { color: c.accentText }]}>{t('dashboard.viewAll')}</Text>
+            <Text style={[styles.viewAll, { color: c.statusActive }]}>{t('dashboard.viewAll')}</Text>
           </Pressable>
         </View>
         {alertMembers.length ? (
@@ -256,7 +256,7 @@ export default function DashboardScreen() {
                 {t('dashboard.unpaidShortcutBody')}
               </Text>
             </View>
-            <Text style={[styles.viewAll, { color: c.accentText }]}>{t('dashboard.viewAll')}</Text>
+            <Text style={[styles.viewAll, { color: c.statusActive }]}>{t('dashboard.viewAll')}</Text>
           </Pressable>
         )}
       </Card>
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
   sectionTitle: { fontSize: 16, fontWeight: '700' },
-  viewAll: { fontSize: 13, fontWeight: '600' },
+  viewAll: { fontSize: 13, fontWeight: '700' },
   alertRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -400,9 +400,9 @@ const styles = StyleSheet.create({
   alertAction: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 5,
   },
-  alertActionText: { fontSize: 12, fontWeight: '600' },
+  alertActionText: { fontSize: 13, fontWeight: '700' },
   attentionShortcut: {
     flexDirection: 'row',
     alignItems: 'center',
