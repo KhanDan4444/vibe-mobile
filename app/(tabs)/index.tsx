@@ -117,7 +117,7 @@ function AlertMemberRow({
             }}
             style={({ pressed }) => [styles.alertAction, { opacity: pressed ? 0.65 : 1 }]}
           >
-            <Ionicons name="refresh" size={15} color={colors.statusActive} />
+            <Ionicons name="refresh" size={16} color={colors.statusActive} />
             <Text latin style={[styles.alertActionText, { color: colors.statusActive }]}>
               {t('dashboard.renew')}
             </Text>
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
   sectionTitle: { fontSize: 16, fontWeight: '700' },
-  viewAll: { fontSize: 13, fontWeight: '700' },
+  viewAll: { fontSize: 15, fontWeight: '700' },
   alertRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 5,
   },
-  alertActionText: { fontSize: 13, fontWeight: '700' },
+  alertActionText: { fontSize: 14, fontWeight: '700' },
   attentionShortcut: {
     flexDirection: 'row',
     alignItems: 'center',
