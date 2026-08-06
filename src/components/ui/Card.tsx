@@ -9,6 +9,7 @@ type CardProps = {
   quiet?: boolean;
 };
 
+/** Softer surface for nested metrics / list sections (surface tier in light). */
 export default function Card({ children, style, quiet = false }: CardProps) {
   const { colors: c } = useTheme();
 
@@ -17,7 +18,7 @@ export default function Card({ children, style, quiet = false }: CardProps) {
       style={[
         styles.base,
         {
-          backgroundColor: quiet ? c.card : c.card,
+          backgroundColor: quiet ? c.inputBg : c.card,
           borderColor: c.border,
           borderRadius: radiusMd,
         },

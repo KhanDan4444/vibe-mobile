@@ -33,6 +33,8 @@ export function EmptyState({ icon = 'file-tray-outline', title, body, actionLabe
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
       backgroundColor: colors.warmSoft,
+      borderWidth: 1,
+      borderColor: 'rgba(180,83,9,0.22)',
       marginBottom: 14,
     },
     title: {

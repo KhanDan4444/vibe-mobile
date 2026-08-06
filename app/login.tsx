@@ -54,6 +54,7 @@ export default function LoginScreen() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [focused, setFocused] = useState<Field | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -98,7 +99,7 @@ export default function LoginScreen() {
     }
     setLoading(true);
     try {
-      const user = await login(identifier, password, true);
+      const user = await login(identifier, password, rememberMe);
       if (isPlatformAdmin(user.role)) {
         await logout();
         setError(t('auth.adminBlocked'));
@@ -200,9 +201,28 @@ export default function LoginScreen() {
                 </View>
               </View>
 
-              <Pressable style={s.forgotLink} hitSlop={8} onPress={() => router.push('/forgot-password' as never)}>
-                <Text style={[s.linkText, { color: c.accentText }]}>{t('auth.forgotPassword')}</Text>
-              </Pressable>
+              <View style={s.rememberRow}>
+                <Pressable
+                  style={s.rememberHit}
+                  onPress={() => setRememberMe((v) => !v)}
+                  hitSlop={8}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: rememberMe }}
+                  accessibilityLabel={t('auth.rememberMe')}
+                >
+                  <Ionicons
+                    name={rememberMe ? 'checkbox' : 'square-outline'}
+                    size={isTablet ? 22 : 20}
+                    color={rememberMe ? c.accentText : 'rgba(226, 232, 240, 0.62)'}
+                  />
+                  <Text style={[s.rememberText, { color: 'rgba(226, 232, 240, 0.82)' }]}>
+                    {t('auth.rememberMe')}
+                  </Text>
+                </Pressable>
+                <Pressable style={s.forgotLinkInline} hitSlop={8} onPress={() => router.push('/forgot-password' as never)}>
+                  <Text style={[s.linkText, { color: c.accentText }]}>{t('auth.forgotPassword')}</Text>
+                </Pressable>
+              </View>
 
               <AnimatedPressable
                 style={[
@@ -299,6 +319,21 @@ const phoneStyles = StyleSheet.create({
     elevation: 4,
   },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.2 },
+  rememberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+    gap: 12,
+  },
+  rememberHit: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexShrink: 1,
+  },
+  rememberText: { fontSize: 13, fontWeight: '600' },
+  forgotLinkInline: { flexShrink: 0 },
   forgotLink: { alignSelf: 'flex-end', marginBottom: 14 },
   registerRow: {
     flexDirection: 'row',
@@ -366,6 +401,21 @@ const tabletStyles = StyleSheet.create({
     elevation: 5,
   },
   buttonText: { color: '#fff', fontSize: 17, fontWeight: '700', letterSpacing: 0.2 },
+  rememberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    gap: 12,
+  },
+  rememberHit: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexShrink: 1,
+  },
+  rememberText: { fontSize: 14, fontWeight: '600' },
+  forgotLinkInline: { flexShrink: 0 },
   forgotLink: { alignSelf: 'flex-end', marginBottom: 16 },
   registerRow: {
     flexDirection: 'row',

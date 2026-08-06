@@ -61,12 +61,18 @@ export function GymBootProvider({ children }: { children: React.ReactNode }) {
   const retryBoot = useCallback(() => {
     if (retrying) return;
     setRetrying(true);
+    const started = Date.now();
+    const MIN_BUSY_MS = 650;
     void bootQuery
       .refetch()
-      .finally(() => {
+      .finally(async () => {
+        const wait = MIN_BUSY_MS - (Date.now() - started);
+        if (wait > 0) {
+          await new Promise((r) => setTimeout(r, wait));
+        }
         setRetrying(false);
       });
-  }, [retrying, bootQuery.refetch]);
+  }, [retrying, bootQuery]);
 
   const value = useMemo(
     () => ({

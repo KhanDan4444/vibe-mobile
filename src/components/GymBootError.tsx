@@ -12,6 +12,8 @@ export function GymBootError() {
   if (!bootError) return null;
 
   const showDevDetail = typeof __DEV__ !== 'undefined' && __DEV__;
+  const btnBg = c.accent;
+  const btnFg = '#fff';
 
   return (
     <View style={[styles.wrap, { backgroundColor: c.bg }]}>
@@ -28,7 +30,7 @@ export function GymBootError() {
         ) : null}
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={t('gymBoot.retry')}
+          accessibilityLabel={retrying ? t('gymBoot.retrying') : t('gymBoot.retry')}
           accessibilityState={{ disabled: retrying, busy: retrying }}
           disabled={retrying}
           onPress={retryBoot}
@@ -38,16 +40,19 @@ export function GymBootError() {
           style={({ pressed }) => [
             styles.btn,
             {
-              backgroundColor: c.accent,
-              opacity: retrying ? 0.72 : pressed ? 0.82 : 1,
+              backgroundColor: btnBg,
+              opacity: pressed && !retrying ? 0.9 : 1,
               transform: [{ scale: pressed && !retrying ? 0.98 : 1 }],
             },
           ]}
         >
           {retrying ? (
-            <ActivityIndicator color="#fff" />
+            <View style={styles.btnBusy}>
+              <ActivityIndicator color={btnFg} />
+              <Text style={[styles.btnText, { color: btnFg }]}>{t('gymBoot.retrying')}</Text>
+            </View>
           ) : (
-            <Text style={styles.btnText}>{t('gymBoot.retry')}</Text>
+            <Text style={[styles.btnText, { color: btnFg }]}>{t('gymBoot.retry')}</Text>
           )}
         </Pressable>
       </View>
@@ -95,13 +100,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 10,
-    minHeight: 44,
+    minHeight: 48,
     paddingHorizontal: 16,
     paddingVertical: 12,
     overflow: 'hidden',
   },
+  btnBusy: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
   btnText: {
-    color: '#fff',
     fontSize: 15,
     fontWeight: '700',
   },

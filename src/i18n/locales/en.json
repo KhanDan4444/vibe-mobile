@@ -26,6 +26,7 @@
     "accessDenied": "This account cannot use the mobile app.",
     "loginFailed": "Login failed.",
     "connectionFailed": "Could not connect to the server. Check your internet and try again.",
+    "rememberMe": "Remember me",
     "newGymOwner": "New Gym Owner?",
     "registerGym": "Register your Gym"
   },
@@ -75,7 +76,9 @@
     "noPlan": "No plan",
     "unpaidBadge": "Unpaid",
     "emptyTitle": "No members yet",
-    "emptyBody": "Enroll your first member to track terms and payments."
+    "emptyBody": "Enroll your first member to track terms and payments.",
+    "emptyFiltered": "No members match this filter.",
+    "emptyFilteredBody": "Try another status or clear search."
   },
   "status": {
     "active": "Active",
@@ -337,7 +340,8 @@
     "errorTitle": "Could not load gym data",
     "errorBody": "Check your connection and try again.",
     "usbHint": "USB dev: in vibe-mobile run npm run adb-reverse, then tap Retry.",
-    "retry": "Retry"
+    "retry": "Retry",
+    "retrying": "Retrying…"
   },
   "flash": {
     "saved": {

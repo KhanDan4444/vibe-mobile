@@ -78,8 +78,8 @@ function BranchCard({
     inactive: {
       fontSize: 11,
       fontWeight: '700' as const,
-      color: '#f87171',
-      backgroundColor: 'rgba(248,113,113,0.15)',
+      color: c.statusExpired,
+      backgroundColor: c.errorBg,
       paddingHorizontal: 8,
       paddingVertical: 3,
       borderRadius: 6,

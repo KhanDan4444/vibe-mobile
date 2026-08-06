@@ -26,6 +26,7 @@
     "accessDenied": "ይህ መለያ ሞባይል መተግበሪያ ሊጠቀም አይችልም።",
     "loginFailed": "መግቢያ አልተሳካም።",
     "connectionFailed": "ከሰርቨር ጋር መገናኘት አልተሳካም። ኢንተርኔትዎን ይፈትሹና እንደገና ይሞክሩ።",
+    "rememberMe": "አስታውሰኝ",
     "newGymOwner": "አዲስ የጂም ባለቤት?",
     "registerGym": "ጂምዎን ይመዝግቡ"
   },
@@ -75,7 +76,9 @@
     "noPlan": "ዕቅድ የለም",
     "unpaidBadge": "ያልተከፈለ",
     "emptyTitle": "እስካሁን አባል የለም",
-    "emptyBody": "ውሎችንና ክፍያዎችን ለመከታተል የመጀመሪያ አባልዎን ያስመዝግቡ።"
+    "emptyBody": "ውሎችንና ክፍያዎችን ለመከታተል የመጀመሪያ አባልዎን ያስመዝግቡ።",
+    "emptyFiltered": "ከዚህ ማጣሪያ ጋር የሚዛመድ አባል የለም።",
+    "emptyFilteredBody": "ሌላ ሁኔታ ይሞክሩ ወይም ፍለጋውን ያጽዱ።"
   },
   "status": {
     "active": "ንቁ",
@@ -337,7 +340,8 @@
     "errorTitle": "የጂም ውሂብ መጫን አልተሳካም",
     "errorBody": "ግንኙነትዎን ይፈትሹ እና እንደገና ይሞክሩ።",
     "usbHint": "USB: በ vibe-mobile npm run adb-reverse ካስከሱ Retry ይጫኑ።",
-    "retry": "እንደገና ሞክር"
+    "retry": "እንደገና ሞክር",
+    "retrying": "እንደገና በመሞከር ላይ…"
   },
   "flash": {
     "saved": {

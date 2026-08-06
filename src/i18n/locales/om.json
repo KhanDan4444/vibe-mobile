@@ -26,6 +26,7 @@
     "accessDenied": "Akkaawuntiin kun apiliikeeshinii mobaalaa fayyadamuu hin danda'u.",
     "loginFailed": "Seensaan hin milkoofne.",
     "connectionFailed": "Sarvarii wajjin walqunnamuu hin dandeenye. Intarneetii keessan sakatta'aa fi irra deebi'ii yaali.",
+    "rememberMe": "Na yaadadhu",
     "newGymOwner": "Abbaa jimii haaraa?",
     "registerGym": "Jimii keessan galmeessaa"
   },
@@ -75,7 +76,9 @@
     "noPlan": "Karoora hin jiru",
     "unpaidBadge": "Hin Kaffalamne",
     "emptyTitle": "Miseensonni ammaaf hin jiran",
-    "emptyBody": "Turtiilee fi kaffaltiiwwan hordofuu eegaluuf miseensa keessan isa duraa galmeessaa."
+    "emptyBody": "Turtiilee fi kaffaltiiwwan hordofuu eegaluuf miseensa keessan isa duraa galmeessaa.",
+    "emptyFiltered": "Miseensi calallii kanaan walsimatu hin jiru.",
+    "emptyFilteredBody": "Haala biraa yaalaa ykn barbaacha qulqulleessaa."
   },
   "status": {
     "active": "Si'aawaa",
@@ -337,7 +340,8 @@
     "errorTitle": "Daataa jimii fe'uu hin dandeenye",
     "errorBody": "Walqunnamtii keessan sakatta'aa fi irra deebi'ii yaali.",
     "usbHint": "USB dev: vibe-mobile keessatti npm run adb-reverse, sana booda Irra deebi'ii yaali cuqaasaa.",
-    "retry": "Irra deebi'ii yaali"
+    "retry": "Irra deebi'ii yaali",
+    "retrying": "Irra deebi'aa jira…"
   },
   "flash": {
     "saved": {

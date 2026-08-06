@@ -30,6 +30,7 @@ import { isGymOwner } from '@/src/utils/roles';
 import { SecondaryButton } from '@/src/components/ui/Button';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import type { PaymentListRow, UnpaidMemberSummary } from '@/src/types/api';
+import type { ThemeColors } from '@/src/theme/tokens';
 
 type PaymentPreset = 'today' | 'this_week' | 'this_month' | 'last_month' | 'last_30_days' | 'this_year';
 
@@ -79,31 +80,32 @@ function PaymentRowItem({
       alignItems: 'center' as const,
       backgroundColor: colors.card,
       borderRadius: 10,
-      padding: 14,
-      marginBottom: 8,
+      paddingVertical: 11,
+      paddingHorizontal: 12,
+      marginBottom: 6,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.border,
     },
     rowColumn: { marginBottom: 0 },
-    avatar: { marginRight: 12 },
+    avatar: { marginRight: 10 },
     rowBody: { flex: 1, minWidth: 0, marginRight: 8 },
     memberName: { fontSize: 15, fontWeight: '600' as const, color: colors.text },
-    rowSub: { marginTop: 3, fontSize: 12, color: colors.dim },
+    rowSub: { marginTop: 2, fontSize: 12, color: colors.dim },
     methodBadge: {
       alignSelf: 'flex-start' as const,
-      marginTop: 6,
+      marginTop: 5,
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       gap: 5,
-      paddingHorizontal: 9,
-      paddingVertical: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
       borderRadius: 8,
       borderWidth: StyleSheet.hairlineWidth,
     },
     methodBadgeText: { fontSize: 11, fontWeight: '700' as const },
     rowAmountCol: { alignItems: 'flex-end' as const, justifyContent: 'center' as const },
-    rowAmount: { fontSize: 16, fontWeight: '700' as const, color: colors.accentText },
-    rowCurrency: { fontSize: 10, fontWeight: '600' as const, color: colors.dim, marginTop: 2 },
+    rowAmount: { fontSize: 15, fontWeight: '700' as const, color: colors.accentText },
+    rowCurrency: { fontSize: 10, fontWeight: '600' as const, color: colors.dim, marginTop: 1 },
   }));
 
   const badge = paymentMethodBadgeStyle(payment.method, c);
@@ -176,11 +178,11 @@ function MethodStat({ method, label, amount }: { method: string; label: string; 
   );
 }
 
-function attentionColor(status: string) {
+function attentionColor(status: string, c: ThemeColors) {
   const s = status.toLowerCase();
-  if (s === 'expired') return '#f87171';
-  if (s === 'due soon') return '#fbbf24';
-  return '#fb923c';
+  if (s === 'expired') return c.statusExpired;
+  if (s === 'due soon') return c.warning;
+  return c.statusUnpaid;
 }
 
 function AttentionCard({
@@ -215,13 +217,14 @@ function AttentionCard({
     attentionStatus: { marginTop: 8, fontSize: 11, fontWeight: '700' as const },
   }));
   const { language } = usePreferences();
+  const { colors: themeColors } = useTheme();
   const { t } = useTranslation();
 
   return (
     <Pressable style={[styles.attentionCard, wide && styles.attentionCardWide]} onPress={onPress}>
       <Text style={appTextStyle(language, styles.attentionName)} numberOfLines={1}>{member.name}</Text>
       <Text style={appTextStyle(language, styles.attentionMeta)}>{formatDisplayDate(member.end_date)}</Text>
-      <Text style={appTextStyle(language, { ...styles.attentionStatus, color: attentionColor(member.status) })}>
+      <Text style={appTextStyle(language, { ...styles.attentionStatus, color: attentionColor(member.status, themeColors) })}>
         {t(statusLabelKey(member.status))}
       </Text>
     </Pressable>
@@ -252,16 +255,16 @@ export default function RevenueScreen() {
     heroTrend: { color: colors.success, fontWeight: '600' as const },
     methodStats: {
       flexDirection: 'row' as const,
-      marginTop: 16,
-      paddingTop: 16,
+      marginTop: 14,
+      paddingTop: 14,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: colors.border,
-      gap: 8,
+      gap: 10,
     },
-    periodRow: { gap: 8, paddingVertical: 16 },
+    periodRow: { gap: 8, paddingVertical: 12 },
     periodPill: {
-      paddingHorizontal: 14,
-      paddingVertical: 9,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
       borderRadius: 10,
       backgroundColor: colors.card,
       borderWidth: StyleSheet.hairlineWidth,

@@ -60,7 +60,7 @@ function StatCard({
     </>
   );
 
-  const card = <Card style={styles.statCard}>{content}</Card>;
+  const card = <Card quiet style={styles.statCard}>{content}</Card>;
 
   if (!onPress) {
     return <View style={layoutStyle}>{card}</View>;
@@ -200,22 +200,24 @@ export default function DashboardScreen() {
           ? ` · ${t('dashboard.newThisMonth', { count: data.newMembersThisMonth })}`
           : ''}
       </Text>
-      {owner ? (
-        <MiniBarChart data={data.revenueChart ?? []} height={chartHeight} />
-      ) : null}
     </Card>
   ) : null;
 
+  const chartBlock =
+    data && owner ? (
+      <Card quiet style={styles.chartCard}>
+        <MiniBarChart data={data.revenueChart ?? []} height={chartHeight} />
+      </Card>
+    ) : null;
+
   const attentionBlock =
-    data && owner && (attentionHasContent || !isTablet) ? (
+    data && owner && attentionHasContent ? (
       <Card style={styles.alertCard}>
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: c.text }]}>{t('dashboard.attentionTitle')}</Text>
-          {attentionHasContent ? (
-            <Pressable onPress={() => goMembers(alertFilter)}>
-              <Text style={[styles.viewAll, { color: c.accentText }]}>{t('dashboard.viewAll')}</Text>
-            </Pressable>
-          ) : null}
+          <Pressable onPress={() => goMembers(alertFilter)}>
+            <Text style={[styles.viewAll, { color: c.accentText }]}>{t('dashboard.viewAll')}</Text>
+          </Pressable>
         </View>
         {alertMembers.length ? (
           alertMembers.map((member) => {
@@ -232,7 +234,7 @@ export default function DashboardScreen() {
               />
             );
           })
-        ) : unpaidCount > 0 ? (
+        ) : (
           <Pressable
             style={[styles.attentionShortcut, { borderColor: c.border, backgroundColor: c.accentSoft }]}
             onPress={() => goMembers('unpaid')}
@@ -248,8 +250,6 @@ export default function DashboardScreen() {
             </View>
             <Text style={[styles.viewAll, { color: c.accentText }]}>{t('dashboard.viewAll')}</Text>
           </Pressable>
-        ) : (
-          <Text style={[styles.muted, { color: c.dim }]}>{t('dashboard.noAttention')}</Text>
         )}
       </Card>
     ) : null;
@@ -320,6 +320,7 @@ export default function DashboardScreen() {
           </View>
           {summaryBlock}
           {owner ? attentionBlock : null}
+          {owner ? chartBlock : null}
         </>
       ) : null}
 
@@ -349,14 +350,14 @@ const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
   statCard: {
     flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
   },
   statValue: { fontSize: 22, fontWeight: '700' },
   statLabel: { marginTop: 2, fontSize: 12 },
   summary: {
-    marginTop: 16,
-    padding: 18,
+    marginTop: 14,
+    padding: 16,
   },
   summaryTitle: { fontSize: 13, fontWeight: '600' },
   summaryTitleRow: {
@@ -366,13 +367,17 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   summaryTitleChevron: { fontSize: 16, fontWeight: '700', lineHeight: 18 },
-  income: { marginTop: 6, fontSize: 34, fontWeight: '700', letterSpacing: -0.5 },
+  income: { marginTop: 6, fontSize: 32, fontWeight: '700', letterSpacing: -0.5 },
   trend: { marginTop: 6, fontSize: 13, fontWeight: '600' },
   muted: { marginTop: 8, fontSize: 14 },
   errorWrap: { alignItems: 'center', paddingTop: 32, gap: 12 },
   errorText: { textAlign: 'center', fontSize: 15 },
+  chartCard: {
+    marginTop: 12,
+    padding: 12,
+  },
   alertCard: {
-    marginTop: 16,
+    marginTop: 14,
     padding: 14,
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },

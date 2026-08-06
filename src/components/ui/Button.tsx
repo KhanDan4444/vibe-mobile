@@ -13,6 +13,7 @@ type ButtonProps = {
 
 export function SecondaryButton({ label, onPress, loading, disabled, style }: ButtonProps) {
   const { colors: c } = useTheme();
+  const idle = disabled && !loading;
 
   return (
     <Pressable
@@ -22,9 +23,9 @@ export function SecondaryButton({ label, onPress, loading, disabled, style }: Bu
       style={({ pressed }) => [
         styles.base,
         {
-          borderColor: c.border,
-          backgroundColor: c.card,
-          opacity: pressed ? 0.85 : disabled || loading ? 0.55 : 1,
+          borderColor: c.accentText,
+          backgroundColor: c.accentSoft,
+          opacity: pressed && !loading ? 0.88 : idle ? 0.55 : 1,
         },
         style,
       ]}

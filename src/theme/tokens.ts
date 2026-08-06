@@ -65,12 +65,12 @@ export const darkTheme: ThemeColors = {
 };
 
 export const lightTheme: ThemeColors = {
-  bg: '#f1f5f9',
+  bg: '#eef1ef',
   card: '#ffffff',
-  border: '#e2e8f0',
-  text: '#0f172a',
-  muted: '#64748b',
-  dim: '#94a3b8',
+  border: '#dce3df',
+  text: '#0c1211',
+  muted: '#5c6b66',
+  dim: '#7a8a84',
   accent: '#0f766e',
   accentSoft: 'rgba(15,118,110,0.12)',
   accentText: '#115e59',
@@ -79,18 +79,18 @@ export const lightTheme: ThemeColors = {
   warmText: '#92400e',
   error: '#e11d48',
   errorBg: 'rgba(225,29,72,0.08)',
-  headerBg: '#ffffff',
-  tabBarBg: '#ffffff',
-  tabBarBorder: '#e2e8f0',
-  inputBg: '#f8fafc',
-  inputBorder: '#cbd5e1',
+  headerBg: '#f6f8f7',
+  tabBarBg: '#f6f8f7',
+  tabBarBorder: '#dce3df',
+  inputBg: '#f6f8f7',
+  inputBorder: '#c5d0cb',
   success: '#059669',
   warning: '#d97706',
   statusActive: '#059669',
   statusDueSoon: '#0284c7',
   statusExpired: '#e11d48',
   statusUnpaid: '#ea580c',
-  statusNeutral: '#64748b',
+  statusNeutral: '#5c6b66',
 };
 
 export function colorsForTheme(theme: AppTheme): ThemeColors {

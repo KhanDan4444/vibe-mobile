@@ -304,10 +304,10 @@ export default function ReportsScreen() {
         <>
           <View style={styles.statsRow}>
             <StatBox label={t('reports.total')} value={counts.total} styles={styles} language={language} />
-            <StatBox label={t('reports.active')} value={counts.active} accent="#34d399" styles={styles} language={language} />
-            <StatBox label={t('reports.dueSoon')} value={counts.dueSoon} accent="#0284c7" styles={styles} language={language} />
-            <StatBox label={t('reports.expired')} value={counts.expired} accent="#f87171" styles={styles} language={language} />
-            <StatBox label={t('reports.unpaid')} value={counts.unpaid} accent="#fb923c" styles={styles} language={language} />
+            <StatBox label={t('reports.active')} value={counts.active} accent={c.statusActive} styles={styles} language={language} />
+            <StatBox label={t('reports.dueSoon')} value={counts.dueSoon} accent={c.statusDueSoon} styles={styles} language={language} />
+            <StatBox label={t('reports.expired')} value={counts.expired} accent={c.statusExpired} styles={styles} language={language} />
+            <StatBox label={t('reports.unpaid')} value={counts.unpaid} accent={c.statusUnpaid} styles={styles} language={language} />
           </View>
           <StatusBreakdown counts={counts} barCounts={barCounts} />
         </>

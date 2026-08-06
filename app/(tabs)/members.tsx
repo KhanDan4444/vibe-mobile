@@ -134,7 +134,6 @@ function MemberRowItem({
         {!multiColumn ? (
           <View style={styles.rowMeta}>
             <StatusBadge status={member.status} />
-            <Text style={styles.plan}>{member.plan_name || t('members.noPlan')}</Text>
             {member.is_unpaid ? <Text style={styles.unpaid}>{t('members.unpaidBadge')}</Text> : null}
           </View>
         ) : null}
@@ -408,8 +407,16 @@ export default function MembersScreen() {
           ListEmptyComponent={
             <EmptyState
               icon="people-outline"
-              title={t('members.emptyTitle')}
-              body={t('members.emptyBody')}
+              title={
+                filter !== 'all' || debouncedSearch
+                  ? t('members.emptyFiltered')
+                  : t('members.emptyTitle')
+              }
+              body={
+                filter !== 'all' || debouncedSearch
+                  ? t('members.emptyFilteredBody')
+                  : t('members.emptyBody')
+              }
             />
           }
           ListFooterComponent={query.isFetchingNextPage ? <ListFooterSkeleton /> : null}
@@ -435,8 +442,8 @@ function createStyles(c: ThemeColors) {
   return {
     container: { flex: 1, backgroundColor: c.bg },
     toolbar: {
-      paddingBottom: 10,
-      gap: 10,
+      paddingBottom: 8,
+      gap: 8,
     },
     searchWrap: {
       flexDirection: 'row' as const,
@@ -446,12 +453,12 @@ function createStyles(c: ThemeColors) {
       borderColor: c.border,
       borderRadius: 10,
       paddingHorizontal: 12,
-      minHeight: 48,
+      minHeight: 44,
     },
     searchIcon: { marginRight: 8 },
     searchInput: {
       flex: 1,
-      paddingVertical: 11,
+      paddingVertical: 10,
       color: c.text,
       fontSize: 15,
     },
@@ -463,41 +470,41 @@ function createStyles(c: ThemeColors) {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       paddingRight: 32,
-      gap: 8,
+      gap: 6,
     },
-    filtersWrap: { flexWrap: 'wrap' as const },
+    filtersWrap: { flexWrap: 'wrap' as const, rowGap: 6 },
     filterChip: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
-      gap: 6,
-      paddingLeft: 11,
-      paddingRight: 8,
-      paddingVertical: 7,
+      gap: 5,
+      paddingLeft: 10,
+      paddingRight: 7,
+      paddingVertical: 5,
       borderRadius: 999,
       borderWidth: StyleSheet.hairlineWidth,
       flexShrink: 0,
       alignSelf: 'flex-start' as const,
-      minHeight: 36,
+      minHeight: 32,
     },
     filterDot: {
-      width: 7,
-      height: 7,
-      borderRadius: 4,
+      width: 6,
+      height: 6,
+      borderRadius: 3,
     },
     filterLabel: {
-      fontSize: 13,
+      fontSize: 12,
       fontWeight: '500' as const,
     },
     filterCountBadge: {
-      minWidth: 22,
-      height: 22,
-      borderRadius: 11,
+      minWidth: 20,
+      height: 20,
+      borderRadius: 10,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
-      paddingHorizontal: 6,
+      paddingHorizontal: 5,
     },
     filterCount: {
-      fontSize: 12,
+      fontSize: 11,
       fontWeight: '600' as const,
     },
     sortRow: { alignSelf: 'flex-start' as const },
@@ -509,11 +516,12 @@ function createStyles(c: ThemeColors) {
       justifyContent: 'space-between' as const,
       backgroundColor: c.card,
       borderRadius: radiusMd,
-      padding: 12,
-      marginBottom: 8,
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+      marginBottom: 6,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
-      gap: 12,
+      gap: 10,
     },
     rowColumn: {
       marginBottom: 0,
