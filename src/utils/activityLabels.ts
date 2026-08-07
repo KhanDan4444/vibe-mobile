@@ -28,7 +28,7 @@ export function formatAuditAction(action: string, t: TFunction) {
 
 export function formatActorRole(role: string | null | undefined, t: TFunction) {
   if (role === 'Gym Owner') return t('activity.roles.owner');
-  if (role === 'Gym Staff' || role === 'Help Desk') return t('activity.roles.staff');
+  if (role === 'Gym Staff' || role === 'Help Desk' || role === 'Front Desk') return t('activity.roles.staff');
   return role || t('activity.roles.user');
 }
 
@@ -44,7 +44,7 @@ export function formatAuditDetails(entry: ActivityLogRow, t: TFunction): string 
   if (d.skip_payment) parts.push(t('activity.details.noPayment'));
   if (d.staff_role) {
     const role =
-      d.staff_role === 'Help Desk' || d.staff_role === 'Gym Staff'
+      d.staff_role === 'Help Desk' || d.staff_role === 'Gym Staff' || d.staff_role === 'Front Desk'
         ? t('activity.roles.staff')
         : String(d.staff_role);
     parts.push(t('activity.details.role', { role }));

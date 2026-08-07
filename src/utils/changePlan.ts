@@ -14,19 +14,36 @@ function formatLocalDate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+/** Inclusive term end — mirrors web/backend (next period start minus one day). */
+function addMonthsAsInclusiveEnd(start: Date, months: number): Date {
+  const targetMonth = start.getMonth() + months;
+  const targetYear = start.getFullYear() + Math.floor(targetMonth / 12);
+  const normalizedTargetMonth = ((targetMonth % 12) + 12) % 12;
+  const daysInTargetMonth = new Date(targetYear, normalizedTargetMonth + 1, 0).getDate();
+  const nextStart =
+    start.getDate() <= daysInTargetMonth
+      ? new Date(targetYear, normalizedTargetMonth, start.getDate())
+      : new Date(targetYear, normalizedTargetMonth + 1, 1);
+
+  nextStart.setDate(nextStart.getDate() - 1);
+  return nextStart;
+}
+
+/** Mirror backend/web calculateEndDate — preview term end in forms. */
 export function calculateEndDate(startDateStr: string, duration: number | string): string {
   const start = parseLocalDate(startDateStr);
   if (!start) return '—';
 
   const months = parseInt(String(duration), 10);
   if (!Number.isNaN(months)) {
-    start.setMonth(start.getMonth() + months);
-  } else if (typeof duration === 'string') {
+    return formatLocalDate(addMonthsAsInclusiveEnd(start, months));
+  }
+  if (typeof duration === 'string') {
     const normalized = duration.trim();
-    if (normalized === 'Monthly') start.setMonth(start.getMonth() + 1);
-    else if (normalized === 'Quarterly') start.setMonth(start.getMonth() + 3);
-    else if (normalized === '6-month') start.setMonth(start.getMonth() + 6);
-    else if (normalized === 'Yearly') start.setFullYear(start.getFullYear() + 1);
+    if (normalized === 'Monthly') return formatLocalDate(addMonthsAsInclusiveEnd(start, 1));
+    if (normalized === 'Quarterly') return formatLocalDate(addMonthsAsInclusiveEnd(start, 3));
+    if (normalized === '6-month') return formatLocalDate(addMonthsAsInclusiveEnd(start, 6));
+    if (normalized === 'Yearly') return formatLocalDate(addMonthsAsInclusiveEnd(start, 12));
   }
 
   return formatLocalDate(start);

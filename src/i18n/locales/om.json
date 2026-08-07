@@ -211,7 +211,8 @@
     "empty": "Hundinuu sirriidha! Beeksisi si'aawaa hin jiru.",
     "loading": "Fe'amaa jira…",
     "renew": "Haaromsi",
-    "collectPayment": "Kaffaltii sassaabi"
+    "collectPayment": "Kaffaltii sassaabi",
+    "viewMember": "Miseensa ilaali"
   },
   "profile": {
     "gymProfile": "Profaayilii jimii",
@@ -228,8 +229,11 @@
     "gymSection": "Jimii",
     "loginSection": "Seensa",
     "roleOwner": "Abbaa jimii",
-    "roleStaff": "Hojjeetaa",
+    "roleStaff": "Deskii Fuulduraa",
     "roleAccount": "Akkaawuntii"
+  },
+  "roles": {
+    "frontDesk": "Deskii Fuulduraa"
   },
   "account": {
     "preferences": "Filannoo",
@@ -291,6 +295,8 @@
     "no": "Lakkii",
     "error": "Dogoggora",
     "loading": "Fe'amaa jira…",
+    "continue": "Itti fufi",
+    "back": "Deebi'i",
     "readOnly": "Jimii haala dubbisa qofa irra jira. Hayyama keessan marsariitii irratti haaromsaa.",
     "readOnlyShort": "Jimii haala dubbisa qofa irra jira.",
     "notFound": "Hin argamne.",
@@ -433,6 +439,24 @@
     "manage": "Bulchi",
     "planDatesLocked": "Karoora fi guyyaawwan as irratti gulaalamuu hin danda'an. Fuula miseensaa irratti Haaromsi ykn Karoora jijjiiri fayyadami."
   },
+  "enroll": {
+    "successDone": "Xumurameera",
+    "successPaid": "Kaffaltiin galmeeffameera. Tajaajilaaf qophaa'aa dha.",
+    "successSkip": "Akka hin kaffalamneetti mallatteeffame — yeroo qophaa'an kaffaltii sassaabi.",
+    "enrollAnother": "Kan biraa galmeessi",
+    "viewMembers": "Miseensota ilaali",
+    "term": "Yeroo",
+    "payment": "Kaffaltii",
+    "fullNameRequired": "Maqaa guutuu miseensaa galchi.",
+    "sectionMember": "Miseensa",
+    "sectionMembership": "Miseensummaa",
+    "sectionPayment": "Kaffaltii",
+    "stepOf": "Tarkaanfii {{current}} keessaa {{total}}",
+    "endDate": "Guyyaa dhuma",
+    "endDateHint": "Karooraa fi guyyaa jalqabaa irratti hundaa'ee ni shallagama.",
+    "startDateRequired": "Guyyaa jalqabaa filadhu.",
+    "swipeHint": "Tarkaanfiiwwan gidduutti socho'uuf bitaa ykn mirgaatti harkisi."
+  },
   "screens": {
     "account": "Akkaawuntii",
     "member": "Galmee Miseensotaa",
@@ -458,6 +482,8 @@
   },
   "forms": {
     "name": "Maqaa",
+    "role": "Gahee",
+    "pickRole": "Gahee filadhu",
     "phone": "Bilbila",
     "plan": "Karoora",
     "startDate": "Guyyaa jalqabaa",
@@ -642,14 +668,18 @@
     "empty": "SMSn miseensaa kan ergame hin jiru.",
     "filterLabel": "Gosa ergaa",
     "filterAll": "Hunda",
+    "filterEnrolled": "Galmeessa",
     "filterDueSoon": "Dhiyeenyatti kan dhumu",
     "filterExpiresToday": "Har'a dhumata",
     "filterExpired": "Kan Dhumate",
+    "filterRenewed": "Kan haaromfame",
     "emptyTitle": "SMSn hin jiru",
     "emptyBody": "Seenaan SMS miseensaa ergaa jalqabaa ergteen booda mul'ata.",
+    "typeEnrolled": "Galmeessi mirkanaa'e",
     "typeDueSoon": "Yaadachiisa dhuminsa dhihoo",
     "typeExpiresToday": "Har'a dhumata",
-    "typeExpired": "Beeksisa kan dhumate"
+    "typeExpired": "Beeksisa kan dhumate",
+    "typeRenewed": "Haaromsa mirkanaa'e"
   },
   "team": {
     "noBranch": "Dameen hin jiru",
@@ -665,7 +695,7 @@
     "enableBody": "{{name}} deebi'ee seenuu danda'a.",
     "disableBody": "{{name}} hanga deebi'ee hayyamamutti seensa dhabu.",
     "emptyTitle": "Hojjettonni hin jiran",
-    "emptyBody": "Hojjettoota gargaarsaa afeeri si'a ta'u miseensota teessuma duraatiin bulchuu danda'u.",
+    "emptyBody": "Hojjettoota deskii fuulduraa afeeri si'a ta'u miseensota teessuma duraatiin bulchuu danda'u.",
     "notFound": "Akkaantiin hojjeetaa hin argamne.",
     "resetPassword": "Jecha iccitii deebisi",
     "resetPasswordHint": "Hojjeetaa kanaaf jecha iccitii seensaa haaraa kaa'i.",

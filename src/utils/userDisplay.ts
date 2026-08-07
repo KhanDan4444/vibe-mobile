@@ -8,6 +8,6 @@ export function initialsFrom(name?: string | null, email?: string | null, userna
 /** i18n key for the account role subtitle. */
 export function roleSubtitleKey(role?: string | null) {
   if (role === 'Gym Owner' || role === 'owner') return 'profile.roleOwner';
-  if (role === 'Help Desk' || role === 'Gym Staff') return 'profile.roleStaff';
+  if (role === 'Help Desk' || role === 'Gym Staff' || role === 'Front Desk') return 'profile.roleStaff';
   return 'profile.roleAccount';
 }

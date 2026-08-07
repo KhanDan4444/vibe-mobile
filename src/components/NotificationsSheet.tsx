@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useBranchScope } from '@/src/context/BranchContext';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useNotificationInbox } from '@/src/notifications/NotificationInboxContext';
@@ -12,9 +13,11 @@ import type { DashboardNotification } from '@/src/types/api';
 import type { ThemeColors } from '@/src/theme/tokens';
 import {
   notificationAction,
+  notificationActionColor,
   notificationActionLabel,
   notificationActionRoute,
 } from '@/src/utils/notificationActions';
+import { stripBranchBracketPrefix } from '@/src/utils/notificationText';
 
 function iconForType(type: string): keyof typeof Ionicons.glyphMap {
   if (type === 'danger') return 'alert-circle';
@@ -32,6 +35,7 @@ function NotificationRow({
   item,
   isRead,
   readOnly,
+  showBranchBadge,
   colors: c,
   onOpenMember,
   onAction,
@@ -41,6 +45,7 @@ function NotificationRow({
   item: DashboardNotification;
   isRead: boolean;
   readOnly: boolean;
+  showBranchBadge: boolean;
   colors: ThemeColors;
   onOpenMember: () => void;
   onAction: () => void;
@@ -48,8 +53,11 @@ function NotificationRow({
   isLast: boolean;
 }) {
   const { t } = useTranslation();
-  const action = !readOnly ? notificationAction(item) : null;
+  const resolved = notificationAction(item);
+  // Match web: renew/payment gated by read-only; View member always available.
+  const action = resolved && (resolved === 'view' || !readOnly) ? resolved : null;
   const palette = colorsForType(item.type, c);
+  const message = stripBranchBracketPrefix(item.message);
 
   return (
     <View
@@ -70,12 +78,25 @@ function NotificationRow({
           </Text>
           {!isRead ? <View style={[styles.unreadDot, { backgroundColor: c.accentText }]} /> : null}
         </View>
+        {showBranchBadge && item.branchName ? (
+          <View
+            style={[
+              styles.branchBadge,
+              {
+                backgroundColor: 'rgba(15,118,110,0.10)',
+                borderColor: 'rgba(15,118,110,0.25)',
+              },
+            ]}
+          >
+            <Text style={[styles.branchBadgeText, { color: c.accentText }]}>{item.branchName}</Text>
+          </View>
+        ) : null}
         <Text style={[styles.rowMessage, { color: c.muted }]} numberOfLines={3}>
-          {item.message}
+          {message}
         </Text>
         {action ? (
           <Pressable
-            style={[styles.actionBtn, { backgroundColor: c.accent }]}
+            style={[styles.actionBtn, { backgroundColor: notificationActionColor(action, c) }]}
             onPress={(e) => {
               e.stopPropagation?.();
               onAction();
@@ -97,9 +118,11 @@ export function NotificationsSheet({ visible, onClose }: { visible: boolean; onC
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { readOnly } = useGymReadOnly();
+  const { selectedBranchId } = useBranchScope();
   const { colors: c } = useTheme();
   const { t } = useTranslation();
   const { notifications, unread, isRead, markRead, markAllRead, dismiss, loading } = useNotificationInbox();
+  const showBranchBadge = selectedBranchId === 'all';
 
   const openMember = (item: DashboardNotification) => {
     markRead(item.id);
@@ -157,6 +180,7 @@ export function NotificationsSheet({ visible, onClose }: { visible: boolean; onC
                     item={item}
                     isRead={isRead(item.id)}
                     readOnly={readOnly}
+                    showBranchBadge={showBranchBadge}
                     colors={c}
                     isLast={index === notifications.length - 1}
                     onOpenMember={() => openMember(item)}
@@ -230,6 +254,15 @@ const styles = StyleSheet.create({
   rowTitle: { fontSize: 15, fontWeight: '600', flexShrink: 1 },
   rowTitleUnread: { fontWeight: '700' },
   unreadDot: { width: 7, height: 7, borderRadius: 4 },
+  branchBadge: {
+    alignSelf: 'flex-start',
+    marginTop: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  branchBadgeText: { fontSize: 10, fontWeight: '700' },
   rowMessage: { marginTop: 4, fontSize: 13, lineHeight: 19 },
   actionBtn: {
     alignSelf: 'flex-start',

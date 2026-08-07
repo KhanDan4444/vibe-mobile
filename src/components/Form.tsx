@@ -24,12 +24,25 @@ export const colors = {
 /**
  * Form screens — pads the system nav / gesture bar so the primary CTA is not
  * covered by the Android navigation shadow.
+ * Pass `flushBottom` when the screen owns a sticky footer that pads the inset itself.
  */
-export function Screen({ children }: { children: React.ReactNode }) {
+export function Screen({
+  children,
+  flushBottom = false,
+}: {
+  children: React.ReactNode;
+  flushBottom?: boolean;
+}) {
   const { colors: c } = useTheme();
   const insets = useSafeAreaInsets();
   return (
-    <View style={{ flex: 1, backgroundColor: c.bg, paddingBottom: Math.max(insets.bottom, 8) + 20 }}>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: c.bg,
+        paddingBottom: flushBottom ? 0 : Math.max(insets.bottom, 8) + 20,
+      }}
+    >
       {children}
     </View>
   );
@@ -168,16 +181,23 @@ export function PrimaryButton({
   onPress,
   loading,
   disabled,
+  style,
 }: {
   label: string;
   onPress: () => void;
   loading?: boolean;
   disabled?: boolean;
+  style?: StyleProp<ViewStyle>;
 }) {
   const { colors: c } = useTheme();
   return (
     <Pressable
-      style={[formStyles.button, { backgroundColor: c.accent }, (loading || disabled) && formStyles.buttonDisabled]}
+      style={[
+        formStyles.button,
+        { backgroundColor: c.accent },
+        (loading || disabled) && formStyles.buttonDisabled,
+        style,
+      ]}
       onPress={onPress}
       disabled={loading || disabled}
     >

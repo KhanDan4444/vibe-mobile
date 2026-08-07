@@ -211,7 +211,8 @@
     "empty": "No notifications right now.",
     "loading": "Loading…",
     "renew": "Renew",
-    "collectPayment": "Collect payment"
+    "collectPayment": "Collect payment",
+    "viewMember": "View member"
   },
   "profile": {
     "gymProfile": "Gym profile",
@@ -228,8 +229,11 @@
     "gymSection": "Gym",
     "loginSection": "Login",
     "roleOwner": "Gym owner",
-    "roleStaff": "Staff",
+    "roleStaff": "Front Desk",
     "roleAccount": "Account"
+  },
+  "roles": {
+    "frontDesk": "Front Desk"
   },
   "account": {
     "preferences": "Preferences",
@@ -291,6 +295,8 @@
     "no": "No",
     "error": "Error",
     "loading": "Loading…",
+    "continue": "Continue",
+    "back": "Back",
     "readOnly": "Gym is read-only. Renew your license on the web app.",
     "readOnlyShort": "Gym is read-only.",
     "notFound": "Not found.",
@@ -433,6 +439,24 @@
     "manage": "Manage",
     "planDatesLocked": "Plan and dates cannot be edited here. Use Renew or Change plan on the member screen."
   },
+  "enroll": {
+    "successDone": "Done",
+    "successPaid": "Payment recorded. They're ready for the floor.",
+    "successSkip": "Marked unpaid — collect payment when they're ready.",
+    "enrollAnother": "Enroll another",
+    "viewMembers": "View members",
+    "term": "Term",
+    "payment": "Payment",
+    "fullNameRequired": "Enter the member's full name.",
+    "sectionMember": "Member",
+    "sectionMembership": "Membership",
+    "sectionPayment": "Payment",
+    "stepOf": "Step {{current}} of {{total}}",
+    "endDate": "End date",
+    "endDateHint": "Calculated from the plan and start date.",
+    "startDateRequired": "Choose a start date.",
+    "swipeHint": "Swipe left or right to move between steps."
+  },
   "screens": {
     "account": "Account",
     "member": "Member",
@@ -460,6 +484,8 @@
     "name": "Name",
     "phone": "Phone",
     "plan": "Plan",
+    "role": "Role",
+    "pickRole": "Select role",
     "startDate": "Start date",
     "amount": "Amount (ETB)",
     "amountFromPlan": "Taken from the selected plan — not editable on enroll.",
@@ -642,14 +668,18 @@
     "empty": "No SMS messages yet.",
     "filterLabel": "Message type",
     "filterAll": "All",
+    "filterEnrolled": "Enrollment",
     "filterDueSoon": "Due soon",
     "filterExpiresToday": "Expires today",
     "filterExpired": "Expired",
+    "filterRenewed": "Renewed",
     "emptyTitle": "No SMS yet",
     "emptyBody": "Member SMS history shows up after you send the first message.",
+    "typeEnrolled": "Enrollment confirmed",
     "typeDueSoon": "Due soon reminder",
     "typeExpiresToday": "Expires today",
-    "typeExpired": "Expired notice"
+    "typeExpired": "Expired notice",
+    "typeRenewed": "Renewal confirmed"
   },
   "team": {
     "noBranch": "No branch",
@@ -665,7 +695,7 @@
     "enableBody": "Allow {{name}} to sign in?",
     "disableBody": "Block {{name}} from signing in?",
     "emptyTitle": "No staff yet",
-    "emptyBody": "Add help desk staff to manage members at the desk.",
+    "emptyBody": "Add front desk staff to manage members at the desk.",
     "notFound": "Staff account not found.",
     "resetPassword": "Reset password",
     "resetPasswordHint": "Set a new login password for this staff member.",

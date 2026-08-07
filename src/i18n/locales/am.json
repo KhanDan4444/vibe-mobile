@@ -211,7 +211,8 @@
     "empty": "አሁን ማሳወቂያ የለም።",
     "loading": "በመጫን ላይ…",
     "renew": "ያድሱ",
-    "collectPayment": "ክፍያ ይቀበሉ"
+    "collectPayment": "ክፍያ ይቀበሉ",
+    "viewMember": "አባል ይመልከቱ"
   },
   "profile": {
     "gymProfile": "የጂም መገለጫ",
@@ -228,8 +229,11 @@
     "gymSection": "ጂም",
     "loginSection": "መግቢያ",
     "roleOwner": "የጂም ባለቤት",
-    "roleStaff": "ሰራተኛ",
+    "roleStaff": "የፊት ዴስክ",
     "roleAccount": "መለያ"
+  },
+  "roles": {
+    "frontDesk": "የፊት ዴስክ"
   },
   "account": {
     "preferences": "ምርጫዎች",
@@ -291,6 +295,8 @@
     "no": "አይ",
     "error": "ስህተት",
     "loading": "በመጫን ላይ…",
+    "continue": "ቀጥል",
+    "back": "ተመለስ",
     "readOnly": "ጂሙ በማንበብ ብቻ ሁኔታ ላይ ነው። ፈቃድዎን በድር መተግበሪያ ያድሱ።",
     "readOnlyShort": "ጂሙ በማንበብ ብቻ ሁኔታ ላይ ነው።",
     "notFound": "አልተገኘም።",
@@ -433,6 +439,24 @@
     "manage": "አስተዳድር",
     "planDatesLocked": "ዕቅድ እና ቀኖች እዚህ ሊታረሙ አይችሉም። በአባሉ ገጽ ላይ አድስ ወይም ዕቅድ ቀይር ይጠቀሙ።"
   },
+  "enroll": {
+    "successDone": "ተጠናቋል",
+    "successPaid": "ክፍያ ተመዝግቧል። ለአገልግሎት ዝግጁ ናቸው።",
+    "successSkip": "እንዳልከፈሉ ምልክት ተደርጓል — ክፍያ ሲዘጋጁ ይቀበሉ።",
+    "enrollAnother": "ሌላ አባል መዝግብ",
+    "viewMembers": "አባላትን ይመልከቱ",
+    "term": "የክፍያ ዘመን",
+    "payment": "ክፍያ",
+    "fullNameRequired": "የአባሉን ሙሉ ስም ያስገቡ።",
+    "sectionMember": "አባል",
+    "sectionMembership": "አባልነት",
+    "sectionPayment": "ክፍያ",
+    "stepOf": "ደረጃ {{current}} ከ {{total}}",
+    "endDate": "ማለቂያ ቀን",
+    "endDateHint": "ከዕቅዱና ከመጀመሪያ ቀን በራስ ይሰላል።",
+    "startDateRequired": "የመጀመሪያ ቀን ይምረጡ።",
+    "swipeHint": "በደረጃዎች መካከል ለመንቀሳቀስ ወደ ግራ ወይም ቀኝ ያንሸራቱ።"
+  },
   "screens": {
     "account": "መለያ",
     "member": "አባል",
@@ -458,6 +482,8 @@
   },
   "forms": {
     "name": "ስም",
+    "role": "ሚና",
+    "pickRole": "ሚና ይምረጡ",
     "phone": "ስልክ",
     "plan": "ዕቅድ",
     "startDate": "የመጀመሪያ ቀን",
@@ -642,14 +668,18 @@
     "empty": "SMS መልዕክት እስካሁን የለም።",
     "filterLabel": "የመልዕክት አይነት",
     "filterAll": "ሁሉም",
+    "filterEnrolled": "ምዝገባ",
     "filterDueSoon": "በቅርብ ያበቃ",
     "filterExpiresToday": "ዛሬ ያበቃ",
     "filterExpired": "የተጠናቀቀ",
+    "filterRenewed": "የታደሰ",
     "emptyTitle": "እስካሁን SMS የለም",
     "emptyBody": "የመጀመሪያውን መልእክት ከላኩ በኋላ የአባል SMS ታሪክ ይታያል።",
+    "typeEnrolled": "ምዝገባ ተረጋግጧል",
     "typeDueSoon": "በቅርቡ የሚያልቅ ማስታወሻ",
     "typeExpiresToday": "ዛሬ ያልቃል",
-    "typeExpired": "ያለፈ ማሳወቂያ"
+    "typeExpired": "ያለፈ ማሳወቂያ",
+    "typeRenewed": "እድሳት ተረጋግጧል"
   },
   "team": {
     "noBranch": "ቅርንጫፍ የለም",
@@ -665,7 +695,7 @@
     "enableBody": "{{name}} መግባት ይፈቀድ?",
     "disableBody": "{{name}} መግባት ይከለክል?",
     "emptyTitle": "እስካሁን ሰራተኛ የለም",
-    "emptyBody": "በዴስክ አባላትን እንዲያስተዳድሩ የእገዛ ዴስክ ሰራተኞችን ያክሉ።",
+    "emptyBody": "በዴስክ አባላትን እንዲያስተዳድሩ የፊት ዴስክ ሰራተኞችን ያክሉ።",
     "notFound": "የሰራተኛ መለያ አልተገኘም።",
     "resetPassword": "የይለፍ ቃል ዳግም አስጀምር",
     "resetPasswordHint": "ለዚህ ሰራተኛ አዲስ የመግቢያ ይለፍ ቃል ያዘጋጁ።",

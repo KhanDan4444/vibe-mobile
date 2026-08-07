@@ -10,7 +10,8 @@ import { fetchBranches } from '@/src/api/branches';
 import { BranchPicker } from '@/src/components/BranchPicker';
 import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
-import { isGymOwner } from '@/src/utils/roles';
+import { isGymOwner, DEFAULT_STAFF_ROLE, STAFF_ROLE_OPTIONS } from '@/src/utils/roles';
+import { OptionPickerField } from '@/src/components/OptionPickerField';
 
 export default function NewStaffScreen() {
   const { t } = useTranslation();
@@ -22,6 +23,7 @@ export default function NewStaffScreen() {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [staffRole, setStaffRole] = useState<string>(DEFAULT_STAFF_ROLE);
   const [branchId, setBranchId] = useState<number | null>(null);
   const [error, setError] = useState('');
   const canManageTeam = Boolean(user && isGymOwner(user.role));
@@ -50,7 +52,7 @@ export default function NewStaffScreen() {
         email: email.trim() || null,
         username: username.trim(),
         password,
-        staff_role: 'Help Desk',
+        staff_role: staffRole,
         branch_id: branchId!,
       }),
     onSuccess: () => {
@@ -86,6 +88,18 @@ export default function NewStaffScreen() {
 
           <Label>{t('forms.name')}</Label>
           <Field value={name} onChangeText={setName} autoCapitalize="words" />
+
+          <OptionPickerField
+            label={t('forms.role')}
+            placeholder={t('forms.pickRole')}
+            sheetTitle={t('forms.role')}
+            options={STAFF_ROLE_OPTIONS.map((opt) => ({
+              value: opt.id,
+              label: t(opt.labelKey),
+            }))}
+            value={staffRole}
+            onChange={setStaffRole}
+          />
 
           <Label>{t('forms.username')}</Label>
           <Field value={username} onChangeText={setUsername} autoCapitalize="none" />

@@ -1,9 +1,11 @@
 import type { TFunction } from 'i18next';
 
 const TYPE_KEYS: Record<string, string> = {
+  member_enrolled: 'messages.typeEnrolled',
   member_due_soon: 'messages.typeDueSoon',
   member_expires_today: 'messages.typeExpiresToday',
   member_expired: 'messages.typeExpired',
+  member_renewed: 'messages.typeRenewed',
 };
 
 export function formatSmsType(type: string, t: TFunction) {
@@ -13,7 +15,9 @@ export function formatSmsType(type: string, t: TFunction) {
 
 export const SMS_TYPE_FILTER_KEYS = [
   { value: 'all' as const, labelKey: 'messages.filterAll' },
+  { value: 'member_enrolled' as const, labelKey: 'messages.filterEnrolled' },
   { value: 'member_due_soon' as const, labelKey: 'messages.filterDueSoon' },
   { value: 'member_expires_today' as const, labelKey: 'messages.filterExpiresToday' },
   { value: 'member_expired' as const, labelKey: 'messages.filterExpired' },
+  { value: 'member_renewed' as const, labelKey: 'messages.filterRenewed' },
 ] as const;

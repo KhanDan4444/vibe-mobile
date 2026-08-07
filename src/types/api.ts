@@ -1,4 +1,4 @@
-export type UserRole = 'Platform Admin' | 'Gym Owner' | 'Help Desk' | string;
+export type UserRole = 'Platform Admin' | 'Gym Owner' | 'Front Desk' | 'Help Desk' | string;
 
 export interface AuthUser {
   id: number;

@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { formStyles } from '@/src/components/Form';
-import { dismissKeyboard } from '@/src/utils/dismissKeyboard';
+import { dismissKeyboardThen } from '@/src/utils/dismissKeyboard';
 
 export type PickerOption<T extends string = string> = {
   value: T;
@@ -50,8 +50,7 @@ export function OptionPickerField<T extends string>({
           },
         ]}
         onPress={() => {
-          dismissKeyboard();
-          setOpen(true);
+          dismissKeyboardThen(() => setOpen(true));
         }}
         accessibilityRole="button"
       >
