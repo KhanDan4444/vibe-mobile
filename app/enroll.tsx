@@ -4,14 +4,17 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import {
   AccessibilityInfo,
   Animated,
+  BackHandler,
   KeyboardAvoidingView,
   PanResponder,
   Platform,
+  Pressable,
   StyleSheet,
   Switch,
   View,
   type TextInput,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText as Text } from '@/src/components/AppText';
@@ -71,6 +74,8 @@ type EnrollDone = {
   method?: string;
 };
 
+const SWIPE_HINT_KEY = 'niku.enroll.swipeHintSeen';
+
 export default function EnrollScreen() {
   const router = useRouter();
   const navigation = useNavigation();
@@ -100,12 +105,14 @@ export default function EnrollScreen() {
   const [enrollStep, setEnrollStep] = useState(1);
   const [enrollDone, setEnrollDone] = useState<EnrollDone | null>(null);
   const [reduceMotion, setReduceMotion] = useState(false);
+  const [showSwipeHint, setShowSwipeHint] = useState(false);
   const phoneRef = useRef<TextInput>(null);
   const stepDirectionRef = useRef<1 | -1>(1);
   const checkScale = useRef(new Animated.Value(1)).current;
   const checkOpacity = useRef(new Animated.Value(1)).current;
   const stepOpacity = useRef(new Animated.Value(1)).current;
   const stepTranslate = useRef(new Animated.Value(0)).current;
+  const swipeHintOpacity = useRef(new Animated.Value(1)).current;
   const { colors: c } = useTheme();
   const { t } = useTranslation();
   const styles = useThemedStyles((colors) => ({
@@ -131,37 +138,50 @@ export default function EnrollScreen() {
     switchLabel: { color: colors.text, fontSize: 15, flex: 1, marginRight: 12 },
     successWrap: {
       alignItems: 'center' as const,
-      paddingVertical: 12,
+      paddingVertical: 8,
     },
     checkCircle: {
+      width: 96,
+      height: 96,
+      borderRadius: 48,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      backgroundColor: 'rgba(5,150,105,0.12)',
+      marginBottom: 22,
+      borderWidth: 1,
+      borderColor: 'rgba(5,150,105,0.22)',
+    },
+    checkInner: {
       width: 64,
       height: 64,
       borderRadius: 32,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
-      backgroundColor: 'rgba(5,150,105,0.15)',
-      marginBottom: 20,
+      backgroundColor: 'rgba(5,150,105,0.18)',
     },
-    doneEyebrow: {
-      fontSize: 12,
+    successTitle: {
+      fontSize: 20,
       fontWeight: '700' as const,
-      letterSpacing: 1.6,
-      textTransform: 'uppercase' as const,
-      color: colors.accentText,
+      letterSpacing: -0.3,
+      color: colors.text,
+      textAlign: 'center' as const,
     },
     successName: {
-      marginTop: 8,
-      fontSize: 24,
+      marginTop: 10,
+      fontSize: 28,
       fontWeight: '700' as const,
+      letterSpacing: -0.4,
+      lineHeight: 34,
       color: colors.text,
       textAlign: 'center' as const,
     },
     successSub: {
-      marginTop: 6,
-      fontSize: 14,
-      lineHeight: 20,
+      marginTop: 8,
+      fontSize: 15,
+      lineHeight: 22,
       color: colors.muted,
       textAlign: 'center' as const,
+      paddingHorizontal: 8,
     },
     summary: {
       marginTop: 24,
@@ -209,7 +229,62 @@ export default function EnrollScreen() {
       gap: 10,
     },
     stickyBtn: { flex: 1 },
+    swipeHint: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 8,
+      alignSelf: 'flex-start' as const,
+      marginTop: -8,
+      marginBottom: 14,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderRadius: 999,
+      backgroundColor: colors.accentSoft,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+    },
+    swipeHintText: {
+      flexShrink: 1,
+      color: colors.accentText,
+      fontSize: 13,
+      fontWeight: '600' as const,
+    },
+    swipeHintDismiss: {
+      padding: 2,
+    },
   }));
+
+  const swipeHintVisibleRef = useRef(false);
+
+  const dismissSwipeHint = useCallback(() => {
+    if (!swipeHintVisibleRef.current) return;
+    swipeHintVisibleRef.current = false;
+    void AsyncStorage.setItem(SWIPE_HINT_KEY, '1');
+    if (reduceMotion) {
+      setShowSwipeHint(false);
+      return;
+    }
+    Animated.timing(swipeHintOpacity, {
+      toValue: 0,
+      duration: 160,
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished) setShowSwipeHint(false);
+    });
+  }, [reduceMotion, swipeHintOpacity]);
+
+  useEffect(() => {
+    let alive = true;
+    void AsyncStorage.getItem(SWIPE_HINT_KEY).then((v) => {
+      if (!alive || v === '1') return;
+      swipeHintOpacity.setValue(1);
+      swipeHintVisibleRef.current = true;
+      setShowSwipeHint(true);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [swipeHintOpacity]);
 
   const canEnroll = Boolean(user && hasGymPortalAccess(user.role));
   const owner = isGymOwner(user?.role);
@@ -239,9 +314,23 @@ export default function EnrollScreen() {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: enrollDone ? t('enroll.successDone') : t('screens.enroll'),
+      title: enrollDone ? t('enroll.successTitle') : t('screens.enroll'),
+      headerBackVisible: !enrollDone,
+      gestureEnabled: !enrollDone,
+      headerLeft: enrollDone
+        ? () => null
+        : undefined,
     });
   }, [enrollDone, navigation, t]);
+
+  useEffect(() => {
+    if (!enrollDone) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      router.replace('/(tabs)/members');
+      return true;
+    });
+    return () => sub.remove();
+  }, [enrollDone, router]);
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
@@ -449,6 +538,7 @@ export default function EnrollScreen() {
   };
 
   const goNext = () => {
+    dismissSwipeHint();
     dismissKeyboard();
     setError('');
     if (enrollStep === 1) {
@@ -480,6 +570,7 @@ export default function EnrollScreen() {
 
   const goBack = () => {
     if (enrollStep <= 1) return;
+    dismissSwipeHint();
     dismissKeyboard();
     setError('');
     void selectionHaptic();
@@ -503,11 +594,12 @@ export default function EnrollScreen() {
           const enoughDistance = Math.abs(g.dx) >= 56;
           const enoughVelocity = Math.abs(g.vx) >= 0.35;
           if (!enoughDistance && !enoughVelocity) return;
+          dismissSwipeHint();
           if (g.dx < 0) goNextRef.current();
           else goBackRef.current();
         },
       }),
-    []
+    [dismissSwipeHint]
   );
 
   const submitEnroll = () => {
@@ -570,10 +662,14 @@ export default function EnrollScreen() {
         <FormScroll>
           <View style={styles.successWrap}>
             <Animated.View style={[styles.checkCircle, { opacity: checkOpacity, transform: [{ scale: checkScale }] }]}>
-              <Ionicons name="checkmark-circle" size={36} color={c.success} />
+              <View style={styles.checkInner}>
+                <Ionicons name="checkmark" size={36} color={c.success} />
+              </View>
             </Animated.View>
-            <Text style={styles.doneEyebrow}>{t('enroll.successDone')}</Text>
-            <Text style={styles.successName}>{enrollDone.name}</Text>
+            <Text style={styles.successTitle}>{t('enroll.successTitle')}</Text>
+            <Text style={styles.successName} latin>
+              {enrollDone.name}
+            </Text>
             <Text style={styles.successSub}>
               {enrollDone.skipPayment ? t('enroll.successSkip') : t('enroll.successPaid')}
             </Text>
@@ -618,6 +714,29 @@ export default function EnrollScreen() {
       >
         <FormScroll contentContainerStyle={{ paddingBottom: 24 }}>
           <EnrollStepProgress steps={enrollSteps} current={enrollStep} />
+
+          {showSwipeHint ? (
+            <Animated.View style={{ opacity: swipeHintOpacity }}>
+              <Pressable
+                onPress={dismissSwipeHint}
+                style={styles.swipeHint}
+                accessibilityRole="button"
+                accessibilityLabel={t('enroll.swipeHint')}
+              >
+                <Ionicons name="swap-horizontal" size={16} color={c.accentText} />
+                <Text style={styles.swipeHintText}>{t('enroll.swipeHintShort')}</Text>
+                <Pressable
+                  onPress={dismissSwipeHint}
+                  hitSlop={8}
+                  style={styles.swipeHintDismiss}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('common.dismiss')}
+                >
+                  <Ionicons name="close" size={14} color={c.accentText} />
+                </Pressable>
+              </Pressable>
+            </Animated.View>
+          ) : null}
 
           <ErrorBanner
             message={
@@ -780,7 +899,7 @@ export default function EnrollScreen() {
                 <PrimaryButton
                   label={t('common.continue')}
                   onPress={goNext}
-                  style={enrollStep > 1 ? styles.stickyBtn : undefined}
+                  style={styles.stickyBtn}
                 />
               ) : (
                 <PrimaryButton
@@ -788,7 +907,7 @@ export default function EnrollScreen() {
                   onPress={submitEnroll}
                   loading={mutation.isPending || photoProcessing}
                   disabled={!canSubmit || photoProcessing}
-                  style={enrollStep > 1 ? styles.stickyBtn : undefined}
+                  style={styles.stickyBtn}
                 />
               )}
             </View>

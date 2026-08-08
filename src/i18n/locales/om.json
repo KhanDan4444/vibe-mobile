@@ -441,6 +441,7 @@
   },
   "enroll": {
     "successDone": "Xumurameera",
+    "successTitle": "Miseensi galmaa'eera",
     "successPaid": "Kaffaltiin galmeeffameera. Tajaajilaaf qophaa'aa dha.",
     "successSkip": "Akka hin kaffalamneetti mallatteeffame — yeroo qophaa'an kaffaltii sassaabi.",
     "enrollAnother": "Kan biraa galmeessi",
@@ -452,10 +453,14 @@
     "sectionMembership": "Miseensummaa",
     "sectionPayment": "Kaffaltii",
     "stepOf": "Tarkaanfii {{current}} keessaa {{total}}",
+    "stepOfShort": "{{current}}/{{total}}",
+    "nextStep": "Itti aansu — {{step}}",
+    "nextDone": "Itti aansu — Xumuri",
     "endDate": "Guyyaa dhuma",
     "endDateHint": "Karooraa fi guyyaa jalqabaa irratti hundaa'ee ni shallagama.",
     "startDateRequired": "Guyyaa jalqabaa filadhu.",
-    "swipeHint": "Tarkaanfiiwwan gidduutti socho'uuf bitaa ykn mirgaatti harkisi."
+    "swipeHint": "Tarkaanfiiwwan gidduutti socho'uuf bitaa ykn mirgaatti harkisi.",
+    "swipeHintShort": "Tarkaanfiiwwan gidduutti harkisi"
   },
   "screens": {
     "account": "Akkaawuntii",

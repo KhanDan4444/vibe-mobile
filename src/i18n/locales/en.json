@@ -441,6 +441,7 @@
   },
   "enroll": {
     "successDone": "Done",
+    "successTitle": "Member enrolled",
     "successPaid": "Payment recorded. They're ready for the floor.",
     "successSkip": "Marked unpaid — collect payment when they're ready.",
     "enrollAnother": "Enroll another",
@@ -452,10 +453,14 @@
     "sectionMembership": "Membership",
     "sectionPayment": "Payment",
     "stepOf": "Step {{current}} of {{total}}",
+    "stepOfShort": "{{current}} of {{total}}",
+    "nextStep": "Next — {{step}}",
+    "nextDone": "Next — Done",
     "endDate": "End date",
     "endDateHint": "Calculated from the plan and start date.",
     "startDateRequired": "Choose a start date.",
-    "swipeHint": "Swipe left or right to move between steps."
+    "swipeHint": "Swipe left or right to move between steps.",
+    "swipeHintShort": "Swipe between steps"
   },
   "screens": {
     "account": "Account",

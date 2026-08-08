@@ -441,6 +441,7 @@
   },
   "enroll": {
     "successDone": "ተጠናቋል",
+    "successTitle": "አባል ተመዝግቧል",
     "successPaid": "ክፍያ ተመዝግቧል። ለአገልግሎት ዝግጁ ናቸው።",
     "successSkip": "እንዳልከፈሉ ምልክት ተደርጓል — ክፍያ ሲዘጋጁ ይቀበሉ።",
     "enrollAnother": "ሌላ አባል መዝግብ",
@@ -452,10 +453,14 @@
     "sectionMembership": "አባልነት",
     "sectionPayment": "ክፍያ",
     "stepOf": "ደረጃ {{current}} ከ {{total}}",
+    "stepOfShort": "{{current}} ከ {{total}}",
+    "nextStep": "ቀጣይ — {{step}}",
+    "nextDone": "ቀጣይ — ጨርስ",
     "endDate": "ማለቂያ ቀን",
     "endDateHint": "ከዕቅዱና ከመጀመሪያ ቀን በራስ ይሰላል።",
     "startDateRequired": "የመጀመሪያ ቀን ይምረጡ።",
-    "swipeHint": "በደረጃዎች መካከል ለመንቀሳቀስ ወደ ግራ ወይም ቀኝ ያንሸራቱ።"
+    "swipeHint": "በደረጃዎች መካከል ለመንቀሳቀስ ወደ ግራ ወይም ቀኝ ያንሸራቱ።",
+    "swipeHintShort": "በደረጃዎች መካከል ያንሸራቱ"
   },
   "screens": {
     "account": "መለያ",
