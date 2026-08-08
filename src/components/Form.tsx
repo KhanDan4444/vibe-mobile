@@ -1,12 +1,15 @@
 import React from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText as Text, AppTextInput as TextInput } from '@/src/components/AppText';
+import { PrimaryButton as UiPrimaryButton } from '@/src/components/ui/Button';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import type { ThemeColors } from '@/src/theme/tokens';
 import { appTextStyle } from '@/src/theme/typography';
 import { dismissKeyboard } from '@/src/utils/dismissKeyboard';
+
+export { SecondaryButton } from '@/src/components/ui/Button';
 
 /** @deprecated Use useTheme().colors in new code. */
 export const colors = {
@@ -189,20 +192,14 @@ export function PrimaryButton({
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
 }) {
-  const { colors: c } = useTheme();
   return (
-    <Pressable
-      style={[
-        formStyles.button,
-        { backgroundColor: c.accent },
-        (loading || disabled) && formStyles.buttonDisabled,
-        style,
-      ]}
+    <UiPrimaryButton
+      label={label}
       onPress={onPress}
-      disabled={loading || disabled}
-    >
-      {loading ? <ActivityIndicator color="#fff" /> : <Text style={formStyles.buttonText}>{label}</Text>}
-    </Pressable>
+      loading={loading}
+      disabled={disabled}
+      style={[formStyles.buttonSpacing, style]}
+    />
   );
 }
 
@@ -273,15 +270,10 @@ export const formStyles = StyleSheet.create({
     marginBottom: 12,
     fontSize: 14,
   },
-  button: {
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: 'center',
+  buttonSpacing: {
     marginTop: 24,
     marginBottom: 8,
   },
-  buttonDisabled: { opacity: 0.6 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
   chip: {
     paddingHorizontal: 12,

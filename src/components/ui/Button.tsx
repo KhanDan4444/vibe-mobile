@@ -11,46 +11,74 @@ type ButtonProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-export function SecondaryButton({ label, onPress, loading, disabled, style }: ButtonProps) {
+function AppButton({
+  label,
+  onPress,
+  loading,
+  disabled,
+  style,
+  variant,
+}: ButtonProps & { variant: 'primary' | 'secondary' }) {
   const { colors: c } = useTheme();
-  const idle = disabled && !loading;
+  const idle = Boolean(disabled && !loading);
+  const busy = Boolean(loading);
+  const primary = variant === 'primary';
 
   return (
     <Pressable
       accessibilityRole="button"
       disabled={disabled || loading}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.base,
-        {
-          borderColor: c.accentText,
-          backgroundColor: c.accentSoft,
-          opacity: pressed && !loading ? 0.88 : idle ? 0.55 : 1,
-        },
-        style,
-      ]}
+      android_ripple={{ color: 'transparent' }}
+      style={({ pressed }) => {
+        const active = pressed && !busy && !idle;
+        return [
+          styles.base,
+          primary
+            ? {
+                backgroundColor: c.accent,
+                borderColor: c.accent,
+                opacity: idle ? 0.55 : active ? 0.88 : 1,
+              }
+            : {
+                backgroundColor: active ? c.accentSoft : 'transparent',
+                borderColor: c.accentText,
+                opacity: idle ? 0.55 : active ? 0.92 : 1,
+              },
+          style,
+        ];
+      }}
     >
-      {loading ? (
-        <ActivityIndicator color={c.accentText} />
+      {busy ? (
+        <ActivityIndicator color={primary ? '#fff' : c.accentText} />
       ) : (
-        <Text style={[styles.label, { color: c.accentText }]}>{label}</Text>
+        <Text style={[styles.label, { color: primary ? '#fff' : c.accentText }]}>{label}</Text>
       )}
     </Pressable>
   );
 }
 
+export function PrimaryButton(props: ButtonProps) {
+  return <AppButton {...props} variant="primary" />;
+}
+
+export function SecondaryButton(props: ButtonProps) {
+  return <AppButton {...props} variant="secondary" />;
+}
+
 const styles = StyleSheet.create({
   base: {
-    minHeight: 44,
+    minHeight: 48,
     borderRadius: radiusMd,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
+    overflow: 'hidden',
   },
   label: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
   },
 });

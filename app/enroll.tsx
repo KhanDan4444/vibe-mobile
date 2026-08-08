@@ -30,8 +30,7 @@ import { EnrollStepProgress } from '@/src/components/EnrollStepProgress';
 import { PhotoPickerField } from '@/src/components/PhotoPickerField';
 import { PlanPickerField } from '@/src/components/PlanPickerField';
 import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
-import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
-import { SecondaryButton } from '@/src/components/ui/Button';
+import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton, Screen, SecondaryButton } from '@/src/components/Form';
 import { SkeletonBone } from '@/src/components/Skeleton';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useOfflineFlash } from '@/src/hooks/useSaveFlash';
@@ -228,7 +227,7 @@ export default function EnrollScreen() {
       flexDirection: 'row' as const,
       gap: 10,
     },
-    stickyBtn: { flex: 1 },
+    stickyBtn: { flex: 1, marginTop: 0, marginBottom: 0 },
     swipeHint: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
