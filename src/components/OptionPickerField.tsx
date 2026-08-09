@@ -38,11 +38,11 @@ export function OptionPickerField<T extends string>({
     <View>
       {label ? <Text style={[formStyles.label, { color: c.muted }]}>{label}</Text> : null}
       <Pressable
-        style={[
+        style={({ pressed }) => [
           formStyles.input,
           {
             backgroundColor: c.inputBg,
-            borderColor: error ? c.error : c.inputBorder,
+            borderColor: error ? c.error : open || pressed ? c.accentText : c.inputBorder,
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -57,7 +57,7 @@ export function OptionPickerField<T extends string>({
         <Text style={{ color: selected ? c.text : c.dim, fontSize: 16, flex: 1 }} numberOfLines={1}>
           {display}
         </Text>
-        <Ionicons name="chevron-down" size={18} color={c.muted} />
+        <Ionicons name="chevron-down" size={18} color={open ? c.accentText : c.muted} />
       </Pressable>
 
       <BottomSheet visible={open} title={sheetTitle ?? label ?? placeholder} onClose={() => setOpen(false)}>

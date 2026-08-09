@@ -115,6 +115,7 @@ export const Field = React.forwardRef<
     keyboardType?: 'default' | 'numeric' | 'phone-pad' | 'decimal-pad' | 'email-address';
     autoCapitalize?: 'none' | 'sentences' | 'words';
     onBlur?: () => void;
+    onFocus?: () => void;
     onSubmitEditing?: () => void;
     returnKeyType?: 'done' | 'next' | 'go' | 'send' | 'default';
     blurOnSubmit?: boolean;
@@ -129,6 +130,7 @@ export const Field = React.forwardRef<
     keyboardType,
     autoCapitalize,
     onBlur,
+    onFocus,
     onSubmitEditing,
     returnKeyType,
     blurOnSubmit,
@@ -137,6 +139,8 @@ export const Field = React.forwardRef<
   ref
 ) {
   const { colors: c } = useTheme();
+  const [focused, setFocused] = React.useState(false);
+
   return (
     <TextInput
       ref={ref}
@@ -144,7 +148,7 @@ export const Field = React.forwardRef<
         formStyles.input,
         {
           backgroundColor: c.inputBg,
-          borderColor: error ? c.error : c.inputBorder,
+          borderColor: error ? c.error : focused ? c.accentText : c.inputBorder,
           color: c.text,
         },
       ]}
@@ -152,11 +156,19 @@ export const Field = React.forwardRef<
       onChangeText={onChangeText}
       placeholder={placeholder}
       placeholderTextColor={c.dim}
+      selectionColor={c.accentText}
       secureTextEntry={secureTextEntry}
       keyboardType={keyboardType}
       autoCapitalize={autoCapitalize ?? 'sentences'}
       autoCorrect={false}
-      onBlur={onBlur}
+      onFocus={() => {
+        setFocused(true);
+        onFocus?.();
+      }}
+      onBlur={() => {
+        setFocused(false);
+        onBlur?.();
+      }}
       onSubmitEditing={onSubmitEditing}
       returnKeyType={returnKeyType}
       blurOnSubmit={blurOnSubmit}

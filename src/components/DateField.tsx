@@ -62,11 +62,15 @@ export function DateField({
   return (
     <View>
       <Pressable
-        style={[
+        style={({ pressed }) => [
           formStyles.input,
           {
             backgroundColor: c.inputBg,
-            borderColor: c.inputBorder,
+            borderColor: pickerDisabled
+              ? c.inputBorder
+              : open || pressed
+                ? c.accentText
+                : c.inputBorder,
             justifyContent: 'center',
             minHeight: 48,
             opacity: pickerDisabled ? 0.55 : 1,
