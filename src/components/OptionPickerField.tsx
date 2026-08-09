@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { formStyles } from '@/src/components/Form';
-import { dismissKeyboardThen } from '@/src/utils/dismissKeyboard';
+import { dismissKeyboard } from '@/src/utils/dismissKeyboard';
 
 export type PickerOption<T extends string = string> = {
   value: T;
@@ -38,11 +38,11 @@ export function OptionPickerField<T extends string>({
     <View>
       {label ? <Text style={[formStyles.label, { color: c.muted }]}>{label}</Text> : null}
       <Pressable
-        style={({ pressed }) => [
+        style={[
           formStyles.input,
           {
             backgroundColor: c.inputBg,
-            borderColor: error ? c.error : open || pressed ? c.accentText : c.inputBorder,
+            borderColor: error ? c.error : open ? c.accentText : c.inputBorder,
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -50,7 +50,10 @@ export function OptionPickerField<T extends string>({
           },
         ]}
         onPress={() => {
-          dismissKeyboardThen(() => setOpen(true));
+          // Open immediately so the teal border doesn't flash off after press release
+          // while waiting for keyboard dismiss (Android delay).
+          setOpen(true);
+          dismissKeyboard();
         }}
         accessibilityRole="button"
       >

@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { formStyles } from '@/src/components/Form';
 import { clampIsoDate, dateToIso, formatDisplayDate, isDateRangeValid, isoToLocalDate, toDateString } from '@/src/utils/date';
-import { dismissKeyboardThen } from '@/src/utils/dismissKeyboard';
+import { dismissKeyboard } from '@/src/utils/dismissKeyboard';
 
 function parseIsoDate(value: string): Date {
   return isoToLocalDate(value || todayFallback());
@@ -62,15 +62,11 @@ export function DateField({
   return (
     <View>
       <Pressable
-        style={({ pressed }) => [
+        style={[
           formStyles.input,
           {
             backgroundColor: c.inputBg,
-            borderColor: pickerDisabled
-              ? c.inputBorder
-              : open || pressed
-                ? c.accentText
-                : c.inputBorder,
+            borderColor: pickerDisabled ? c.inputBorder : open ? c.accentText : c.inputBorder,
             justifyContent: 'center',
             minHeight: 48,
             opacity: pickerDisabled ? 0.55 : 1,
@@ -78,7 +74,9 @@ export function DateField({
         ]}
         onPress={() => {
           if (pickerDisabled) return;
-          dismissKeyboardThen(() => setOpen(true));
+          // Open immediately so teal border stays stable (no press→delay→open flash).
+          setOpen(true);
+          dismissKeyboard();
         }}
         disabled={pickerDisabled}
         accessibilityRole="button"
