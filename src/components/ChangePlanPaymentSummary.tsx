@@ -1,5 +1,6 @@
 import { View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
@@ -31,27 +32,21 @@ export function ChangePlanPaymentSummary({
 
   const styles = useThemedStyles((colors) => ({
     card: {
-      marginTop: 16,
-      marginBottom: 8,
+      marginTop: 12,
+      marginBottom: 6,
       padding: 14,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
-      backgroundColor: colors.card,
     },
     title: {
-      fontSize: 12,
-      fontWeight: '700' as const,
-      textTransform: 'uppercase' as const,
-      letterSpacing: 0.4,
-      color: colors.muted,
-      marginBottom: 10,
+      fontSize: 14,
+      fontWeight: '600' as const,
+      color: colors.text,
+      marginBottom: 8,
     },
     row: {
       flexDirection: 'row' as const,
       justifyContent: 'space-between' as const,
       alignItems: 'flex-start' as const,
-      paddingVertical: 6,
+      paddingVertical: 5,
       gap: 12,
     },
     rowBorder: {
@@ -63,16 +58,16 @@ export function ChangePlanPaymentSummary({
     rowMeta: { marginTop: 2, fontSize: 12, color: colors.dim },
     rowAmount: { fontSize: 14, fontWeight: '600' as const, color: colors.text },
     totalRow: { marginTop: 4, paddingTop: 10 },
-    totalLabel: { fontSize: 14, fontWeight: '700' as const, color: colors.text },
-    totalAmount: { fontSize: 16, fontWeight: '700' as const, color: colors.accentText },
-    note: { marginTop: 10, fontSize: 12, lineHeight: 17, color: colors.dim },
+    totalLabel: { fontSize: 14, fontWeight: '600' as const, color: colors.text },
+    totalAmount: { fontSize: 16, fontWeight: '700' as const, letterSpacing: -0.2, color: colors.accentText },
+    note: { marginTop: 8, fontSize: 12, lineHeight: 16, color: colors.dim },
     empty: { fontSize: 13, color: colors.dim, marginBottom: 4 },
   }));
 
   if (!termStart) return null;
 
   return (
-    <View style={styles.card}>
+    <SoftSurface variant="panel" style={styles.card}>
       <Text style={styles.title}>{t('forms.termPaymentSummaryTitle')}</Text>
 
       {termPayments.length === 0 ? (
@@ -103,10 +98,10 @@ export function ChangePlanPaymentSummary({
 
       <View style={[styles.row, styles.totalRow, styles.rowBorder]}>
         <Text style={styles.totalLabel}>{t('forms.termPaymentTotalAfter')}</Text>
-        <Text style={styles.totalAmount}>{totalAfter.toLocaleString()} ETB</Text>
+        <Text display style={styles.totalAmount}>{totalAfter.toLocaleString()} ETB</Text>
       </View>
 
       <Text style={styles.note}>{t('forms.termPaymentRevenueNote')}</Text>
-    </View>
+    </SoftSurface>
   );
 }

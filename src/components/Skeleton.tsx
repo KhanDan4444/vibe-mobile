@@ -8,6 +8,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 
@@ -20,7 +21,7 @@ type BoneProps = {
 
 /** Pulsing block — building unit for page skeletons. */
 export function SkeletonBone({ width = '100%', height = 14, radius = 8, style }: BoneProps) {
-  const { colors: c, isDark } = useTheme();
+  const { isDark } = useTheme();
   const opacity = useSharedValue(0.45);
 
   useEffect(() => {
@@ -52,51 +53,42 @@ export function SkeletonBone({ width = '100%', height = 14, radius = 8, style }:
 }
 
 function ListRowSkeleton({ card }: { card?: boolean }) {
-  const { colors: c } = useTheme();
-  return (
-    <View
-      style={[
-        styles.row,
-        card
-          ? { backgroundColor: c.card, borderColor: c.border, borderWidth: StyleSheet.hairlineWidth, borderRadius: 12, padding: 14 }
-          : null,
-      ]}
-    >
+  const body = (
+    <>
       <SkeletonBone width={44} height={44} radius={22} />
       <View style={styles.rowBody}>
         <SkeletonBone width="58%" height={14} />
         <SkeletonBone width="40%" height={12} style={{ marginTop: 8 }} />
         <SkeletonBone width="28%" height={10} style={{ marginTop: 8 }} />
       </View>
-    </View>
+    </>
   );
+
+  if (card) {
+    return <SoftSurface style={styles.rowCard}>{body}</SoftSurface>;
+  }
+
+  return <View style={styles.row}>{body}</View>;
 }
 
 function ListCardSkeleton() {
-  const { colors: c } = useTheme();
   return (
-    <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
+    <SoftSurface variant="panel" style={styles.card}>
       <SkeletonBone width="55%" height={15} />
       <SkeletonBone width="35%" height={12} style={{ marginTop: 10 }} />
       <SkeletonBone width="70%" height={12} style={{ marginTop: 10 }} />
-    </View>
+    </SoftSurface>
   );
 }
 
 function StatSkeleton() {
-  const { colors: c } = useTheme();
   const { statCardLayoutStyle } = useResponsiveLayout();
   return (
     <View style={statCardLayoutStyle}>
-      <View
-        style={[
-          styles.stat,
-          { backgroundColor: c.card, borderColor: c.border },
-        ]}
-      >
+      <SoftSurface style={styles.stat}>
         <SkeletonBone width={36} height={22} />
         <SkeletonBone width="70%" height={11} style={{ marginTop: 10 }} />
-      </View>
+      </SoftSurface>
     </View>
   );
 }
@@ -115,7 +107,6 @@ type PageSkeletonProps = {
 export function PageSkeleton({ variant = 'list-rows', count, padded = true, style }: PageSkeletonProps) {
   const { t } = useTranslation();
   const { pagePadding } = useResponsiveLayout();
-  const { colors: c } = useTheme();
   const n = count ?? defaultCount(variant);
 
   let body: ReactNode;
@@ -128,11 +119,11 @@ export function PageSkeleton({ variant = 'list-rows', count, padded = true, styl
               <StatSkeleton key={i} />
             ))}
           </View>
-          <View style={[styles.summary, { backgroundColor: c.card, borderColor: c.border }]}>
+          <SoftSurface variant="panel" style={styles.summary}>
             <SkeletonBone width="40%" height={13} />
             <SkeletonBone width="55%" height={28} style={{ marginTop: 14 }} />
             <SkeletonBone width="30%" height={12} style={{ marginTop: 12 }} />
-          </View>
+          </SoftSurface>
         </>
       );
       break;
@@ -168,11 +159,11 @@ export function PageSkeleton({ variant = 'list-rows', count, padded = true, styl
             </View>
           </View>
           {Array.from({ length: 3 }, (_, i) => (
-            <View key={i} style={[styles.card, { backgroundColor: c.card, borderColor: c.border, marginTop: 12 }]}>
+            <SoftSurface key={i} variant="panel" style={[styles.card, { marginTop: 12 }]}>
               <SkeletonBone width="40%" height={12} />
               <SkeletonBone width="85%" height={14} style={{ marginTop: 12 }} />
               <SkeletonBone width="60%" height={14} style={{ marginTop: 10 }} />
-            </View>
+            </SoftSurface>
           ))}
         </View>
       );
@@ -226,10 +217,16 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 10,
   },
+  rowCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 10,
+    paddingVertical: 13,
+    paddingHorizontal: 12,
+  },
   rowBody: { flex: 1 },
   card: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 12,
     padding: 14,
     marginBottom: 10,
   },
@@ -241,15 +238,11 @@ const styles = StyleSheet.create({
   },
   stat: {
     flex: 1,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 8,
     padding: 14,
     minHeight: 72,
     justifyContent: 'center',
   },
   summary: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 14,
     padding: 16,
   },
   form: { gap: 18, paddingTop: 8 },

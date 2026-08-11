@@ -10,7 +10,8 @@ import { fetchPlans } from '@/src/api/plans';
 import { DateField } from '@/src/components/DateField';
 import { PlanPickerField } from '@/src/components/PlanPickerField';
 import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
-import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, FormScroll, Label, MoneyAmountField, PrimaryButton, Screen } from '@/src/components/Form';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { PageSkeleton } from '@/src/components/Skeleton';
 import { LoadError } from '@/src/components/LoadError';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
@@ -54,7 +55,8 @@ export default function RenewScreen() {
   const canRenew = Boolean(user && hasGymPortalAccess(user.role));
   const styles = useThemedStyles((colors) => ({
     center: { flex: 1, alignItems: 'center' as const, justifyContent: 'center' as const },
-    memberName: { color: colors.text, fontSize: 17, fontWeight: '600' as const, marginBottom: 8 },
+    memberChip: { paddingHorizontal: 14, paddingVertical: 12, marginBottom: 14 },
+    memberName: { color: colors.text, fontSize: 16, fontWeight: '600' as const },
     hint: { color: colors.dim, fontSize: 14 },
     useTodayBtn: {
       alignSelf: 'flex-start' as const,
@@ -173,7 +175,11 @@ export default function RenewScreen() {
     <Screen>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <FormScroll>
-          {member ? <Text style={styles.memberName}>{t('forms.renewFor', { name: member.name })}</Text> : null}
+          {member ? (
+            <SoftSurface variant="quiet" style={styles.memberChip}>
+              <Text style={styles.memberName}>{t('forms.renewFor', { name: member.name })}</Text>
+            </SoftSurface>
+          ) : null}
           <ErrorBanner message={error} />
 
           {plans.length === 0 ? (
@@ -193,7 +199,7 @@ export default function RenewScreen() {
           />
 
           <Label>{t('forms.amount')}</Label>
-          <Field value={amount} onChangeText={setAmount} keyboardType="decimal-pad" autoCapitalize="none" />
+          <MoneyAmountField value={amount} onChangeText={setAmount} />
 
           <Label>{t('forms.paymentDate')}</Label>
           <DateField

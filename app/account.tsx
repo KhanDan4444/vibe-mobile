@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Redirect, useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
@@ -8,32 +8,47 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
 import { ResponsiveContent } from '@/src/components/ResponsiveContent';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { APP_LANGUAGES, LANGUAGE_LABEL_KEYS, type AppLanguage } from '@/src/i18n';
 import { initialsFrom, roleSubtitleKey } from '@/src/utils/userDisplay';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
 
+type ChevronKind = 'forward' | 'down' | 'none';
+
 type RowProps = {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   value?: string;
   danger?: boolean;
-  /** When true, shows a down chevron (dropdown). Default forward chevron when no value. */
-  dropdown?: boolean;
+  /** Default: forward for links, down when dropdown, none for actions like logout. */
+  chevron?: ChevronKind;
+  /** Hide bottom divider when this is the last row in a group. */
+  last?: boolean;
   onPress: () => void;
 };
 
-function AccountRow({ icon, label, value, danger, dropdown, onPress }: RowProps) {
+function AccountGroup({ children }: { children: ReactNode }) {
+  return <SoftSurface variant="group" style={styles.group}>{children}</SoftSurface>;
+}
+
+function AccountRow({ icon, label, value, danger, chevron = 'forward', last, onPress }: RowProps) {
   const { colors: c } = useTheme();
+  const iconColor = danger ? c.error : c.muted;
+  const labelColor = danger ? c.error : c.text;
+
   return (
-    <Pressable style={[styles.row, { backgroundColor: c.card, borderColor: c.border }]} onPress={onPress}>
-      <Ionicons name={icon} size={22} color={danger ? c.error : c.muted} style={styles.rowIcon} />
-      <Text style={[styles.rowLabel, { color: danger ? c.error : c.text }]}>{label}</Text>
+    <Pressable
+      style={[styles.row, !last && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.border }]}
+      onPress={onPress}
+    >
+      <Ionicons name={icon} size={22} color={iconColor} style={styles.rowIcon} />
+      <Text style={[styles.rowLabel, { color: labelColor }]}>{label}</Text>
       {value ? <Text style={[styles.rowValue, { color: c.dim }]}>{value}</Text> : null}
-      {dropdown ? (
+      {chevron === 'down' ? (
         <Ionicons name="chevron-down" size={18} color={c.dim} style={styles.rowCaret} />
-      ) : !value ? (
+      ) : chevron === 'forward' ? (
         <Ionicons name="chevron-forward" size={18} color={c.dim} />
       ) : null}
     </Pressable>
@@ -63,76 +78,109 @@ export default function AccountScreen() {
     setLangOpen(false);
   };
 
-  const handleLogout = () => {
-    void logout();
-  };
+  const preferencesBlock = (
+    <>
+      <Text style={[styles.section, { color: c.dim }]}>{t('account.preferences')}</Text>
+      <AccountGroup>
+        <AccountRow
+          icon={theme === 'dark' ? 'moon-outline' : 'sunny-outline'}
+          label={t('profile.appearance')}
+          value={themeLabel}
+          chevron="forward"
+          onPress={cycleTheme}
+        />
+        <AccountRow
+          icon="language-outline"
+          label={t('profile.language')}
+          value={langLabel}
+          chevron="down"
+          last
+          onPress={() => setLangOpen(true)}
+        />
+      </AccountGroup>
+    </>
+  );
+
+  const securityBlock = (
+    <>
+      <Text style={[styles.section, { color: c.dim }]}>{t('account.security')}</Text>
+      <AccountGroup>
+        {owner ? (
+          <AccountRow
+            icon="storefront-outline"
+            label={t('profile.gymProfile')}
+            onPress={() => router.push('/profile')}
+          />
+        ) : null}
+        <AccountRow
+          icon="key-outline"
+          label={t('profile.changePassword')}
+          last
+          onPress={() => router.push('/change-password')}
+        />
+      </AccountGroup>
+    </>
+  );
+
+  const sessionBlock = (
+    <>
+      <Text style={[styles.section, { color: c.dim }]}>{t('account.session')}</Text>
+      <AccountGroup>
+        <AccountRow
+          icon="log-out-outline"
+          label={t('profile.signOut')}
+          danger
+          chevron="none"
+          last
+          onPress={() => void logout()}
+        />
+      </AccountGroup>
+    </>
+  );
 
   return (
     <TabScreenFrame>
-    <ScrollView style={[styles.container, { backgroundColor: c.bg }]} contentContainerStyle={styles.content}>
-      <ResponsiveContent style={{ paddingHorizontal: pagePadding }}>
-      <View style={[styles.profileCard, { backgroundColor: c.card, borderColor: c.border }]}>
-        <View style={[styles.avatar, { backgroundColor: c.accent }]}>
-          <Text style={styles.avatarText}>{initialsFrom(user.name, user.email, user.username)}</Text>
-        </View>
-        <View style={styles.profileText}>
-          <Text style={[styles.name, { color: c.text }]} numberOfLines={1}>
-            {displayName}
-          </Text>
-          <Text style={[styles.meta, { color: c.muted }]} numberOfLines={1}>
-            {user.username || user.email}
-          </Text>
-          <Text style={[styles.role, { color: c.dim }]}>{t(roleSubtitleKey(user.role))}</Text>
-        </View>
-      </View>
+      <ScrollView style={[styles.container, { backgroundColor: c.bg }]} contentContainerStyle={styles.content}>
+        <ResponsiveContent style={{ paddingHorizontal: pagePadding }}>
+          <SoftSurface variant="panel" style={styles.profileCard}>
+            <View style={[styles.avatar, { backgroundColor: c.accent }]}>
+              <Text latin style={styles.avatarText}>
+                {initialsFrom(user.name, user.email, user.username)}
+              </Text>
+            </View>
+            <View style={styles.profileText}>
+              <Text style={[styles.name, { color: c.text }]} numberOfLines={1}>
+                {displayName}
+              </Text>
+              <Text latin style={[styles.meta, { color: c.muted }]} numberOfLines={1}>
+                {user.username || user.email}
+              </Text>
+              <Text style={[styles.role, { color: c.dim }]}>{t(roleSubtitleKey(user.role))}</Text>
+            </View>
+          </SoftSurface>
 
-      <View style={[styles.menuGrid, isTablet && styles.menuGridTablet]}>
-        <View style={isTablet ? styles.menuColumn : undefined}>
-          <Text style={[styles.section, { color: c.dim }]}>{t('account.preferences')}</Text>
-          <AccountRow icon={theme === 'dark' ? 'moon-outline' : 'sunny-outline'} label={t('profile.appearance')} value={themeLabel} onPress={cycleTheme} />
-          <AccountRow
-            icon="language-outline"
-            label={t('profile.language')}
-            value={langLabel}
-            dropdown
-            onPress={() => setLangOpen(true)}
+          <View style={[styles.menuGrid, isTablet && styles.menuGridTablet]}>
+            <View style={isTablet ? styles.menuColumn : undefined}>
+              {preferencesBlock}
+              {isTablet ? sessionBlock : null}
+            </View>
+            <View style={isTablet ? styles.menuColumn : undefined}>{securityBlock}</View>
+          </View>
+
+          {!isTablet ? sessionBlock : null}
+        </ResponsiveContent>
+      </ScrollView>
+
+      <BottomSheet visible={langOpen} title={t('profile.language')} onClose={() => setLangOpen(false)}>
+        {APP_LANGUAGES.map((lng) => (
+          <SheetOption
+            key={lng}
+            label={t(LANGUAGE_LABEL_KEYS[lng])}
+            selected={lng === language}
+            onPress={() => pickLanguage(lng)}
           />
-          {isTablet ? (
-            <>
-              <Text style={[styles.section, { color: c.dim }]}>{t('account.session')}</Text>
-              <AccountRow icon="log-out-outline" label={t('profile.signOut')} danger onPress={handleLogout} />
-            </>
-          ) : null}
-        </View>
-
-        <View style={isTablet ? styles.menuColumn : undefined}>
-          <Text style={[styles.section, { color: c.dim }]}>{t('account.security')}</Text>
-          {owner ? (
-            <AccountRow icon="storefront-outline" label={t('profile.gymProfile')} onPress={() => router.push('/profile')} />
-          ) : null}
-          <AccountRow icon="key-outline" label={t('profile.changePassword')} onPress={() => router.push('/change-password')} />
-        </View>
-      </View>
-
-      {!isTablet ? (
-        <>
-          <Text style={[styles.section, { color: c.dim }]}>{t('account.session')}</Text>
-          <AccountRow icon="log-out-outline" label={t('profile.signOut')} danger onPress={handleLogout} />
-        </>
-      ) : null}
-      </ResponsiveContent>
-    </ScrollView>
-
-    <BottomSheet visible={langOpen} title={t('profile.language')} onClose={() => setLangOpen(false)}>
-      {APP_LANGUAGES.map((lng) => (
-        <SheetOption
-          key={lng}
-          label={t(LANGUAGE_LABEL_KEYS[lng])}
-          selected={lng === language}
-          onPress={() => pickLanguage(lng)}
-        />
-      ))}
-    </BottomSheet>
+        ))}
+      </BottomSheet>
     </TabScreenFrame>
   );
 }
@@ -143,10 +191,8 @@ const styles = StyleSheet.create({
   profileCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
     padding: 16,
-    marginBottom: 22,
+    marginBottom: 18,
   },
   avatar: {
     width: 56,
@@ -156,23 +202,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 14,
   },
-  avatarText: { color: '#fff', fontSize: 18, fontWeight: '800' },
+  avatarText: { color: '#fff', fontSize: 18, fontWeight: '700' },
   profileText: { flex: 1 },
-  name: { fontSize: 18, fontWeight: '800' },
+  name: { fontSize: 18, fontWeight: '600', letterSpacing: -0.2 },
   meta: { marginTop: 3, fontSize: 13 },
-  role: { marginTop: 4, fontSize: 12, fontWeight: '600' },
-  section: { marginTop: 10, marginBottom: 8, paddingHorizontal: 4, fontSize: 13, fontWeight: '600' },
+  role: { marginTop: 4, fontSize: 12, fontWeight: '500' },
+  section: { marginTop: 14, marginBottom: 8, paddingHorizontal: 4, fontSize: 13, fontWeight: '600' },
+  group: {
+    overflow: 'hidden',
+    marginBottom: 4,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 10,
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: 14,
-    marginBottom: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    minHeight: 52,
   },
   rowIcon: { marginRight: 12 },
   rowLabel: { flex: 1, fontSize: 16, fontWeight: '600' },
-  rowValue: { fontSize: 13, fontWeight: '700', marginRight: 4 },
+  rowValue: { fontSize: 13, fontWeight: '600', marginRight: 4 },
   rowCaret: { marginLeft: 2 },
   menuGrid: { gap: 0 },
   menuGridTablet: { flexDirection: 'row', gap: 20, alignItems: 'flex-start' },

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, View, type TextStyle } from 'react-native';
 import { AppText as Text, AppTextInput as TextInput } from '@/src/components/AppText';
 import { ListFooterSkeleton, PageSkeleton } from '@/src/components/Skeleton';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,7 +15,7 @@ import { BranchFilterBar } from '@/src/components/BranchFilterBar';
 import { RevenueFiltersSheet } from '@/src/components/RevenueFiltersSheet';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { EmptyState } from '@/src/components/EmptyState';
-import { PAYMENT_METHODS, paymentMethodBadgeStyle, paymentMethodIcon, paymentMethodLabelKey } from '@/src/constants/payments';
+import { PAYMENT_METHODS, paymentMethodBadgeStyle, paymentMethodIcon, paymentMethodLabelKey, paymentMethodShortLabelKey } from '@/src/constants/payments';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
@@ -28,7 +28,13 @@ import { paymentSourceKey } from '@/src/utils/termPayments';
 import { statusLabelKey } from '@/src/utils/statusLabels';
 import { isGymOwner } from '@/src/utils/roles';
 import { SecondaryButton } from '@/src/components/ui/Button';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
+import {
+  formatTrendForDisplay,
+  trendCaptionKeyForPreset,
+  trendThinBaselineKeyForPreset,
+} from '@/src/utils/trendDisplay';
 import type { PaymentListRow, UnpaidMemberSummary } from '@/src/types/api';
 import type { ThemeColors } from '@/src/theme/tokens';
 
@@ -78,13 +84,9 @@ function PaymentRowItem({
     row: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
-      backgroundColor: colors.card,
-      borderRadius: 10,
-      paddingVertical: 11,
+      paddingVertical: 12,
       paddingHorizontal: 12,
-      marginBottom: 6,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.border,
+      marginBottom: 10,
     },
     rowColumn: { marginBottom: 0 },
     avatar: { marginRight: 10 },
@@ -104,7 +106,12 @@ function PaymentRowItem({
     },
     methodBadgeText: { fontSize: 11, fontWeight: '700' as const },
     rowAmountCol: { alignItems: 'flex-end' as const, justifyContent: 'center' as const },
-    rowAmount: { fontSize: 15, fontWeight: '700' as const, color: colors.accentText },
+    rowAmount: {
+      fontSize: 15,
+      fontWeight: '700' as const,
+      color: colors.accentText,
+      fontVariant: ['tabular-nums'] as TextStyle['fontVariant'],
+    },
     rowCurrency: { fontSize: 10, fontWeight: '600' as const, color: colors.dim, marginTop: 1 },
   }));
 
@@ -120,7 +127,10 @@ function PaymentRowItem({
       : [];
 
   return (
-    <Pressable style={[styles.row, multiColumn && styles.rowColumn, multiColumn && columnStyle]} onPress={onOpenMember}>
+    <SoftSurface
+      onPress={onOpenMember}
+      style={[styles.row, multiColumn && styles.rowColumn, multiColumn && columnStyle]}
+    >
       <View style={styles.avatar}>
         <MemberPhoto
           memberId={payment.member_id}
@@ -131,7 +141,7 @@ function PaymentRowItem({
         />
       </View>
       <View style={styles.rowBody}>
-        <Text style={appTextStyle(language, styles.memberName)} numberOfLines={1}>
+        <Text listRow style={styles.memberName} numberOfLines={1}>
           {payment.member_name || 'Member'}
         </Text>
         <Text style={appTextStyle(language, styles.rowSub)}>
@@ -146,11 +156,11 @@ function PaymentRowItem({
         </View>
       </View>
       <View style={styles.rowAmountCol}>
-        <Text style={appTextStyle(language, styles.rowAmount)}>{Number(payment.amount).toLocaleString()}</Text>
+        <Text style={styles.rowAmount}>{Number(payment.amount).toLocaleString()}</Text>
         <Text style={appTextStyle(language, styles.rowCurrency)}>ETB</Text>
       </View>
       {menuItems.length > 0 ? <ActionOverflowMenu items={menuItems} /> : null}
-    </Pressable>
+    </SoftSurface>
   );
 }
 
@@ -158,22 +168,31 @@ function MethodStat({ method, label, amount }: { method: string; label: string; 
   const { language } = usePreferences();
   const { colors: c } = useTheme();
   const styles = useThemedStyles((colors) => ({
-    methodStat: { flex: 1, minWidth: 0 },
-    methodStatHead: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 4 },
-    methodStatLabel: { flexShrink: 1, fontSize: 11, fontWeight: '600' as const, color: colors.dim },
-    methodStatValue: { marginTop: 5, fontSize: 15, fontWeight: '700' as const, color: colors.text },
+    methodStat: { flex: 1, minWidth: 0, alignItems: 'center' as const },
+    methodStatIcon: { marginBottom: 4 },
+    methodStatValue: {
+      fontSize: 14,
+      fontWeight: '700' as const,
+      color: colors.text,
+      fontVariant: ['tabular-nums'] as TextStyle['fontVariant'],
+    },
+    methodStatLabel: {
+      marginTop: 3,
+      fontSize: 11,
+      fontWeight: '500' as const,
+      color: colors.dim,
+      textAlign: 'center' as const,
+    },
   }));
 
   if (!amount) return null;
   return (
-    <View style={styles.methodStat}>
-      <View style={styles.methodStatHead}>
-        <Ionicons name={paymentMethodIcon(method)} size={12} color={c.dim} />
-        <Text style={appTextStyle(language, styles.methodStatLabel)} numberOfLines={1}>
-          {label}
-        </Text>
-      </View>
-      <Text style={appTextStyle(language, styles.methodStatValue)}>{amount.toLocaleString()}</Text>
+    <View style={styles.methodStat} accessibilityLabel={`${label} ${amount.toLocaleString()}`}>
+      <Ionicons name={paymentMethodIcon(method)} size={14} color={c.dim} style={styles.methodStatIcon} />
+      <Text style={styles.methodStatValue}>{amount.toLocaleString()}</Text>
+      <Text style={appTextStyle(language, styles.methodStatLabel)} numberOfLines={1}>
+        {label}
+      </Text>
     </View>
   );
 }
@@ -197,12 +216,8 @@ function AttentionCard({
   const styles = useThemedStyles((c) => ({
     attentionCard: {
       width: 170,
-      backgroundColor: c.card,
-      borderRadius: 10,
       padding: 12,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: c.border,
-      marginRight: 8,
+      marginRight: 10,
     },
     attentionCardWide: {
       width: undefined,
@@ -210,24 +225,27 @@ function AttentionCard({
       flexBasis: '30%',
       maxWidth: '32%',
       marginRight: 0,
-      marginBottom: 8,
+      marginBottom: 10,
     },
-    attentionName: { color: c.text, fontSize: 14, fontWeight: '700' as const },
+    attentionName: { color: c.text, fontSize: 14, fontWeight: '600' as const },
     attentionMeta: { marginTop: 6, color: c.dim, fontSize: 12 },
-    attentionStatus: { marginTop: 8, fontSize: 11, fontWeight: '700' as const },
+    attentionStatus: { marginTop: 8, fontSize: 11, fontWeight: '500' as const },
   }));
   const { language } = usePreferences();
   const { colors: themeColors } = useTheme();
   const { t } = useTranslation();
 
   return (
-    <Pressable style={[styles.attentionCard, wide && styles.attentionCardWide]} onPress={onPress}>
-      <Text style={appTextStyle(language, styles.attentionName)} numberOfLines={1}>{member.name}</Text>
+    <SoftSurface
+      onPress={onPress}
+      style={[styles.attentionCard, wide && styles.attentionCardWide]}
+    >
+      <Text listRow style={styles.attentionName} numberOfLines={1}>{member.name}</Text>
       <Text style={appTextStyle(language, styles.attentionMeta)}>{formatDisplayDate(member.end_date)}</Text>
       <Text style={appTextStyle(language, { ...styles.attentionStatus, color: attentionColor(member.status, themeColors) })}>
         {t(statusLabelKey(member.status))}
       </Text>
-    </Pressable>
+    </SoftSurface>
   );
 }
 
@@ -241,38 +259,42 @@ export default function RevenueScreen() {
     container: { flex: 1, backgroundColor: colors.bg },
     headerBlock: { paddingTop: 0 },
     hero: {
-      backgroundColor: colors.card,
-      borderRadius: 14,
-      padding: 20,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.border,
+      paddingVertical: 18,
+      paddingHorizontal: 16,
     },
     heroLabel: { fontSize: 13, fontWeight: '600' as const, color: colors.muted },
-    heroTotal: { marginTop: 8, fontSize: 36, fontWeight: '700' as const, color: colors.text, letterSpacing: -0.5 },
-    heroMeta: { flexDirection: 'row' as const, alignItems: 'center' as const, marginTop: 8, flexWrap: 'wrap' as const },
-    heroMetaText: { fontSize: 14, color: colors.dim },
+    heroTotal: {
+      marginTop: 6,
+      fontSize: 32,
+      fontWeight: '700' as const,
+      color: colors.text,
+      letterSpacing: -0.4,
+      fontVariant: ['tabular-nums'] as TextStyle['fontVariant'],
+    },
+    heroMeta: { flexDirection: 'row' as const, alignItems: 'center' as const, marginTop: 6, flexWrap: 'wrap' as const },
+    heroMetaText: { fontSize: 13, color: colors.dim },
     heroDot: { marginHorizontal: 6, color: colors.border },
-    heroTrend: { color: colors.success, fontWeight: '600' as const },
+    heroTrend: { fontWeight: '600' as const },
+    heroTrendHint: { marginTop: 4, fontSize: 12, color: colors.dim, lineHeight: 17 },
     methodStats: {
       flexDirection: 'row' as const,
-      marginTop: 14,
-      paddingTop: 14,
+      marginTop: 12,
+      paddingTop: 12,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: colors.border,
-      gap: 10,
+      gap: 8,
     },
-    periodRow: { gap: 8, paddingVertical: 12 },
+    periodRow: { gap: 8, paddingTop: 10, paddingBottom: 8 },
     periodPill: {
       paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: 10,
-      backgroundColor: colors.card,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.border,
+      paddingVertical: 7,
+      borderRadius: 12,
+      minHeight: 36,
+      justifyContent: 'center' as const,
     },
     periodPillActive: {
       backgroundColor: colors.accentSoft,
-      borderColor: 'rgba(255, 255, 255, 0.2)',
+      borderColor: colors.accentText,
     },
     periodPillText: { fontSize: 13, fontWeight: '600' as const, color: colors.muted },
     periodPillTextActive: { color: colors.accentText },
@@ -281,21 +303,14 @@ export default function RevenueScreen() {
       flex: 1,
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
-      backgroundColor: colors.card,
-      borderRadius: 10,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.border,
       paddingHorizontal: 12,
+      minHeight: 44,
     },
     searchIcon: { marginRight: 8 },
     searchInput: { flex: 1, paddingVertical: 11, color: colors.text, fontSize: 15 },
     filterBtn: {
       width: 44,
       height: 44,
-      borderRadius: 10,
-      backgroundColor: colors.card,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.border,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
     },
@@ -316,12 +331,12 @@ export default function RevenueScreen() {
       marginBottom: 10,
       marginTop: 4,
     },
-    listHeadingText: { fontSize: 15, fontWeight: '700' as const, color: colors.text },
+    listHeadingText: { fontSize: 15, fontWeight: '600' as const, letterSpacing: -0.15, color: colors.text },
     listHeadingCount: { fontSize: 12, color: colors.dim },
     hint: { fontSize: 13, color: colors.dim, marginBottom: 8 },
     attentionSection: { marginTop: 16 },
     attentionHeader: { flexDirection: 'row' as const, justifyContent: 'space-between' as const, alignItems: 'center' as const, marginBottom: 10 },
-    attentionTitle: { color: colors.text, fontSize: 15, fontWeight: '700' as const },
+    attentionTitle: { color: colors.text, fontSize: 15, fontWeight: '600' as const, letterSpacing: -0.15 },
     attentionLink: { color: colors.accentText, fontSize: 13, fontWeight: '600' as const },
     attentionList: { paddingRight: 8 },
     list: { paddingBottom: 28 },
@@ -377,8 +392,20 @@ export default function RevenueScreen() {
 
   const payments = query.data?.pages.flatMap((p) => p.items) ?? [];
   const summary = query.data?.pages[0]?.summary;
-  const trendPercent = query.data?.pages[0]?.trendPercent;
+  const trendRaw = query.data?.pages[0]?.trendPercent;
+  const trendPreset = customRangeReady ? 'custom' : preset;
+  const trendDisplay = formatTrendForDisplay(trendRaw);
+  const trendNegative = (() => {
+    if (!trendDisplay.label) return false;
+    return trendDisplay.label.startsWith('-');
+  })();
+  const trendCaption = trendDisplay.extreme
+    ? t(trendThinBaselineKeyForPreset(trendPreset))
+    : trendDisplay.label
+      ? t(trendCaptionKeyForPreset(trendPreset))
+      : null;
   const byMethod = summary?.byMethod ?? {};
+  const methodEntries = PAYMENT_METHODS.filter((m) => Number(byMethod[m] || 0) > 0);
   const unpaidMembers = query.data?.pages[0]?.unpaidMembers ?? [];
   const attentionMembers = unpaidMembers
     .filter((m) => ['expired', 'due soon'].includes(m.status.toLowerCase()))
@@ -417,40 +444,57 @@ export default function RevenueScreen() {
 
   const listHeader = (
     <View style={styles.headerBlock}>
-      <View style={styles.hero}>
+      <SoftSurface variant="panel" style={styles.hero}>
         <Text style={appTextStyle(language, styles.heroLabel)}>
           {periodLabel}
         </Text>
-        <Text style={appTextStyle(language, styles.heroTotal)}>{Number(summary?.total || 0).toLocaleString()} ETB</Text>
+        <Text style={styles.heroTotal}>{Number(summary?.total || 0).toLocaleString()} ETB</Text>
         <View style={styles.heroMeta}>
           <Text style={appTextStyle(language, styles.heroMetaText)}>
             {t('revenue.paymentsCount', { count: summary?.count ?? 0 })}
           </Text>
-          {trendPercent ? (
+          {trendDisplay.label ? (
             <>
               <Text style={styles.heroDot}>·</Text>
-              <Text style={appTextStyle(language, { ...styles.heroMetaText, ...styles.heroTrend })}>{trendPercent}</Text>
+              <Text
+                style={appTextStyle(language, {
+                  ...styles.heroMetaText,
+                  ...styles.heroTrend,
+                  color: trendNegative ? c.statusExpired : c.success,
+                })}
+              >
+                {trendDisplay.label}
+              </Text>
+              {trendCaption ? (
+                <>
+                  <Text style={styles.heroDot}>·</Text>
+                  <Text style={appTextStyle(language, styles.heroMetaText)}>{trendCaption}</Text>
+                </>
+              ) : null}
             </>
           ) : null}
         </View>
-        {Object.keys(byMethod).length > 0 ? (
+        {trendDisplay.extreme && trendCaption ? (
+          <Text style={appTextStyle(language, styles.heroTrendHint)}>{trendCaption}</Text>
+        ) : null}
+        {methodEntries.length > 0 ? (
           <View style={styles.methodStats}>
-            {PAYMENT_METHODS.map((m) => (
+            {methodEntries.map((m) => (
               <MethodStat
                 key={m}
                 method={m}
-                label={t(paymentMethodLabelKey(m)!)}
+                label={t(paymentMethodShortLabelKey(m)!)}
                 amount={Number(byMethod[m] || 0)}
               />
             ))}
           </View>
         ) : null}
-      </View>
+      </SoftSurface>
 
       {attentionMembers.length ? (
         <View style={styles.attentionSection}>
           <View style={styles.attentionHeader}>
-            <Text style={appTextStyle(language, styles.attentionTitle)}>{t('revenue.attentionTitle')}</Text>
+            <Text display style={styles.attentionTitle}>{t('revenue.attentionTitle')}</Text>
             <Pressable onPress={() => router.push('/(tabs)/members?filter=unpaid')}>
               <Text style={appTextStyle(language, styles.attentionLink)}>{t('revenue.viewUnpaid')}</Text>
             </Pressable>
@@ -484,10 +528,10 @@ export default function RevenueScreen() {
         {QUICK_PERIODS.map((p) => {
           const active = !useCustomRange && preset === p.value;
           return (
-            <Pressable
+            <SoftSurface
               key={p.value}
-              style={[styles.periodPill, active && styles.periodPillActive]}
               onPress={() => selectPreset(p.value)}
+              style={[styles.periodPill, active && styles.periodPillActive]}
             >
               <Text
                 style={appTextStyle(language, {
@@ -497,12 +541,12 @@ export default function RevenueScreen() {
               >
                 {t(p.labelKey)}
               </Text>
-            </Pressable>
+            </SoftSurface>
           );
         })}
-        <Pressable
-          style={[styles.periodPill, useCustomRange && styles.periodPillActive]}
+        <SoftSurface
           onPress={openMorePeriods}
+          style={[styles.periodPill, useCustomRange && styles.periodPillActive]}
         >
           <Text
             style={appTextStyle(language, {
@@ -512,11 +556,11 @@ export default function RevenueScreen() {
           >
             {t('revenue.periodMore')}
           </Text>
-        </Pressable>
+        </SoftSurface>
       </ScrollView>
 
       <View style={styles.searchRow}>
-        <View style={styles.searchWrap}>
+        <SoftSurface style={styles.searchWrap}>
           <Ionicons name="search" size={18} color={c.dim} style={styles.searchIcon} />
           <TextInput
             style={appTextStyle(language, styles.searchInput)}
@@ -532,15 +576,19 @@ export default function RevenueScreen() {
               <Ionicons name="close-circle" size={18} color={c.dim} />
             </Pressable>
           ) : null}
-        </View>
-        <Pressable style={[styles.filterBtn, filtersActive && styles.filterBtnActive]} onPress={() => setFiltersOpen(true)}>
+        </SoftSurface>
+        <SoftSurface
+          onPress={() => setFiltersOpen(true)}
+          style={[styles.filterBtn, filtersActive && styles.filterBtnActive]}
+          accessibilityRole="button"
+        >
           <Ionicons name="options-outline" size={22} color={filtersActive ? c.accentText : c.muted} />
           {filtersActive ? <View style={styles.filterDot} /> : null}
-        </Pressable>
+        </SoftSurface>
       </View>
 
       <View style={styles.listHeading}>
-        <Text style={appTextStyle(language, styles.listHeadingText)}>{t('revenue.transactions')}</Text>
+        <Text display style={styles.listHeadingText}>{t('revenue.transactions')}</Text>
         {!query.isLoading ? (
           <Text style={appTextStyle(language, styles.listHeadingCount)}>
             {t('revenue.shown', { count: payments.length })}

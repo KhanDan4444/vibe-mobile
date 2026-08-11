@@ -9,6 +9,7 @@ import { fetchMember, updateMember } from '@/src/api/members';
 import { BranchPicker } from '@/src/components/BranchPicker';
 import { PhotoPickerField } from '@/src/components/PhotoPickerField';
 import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { useNetwork } from '@/src/offline/NetworkProvider';
@@ -228,9 +229,11 @@ export default function EditMemberScreen() {
           ) : member?.branch_name ? (
             <View style={styles.branchReadOnly}>
               <Label>{t('member.branch')}</Label>
-              <Text style={[styles.branchValue, { color: c.text }]}>
-                {branchDisplayName(member.branch_name)}
-              </Text>
+              <SoftSurface variant="quiet" style={styles.branchValue}>
+                <Text style={{ color: c.text, fontSize: 15 }}>
+                  {branchDisplayName(member.branch_name)}
+                </Text>
+              </SoftSurface>
             </View>
           ) : null}
 
@@ -260,12 +263,8 @@ const styles = StyleSheet.create({
   hint: { fontSize: 13, marginTop: 16, lineHeight: 20 },
   branchReadOnly: { marginTop: 8 },
   branchValue: {
-    fontSize: 15,
     marginTop: 4,
     paddingVertical: 10,
     paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.35)',
   },
 });

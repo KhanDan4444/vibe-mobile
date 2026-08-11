@@ -1,11 +1,12 @@
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
 import { ResponsiveContent } from '@/src/components/ResponsiveContent';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { isGymOwner } from '@/src/utils/roles';
@@ -57,11 +58,7 @@ export default function MoreScreen() {
 
           <View style={styles.menuGrid}>
             {items.map((item) => (
-              <Pressable
-                key={item.route}
-                style={[styles.row, { backgroundColor: c.card, borderColor: c.border }]}
-                onPress={() => router.push(item.route as never)}
-              >
+              <SoftSurface key={item.route} onPress={() => router.push(item.route as never)} style={styles.row}>
                 <Ionicons name={item.icon} size={22} color={c.muted} style={styles.rowIcon} />
                 <View style={styles.rowText}>
                   <Text style={[styles.rowLabel, { color: c.text }]}>{t(MENU_KEYS[item.labelKey])}</Text>
@@ -70,7 +67,7 @@ export default function MoreScreen() {
                   ) : null}
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={c.dim} />
-              </Pressable>
+              </SoftSurface>
             ))}
           </View>
         </ResponsiveContent>
@@ -89,17 +86,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   menuGrid: {
-    gap: 10,
+    gap: 12,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 10,
-    padding: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    padding: 16,
   },
-  rowIcon: { marginRight: 12 },
-  rowText: { flex: 1 },
+  rowIcon: { marginRight: 14 },
+  rowText: { flex: 1, minWidth: 0 },
   rowLabel: { fontSize: 16, fontWeight: '600' },
-  rowSub: { marginTop: 2, fontSize: 13 },
+  rowSub: { marginTop: 3, fontSize: 13 },
 });

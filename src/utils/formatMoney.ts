@@ -1,3 +1,5 @@
+export const CURRENCY_CODE = 'ETB';
+
 /** Compact number for tight chart labels (e.g. 1.2M, 85K). */
 export function formatCompactNumber(amount: number): string {
   const n = Number(amount) || 0;
@@ -18,7 +20,7 @@ export function formatEtb(amount: number, options?: { forceCompact?: boolean }) 
   const n = Number(amount) || 0;
   const compact = options?.forceCompact ?? Math.abs(n) >= 100_000;
   const value = compact ? formatCompactNumber(n) : n.toLocaleString();
-  return `${value} ETB`;
+  return `${value} ${CURRENCY_CODE}`;
 }
 
 /** Chart labels — always prefer compact when value is large. */

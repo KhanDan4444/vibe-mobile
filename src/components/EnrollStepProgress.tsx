@@ -40,7 +40,7 @@ export function EnrollStepProgress({ steps, current }: Props) {
     title: {
       color: colors.text,
       fontSize: 24,
-      fontWeight: '700' as const,
+      fontWeight: '600' as const,
       letterSpacing: -0.45,
       lineHeight: 30,
     },
@@ -209,7 +209,7 @@ export function EnrollStepProgress({ steps, current }: Props) {
           { opacity: titleOpacity, transform: [{ translateY: titleTranslate }] },
         ]}
       >
-        <Text style={styles.title}>{active?.label ?? ''}</Text>
+        <Text display style={styles.title}>{active?.label ?? ''}</Text>
         <Text style={styles.next}>{nextLabel}</Text>
       </Animated.View>
 

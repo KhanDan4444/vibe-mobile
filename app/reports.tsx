@@ -1,6 +1,6 @@
 import { Redirect } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Share, View } from 'react-native';
+import { ScrollView, Share, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { PageSkeleton } from '@/src/components/Skeleton';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +21,7 @@ import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { appTextStyle } from '@/src/theme/typography';
 import type { AppLanguage } from '@/src/i18n';
 import type { ThemeColors } from '@/src/theme/tokens';
+import { space } from '@/src/theme/tokens';
 import { membersToCsv, revenueToCsv } from '@/src/utils/reportExport';
 import {
   buildFullReportPdfHtml,
@@ -29,6 +30,7 @@ import {
   sharePdfFromHtml,
 } from '@/src/utils/reportPdf';
 import { hasGymPortalAccess } from '@/src/utils/roles';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 
 type MemberFilter = 'all' | 'active' | 'unpaid' | 'due_soon' | 'expired';
 
@@ -53,10 +55,10 @@ function buildReportStyles(colors: ThemeColors, statCardWidthPercent: string) {
   return {
     container: { flex: 1, backgroundColor: colors.bg },
     content: { paddingBottom: 40 },
-    pageTitle: { fontSize: 22, fontWeight: '700' as const, color: colors.text, marginTop: 4 },
-    pageSub: { marginTop: 4, marginBottom: 8, fontSize: 14, color: colors.dim },
+    pageTitle: { fontSize: 28, fontWeight: '600' as const, letterSpacing: -0.4, color: colors.text, marginTop: 4 },
+    pageSub: { marginTop: 4, marginBottom: space.sm, fontSize: 14, color: colors.dim },
     sectionTitle: {
-      marginTop: 16,
+      marginTop: space.lg,
       marginBottom: 10,
       fontSize: 12,
       fontWeight: '700' as const,
@@ -64,56 +66,43 @@ function buildReportStyles(colors: ThemeColors, statCardWidthPercent: string) {
       textTransform: 'uppercase' as const,
       letterSpacing: 0.5,
     },
-    statsRow: { flexDirection: 'row' as const, flexWrap: 'wrap' as const, gap: 8, marginTop: 16 },
+    statsRow: { flexDirection: 'row' as const, flexWrap: 'wrap' as const, gap: space.md, marginTop: space.lg },
     statBox: {
       width: statCardWidthPercent as `${number}%`,
       flexGrow: 1,
-      backgroundColor: colors.card,
-      borderRadius: 10,
-      padding: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
+      padding: space.md,
       alignItems: 'center' as const,
     },
-    statValue: { fontSize: 22, fontWeight: '700' as const, color: colors.text },
+    statValue: { fontSize: 22, fontWeight: '700' as const, letterSpacing: -0.3, color: colors.text },
     statLabel: {
       marginTop: 4,
       fontSize: 13,
       color: colors.dim,
       textAlign: 'center' as const,
     },
-    exportRow: { flexDirection: 'row' as const, gap: 10, marginTop: 16 },
+    exportRow: { flexDirection: 'row' as const, gap: space.md, marginTop: space.lg },
     exportBtn: {
       flex: 1,
-      paddingVertical: 12,
+      paddingVertical: space.md,
       alignItems: 'center' as const,
-      borderRadius: 10,
-      borderWidth: 1,
-      borderColor: colors.inputBorder,
+      justifyContent: 'center' as const,
+      minHeight: 48,
     },
-    exportBtnPrimary: { backgroundColor: colors.accentCta, borderColor: colors.accentCta },
+    exportBtnPrimary: { backgroundColor: colors.accentCta, borderWidth: 0 },
     exportDisabled: { opacity: 0.45 },
     exportText: { color: colors.accentText, fontSize: 14, fontWeight: '600' as const },
     exportTextPrimary: { color: '#fff' },
     revenueSummary: {
-      marginTop: 16,
-      backgroundColor: colors.card,
-      borderRadius: 12,
-      padding: 16,
-      borderWidth: 1,
-      borderColor: colors.border,
+      marginTop: space.lg,
+      padding: space.lg + 2,
     },
-    revenueTotal: { fontSize: 28, fontWeight: '700' as const, color: colors.text },
+    revenueTotal: { fontSize: 28, fontWeight: '700' as const, letterSpacing: -0.4, color: colors.text },
     revenueMeta: { marginTop: 4, fontSize: 13, color: colors.dim },
     fullSection: {
-      marginTop: 32,
-      padding: 16,
-      borderRadius: 14,
-      backgroundColor: colors.card,
-      borderWidth: 1,
-      borderColor: colors.border,
+      marginTop: space.xxl,
+      padding: space.lg + 2,
     },
-    fullTitle: { fontSize: 16, fontWeight: '700' as const, color: colors.text },
+    fullTitle: { fontSize: 16, fontWeight: '600' as const, letterSpacing: -0.2, color: colors.text },
     fullSub: { marginTop: 4, fontSize: 13, color: colors.dim, marginBottom: 4 },
   };
 }
@@ -279,7 +268,7 @@ export default function ReportsScreen() {
       <ResponsiveContent style={{ paddingHorizontal: pagePadding }}>
       <BranchFilterBar horizontalPadding={0} />
 
-      <Text style={appTextStyle(language, styles.pageTitle)}>{t('reports.title')}</Text>
+      <Text display style={styles.pageTitle}>{t('reports.title')}</Text>
       <Text style={appTextStyle(language, styles.pageSub)}>{displayGym} · {branchLabel}</Text>
 
       <Text
@@ -331,17 +320,17 @@ export default function ReportsScreen() {
       />
 
       {revenueSummary ? (
-        <View style={styles.revenueSummary}>
-          <Text style={styles.revenueTotal}>{Number(revenueSummary.total || 0).toLocaleString()} ETB</Text>
+        <SoftSurface variant="panel" style={styles.revenueSummary}>
+          <Text display style={styles.revenueTotal}>{Number(revenueSummary.total || 0).toLocaleString()} ETB</Text>
           <Text style={styles.revenueMeta}>
             {t('reports.paymentsInPeriod', { count: revenueSummary.count ?? 0, period: periodLabel.toLowerCase() })}
           </Text>
           {revenueTrend.length > 0 ? <MiniBarChart data={revenueTrend} /> : null}
-        </View>
+        </SoftSurface>
       ) : null}
 
-      <View style={styles.fullSection}>
-        <Text style={styles.fullTitle}>{t('reports.shareReport')}</Text>
+      <SoftSurface variant="panel" style={styles.fullSection}>
+        <Text display style={styles.fullTitle}>{t('reports.shareReport')}</Text>
         <Text style={styles.fullSub}>
           {t('reports.shareReportSub', { memberFilter: memberMeta.label.toLowerCase(), period: periodLabel.toLowerCase() })}
         </Text>
@@ -354,7 +343,7 @@ export default function ReportsScreen() {
           styles={styles}
           t={t}
         />
-      </View>
+      </SoftSurface>
       </ResponsiveContent>
     </ScrollView>
     <ConfirmDialog
@@ -383,10 +372,10 @@ function StatBox({
   language: AppLanguage;
 }) {
   return (
-    <View style={styles.statBox}>
-      <Text style={[styles.statValue, accent ? { color: accent } : null]}>{value}</Text>
+    <SoftSurface variant="quiet" style={styles.statBox}>
+      <Text display style={[styles.statValue, accent ? { color: accent } : null]}>{value}</Text>
       <Text style={appTextStyle(language, styles.statLabel)}>{label}</Text>
-    </View>
+    </SoftSurface>
   );
 }
 
@@ -409,12 +398,19 @@ function ExportRow({
 }) {
   return (
     <View style={styles.exportRow}>
-      <Pressable style={[styles.exportBtn, disabled && styles.exportDisabled]} onPress={onCsv} disabled={disabled}>
+      <SoftSurface
+        variant="quiet"
+        onPress={disabled ? undefined : onCsv}
+        style={[styles.exportBtn, disabled && styles.exportDisabled]}
+      >
         <Text style={styles.exportText}>{csvLoading ? '…' : t('common.exportCsv')}</Text>
-      </Pressable>
-      <Pressable style={[styles.exportBtn, styles.exportBtnPrimary, disabled && styles.exportDisabled]} onPress={onPdf} disabled={disabled}>
+      </SoftSurface>
+      <SoftSurface
+        onPress={disabled ? undefined : onPdf}
+        style={[styles.exportBtn, styles.exportBtnPrimary, disabled && styles.exportDisabled]}
+      >
         <Text style={[styles.exportText, styles.exportTextPrimary]}>{pdfLoading ? '…' : t('common.exportPdf')}</Text>
-      </Pressable>
+      </SoftSurface>
     </View>
   );
 }

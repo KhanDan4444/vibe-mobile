@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchPlans, updatePlan } from '@/src/api/plans';
 import type { PlanPayload } from '@/src/api/plans';
-import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, Field, FormScroll, Label, MoneyAmountField, PrimaryButton, Screen } from '@/src/components/Form';
 import { PageSkeleton } from '@/src/components/Skeleton';
 import { LoadError } from '@/src/components/LoadError';
 import { useTheme } from '@/src/context/PreferencesContext';
@@ -125,7 +125,7 @@ export default function EditPlanScreen() {
           <Field value={duration} onChangeText={setDuration} keyboardType="numeric" />
 
           <Label>{t('plans.priceLabel')}</Label>
-          <Field value={price} onChangeText={setPrice} keyboardType="decimal-pad" />
+          <MoneyAmountField value={price} onChangeText={setPrice} />
 
           <PrimaryButton
             label={t('common.save')}

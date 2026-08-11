@@ -1,5 +1,6 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
@@ -23,24 +24,24 @@ export function ReadOnlyBanner() {
 
   if (branchReadOnly && selectedBranch && !subscriptionReadOnly) {
     return (
-      <View style={bannerStyle}>
+      <SoftSurface flat style={bannerStyle}>
         <Text style={titleStyle}>{t('alerts.branchReadOnlyTitle')}</Text>
         <Text style={bodyStyle}>{t('alerts.branchReadOnlyBody', { name: selectedBranch.name })}</Text>
-      </View>
+      </SoftSurface>
     );
   }
 
   return (
-    <View style={bannerStyle}>
+    <SoftSurface flat style={bannerStyle}>
       <Text style={bodyStyle}>{t('dashboard.readOnlyBanner')}</Text>
-    </View>
+    </SoftSurface>
   );
 }
 
 const styles = StyleSheet.create({
   banner: {
     marginBottom: 12,
-    borderRadius: 10,
+    borderRadius: 12,
     padding: 12,
     borderWidth: 1,
   },

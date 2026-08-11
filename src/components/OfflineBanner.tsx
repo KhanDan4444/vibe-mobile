@@ -9,8 +9,10 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { AppText as Text } from '@/src/components/AppText';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useFlash } from '@/src/context/FlashContext';
 import { useTheme } from '@/src/context/PreferencesContext';
+import { fabElevation } from '@/src/theme/elevation';
 import { useNetwork } from '@/src/offline/NetworkProvider';
 
 /**
@@ -48,7 +50,7 @@ export function OfflineStatusStrip() {
 export function OfflineSyncOverlay() {
   const { isOnline, pendingCount, failedCount, lastError, isSyncing, syncNow, discardQueuedChanges } =
     useNetwork();
-  const { colors: c } = useTheme();
+  const { colors: c, theme } = useTheme();
   const { t } = useTranslation();
   const { showFlash } = useFlash();
   const insets = useSafeAreaInsets();
@@ -92,6 +94,7 @@ export function OfflineSyncOverlay() {
           onPress={() => setModalDismissed(false)}
           style={[
             styles.chip,
+            fabElevation(theme),
             {
               backgroundColor: c.accent,
               bottom: Math.max(insets.bottom, 12) + 72,
@@ -111,12 +114,11 @@ export function OfflineSyncOverlay() {
       >
         <View style={styles.overlay}>
           <Pressable style={styles.backdrop} onPress={() => setModalDismissed(true)} />
-          <View
+          <SoftSurface
+            variant="panel"
             style={[
               styles.card,
               {
-                backgroundColor: c.card,
-                borderColor: c.border,
                 marginBottom: Math.max(insets.bottom, 16),
               },
             ]}
@@ -159,7 +161,7 @@ export function OfflineSyncOverlay() {
             >
               <Text style={[styles.discardText, { color: c.dim }]}>{t('offline.discardQueued')}</Text>
             </Pressable>
-          </View>
+          </SoftSurface>
         </View>
       </Modal>
     </View>
@@ -188,8 +190,7 @@ const styles = StyleSheet.create({
     left: 24,
     right: 24,
     zIndex: 180,
-    elevation: 18,
-    borderRadius: 24,
+    borderRadius: 16,
     paddingVertical: 12,
     paddingHorizontal: 16,
     alignItems: 'center',
@@ -205,8 +206,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.55)',
   },
   card: {
-    borderRadius: 16,
-    borderWidth: 1,
     padding: 20,
     zIndex: 1,
   },

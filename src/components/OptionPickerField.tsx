@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { formStyles } from '@/src/components/Form';
+import { FIELD_MIN_HEIGHT } from '@/src/theme/fieldChrome';
 import { dismissKeyboard } from '@/src/utils/dismissKeyboard';
 
 export type PickerOption<T extends string = string> = {
@@ -37,23 +39,20 @@ export function OptionPickerField<T extends string>({
   return (
     <View>
       {label ? <Text style={[formStyles.label, { color: c.muted }]}>{label}</Text> : null}
-      <Pressable
-        style={[
-          formStyles.input,
-          {
-            backgroundColor: c.inputBg,
-            borderColor: error ? c.error : open ? c.accentText : c.inputBorder,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            minHeight: 48,
-          },
-        ]}
+      <SoftSurface
+        variant="quiet"
         onPress={() => {
-          // Open immediately so the teal border doesn't flash off after press release
-          // while waiting for keyboard dismiss (Android delay).
           setOpen(true);
           dismissKeyboard();
+        }}
+        style={{
+          paddingHorizontal: 14,
+          paddingVertical: 12,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          minHeight: FIELD_MIN_HEIGHT,
+          borderColor: error ? c.error : open ? c.accentText : c.inputBorder,
         }}
         accessibilityRole="button"
       >
@@ -61,7 +60,7 @@ export function OptionPickerField<T extends string>({
           {display}
         </Text>
         <Ionicons name="chevron-down" size={18} color={open ? c.accentText : c.muted} />
-      </Pressable>
+      </SoftSurface>
 
       <BottomSheet visible={open} title={sheetTitle ?? label ?? placeholder} onClose={() => setOpen(false)}>
         {options.map((opt) => (

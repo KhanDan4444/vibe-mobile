@@ -14,6 +14,7 @@ import { MemberPhoto } from '@/src/components/MemberPhoto';
 import { MemberActionsBar } from '@/src/components/MemberActionsBar';
 import { ResponsiveContent } from '@/src/components/ResponsiveContent';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import type { AppLanguage } from '@/src/i18n';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
@@ -64,42 +65,26 @@ function buildMemberStyles(c: ThemeColors) {
     content: { paddingBottom: 32 },
     center: { flex: 1, backgroundColor: c.bg, alignItems: 'center' as const, justifyContent: 'center' as const, padding: 24 },
     card: {
-      backgroundColor: c.card,
-      borderRadius: 12,
       padding: 16,
-      marginBottom: 12,
-      borderWidth: 1,
-      borderColor: c.border,
+      marginBottom: 14,
     },
-    name: { fontSize: 22, fontWeight: '700' as const, color: c.text },
+    name: { fontSize: 22, fontWeight: '600' as const, letterSpacing: -0.4, color: c.text },
     headerRow: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 14 },
     headerText: { flex: 1 },
     phone: { marginTop: 4, fontSize: 15, color: c.muted },
     status: { marginTop: 8, fontSize: 13, fontWeight: '700' as const, textTransform: 'capitalize' as const },
     unpaid: { marginTop: 6, fontSize: 12, fontWeight: '700' as const, color: c.statusUnpaid },
-    sectionTitle: { fontSize: 14, fontWeight: '700' as const, color: c.muted, marginBottom: 10 },
+    sectionTitle: { fontSize: 14, fontWeight: '600' as const, letterSpacing: -0.15, color: c.muted, marginBottom: 10 },
     row: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, justifyContent: 'space-between' as const, paddingVertical: 8, gap: 12 },
     rowLabel: { color: c.dim, fontSize: 14, flexShrink: 0 },
     rowValue: { color: c.text, fontSize: 14, fontWeight: '500' as const, flex: 1, textAlign: 'right' as const },
     actions: { gap: 10, marginBottom: 12 },
-    actionBtn: {
-      backgroundColor: c.accent,
-      borderRadius: 10,
-      paddingVertical: 14,
-      alignItems: 'center' as const,
-    },
-    actionBtnSecondary: { backgroundColor: c.accent },
-    actionBtnOutline: { backgroundColor: 'transparent', borderWidth: 1, borderColor: c.border },
-    actionBtnOutlineText: { color: c.muted },
-    actionBtnDanger: { backgroundColor: 'transparent', borderWidth: 1, borderColor: 'rgba(248,113,113,0.5)' },
-    actionBtnDangerText: { color: c.error },
-    actionBtnText: { color: '#fff', fontSize: 15, fontWeight: '600' as const },
     paymentRow: {
       flexDirection: 'row' as const,
       justifyContent: 'space-between' as const,
       alignItems: 'center' as const,
       paddingVertical: 10,
-      borderTopWidth: 1,
+      borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: c.border,
     },
     paymentAmount: { color: c.text, fontSize: 15, fontWeight: '600' as const },
@@ -219,7 +204,7 @@ export default function MemberDetailScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <ResponsiveContent style={{ paddingHorizontal: pagePadding }}>
       <View style={isTablet ? { flexDirection: 'row', gap: 12, alignItems: 'flex-start' } : undefined}>
-      <View style={[styles.card, isTablet && { flex: 1 }]}>
+      <SoftSurface variant="panel" style={[styles.card, isTablet && { flex: 1 }]}>
         <View style={styles.headerRow}>
           {token ? (
             <MemberPhoto
@@ -232,7 +217,7 @@ export default function MemberDetailScreen() {
             />
           ) : null}
           <View style={styles.headerText}>
-            <Text style={appTextStyle(language, styles.name)}>{member.name}</Text>
+            <Text display style={styles.name}>{member.name}</Text>
             <Text style={appTextStyle(language, styles.phone)}>{member.phone || '—'}</Text>
             <Text style={appTextStyle(language, { ...styles.status, color: statusColor(member.status, c) })}>
               {t(statusLabelKey(member.status))}
@@ -240,10 +225,10 @@ export default function MemberDetailScreen() {
             {member.is_unpaid ? <Text style={appTextStyle(language, styles.unpaid)}>{t('member.paymentRequired')}</Text> : null}
           </View>
         </View>
-      </View>
+      </SoftSurface>
 
-      <View style={[styles.card, isTablet && { flex: 1 }]}>
-        <Text style={appTextStyle(language, styles.sectionTitle)}>{t('member.membership')}</Text>
+      <SoftSurface variant="panel" style={[styles.card, isTablet && { flex: 1 }]}>
+        <Text display style={styles.sectionTitle}>{t('member.membership')}</Text>
         <Row label={t('member.plan')} value={member.plan_name || '—'} styles={styles} language={language} />
         <Row label={t('member.start')} value={formatDisplayDate(member.start_date)} styles={styles} language={language} />
         <Row label={t('member.end')} value={formatDisplayDate(member.end_date)} styles={styles} language={language} />
@@ -255,7 +240,7 @@ export default function MemberDetailScreen() {
             language={language}
           />
         ) : null}
-      </View>
+      </SoftSurface>
       </View>
 
       <MemberActionsBar
@@ -269,8 +254,8 @@ export default function MemberDetailScreen() {
         onDelete={confirmDeleteMember}
       />
 
-      <View style={styles.card}>
-        <Text style={appTextStyle(language, styles.sectionTitle)}>{t('member.paymentHistory')}</Text>
+      <SoftSurface variant="panel" style={styles.card}>
+        <Text display style={styles.sectionTitle}>{t('member.paymentHistory')}</Text>
         {paymentsQuery.isLoading ? (
           <PageSkeleton variant="list-rows" count={3} padded={false} style={{ marginTop: 8 }} />
         ) : payments.length === 0 ? (
@@ -283,7 +268,7 @@ export default function MemberDetailScreen() {
             return (
             <View key={p.id} style={styles.paymentRow}>
               <View style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
-                <Text style={appTextStyle(language, styles.paymentAmount)}>{Number(p.amount).toLocaleString()} ETB</Text>
+                <Text display style={styles.paymentAmount}>{Number(p.amount).toLocaleString()} ETB</Text>
                 <Text style={appTextStyle(language, styles.paymentMeta)}>
                   {formatDisplayDate(p.date)}
                   {source ? ` · ${source}` : ''}
@@ -299,7 +284,7 @@ export default function MemberDetailScreen() {
             );
           })
         )}
-      </View>
+      </SoftSurface>
       </ResponsiveContent>
     </ScrollView>
 

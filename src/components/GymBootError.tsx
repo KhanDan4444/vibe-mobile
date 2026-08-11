@@ -1,12 +1,15 @@
 import { ActivityIndicator, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useGymBoot } from '@/src/context/GymBootContext';
+import { elevationStyle } from '@/src/theme/elevation';
+import { radiusMd } from '@/src/theme/tokens';
 
 export function GymBootError() {
   const { t } = useTranslation();
-  const { colors: c } = useTheme();
+  const { colors: c, theme } = useTheme();
   const { bootError, retrying, retryBoot } = useGymBoot();
 
   if (!bootError) return null;
@@ -17,8 +20,8 @@ export function GymBootError() {
 
   return (
     <View style={[styles.wrap, { backgroundColor: c.bg }]}>
-      <View style={[styles.card, { backgroundColor: c.card, borderColor: c.border }]}>
-        <Text style={[styles.title, { color: c.text }]}>{t('gymBoot.errorTitle')}</Text>
+      <SoftSurface variant="panel" style={styles.card}>
+        <Text display style={[styles.title, { color: c.text }]}>{t('gymBoot.errorTitle')}</Text>
         <Text style={[styles.body, { color: c.muted }]}>{t('gymBoot.errorBody')}</Text>
         {showDevDetail && bootError.message ? (
           <Text style={[styles.detail, { color: c.dim }]} selectable>
@@ -39,8 +42,10 @@ export function GymBootError() {
           }
           style={({ pressed }) => [
             styles.btn,
+            elevationStyle('soft', theme),
             {
               backgroundColor: btnBg,
+              borderRadius: radiusMd,
               opacity: pressed && !retrying ? 0.9 : 1,
               transform: [{ scale: pressed && !retrying ? 0.98 : 1 }],
             },
@@ -55,7 +60,7 @@ export function GymBootError() {
             <Text style={[styles.btnText, { color: btnFg }]}>{t('gymBoot.retry')}</Text>
           )}
         </Pressable>
-      </View>
+      </SoftSurface>
     </View>
   );
 }
@@ -71,8 +76,6 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 360,
-    borderRadius: 14,
-    borderWidth: 1,
     padding: 20,
   },
   title: {
@@ -99,11 +102,9 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 10,
     minHeight: 48,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    overflow: 'hidden',
   },
   btnBusy: {
     flexDirection: 'row',

@@ -11,6 +11,7 @@ import { BranchFilterBar } from '@/src/components/BranchFilterBar';
 import { FilterPickerButton } from '@/src/components/FilterPickerButton';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { EmptyState } from '@/src/components/EmptyState';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
@@ -42,12 +43,8 @@ function ActivityItem({
   const { t } = useTranslation();
   const styles = useThemedStyles((c) => ({
     card: {
-      backgroundColor: c.card,
-      borderRadius: 12,
       padding: 14,
-      marginBottom: 10,
-      borderWidth: 1,
-      borderColor: c.border,
+      marginBottom: 12,
     },
     cardColumn: { marginBottom: 0 },
     cardHeader: { flexDirection: 'row' as const, justifyContent: 'space-between' as const, gap: 8 },
@@ -61,7 +58,7 @@ function ActivityItem({
   const details = formatAuditDetails(entry, t);
 
   return (
-    <View style={[styles.card, multiColumn && styles.cardColumn, multiColumn && columnStyle]}>
+    <SoftSurface style={[styles.card, multiColumn && styles.cardColumn, multiColumn && columnStyle]}>
       <View style={styles.cardHeader}>
         <Text style={styles.action}>{formatAuditAction(entry.action, t)}</Text>
         <Text style={styles.time}>{formatDisplayDateTime(entry.created_at)}</Text>
@@ -72,7 +69,7 @@ function ActivityItem({
         {entry.actor_name || entry.actor_email} · {formatActorRole(entry.actor_role, t)}
         {entry.branch_name ? ` · ${branchDisplayName(entry.branch_name)}` : ''}
       </Text>
-    </View>
+    </SoftSurface>
   );
 }
 

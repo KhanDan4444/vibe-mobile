@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
-import { usePreferences } from '@/src/context/PreferencesContext';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
+import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
+import { elevationStyle } from '@/src/theme/elevation';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { appTextStyle } from '@/src/theme/typography';
 import type { MemberRow } from '@/src/types/api';
@@ -37,32 +39,29 @@ export function MemberActionsBar({
 }) {
   const { t } = useTranslation();
   const { language } = usePreferences();
+  const { theme } = useTheme();
   const [manageOpen, setManageOpen] = useState(false);
   const styles = useThemedStyles((c) => ({
     row: { flexDirection: 'row' as const, gap: 10, marginBottom: 12 },
     primaryBtn: {
       flex: 1,
       backgroundColor: c.accent,
-      borderRadius: 10,
       paddingVertical: 14,
       alignItems: 'center' as const,
       minHeight: 48,
       justifyContent: 'center' as const,
+      borderWidth: 0,
     },
     secondaryBtn: {
       flex: 1,
-      backgroundColor: '#0d9488',
-      borderRadius: 10,
+      backgroundColor: c.accentCta,
       paddingVertical: 14,
       alignItems: 'center' as const,
       minHeight: 48,
       justifyContent: 'center' as const,
+      borderWidth: 0,
     },
     manageBtn: {
-      backgroundColor: 'transparent',
-      borderWidth: 1,
-      borderColor: c.border,
-      borderRadius: 10,
       paddingVertical: 14,
       alignItems: 'center' as const,
       minHeight: 48,
@@ -71,6 +70,17 @@ export function MemberActionsBar({
     },
     btnText: { color: '#fff', fontSize: 15, fontWeight: '600' as const },
     manageText: { color: c.muted, fontSize: 15, fontWeight: '600' as const },
+    optionDanger: {
+      paddingVertical: 14,
+      paddingHorizontal: 14,
+      marginBottom: 8,
+      minHeight: 48,
+      justifyContent: 'center' as const,
+      borderWidth: 1,
+      borderColor: 'rgba(248,113,113,0.45)',
+      backgroundColor: c.errorBg,
+    },
+    dangerText: { color: c.error, fontSize: 15, fontWeight: '600' as const },
   }));
 
   const showRenew = canRenewMember(member);
@@ -113,45 +123,38 @@ export function MemberActionsBar({
       {primaries.length > 0 ? (
         <View style={styles.row}>
           {primaries.slice(0, 2).map((p) => (
-            <Pressable
+            <SoftSurface
               key={p.label}
-              style={p.secondary ? styles.secondaryBtn : styles.primaryBtn}
+              flat
               onPress={p.onPress}
+              style={[p.secondary ? styles.secondaryBtn : styles.primaryBtn, elevationStyle('soft', theme)]}
             >
               <Text style={appTextStyle(language, styles.btnText)}>{p.label}</Text>
-            </Pressable>
+            </SoftSurface>
           ))}
         </View>
       ) : null}
 
       {manageActions.length > 0 ? (
         <>
-          <Pressable style={styles.manageBtn} onPress={() => setManageOpen(true)}>
+          <SoftSurface onPress={() => setManageOpen(true)} variant="quiet" style={styles.manageBtn}>
             <Text style={appTextStyle(language, styles.manageText)}>{t('member.manage')}</Text>
-          </Pressable>
+          </SoftSurface>
 
           <BottomSheet visible={manageOpen} title={t('member.manage')} onClose={() => setManageOpen(false)}>
             {manageActions.map((action) =>
               action.destructive ? (
-                <Pressable
+                <SoftSurface
                   key={action.id}
-                  style={{
-                    paddingVertical: 14,
-                    paddingHorizontal: 14,
-                    borderRadius: 10,
-                    borderWidth: 1,
-                    borderColor: 'rgba(248,113,113,0.5)',
-                    marginBottom: 8,
-                    minHeight: 48,
-                    justifyContent: 'center',
-                  }}
+                  flat
                   onPress={() => {
                     setManageOpen(false);
                     action.onPress();
                   }}
+                  style={styles.optionDanger}
                 >
-                  <Text style={appTextStyle(language, { color: '#f87171', fontSize: 15, fontWeight: '600' })}>{action.label}</Text>
-                </Pressable>
+                  <Text style={appTextStyle(language, styles.dangerText)}>{action.label}</Text>
+                </SoftSurface>
               ) : (
                 <SheetOption
                   key={action.id}

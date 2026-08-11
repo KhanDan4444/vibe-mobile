@@ -23,7 +23,9 @@ import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import StatusBadge from '@/src/components/StatusBadge';
 import { SecondaryButton } from '@/src/components/ui/Button';
-import { radiusMd, type ThemeColors } from '@/src/theme/tokens';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
+import { type ThemeColors } from '@/src/theme/tokens';
+import { fabElevation } from '@/src/theme/elevation';
 import { DEFAULT_MEMBER_SORT, MEMBER_SORT_OPTIONS, type MemberSortId } from '@/src/utils/listSort';
 import { isGymOwner } from '@/src/utils/roles';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
@@ -105,9 +107,9 @@ function MemberRowItem({
 }) {
   const { t } = useTranslation();
   return (
-    <Pressable
-      style={[styles.row, multiColumn && styles.rowColumn, multiColumn && columnStyle, multiColumn && styles.rowStacked]}
+    <SoftSurface
       onPress={onPress}
+      style={[styles.row, multiColumn && styles.rowColumn, multiColumn && columnStyle, multiColumn && styles.rowStacked]}
     >
       <View style={styles.rowTop}>
         <MemberPhoto
@@ -118,7 +120,7 @@ function MemberRowItem({
           hasPhoto={Boolean(member.photo_url)}
         />
         <View style={styles.rowMain}>
-          <Text style={styles.name} numberOfLines={1}>
+          <Text listRow style={styles.name} numberOfLines={1}>
             {member.name}
           </Text>
           <Text style={styles.phone} numberOfLines={1}>
@@ -146,7 +148,7 @@ function MemberRowItem({
           {member.is_unpaid ? <Text style={styles.unpaid}>{t('members.unpaidBadge')}</Text> : null}
         </View>
       ) : null}
-    </Pressable>
+    </SoftSurface>
   );
 }
 
@@ -164,7 +166,7 @@ export default function MembersScreen() {
   const { readOnly } = useGymReadOnly();
   const owner = isGymOwner(user?.role);
   const showBranchColumn = owner && selectedBranchId === 'all';
-  const { colors: c } = useTheme();
+  const { colors: c, theme } = useTheme();
   const { language } = usePreferences();
   const { t } = useTranslation();
   const styles = useThemedStyles(createStyles);
@@ -247,7 +249,7 @@ export default function MembersScreen() {
       <BranchFilterBar horizontalPadding={pagePadding} />
       <ReadOnlyBanner />
       <View style={[styles.toolbar, { paddingHorizontal: pagePadding }]}>
-        <View style={styles.searchWrap}>
+        <SoftSurface style={styles.searchWrap}>
           <Ionicons name="search" size={18} color={c.dim} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
@@ -263,7 +265,7 @@ export default function MembersScreen() {
               <Ionicons name="close-circle" size={18} color={c.dim} />
             </Pressable>
           ) : null}
-        </View>
+        </SoftSurface>
 
         {isTablet ? (
           <View style={[styles.filters, styles.filtersWrap]}>
@@ -271,15 +273,16 @@ export default function MembersScreen() {
               const active = filter === option;
               const palette = filterPalette(c, option);
               return (
-                <Pressable
+                <SoftSurface
                   key={option}
+                  flat
+                  onPress={() => setFilter(option)}
                   style={[
                     styles.filterChip,
                     active
                       ? { backgroundColor: palette.activeBg, borderColor: palette.activeBorder }
-                      : { backgroundColor: c.card, borderColor: c.border },
+                      : undefined,
                   ]}
-                  onPress={() => setFilter(option)}
                 >
                   <View style={[styles.filterDot, { backgroundColor: palette.dot }]} />
                   <Text
@@ -307,7 +310,7 @@ export default function MembersScreen() {
                       {filterCounts[option]}
                     </Text>
                   </View>
-                </Pressable>
+                </SoftSurface>
               );
             })}
           </View>
@@ -323,15 +326,16 @@ export default function MembersScreen() {
               const active = filter === option;
               const palette = filterPalette(c, option);
               return (
-                <Pressable
+                <SoftSurface
                   key={option}
+                  flat
+                  onPress={() => setFilter(option)}
                   style={[
                     styles.filterChip,
                     active
                       ? { backgroundColor: palette.activeBg, borderColor: palette.activeBorder }
-                      : { backgroundColor: c.card, borderColor: c.border },
+                      : undefined,
                   ]}
-                  onPress={() => setFilter(option)}
                 >
                   <View style={[styles.filterDot, { backgroundColor: palette.dot }]} />
                   <Text
@@ -359,7 +363,7 @@ export default function MembersScreen() {
                       {filterCounts[option]}
                     </Text>
                   </View>
-                </Pressable>
+                </SoftSurface>
               );
             })}
           </ScrollView>
@@ -426,7 +430,7 @@ export default function MembersScreen() {
 
       {!readOnly ? (
         <Pressable
-          style={[styles.fab, { right: fabRight, width: fabSize, height: fabSize, borderRadius: fabRadius }]}
+          style={[styles.fab, fabElevation(theme), { right: fabRight, width: fabSize, height: fabSize, borderRadius: fabRadius }]}
           onPress={() => router.push('/enroll')}
         >
           <Text style={[styles.fabText, { fontSize: fabFontSize }]}>+</Text>
@@ -447,10 +451,6 @@ function createStyles(c: ThemeColors) {
     searchWrap: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
-      backgroundColor: c.card,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: c.border,
-      borderRadius: 10,
       paddingHorizontal: 12,
       minHeight: 44,
     },
@@ -480,7 +480,6 @@ function createStyles(c: ThemeColors) {
       paddingRight: 7,
       paddingVertical: 5,
       borderRadius: 999,
-      borderWidth: StyleSheet.hairlineWidth,
       flexShrink: 0,
       alignSelf: 'flex-start' as const,
       minHeight: 32,
@@ -513,13 +512,9 @@ function createStyles(c: ThemeColors) {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       justifyContent: 'space-between' as const,
-      backgroundColor: c.card,
-      borderRadius: radiusMd,
       paddingVertical: 13,
       paddingHorizontal: 12,
-      marginBottom: 8,
-      borderWidth: 1,
-      borderColor: c.cardEdge,
+      marginBottom: 10,
       gap: 10,
     },
     rowColumn: {
@@ -565,11 +560,6 @@ function createStyles(c: ThemeColors) {
       backgroundColor: c.accent,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
-      elevation: 2,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.18,
-      shadowRadius: 3,
     },
     fabText: { color: '#fff', fontSize: 26, fontWeight: '300' as const, marginTop: -2 },
   };

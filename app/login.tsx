@@ -26,6 +26,9 @@ import { LoginBrandPanel } from '@/src/components/LoginBrandPanel';
 import { useBootSplash } from '@/src/context/BootSplashContext';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
+import { elevationStyle } from '@/src/theme/elevation';
+import { springs } from '@/src/theme/motion';
+import { radiusLg, radiusMd } from '@/src/theme/tokens';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { hasGymPortalAccess, isPlatformAdmin } from '@/src/utils/roles';
 import { API_BASE_URL } from '@/src/config/api';
@@ -45,7 +48,7 @@ const LOGIN_FIELD = {
 
 export default function LoginScreen() {
   const { login, logout } = useAuth();
-  const { colors: c } = useTheme();
+  const { colors: c, theme } = useTheme();
   const { language } = usePreferences();
   const { t } = useTranslation();
   const { dismissBootSplash } = useBootSplash();
@@ -135,7 +138,16 @@ export default function LoginScreen() {
               <LoginBrandPanel />
 
               {error ? (
-                <Text style={[s.error, { color: c.error, backgroundColor: c.errorBg, borderColor: 'rgba(244,63,94,0.4)' }]}>
+                <Text
+                  style={[
+                    s.error,
+                    {
+                      color: c.error,
+                      backgroundColor: c.errorBg,
+                      borderColor: 'rgba(244,63,94,0.35)',
+                    },
+                  ]}
+                >
                   {error}
                 </Text>
               ) : null}
@@ -228,15 +240,16 @@ export default function LoginScreen() {
                 style={[
                   s.button,
                   buttonAnim,
+                  elevationStyle('raised', theme),
                   { backgroundColor: c.accent, shadowColor: c.accent },
                   loading && styles.buttonDisabled,
                 ]}
                 onPress={handleSubmit}
                 onPressIn={() => {
-                  pressed.value = withSpring(1, { damping: 18, stiffness: 260 });
+                  pressed.value = withSpring(1, springs.press);
                 }}
                 onPressOut={() => {
-                  pressed.value = withSpring(0, { damping: 18, stiffness: 260 });
+                  pressed.value = withSpring(0, springs.press);
                 }}
                 disabled={loading}
               >
@@ -287,7 +300,7 @@ const phoneStyles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   inputRing: {
-    borderRadius: 16,
+    borderRadius: radiusLg,
     marginBottom: 12,
   },
   inputRingTight: {
@@ -296,27 +309,28 @@ const phoneStyles = StyleSheet.create({
   inputShell: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 14,
-    paddingHorizontal: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radiusMd,
+    minHeight: 48,
+    paddingHorizontal: 14,
   },
   inputField: {
     flex: 1,
-    paddingVertical: 15,
+    paddingVertical: 12,
     fontSize: 16,
+    minHeight: 46,
   },
   eyeButton: {
     paddingLeft: 10,
+    minHeight: 44,
+    justifyContent: 'center',
   },
   button: {
-    borderRadius: 16,
-    paddingVertical: 15,
+    borderRadius: radiusMd,
+    paddingVertical: 14,
+    minHeight: 48,
     alignItems: 'center',
     marginTop: 4,
-    shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 16,
-    elevation: 4,
   },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.2 },
   rememberRow: {
@@ -345,8 +359,8 @@ const phoneStyles = StyleSheet.create({
   registerPrompt: { fontSize: 13 },
   linkText: { fontSize: 13, fontWeight: '700' },
   error: {
-    borderWidth: 1,
-    borderRadius: 14,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radiusMd,
     padding: 12,
     marginBottom: 14,
     fontSize: 13,
@@ -369,7 +383,7 @@ const tabletStyles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   inputRing: {
-    borderRadius: 18,
+    borderRadius: radiusLg,
     marginBottom: 14,
   },
   inputRingTight: {
@@ -378,27 +392,28 @@ const tabletStyles = StyleSheet.create({
   inputShell: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 18,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radiusMd,
+    minHeight: 52,
+    paddingHorizontal: 16,
   },
   inputField: {
     flex: 1,
-    paddingVertical: 17,
+    paddingVertical: 14,
     fontSize: 17,
+    minHeight: 50,
   },
   eyeButton: {
     paddingLeft: 12,
+    minHeight: 44,
+    justifyContent: 'center',
   },
   button: {
-    borderRadius: 18,
-    paddingVertical: 17,
+    borderRadius: radiusMd,
+    paddingVertical: 15,
+    minHeight: 52,
     alignItems: 'center',
     marginTop: 6,
-    shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 10 },
-    shadowRadius: 18,
-    elevation: 5,
   },
   buttonText: { color: '#fff', fontSize: 17, fontWeight: '700', letterSpacing: 0.2 },
   rememberRow: {
@@ -427,8 +442,8 @@ const tabletStyles = StyleSheet.create({
   registerPrompt: { fontSize: 14 },
   linkText: { fontSize: 14, fontWeight: '700' },
   error: {
-    borderWidth: 1,
-    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radiusLg,
     padding: 14,
     marginBottom: 16,
     fontSize: 14,

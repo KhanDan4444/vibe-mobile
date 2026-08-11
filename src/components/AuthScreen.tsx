@@ -3,19 +3,22 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthThemeProvider } from '@/src/context/AuthThemeContext';
 import { colorsForTheme } from '@/src/theme/tokens';
 import { AuthHeroBackground } from './AuthHeroBackground';
+import { AuthLanguageButton } from './AuthLanguageButton';
 
 type Props = {
   children: React.ReactNode;
   /** Login uses brand gradient hero; register/forgot use plain dark background. */
   hero?: boolean;
   onHeroReady?: () => void;
+  /** Top-right language control (default on for all auth routes). */
+  showLanguage?: boolean;
 };
 
 /**
  * Auth routes always render dark — matches web AuthScreen and the in-app default.
  * Does not overwrite the user's saved light/dark preference.
  */
-export function AuthScreen({ children, hero = false, onHeroReady }: Props) {
+export function AuthScreen({ children, hero = false, onHeroReady, showLanguage = true }: Props) {
   const insets = useSafeAreaInsets();
   const pad = { paddingBottom: Math.max(insets.bottom, 8) + 20 };
 
@@ -27,7 +30,14 @@ export function AuthScreen({ children, hero = false, onHeroReady }: Props) {
     <View style={[styles.flex, { backgroundColor: colorsForTheme('dark').bg }, pad]}>{children}</View>
   );
 
-  return <AuthThemeProvider>{body}</AuthThemeProvider>;
+  return (
+    <AuthThemeProvider>
+      <View style={styles.flex}>
+        {body}
+        {showLanguage ? <AuthLanguageButton /> : null}
+      </View>
+    </AuthThemeProvider>
+  );
 }
 
 const styles = StyleSheet.create({

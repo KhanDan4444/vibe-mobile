@@ -7,6 +7,13 @@ import {
   DMSans_800ExtraBold,
 } from '@expo-google-fonts/dm-sans';
 import {
+  SpaceGrotesk_300Light,
+  SpaceGrotesk_400Regular,
+  SpaceGrotesk_500Medium,
+  SpaceGrotesk_600SemiBold,
+  SpaceGrotesk_700Bold,
+} from '@expo-google-fonts/space-grotesk';
+import {
   NotoSansEthiopic_400Regular,
   NotoSansEthiopic_600SemiBold,
   NotoSansEthiopic_700Bold,
@@ -21,6 +28,11 @@ export function useAppFonts() {
     DMSans_600SemiBold,
     DMSans_700Bold,
     DMSans_800ExtraBold,
+    SpaceGrotesk_300Light,
+    SpaceGrotesk_400Regular,
+    SpaceGrotesk_500Medium,
+    SpaceGrotesk_600SemiBold,
+    SpaceGrotesk_700Bold,
     NotoSansEthiopic_400Regular,
     NotoSansEthiopic_600SemiBold,
     NotoSansEthiopic_700Bold,

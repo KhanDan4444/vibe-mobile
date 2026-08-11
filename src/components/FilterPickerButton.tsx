@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 
@@ -34,12 +34,8 @@ export function FilterPickerButton<T extends string>({
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       gap: 8,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 10,
       paddingHorizontal: 14,
       paddingVertical: 12,
-      backgroundColor: colors.card,
       minHeight: 48,
     },
     dot: { width: 8, height: 8, borderRadius: 4 },
@@ -48,13 +44,13 @@ export function FilterPickerButton<T extends string>({
 
   return (
     <View>
-      <Pressable style={styles.btn} onPress={() => setOpen(true)} accessibilityRole="button">
+      <SoftSurface onPress={() => setOpen(true)} style={styles.btn} accessibilityRole="button">
         {selected?.color ? <View style={[styles.dot, { backgroundColor: selected.color }]} /> : null}
         <Text style={styles.label} numberOfLines={1}>
           {selected?.label ?? label}
         </Text>
         <Ionicons name="chevron-down" size={18} color={c.muted} />
-      </Pressable>
+      </SoftSurface>
 
       <BottomSheet visible={open} title={sheetTitle ?? label} onClose={() => setOpen(false)}>
         {options.map((opt) => (

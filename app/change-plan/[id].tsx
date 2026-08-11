@@ -9,11 +9,14 @@ import { changeMemberPlan, fetchMember, fetchMemberPayments } from '@/src/api/me
 import { fetchPlans } from '@/src/api/plans';
 import { DateField } from '@/src/components/DateField';
 import { PlanPickerField } from '@/src/components/PlanPickerField';
+import { ChangePlanAmountHint } from '@/src/components/ChangePlanAmountHint';
 import { ChangePlanPaymentSummary } from '@/src/components/ChangePlanPaymentSummary';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
-import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, FormScroll, Label, MoneyAmountField, PrimaryButton, Screen, formStyles } from '@/src/components/Form';
 import { PageSkeleton } from '@/src/components/Skeleton';
 import { LoadError } from '@/src/components/LoadError';
+import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useTranslation } from 'react-i18next';
 import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
@@ -35,10 +38,6 @@ import {
 import { hasGymPortalAccess } from '@/src/utils/roles';
 import type { ChangePlanPayload } from '@/src/types/api';
 
-function formatMoney(n: number) {
-  return Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 });
-}
-
 export default function ChangePlanScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const memberId = Number(id);
@@ -57,44 +56,71 @@ export default function ChangePlanScreen() {
   const flashSaved = useSaveFlash();
   const flashOffline = useOfflineFlash();
   const { t } = useTranslation();
+  const { colors: themeColors } = useTheme();
   const canChangePlan = Boolean(user && hasGymPortalAccess(user.role));
   const styles = useThemedStyles((colors) => ({
     center: { flex: 1, alignItems: 'center' as const, justifyContent: 'center' as const, padding: 24 },
-    memberName: { color: colors.text, fontSize: 17, fontWeight: '600' as const, marginBottom: 4 },
-    subtitle: { color: colors.muted, fontSize: 14, marginBottom: 14, lineHeight: 20 },
-    hint: { color: colors.dim, fontSize: 13, marginTop: 8, marginBottom: 4, lineHeight: 18 },
-    infoPanel: {
-      backgroundColor: colors.inputBg,
+    subtitle: { color: colors.muted, fontSize: 14, marginBottom: 10, lineHeight: 20 },
+    hint: { color: colors.dim, fontSize: 12, marginTop: 4, marginBottom: 2, lineHeight: 17 },
+    currentPlanRow: {
+      flexDirection: 'row' as const,
+      flexWrap: 'wrap' as const,
+      alignItems: 'baseline' as const,
+      gap: 6,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      marginBottom: 10,
+    },
+    currentPlanLabel: { color: colors.muted, fontSize: 13 },
+    currentPlanName: { color: colors.text, fontSize: 14, fontWeight: '600' as const },
+    currentPlanMeta: { color: colors.muted, fontSize: 13 },
+    planHeader: {
+      flexDirection: 'row' as const,
+      flexWrap: 'wrap' as const,
+      alignItems: 'center' as const,
+      justifyContent: 'space-between' as const,
+      gap: 8,
+      marginBottom: 4,
+    },
+    termEndChip: {
       borderWidth: 1,
       borderColor: colors.border,
-      borderRadius: 10,
-      padding: 12,
-      marginBottom: 12,
+      borderRadius: 999,
+      backgroundColor: colors.inputBg,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
     },
-    infoTitle: { color: colors.text, fontSize: 14, fontWeight: '600' as const },
-    infoBody: { color: colors.muted, fontSize: 13, marginTop: 4, lineHeight: 18 },
+    termEndChipText: { color: colors.text, fontSize: 12, fontWeight: '500' as const },
+    termModeGroup: {
+      flexDirection: 'row' as const,
+      gap: 3,
+      padding: 3,
+      marginBottom: 4,
+    },
+    termModeBtn: {
+      flex: 1,
+      borderRadius: 8,
+      paddingVertical: 9,
+      paddingHorizontal: 8,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+    },
+    termModeBtnPressed: { backgroundColor: colors.accentSoft, opacity: 0.92 },
+    termModeBtnActive: { backgroundColor: colors.accent },
+    termModeBtnText: { color: colors.muted, fontSize: 13, fontWeight: '600' as const },
+    termModeBtnTextActive: { color: '#fff' },
     warningPanel: {
       backgroundColor: 'rgba(245, 158, 11, 0.12)',
       borderWidth: 1,
       borderColor: 'rgba(245, 158, 11, 0.35)',
       borderRadius: 10,
-      padding: 12,
-      marginBottom: 12,
+      padding: 10,
+      marginBottom: 10,
     },
     warningText: { color: colors.warning, fontSize: 13, lineHeight: 18 },
-    previewPanel: {
-      backgroundColor: colors.accentSoft,
-      borderWidth: 1,
-      borderColor: colors.accent,
-      borderRadius: 10,
-      padding: 12,
-      marginTop: 8,
-      marginBottom: 12,
-    },
-    previewText: { color: colors.accentText, fontSize: 14, fontWeight: '500' as const },
-    link: { color: colors.accentText, fontSize: 13, fontWeight: '600' as const, marginTop: 10, marginBottom: 10 },
-    useSuggested: { color: colors.accentText, fontSize: 13, fontWeight: '600' as const, marginTop: 8 },
-    fieldGap: { marginBottom: 4 },
+    warningInline: { color: colors.warning, fontSize: 12, lineHeight: 16, marginTop: 4 },
+    fieldGap: { marginBottom: 2, marginTop: 6 },
+    sectionGap: { marginTop: 8, marginBottom: 2 },
   }));
 
   const memberQuery = useQuery({
@@ -245,41 +271,15 @@ export default function ChangePlanScreen() {
     );
   }, [memberId, planId, member, customTermStart, startDate, paymentDate, amount]);
 
-  const amountHint = (() => {
-    if (!upgradeHint) return t('forms.amountCollectedHint');
-    const planFallback = selectedPlan?.name ?? t('forms.newPlanFallback');
-    if (upgradeHint.freshTerm) {
-      return t('forms.freshTermAmountHint', {
-        amount: formatMoney(upgradeHint.suggestedAmount),
-        planName: planFallback,
-        paidThrough: formatDisplayDate(member?.end_date),
-      });
-    }
-    if (upgradeHint.prePayment) {
-      return t('forms.prePaymentHint', {
-        amount: formatMoney(upgradeHint.suggestedAmount),
-        planName: planFallback,
-      });
-    }
-    if (upgradeHint.isDowngrade) {
-      return t('forms.downgradeHint', {
-        amount: formatMoney(upgradeHint.suggestedAmount),
-        endDate: formatDisplayDate(member?.end_date),
-        planName: currentPlan?.name ?? '—',
-      });
-    }
-    const dayLabel = t(upgradeHint.remainingDays === 1 ? 'forms.day' : 'forms.days');
-    let text = t('forms.upgradeHint', {
-      amount: formatMoney(upgradeHint.suggestedAmount),
-      newPrice: formatMoney(upgradeHint.newPlanPrice),
-      credit: formatMoney(upgradeHint.credit),
-      days: upgradeHint.remainingDays,
-      dayLabel,
-      planName: currentPlan?.name ?? '—',
-    });
-    if (!amountEdited) text += ` ${t('forms.upgradeAdjust')}`;
-    return text;
-  })();
+  const midTermHint = member?.is_unpaid
+    ? t('forms.midTermHintUnpaid')
+    : t('forms.midTermHintPaid');
+
+  const termEndChipLabel =
+    termEndPreview &&
+    (upgradeHint?.isDowngrade && upgradeHint?.keepTermEnd
+      ? t('forms.termEndUnchangedChip', { date: formatDisplayDate(termEndPreview) })
+      : t('forms.termEndChip', { date: formatDisplayDate(termEndPreview) }));
 
   if (!canChangePlan) {
     return <Redirect href="/login" />;
@@ -320,67 +320,108 @@ export default function ChangePlanScreen() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <FormScroll>
           {member ? (
-            <>
-              <Text style={styles.memberName}>{t('forms.changePlanFor', { name: member.name })}</Text>
-              <Text style={styles.subtitle}>{t('forms.changePlanSubtitle', { name: member.name })}</Text>
-            </>
+            <Text style={styles.subtitle}>{t('forms.changePlanSubtitle', { name: member.name })}</Text>
           ) : null}
 
           <ErrorBanner message={error} />
 
           {currentPlan ? (
-            <View style={styles.infoPanel}>
-              <Text style={styles.infoTitle}>
-                {t('forms.currentPlan')}: {currentPlan.name}
-                {member?.is_unpaid
-                  ? ` · ${t('forms.noPaymentRecordedYet')}`
-                  : ` · ${t('forms.paidThrough')} ${formatDisplayDate(member?.end_date)}`}
-              </Text>
-            </View>
+            member?.is_unpaid ? (
+              <View style={styles.warningPanel}>
+                <Text style={styles.warningText}>
+                  {t('forms.currentPlan')} · {currentPlan.name}
+                  {member.start_date
+                    ? ` · ${t('forms.termStarted', { date: formatDisplayDate(member.start_date) })}`
+                    : ''}
+                </Text>
+                <Text style={[styles.warningText, { marginTop: 6 }]}>{t('forms.unpaidChangeBanner')}</Text>
+              </View>
+            ) : (
+              <SoftSurface variant="quiet" style={styles.currentPlanRow}>
+                <Text style={styles.currentPlanLabel}>{t('forms.currentPlan')}</Text>
+                <Text style={styles.currentPlanName}>{currentPlan.name}</Text>
+                <Text style={styles.currentPlanMeta}>·</Text>
+                <Text style={styles.currentPlanMeta}>
+                  {t('forms.paidThrough')} {formatDisplayDate(member?.end_date)}
+                </Text>
+                {member?.start_date ? (
+                  <>
+                    <Text style={styles.currentPlanMeta}>·</Text>
+                    <Text style={styles.currentPlanMeta}>
+                      {t('forms.termStarted', { date: formatDisplayDate(member.start_date) })}
+                    </Text>
+                  </>
+                ) : null}
+              </SoftSurface>
+            )
           ) : null}
 
-          {member?.is_unpaid ? (
-            <View style={styles.warningPanel}>
-              <Text style={styles.warningText}>{t('forms.unpaidChangeBanner')}</Text>
-            </View>
-          ) : null}
-
-          <PlanPickerField plans={otherPlans} value={planId} onChange={setPlanId} label={t('forms.newPlan')} />
-
-          <Pressable onPress={toggleTermMode} accessibilityRole="button">
-            <Text style={styles.link}>
-              {customTermStart ? t('forms.switchMidTerm') : t('forms.newTermFromDate')}
+          <View style={styles.planHeader}>
+            <Text style={[formStyles.label, { color: themeColors.muted, marginBottom: 0 }]}>
+              {t('forms.newPlan')}
             </Text>
-          </Pressable>
+            {termEndChipLabel ? (
+              <View style={styles.termEndChip}>
+                <Text style={styles.termEndChipText}>{termEndChipLabel}</Text>
+              </View>
+            ) : null}
+          </View>
+          <PlanPickerField plans={otherPlans} value={planId} onChange={setPlanId} label="" />
 
-          {!customTermStart ? (
-            <View style={styles.infoPanel}>
-              <Text style={styles.infoTitle}>
-                {member?.is_unpaid ? t('forms.switchBeforePayment') : t('forms.switchOnCurrentTerm')}
+          <View style={styles.sectionGap}>
+            <Label>{t('forms.termModeLabel')}</Label>
+            <SoftSurface variant="quiet" style={styles.termModeGroup}>
+              <Pressable
+                onPress={() => {
+                  if (customTermStart) toggleTermMode();
+                }}
+                style={({ pressed }) => [
+                  styles.termModeBtn,
+                  !customTermStart && styles.termModeBtnActive,
+                  pressed && customTermStart && styles.termModeBtnPressed,
+                ]}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: !customTermStart }}
+              >
+                <Text style={[styles.termModeBtnText, !customTermStart && styles.termModeBtnTextActive]}>
+                  {t('forms.termModeMidTerm')}
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  if (!customTermStart) toggleTermMode();
+                }}
+                style={({ pressed }) => [
+                  styles.termModeBtn,
+                  customTermStart && styles.termModeBtnActive,
+                  pressed && !customTermStart && styles.termModeBtnPressed,
+                ]}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: customTermStart }}
+              >
+                <Text style={[styles.termModeBtnText, customTermStart && styles.termModeBtnTextActive]}>
+                  {t('forms.termModeNewTerm')}
+                </Text>
+              </Pressable>
+            </SoftSurface>
+            <Text style={styles.hint}>{!customTermStart ? midTermHint : t('forms.freshTermHint')}</Text>
+            {customTermStart && member && !member.is_unpaid && member.end_date ? (
+              <Text style={styles.warningInline}>
+                {t('forms.customTermPaidWarning', { date: formatDisplayDate(member.end_date) })}
               </Text>
-              <Text style={styles.infoBody}>
-                {t('forms.termStarted', { date: formatDisplayDate(member?.start_date) })}{' '}
-                {member?.is_unpaid ? t('forms.unpaidPickPlan') : t('forms.paidPickPlan')}
-              </Text>
-            </View>
-          ) : (
+            ) : null}
+          </View>
+
+          {customTermStart ? (
             <View style={styles.fieldGap}>
-              {member && !member.is_unpaid && member.end_date ? (
-                <View style={styles.warningPanel}>
-                  <Text style={styles.warningText}>
-                    {t('forms.customTermPaidWarning', { date: formatDisplayDate(member.end_date) })}
-                  </Text>
-                </View>
-              ) : null}
               <Label>{t('forms.effectiveDate')}</Label>
               <DateField
                 value={startDate}
                 onChange={onTermStartChange}
                 maximumDate={customTermStartBounds.maximumDate}
               />
-              <Text style={styles.hint}>{t('forms.freshTermHint')}</Text>
             </View>
-          )}
+          ) : null}
 
           <Label>{t('forms.paymentDateReceived')}</Label>
           <DateField
@@ -391,45 +432,29 @@ export default function ChangePlanScreen() {
           />
           <Text style={styles.hint}>{t('forms.paymentCollectedHint')}</Text>
           {hasChangePlanPaymentOnDate ? (
-            <View style={styles.warningPanel}>
-              <Text style={styles.warningText}>{t('validation.changePlanDuplicate')}</Text>
-            </View>
-          ) : null}
-
-          {termEndPreview ? (
-            <View style={styles.previewPanel}>
-              <Text style={styles.previewText}>
-                {upgradeHint?.isDowngrade && upgradeHint?.keepTermEnd
-                  ? `${t('forms.termEndUnchanged')} ${formatDisplayDate(termEndPreview)}`
-                  : `${t('forms.newTermEnds')} ${formatDisplayDate(termEndPreview)}`}
-              </Text>
-            </View>
+            <Text style={styles.warningInline}>{t('validation.changePlanDuplicate')}</Text>
           ) : null}
 
           <Label>{t('forms.amountDue')}</Label>
-          <Field
+          <MoneyAmountField
             value={amount}
             onChangeText={(v) => {
               setAmountEdited(true);
               setAmount(v);
             }}
-            keyboardType="decimal-pad"
-            autoCapitalize="none"
           />
-          <Text style={styles.hint}>{amountHint}</Text>
-          {upgradeHint && amountEdited ? (
-            <Pressable
-              onPress={() => {
-                setAmountEdited(false);
-                setAmount(String(upgradeHint.suggestedAmount));
-              }}
-              accessibilityRole="button"
-            >
-              <Text style={styles.useSuggested}>
-                {t('forms.useSuggestedAmount', { amount: formatMoney(upgradeHint.suggestedAmount) })}
-              </Text>
-            </Pressable>
-          ) : null}
+          <ChangePlanAmountHint
+            upgradeHint={upgradeHint}
+            amountEdited={amountEdited}
+            selectedPlanName={selectedPlan?.name}
+            currentPlanName={currentPlan?.name}
+            endDate={member?.end_date}
+            onUseSuggested={() => {
+              if (!upgradeHint) return;
+              setAmountEdited(false);
+              setAmount(String(upgradeHint.suggestedAmount));
+            }}
+          />
 
           <PaymentMethodPicker value={method} onChange={setMethod} />
 

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
@@ -23,8 +24,10 @@ import { isGymOwner, isGymStaff } from '@/src/utils/roles';
 import { ResponsiveContent } from '@/src/components/ResponsiveContent';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import StatusBadge from '@/src/components/StatusBadge';
-import Card from '@/src/components/ui/Card';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { SecondaryButton } from '@/src/components/ui/Button';
+import { space } from '@/src/theme/tokens';
+import { timings } from '@/src/theme/motion';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
 
@@ -56,21 +59,27 @@ function StatCard({
 }) {
   const content = (
     <>
-      <Text style={[valueStyle, accent ? { color: accent } : null]}>{value}</Text>
+      <Text display style={[valueStyle, accent ? { color: accent } : null]}>{value}</Text>
       <Text style={labelStyle}>{label}</Text>
     </>
   );
 
-  const card = <Card quiet style={styles.statCard}>{content}</Card>;
-
   if (!onPress) {
-    return <View style={layoutStyle}>{card}</View>;
+    return (
+      <View style={layoutStyle}>
+        <SoftSurface variant="quiet" style={styles.statCard}>
+          {content}
+        </SoftSurface>
+      </View>
+    );
   }
 
   return (
-    <Pressable onPress={onPress} style={layoutStyle}>
-      {card}
-    </Pressable>
+    <View style={layoutStyle}>
+      <SoftSurface variant="quiet" onPress={onPress} style={styles.statCard}>
+        {content}
+      </SoftSurface>
+    </View>
   );
 }
 
@@ -98,7 +107,7 @@ function AlertMemberRow({
         hasPhoto={Boolean(member.photo_url)}
       />
       <View style={styles.alertBody}>
-        <Text style={[styles.alertName, { color: colors.text }]} numberOfLines={1}>
+        <Text listRow style={[styles.alertName, { color: colors.text }]} numberOfLines={1}>
           {member.name}
         </Text>
         <Text style={[styles.alertMeta, { color: colors.dim }]} numberOfLines={1}>
@@ -157,14 +166,24 @@ export default function DashboardScreen() {
     enabled: Boolean(token),
   });
 
+  const trendPercent = data?.revenueTrendPercent;
+  const trendNegative = (() => {
+    if (trendPercent == null) return false;
+    if (typeof trendPercent === 'string') {
+      const trimmed = trendPercent.trim();
+      if (trimmed.startsWith('-')) return true;
+      const n = Number(trimmed.replace(/%/g, ''));
+      return Number.isFinite(n) && n < 0;
+    }
+    return Number(trendPercent) < 0;
+  })();
   const trendLabel = (() => {
-    const percent = data?.revenueTrendPercent;
-    if (percent == null) return null;
-    if (typeof percent === 'string') {
-      const trimmed = percent.trim();
+    if (trendPercent == null) return null;
+    if (typeof trendPercent === 'string') {
+      const trimmed = trendPercent.trim();
       return trimmed ? t('dashboard.trendVsLastMonth', { value: trimmed }) : null;
     }
-    const n = Number(percent);
+    const n = Number(trendPercent);
     if (!Number.isFinite(n)) return null;
     const sign = n > 0 ? '+' : '';
     return t('dashboard.trendVsLastMonth', { value: `${sign}${n.toFixed(0)}%` });
@@ -191,7 +210,7 @@ export default function DashboardScreen() {
         : 'due_soon';
 
   const summaryBlock = data ? (
-    <Card style={styles.summary}>
+    <SoftSurface variant="panel" style={styles.summary}>
       <Pressable
         onPress={() => router.push('/(tabs)/revenue')}
         hitSlop={8}
@@ -202,10 +221,12 @@ export default function DashboardScreen() {
         <Text style={[styles.summaryTitle, { color: c.accentText }]}>{t('dashboard.thisMonth')}</Text>
         <Text style={[styles.summaryTitleChevron, { color: c.accentText }]}>›</Text>
       </Pressable>
-      <Text style={[styles.income, { color: c.text }]}>
+      <Text display style={[styles.income, { color: c.text }]}>
         {formatEtb(Number(data.monthlyIncome || 0), { forceCompact: false })}
       </Text>
-      {trendLabel ? <Text style={[styles.trend, { color: c.success }]}>{trendLabel}</Text> : null}
+      {trendLabel ? (
+        <Text style={[styles.trend, { color: trendNegative ? c.statusExpired : c.success }]}>{trendLabel}</Text>
+      ) : null}
       <Text style={[styles.muted, { color: c.dim }]}>
         {t('dashboard.membersTotal', { count: data.totalMembers })}
         {data.newMembersThisMonth != null
@@ -215,14 +236,14 @@ export default function DashboardScreen() {
       {owner ? (
         <MiniBarChart data={data.revenueChart ?? []} height={chartHeight} />
       ) : null}
-    </Card>
+    </SoftSurface>
   ) : null;
 
   const attentionBlock =
     data && owner && attentionHasContent ? (
-      <Card style={styles.alertCard}>
+      <SoftSurface variant="panel" style={styles.alertCard}>
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: c.text }]}>{t('dashboard.attentionTitle')}</Text>
+          <Text display style={[styles.sectionTitle, { color: c.text }]}>{t('dashboard.attentionTitle')}</Text>
           <Pressable onPress={() => goMembers(alertFilter)}>
             <Text style={[styles.viewAll, { color: c.statusActive }]}>{t('dashboard.viewAll')}</Text>
           </Pressable>
@@ -243,11 +264,12 @@ export default function DashboardScreen() {
             );
           })
         ) : (
-          <Pressable
-            style={[styles.attentionShortcut, { borderColor: c.border, backgroundColor: c.accentSoft }]}
+          <SoftSurface
+            variant="quiet"
             onPress={() => goMembers('unpaid')}
+            style={[styles.attentionShortcut, { backgroundColor: c.accentSoft }]}
           >
-            <Text style={[styles.attentionShortcutValue, { color: c.statusUnpaid }]}>{unpaidCount}</Text>
+            <Text display style={[styles.attentionShortcutValue, { color: c.statusUnpaid }]}>{unpaidCount}</Text>
             <View style={styles.attentionShortcutBody}>
               <Text style={[styles.attentionShortcutTitle, { color: c.text }]}>
                 {t('dashboard.unpaidShortcutTitle')}
@@ -257,9 +279,9 @@ export default function DashboardScreen() {
               </Text>
             </View>
             <Text style={[styles.viewAll, { color: c.statusActive }]}>{t('dashboard.viewAll')}</Text>
-          </Pressable>
+          </SoftSurface>
         )}
-      </Card>
+      </SoftSurface>
     ) : null;
 
   return (
@@ -270,7 +292,7 @@ export default function DashboardScreen() {
       refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={c.accentText} />}
     >
       <ResponsiveContent style={{ paddingHorizontal: pagePadding }}>
-      <Text style={[styles.gymName, { color: c.text }, isTablet && styles.gymNameTablet]}>{registeredGymName}</Text>
+      <Text display style={[styles.gymName, { color: c.text }, isTablet && styles.gymNameTablet]}>{registeredGymName}</Text>
       {staffBranchLabel ? (
         <Text style={[styles.branchLabel, { color: c.muted }]}>{t('branch.staffAt', { name: staffBranchLabel })}</Text>
       ) : null}
@@ -287,7 +309,8 @@ export default function DashboardScreen() {
           <SecondaryButton label={t('gymBoot.retry')} onPress={() => void refetch()} />
         </View>
       ) : data ? (
-        <>
+        <Animated.View entering={FadeInDown.duration(timings.enterMs).springify().damping(22)}>
+          {summaryBlock}
           <View style={styles.grid}>
             <StatCard
               label={t('dashboard.active')}
@@ -326,9 +349,8 @@ export default function DashboardScreen() {
               onPress={() => goMembers('unpaid')}
             />
           </View>
-          {summaryBlock}
           {owner ? attentionBlock : null}
-        </>
+        </Animated.View>
       ) : null}
 
       <ReadOnlyBanner />
@@ -344,27 +366,28 @@ const styles = StyleSheet.create({
   contentTablet: { flexGrow: 1 },
   gymName: {
     fontSize: 22,
-    fontWeight: '700',
+    fontWeight: '600',
     marginBottom: 4,
+    letterSpacing: -0.4,
   },
   gymNameTablet: {
-    fontSize: 26,
+    fontSize: 28,
   },
   branchLabel: {
     fontSize: 14,
     marginBottom: 12,
   },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md, marginTop: space.lg },
   statCard: {
     flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
+    paddingVertical: space.md,
+    paddingHorizontal: space.md,
   },
-  statValue: { fontSize: 22, fontWeight: '700' },
+  statValue: { fontSize: 22, fontWeight: '700', letterSpacing: -0.3 },
   statLabel: { marginTop: 2, fontSize: 12 },
   summary: {
-    marginTop: 14,
-    padding: 16,
+    marginTop: space.sm,
+    padding: space.lg + 2,
   },
   summaryTitle: { fontSize: 13, fontWeight: '600' },
   summaryTitleRow: {
@@ -373,19 +396,19 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     gap: 4,
   },
-  summaryTitleChevron: { fontSize: 16, fontWeight: '700', lineHeight: 18 },
+  summaryTitleChevron: { fontSize: 16, fontWeight: '600', lineHeight: 18 },
   income: { marginTop: 6, fontSize: 32, fontWeight: '700', letterSpacing: -0.5 },
   trend: { marginTop: 6, fontSize: 13, fontWeight: '600' },
   muted: { marginTop: 8, fontSize: 14 },
   errorWrap: { alignItems: 'center', paddingTop: 32, gap: 12 },
   errorText: { textAlign: 'center', fontSize: 15 },
   alertCard: {
-    marginTop: 14,
-    padding: 14,
+    marginTop: space.lg,
+    padding: space.lg,
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
-  sectionTitle: { fontSize: 16, fontWeight: '700' },
-  viewAll: { fontSize: 15, fontWeight: '700' },
+  sectionTitle: { fontSize: 16, fontWeight: '600', letterSpacing: -0.2 },
+  viewAll: { fontSize: 15, fontWeight: '600' },
   alertRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -394,7 +417,7 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   alertBody: { flex: 1, minWidth: 0 },
-  alertName: { fontSize: 14, fontWeight: '700' },
+  alertName: { fontSize: 14, fontWeight: '600' },
   alertMeta: { marginTop: 3, fontSize: 12 },
   alertRight: { alignItems: 'flex-end', gap: 8 },
   alertAction: {
@@ -402,19 +425,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 5,
   },
-  alertActionText: { fontSize: 14, fontWeight: '700' },
+  alertActionText: { fontSize: 14, fontWeight: '600' },
   attentionShortcut: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     marginTop: 4,
-    padding: 12,
-    borderRadius: 10,
-    borderWidth: StyleSheet.hairlineWidth,
+    padding: space.md,
   },
-  attentionShortcutValue: { fontSize: 28, fontWeight: '800', minWidth: 36 },
+  attentionShortcutValue: { fontSize: 28, fontWeight: '700', minWidth: 36, letterSpacing: -0.4 },
   attentionShortcutBody: { flex: 1, minWidth: 0 },
-  attentionShortcutTitle: { fontSize: 14, fontWeight: '700' },
+  attentionShortcutTitle: { fontSize: 14, fontWeight: '600' },
   attentionShortcutMeta: { marginTop: 3, fontSize: 12, lineHeight: 16 },
   banner: {
     marginTop: 20,

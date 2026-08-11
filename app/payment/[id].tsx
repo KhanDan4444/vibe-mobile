@@ -10,7 +10,8 @@ import { createPayment } from '@/src/api/payments';
 import { fetchPlans } from '@/src/api/plans';
 import { DateField } from '@/src/components/DateField';
 import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
-import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, FormScroll, Label, MoneyAmountField, PrimaryButton, Screen } from '@/src/components/Form';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useTranslation } from 'react-i18next';
 import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
@@ -37,7 +38,8 @@ export default function PaymentScreen() {
   const { t } = useTranslation();
   const canRecordPayment = Boolean(user && hasGymPortalAccess(user.role));
   const styles = useThemedStyles((colors) => ({
-    memberName: { color: colors.text, fontSize: 17, fontWeight: '600' as const, marginBottom: 8 },
+    memberChip: { paddingHorizontal: 14, paddingVertical: 12, marginBottom: 14 },
+    memberName: { color: colors.text, fontSize: 16, fontWeight: '600' as const },
   }));
 
   const memberQuery = useQuery({
@@ -102,11 +104,15 @@ export default function PaymentScreen() {
     <Screen>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <FormScroll>
-          {member ? <Text style={styles.memberName}>{t('forms.paymentFor', { name: member.name })}</Text> : null}
+          {member ? (
+            <SoftSurface variant="quiet" style={styles.memberChip}>
+              <Text style={styles.memberName}>{t('forms.paymentFor', { name: member.name })}</Text>
+            </SoftSurface>
+          ) : null}
           <ErrorBanner message={error} />
 
           <Label>{t('forms.amount')}</Label>
-          <Field value={amount} onChangeText={setAmount} keyboardType="decimal-pad" autoCapitalize="none" />
+          <MoneyAmountField value={amount} onChangeText={setAmount} />
 
           <Label>{t('forms.paymentDate')}</Label>
           <DateField

@@ -62,6 +62,6 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '500',
   },
 });

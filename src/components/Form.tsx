@@ -1,15 +1,22 @@
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText as Text, AppTextInput as TextInput } from '@/src/components/AppText';
 import { PrimaryButton as UiPrimaryButton } from '@/src/components/ui/Button';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
+import { fieldChrome } from '@/src/theme/fieldChrome';
+import { radiusMd } from '@/src/theme/tokens';
 import type { ThemeColors } from '@/src/theme/tokens';
 import { appTextStyle } from '@/src/theme/typography';
 import { dismissKeyboard } from '@/src/utils/dismissKeyboard';
 
 export { SecondaryButton } from '@/src/components/ui/Button';
+export { MoneyAmountField } from '@/src/components/MoneyAmountField';
+export { FIELD_MIN_HEIGHT, FIELD_RADIUS, fieldChrome } from '@/src/theme/fieldChrome';
 
 /** @deprecated Use useTheme().colors in new code. */
 export const colors = {
@@ -57,7 +64,6 @@ export function useFormScrollPadding() {
   return {
     paddingHorizontal: pagePadding,
     paddingTop: pagePadding,
-    // Clear of keyboard accessory / nav-bar shadow above the safe-area pad on Screen.
     paddingBottom: 56,
     alignItems: 'center' as const,
   };
@@ -105,6 +111,18 @@ export function FieldError({ message }: { message?: string }) {
   );
 }
 
+export function useFieldBorderColor(opts: {
+  error?: boolean;
+  focused?: boolean;
+  disabled?: boolean;
+}): string {
+  const { colors: c } = useTheme();
+  if (opts.error) return c.error;
+  if (opts.disabled) return c.inputBorder;
+  if (opts.focused) return c.accentText;
+  return c.inputBorder;
+}
+
 export const Field = React.forwardRef<
   React.ElementRef<typeof TextInput>,
   {
@@ -120,6 +138,9 @@ export const Field = React.forwardRef<
     returnKeyType?: 'done' | 'next' | 'go' | 'send' | 'default';
     blurOnSubmit?: boolean;
     error?: boolean;
+    disabled?: boolean;
+    latin?: boolean;
+    style?: StyleProp<ViewStyle>;
   }
 >(function Field(
   {
@@ -135,44 +156,77 @@ export const Field = React.forwardRef<
     returnKeyType,
     blurOnSubmit,
     error,
+    disabled,
+    latin,
+    style,
   },
-  ref
+  ref,
 ) {
+  const { t } = useTranslation();
   const { colors: c } = useTheme();
   const [focused, setFocused] = React.useState(false);
+  const [revealed, setRevealed] = React.useState(false);
+  const showToggle = Boolean(secureTextEntry);
+  const borderColor = useFieldBorderColor({ error, focused, disabled });
 
   return (
-    <TextInput
-      ref={ref}
+    <SoftSurface
+      variant="quiet"
+      flat={!focused || Boolean(disabled)}
       style={[
-        formStyles.input,
+        formStyles.inputShell,
         {
-          backgroundColor: c.inputBg,
-          borderColor: error ? c.error : focused ? c.accentText : c.inputBorder,
-          color: c.text,
+          backgroundColor: disabled ? c.card : c.inputBg,
+          borderColor,
+          opacity: disabled ? 0.65 : 1,
         },
+        style,
       ]}
-      value={value}
-      onChangeText={onChangeText}
-      placeholder={placeholder}
-      placeholderTextColor={c.dim}
-      selectionColor={c.accentText}
-      secureTextEntry={secureTextEntry}
-      keyboardType={keyboardType}
-      autoCapitalize={autoCapitalize ?? 'sentences'}
-      autoCorrect={false}
-      onFocus={() => {
-        setFocused(true);
-        onFocus?.();
-      }}
-      onBlur={() => {
-        setFocused(false);
-        onBlur?.();
-      }}
-      onSubmitEditing={onSubmitEditing}
-      returnKeyType={returnKeyType}
-      blurOnSubmit={blurOnSubmit}
-    />
+    >
+      <TextInput
+        ref={ref}
+        latin={latin}
+        style={[formStyles.inputText, { color: c.text }]}
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor={c.dim}
+        selectionColor={c.accentText}
+        secureTextEntry={secureTextEntry && !revealed}
+        keyboardType={keyboardType}
+        autoCapitalize={autoCapitalize ?? 'sentences'}
+        autoCorrect={false}
+        editable={!disabled}
+        onFocus={() => {
+          if (disabled) return;
+          setFocused(true);
+          onFocus?.();
+        }}
+        onBlur={() => {
+          setFocused(false);
+          onBlur?.();
+        }}
+        onSubmitEditing={onSubmitEditing}
+        returnKeyType={returnKeyType}
+        blurOnSubmit={blurOnSubmit}
+      />
+      {showToggle ? (
+        <Pressable
+          onPress={() => setRevealed((v) => !v)}
+          hitSlop={10}
+          style={formStyles.affixHit}
+          accessibilityRole="button"
+          accessibilityLabel={revealed ? t('auth.hidePassword') : t('auth.showPassword')}
+          disabled={disabled}
+        >
+          <Ionicons
+            name={revealed ? 'eye-off-outline' : 'eye-outline'}
+            size={20}
+            color={focused ? c.accentText : c.muted}
+          />
+        </Pressable>
+      ) : null}
+    </SoftSurface>
   );
 });
 
@@ -180,14 +234,15 @@ export function ErrorBanner({ message }: { message: string }) {
   const { colors: c } = useTheme();
   if (!message) return null;
   return (
-    <Text
+    <SoftSurface
+      flat
       style={[
         formStyles.error,
-        { color: c.error, backgroundColor: c.errorBg, borderColor: 'rgba(244,63,94,0.4)' },
+        { backgroundColor: c.errorBg, borderColor: 'rgba(244,63,94,0.35)' },
       ]}
     >
-      {message}
-    </Text>
+      <Text style={{ color: c.error, fontSize: 14 }}>{message}</Text>
+    </SoftSurface>
   );
 }
 
@@ -231,14 +286,14 @@ export function ChipRow<T extends string>({
       {options.map((opt) => {
         const active = value === opt;
         return (
-          <Pressable
+          <SoftSurface
             key={opt}
+            flat={!active}
+            onPress={() => onChange(opt)}
             style={[
               formStyles.chip,
-              { borderColor: c.border, backgroundColor: c.card },
               active && { borderColor: c.accentText, backgroundColor: c.accentSoft },
             ]}
-            onPress={() => onChange(opt)}
           >
             <Text
               style={appTextStyle(language, {
@@ -248,7 +303,7 @@ export function ChipRow<T extends string>({
             >
               {opt}
             </Text>
-          </Pressable>
+          </SoftSurface>
         );
       })}
     </View>
@@ -262,25 +317,22 @@ export function useThemedStyles<T>(factory: (c: ThemeColors) => T): T {
 
 export const formStyles = StyleSheet.create({
   screen: { flex: 1 },
-  label: { fontSize: 13, fontWeight: '600', marginBottom: 6, marginTop: 12 },
-  input: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-  },
+  label: { ...fieldChrome.label },
+  inputShell: { ...fieldChrome.inputShell },
+  inputText: { ...fieldChrome.inputText },
+  input: { ...fieldChrome.input },
+  affixHit: { ...fieldChrome.affixHit },
+  affixText: { ...fieldChrome.affixText },
   fieldError: {
     marginTop: 6,
     fontSize: 12,
     fontWeight: '500',
   },
   error: {
-    borderWidth: 1,
-    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: radiusMd,
     padding: 12,
     marginBottom: 12,
-    fontSize: 14,
   },
   buttonSpacing: {
     marginTop: 24,
@@ -290,8 +342,7 @@ export const formStyles = StyleSheet.create({
   chip: {
     paddingHorizontal: 12,
     paddingVertical: 9,
-    borderRadius: 8,
-    borderWidth: 1,
+    borderRadius: radiusMd,
   },
   chipText: { fontSize: 13 },
 });

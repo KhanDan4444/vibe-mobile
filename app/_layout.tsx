@@ -21,7 +21,7 @@ import { AppBootSplash, BOOT_SPLASH_BG_DARK } from '@/src/components/AppBootSpla
 import { SubscriptionLockout } from '@/src/components/SubscriptionLockout';
 import { PERSISTED_QUERY_KEYS, queryClient, QUERY_CACHE_STORAGE_KEY } from '@/src/query/client';
 import { SystemChrome } from '@/src/theme/SystemChrome';
-import { DM_SANS_SEMI, NOTO_ETHIOPIC, lineHeightFor } from '@/src/theme/typography';
+import { NOTO_ETHIOPIC, SPACE_GROTESK_SEMI, lineHeightFor } from '@/src/theme/typography';
 import { useAppFonts } from '@/src/theme/useAppFonts';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -102,7 +102,7 @@ function RootNavigator() {
     headerTitleStyle:
       language === 'am'
         ? ({ fontFamily: NOTO_ETHIOPIC, fontWeight: '600' as const, lineHeight: lineHeightFor(17) })
-        : ({ fontFamily: DM_SANS_SEMI, fontWeight: '600' as const }),
+        : ({ fontFamily: SPACE_GROTESK_SEMI, fontWeight: '600' as const }),
     ...(user && !isOnline ? { safeAreaInsets: { top: 0 } } : {}),
   };
 

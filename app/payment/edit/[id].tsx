@@ -9,7 +9,8 @@ import { deletePayment, updatePayment } from '@/src/api/payments';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { DateField } from '@/src/components/DateField';
 import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
-import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, FormScroll, Label, MoneyAmountField, PrimaryButton, Screen } from '@/src/components/Form';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useTranslation } from 'react-i18next';
 import { PAYMENT_METHODS, type PaymentMethod } from '@/src/constants/payments';
@@ -47,13 +48,14 @@ export default function EditPaymentScreen() {
   const [error, setError] = useState('');
   const [deleteOpen, setDeleteOpen] = useState(false);
   const styles = useThemedStyles((colors) => ({
-    memberName: { fontSize: 18, fontWeight: '600' as const, color: colors.text, marginBottom: 8 },
+    memberChip: { paddingHorizontal: 14, paddingVertical: 12, marginBottom: 14 },
+    memberName: { fontSize: 16, fontWeight: '600' as const, color: colors.text },
     readOnly: { color: colors.muted, padding: 16, fontSize: 15, lineHeight: 22 },
     deleteBtn: {
       marginTop: 20,
       paddingVertical: 14,
       alignItems: 'center' as const,
-      borderRadius: 10,
+      borderRadius: 12,
       borderWidth: 1,
       borderColor: 'rgba(248,113,113,0.5)',
     },
@@ -129,11 +131,15 @@ export default function EditPaymentScreen() {
     <Screen>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <FormScroll>
-          {params.member_name ? <Text style={styles.memberName}>{params.member_name}</Text> : null}
+          {params.member_name ? (
+            <SoftSurface variant="quiet" style={styles.memberChip}>
+              <Text style={styles.memberName}>{params.member_name}</Text>
+            </SoftSurface>
+          ) : null}
           <ErrorBanner message={error} />
 
           <Label>{t('forms.amount')}</Label>
-          <Field value={amount} onChangeText={setAmount} keyboardType="decimal-pad" />
+          <MoneyAmountField value={amount} onChangeText={setAmount} />
 
           <Label>{t('forms.paymentDate')}</Label>
           <DateField

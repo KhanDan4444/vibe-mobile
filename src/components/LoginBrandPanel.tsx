@@ -17,7 +17,7 @@ export function LoginBrandPanel() {
   return (
     <View style={s.wrap}>
       <Image source={LOGIN_BRAND_MARK} style={s.mark} resizeMode="contain" accessibilityLabel="ንቁ" />
-      <Text latin={sloganLatin} style={[s.slogan, { color: c.accentText }]}>
+      <Text latin={sloganLatin} display style={[s.slogan, { color: c.accentText }]}>
         {t('auth.brandSlogan')}
       </Text>
     </View>

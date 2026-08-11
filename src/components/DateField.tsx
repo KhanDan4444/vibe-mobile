@@ -3,8 +3,9 @@ import { Platform, Pressable, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useTheme } from '@/src/context/PreferencesContext';
-import { formStyles } from '@/src/components/Form';
+import { FIELD_MIN_HEIGHT } from '@/src/theme/fieldChrome';
 import { clampIsoDate, dateToIso, formatDisplayDate, isDateRangeValid, isoToLocalDate, toDateString } from '@/src/utils/date';
 import { dismissKeyboard } from '@/src/utils/dismissKeyboard';
 
@@ -61,29 +62,31 @@ export function DateField({
 
   return (
     <View>
-      <Pressable
-        style={[
-          formStyles.input,
-          {
-            backgroundColor: c.inputBg,
-            borderColor: pickerDisabled ? c.inputBorder : open ? c.accentText : c.inputBorder,
-            justifyContent: 'center',
-            minHeight: 48,
-            opacity: pickerDisabled ? 0.55 : 1,
-          },
-        ]}
-        onPress={() => {
-          if (pickerDisabled) return;
-          // Open immediately so teal border stays stable (no press→delay→open flash).
-          setOpen(true);
-          dismissKeyboard();
+      <SoftSurface
+        variant="quiet"
+        flat={pickerDisabled}
+        onPress={
+          pickerDisabled
+            ? undefined
+            : () => {
+                setOpen(true);
+                dismissKeyboard();
+              }
+        }
+        style={{
+          paddingHorizontal: 14,
+          paddingVertical: 12,
+          justifyContent: 'center',
+          minHeight: FIELD_MIN_HEIGHT,
+          opacity: pickerDisabled ? 0.65 : 1,
+          backgroundColor: pickerDisabled ? c.card : undefined,
+          borderColor: pickerDisabled ? c.inputBorder : open ? c.accentText : c.inputBorder,
         }}
-        disabled={pickerDisabled}
         accessibilityRole="button"
-        accessibilityState={{ disabled: pickerDisabled }}
+        accessibilityLabel={display}
       >
         <Text style={{ color: clampedValue ? c.text : c.dim, fontSize: 16 }}>{display}</Text>
-      </Pressable>
+      </SoftSurface>
       {!rangeValid ? (
         <Text style={{ color: c.warning, fontSize: 12, marginTop: 6, lineHeight: 17 }}>
           {rangeInvalidMessage || t('forms.dateRangeInvalid')}

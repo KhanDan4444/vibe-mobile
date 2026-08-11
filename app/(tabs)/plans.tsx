@@ -21,8 +21,10 @@ import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
 import { runInBackground } from '@/src/utils/runInBackground';
 import { formatPlanDuration } from '@/src/utils/planFormat';
 import { SecondaryButton } from '@/src/components/ui/Button';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import type { PlanRow } from '@/src/types/api';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
+import { fabElevation } from '@/src/theme/elevation';
 
 function PlanCard({
   plan,
@@ -44,12 +46,8 @@ function PlanCard({
   const { t } = useTranslation();
   const styles = useThemedStyles((c) => ({
     card: {
-      backgroundColor: c.card,
-      borderRadius: 12,
       padding: 16,
-      marginBottom: 10,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: c.border,
+      marginBottom: 12,
     },
     cardColumn: {
       marginBottom: 0,
@@ -67,7 +65,7 @@ function PlanCard({
       justifyContent: 'space-between' as const,
       gap: 10,
     },
-    price: { fontSize: 20, fontWeight: '800' as const, color: c.text, flexShrink: 1 },
+    price: { fontSize: 20, fontWeight: '700' as const, letterSpacing: -0.3, color: c.text, flexShrink: 1 },
     durationBadge: {
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,
@@ -91,10 +89,10 @@ function PlanCard({
       : [];
 
   return (
-    <View style={[styles.card, multiColumn && styles.cardColumn, multiColumn && columnStyle]}>
+    <SoftSurface variant="panel" style={[styles.card, multiColumn && styles.cardColumn, multiColumn && columnStyle]}>
       <View style={styles.headerRow}>
         <View style={styles.cardMain}>
-          <Text style={styles.name}>{plan.name}</Text>
+          <Text listRow style={styles.name}>{plan.name}</Text>
           {activeCount > 0 ? (
             <Text style={styles.activeCount}>
               {t('plans.activeMembers', { count: activeCount })}
@@ -106,19 +104,19 @@ function PlanCard({
         <ActionOverflowMenu items={menuItems} />
       </View>
       <View style={styles.footer}>
-        <Text style={styles.price}>{Number(plan.price).toLocaleString()} ETB</Text>
+        <Text display style={styles.price}>{Number(plan.price).toLocaleString()} ETB</Text>
         <View style={styles.durationBadge}>
           <Text style={styles.durationText}>{formatPlanDuration(plan.duration, t)}</Text>
         </View>
       </View>
-    </View>
+    </SoftSurface>
   );
 }
 
 export default function PlansScreen() {
   const router = useRouter();
   const { token, user } = useAuth();
-  const { colors: c } = useTheme();
+  const { colors: c, theme } = useTheme();
   const { t } = useTranslation();
   const styles = useThemedStyles((colors) => ({
     container: { flex: 1, backgroundColor: colors.bg },
@@ -152,7 +150,6 @@ export default function PlansScreen() {
       backgroundColor: colors.accent,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
-      elevation: 2,
     },
     fabText: { color: '#fff', fontSize: 26, fontWeight: '300' as const, marginTop: -2 },
   }));
@@ -254,7 +251,7 @@ export default function PlansScreen() {
 
       {owner && !readOnly ? (
         <Pressable
-          style={[styles.fab, { right: fabRight, width: fabSize, height: fabSize, borderRadius: fabRadius }]}
+          style={[styles.fab, fabElevation(theme), { right: fabRight, width: fabSize, height: fabSize, borderRadius: fabRadius }]}
           onPress={() => router.push('/plan/new')}
         >
           <Text style={[styles.fabText, { fontSize: fabFontSize }]}>+</Text>

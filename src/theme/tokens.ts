@@ -4,6 +4,18 @@ export type AppTheme = 'light' | 'dark';
 export const radiusSm = 8;
 export const radiusMd = 12;
 export const radiusLg = 16;
+/** Sheets / floating panels — softer, more modern pop. */
+export const radiusXl = 22;
+
+/** Comfortable rhythm scale (use instead of one-off 8/10/12/14). */
+export const space = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 24,
+  xxl: 32,
+} as const;
 
 export type ThemeColors = {
   bg: string;
@@ -40,13 +52,13 @@ export type ThemeColors = {
 };
 
 export const darkTheme: ThemeColors = {
-  bg: '#13161c',
-  card: '#22262f',
-  border: '#2a2f3a',
-  cardEdge: '#2a2f3a',
-  text: '#e4e7ee',
-  muted: '#8b93a3',
-  dim: '#64748b',
+  bg: '#12151a',
+  card: '#1e222a',
+  border: '#2c323c',
+  cardEdge: '#323844',
+  text: '#e8eaf0',
+  muted: '#9199a8',
+  dim: '#6b7385',
   accent: '#0f766e',
   accentSoft: 'rgba(45,212,191,0.16)',
   accentText: '#2dd4bf',
@@ -56,11 +68,11 @@ export const darkTheme: ThemeColors = {
   warmText: '#fcd34d',
   error: '#fda4af',
   errorBg: 'rgba(244,63,94,0.15)',
-  headerBg: '#1a1e26',
-  tabBarBg: '#171a21',
-  tabBarBorder: '#2a2f3a',
-  inputBg: '#1e222b',
-  inputBorder: '#343a46',
+  headerBg: '#181c24',
+  tabBarBg: '#161920',
+  tabBarBorder: '#2c323c',
+  inputBg: '#1a1e26',
+  inputBorder: '#363c48',
   success: '#34d399',
   warning: '#fbbf24',
   statusActive: '#34d399',
@@ -70,28 +82,29 @@ export const darkTheme: ThemeColors = {
   statusNeutral: '#94a3b8',
 };
 
+/** Soft warm-gray canvas — calm and inviting without cream/terracotta cliché. */
 export const lightTheme: ThemeColors = {
-  bg: '#f1f5f9',
+  bg: '#f3f4f6',
   card: '#ffffff',
-  border: '#e2e8f0',
-  cardEdge: '#e2e8f0',
-  text: '#0f172a',
-  muted: '#64748b',
-  dim: '#94a3b8',
+  border: '#e4e7ec',
+  cardEdge: '#e8eaef',
+  text: '#111827',
+  muted: '#6b7280',
+  dim: '#9ca3af',
   accent: '#0f766e',
-  accentSoft: 'rgba(15,118,110,0.12)',
-  accentText: '#115e59',
+  accentSoft: 'rgba(15,118,110,0.1)',
+  accentText: '#0f766e',
   accentCta: '#0d9488',
   warm: '#b45309',
-  warmSoft: 'rgba(180,83,9,0.12)',
+  warmSoft: 'rgba(180,83,9,0.1)',
   warmText: '#92400e',
   error: '#e11d48',
   errorBg: 'rgba(225,29,72,0.08)',
   headerBg: '#ffffff',
   tabBarBg: '#ffffff',
-  tabBarBorder: '#e2e8f0',
-  inputBg: '#f8fafc',
-  inputBorder: '#cbd5e1',
+  tabBarBorder: '#e4e7ec',
+  inputBg: '#f7f8fa',
+  inputBorder: '#d1d5db',
   success: '#059669',
   warning: '#d97706',
   statusActive: '#059669',

@@ -6,7 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
 import { createPlan, type PlanPayload } from '@/src/api/plans';
-import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, Field, FormScroll, Label, MoneyAmountField, PrimaryButton, Screen } from '@/src/components/Form';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { isOfflineQueued } from '@/src/offline/types';
@@ -76,7 +76,7 @@ export default function NewPlanScreen() {
           <Field value={duration} onChangeText={setDuration} keyboardType="numeric" placeholder="1" />
 
           <Label>{t('plans.priceLabel')}</Label>
-          <Field value={price} onChangeText={setPrice} keyboardType="decimal-pad" placeholder="0" />
+          <MoneyAmountField value={price} onChangeText={setPrice} placeholder="0" />
 
           <PrimaryButton
             label={t('screens.newPlan')}

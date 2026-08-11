@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Pressable } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 
 type SortOption = { id: string; label?: string; labelKey?: string };
@@ -22,12 +22,8 @@ export function SortPicker<T extends string>({
   const [open, setOpen] = useState(false);
   const styles = useThemedStyles((c) => ({
     btn: {
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: c.border,
-      backgroundColor: c.card,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
       alignSelf: 'flex-start' as const,
       justifyContent: 'center' as const,
     },
@@ -44,9 +40,9 @@ export function SortPicker<T extends string>({
 
   return (
     <>
-      <Pressable style={styles.btn} onPress={() => setOpen(true)} accessibilityRole="button">
+      <SoftSurface onPress={() => setOpen(true)} style={styles.btn} accessibilityRole="button">
         <Text style={styles.btnText}>{current}</Text>
-      </Pressable>
+      </SoftSurface>
 
       <BottomSheet visible={open} title={label} onClose={() => setOpen(false)}>
         {options.map((opt) => (

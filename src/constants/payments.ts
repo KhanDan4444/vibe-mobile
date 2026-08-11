@@ -9,6 +9,13 @@ const METHOD_LABEL_KEYS: Record<string, string> = {
   'Bank Transfer': 'revenue.methodBankTransfer',
 };
 
+/** Compact labels for tight hero method columns (Amharic-friendly). */
+const METHOD_SHORT_LABEL_KEYS: Record<string, string> = {
+  Cash: 'revenue.methodCashShort',
+  Card: 'revenue.methodCardShort',
+  'Bank Transfer': 'revenue.methodBankTransferShort',
+};
+
 /** Ionicons names for method chips. */
 const METHOD_ICONS: Record<string, 'cash-outline' | 'card-outline' | 'swap-horizontal-outline' | 'wallet-outline'> = {
   Cash: 'cash-outline',
@@ -20,6 +27,10 @@ type MethodTone = { bg: string; text: string; border: string };
 
 export function paymentMethodLabelKey(method: string) {
   return METHOD_LABEL_KEYS[method] ?? null;
+}
+
+export function paymentMethodShortLabelKey(method: string) {
+  return METHOD_SHORT_LABEL_KEYS[method] ?? paymentMethodLabelKey(method);
 }
 
 export function paymentMethodIcon(method: string) {

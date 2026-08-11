@@ -16,6 +16,9 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
+import { elevationStyle } from '@/src/theme/elevation';
+import { springs } from '@/src/theme/motion';
+import { radiusLg, radiusMd } from '@/src/theme/tokens';
 
 export type FlashVariant = 'success' | 'offline' | 'danger';
 
@@ -70,7 +73,7 @@ function FlashToastItem({
   onDismiss: (id: string) => void;
 }) {
   const { t } = useTranslation();
-  const { colors: c, isDark } = useTheme();
+  const { colors: c, theme } = useTheme();
   const [reduceMotion, setReduceMotion] = useState(false);
   const durationMs = toast.durationMs ?? FLASH_DISMISS_MS;
   const translateY = useSharedValue(18);
@@ -153,7 +156,7 @@ function FlashToastItem({
       translateY.value = 0;
       opacity.value = 1;
     } else {
-      translateY.value = withSpring(0, { damping: 18, stiffness: 260, mass: 0.75 });
+      translateY.value = withSpring(0, springs.enter);
       opacity.value = withTiming(1, { duration: 200 });
     }
     startProgress();
@@ -190,10 +193,10 @@ function FlashToastItem({
                 });
                 return;
               }
-              translateX.value = withSpring(0, { damping: 20, stiffness: 280 });
+              translateX.value = withSpring(0, springs.press);
             },
             onPanResponderTerminate: () => {
-              translateX.value = withSpring(0, { damping: 20, stiffness: 280 });
+              translateX.value = withSpring(0, springs.press);
             },
           }),
     [hasAction, opacity, translateX]
@@ -218,11 +221,10 @@ function FlashToastItem({
 
   const surface = {
     backgroundColor: c.card,
-    borderColor: c.border,
+    borderColor: c.cardEdge,
     titleColor: c.text,
     subtitleColor: c.muted,
     iconBg: `${accent}22`,
-    shadowOpacity: isDark ? 0.35 : 0.12,
   };
 
   return (
@@ -238,10 +240,10 @@ function FlashToastItem({
       <View
         style={[
           styles.bar,
+          elevationStyle('float', theme),
           {
             backgroundColor: surface.backgroundColor,
             borderColor: surface.borderColor,
-            shadowOpacity: surface.shadowOpacity,
           },
         ]}
       >
@@ -347,15 +349,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     minHeight: 52,
-    borderRadius: 12,
+    borderRadius: radiusLg,
     borderWidth: StyleSheet.hairlineWidth,
     paddingVertical: 10,
     paddingRight: 4,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
   },
   bodyPress: {
     flex: 1,
@@ -373,7 +371,7 @@ const styles = StyleSheet.create({
   iconWrap: {
     width: 30,
     height: 30,
-    borderRadius: 8,
+    borderRadius: radiusMd,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,

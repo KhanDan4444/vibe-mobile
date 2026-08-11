@@ -12,8 +12,10 @@ import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { EmptyState } from '@/src/components/EmptyState';
 import { useTheme } from '@/src/context/PreferencesContext';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
+import { fabElevation } from '@/src/theme/elevation';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { isGymOwner } from '@/src/utils/roles';
@@ -36,12 +38,8 @@ function StaffCard({
   const { t } = useTranslation();
   const styles = useThemedStyles((c) => ({
     card: {
-      backgroundColor: c.card,
-      borderRadius: 12,
       padding: 16,
-      marginBottom: 10,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: c.border,
+      marginBottom: 12,
     },
     cardColumn: { marginBottom: 0 },
     headerRow: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 8 },
@@ -73,10 +71,10 @@ function StaffCard({
   ];
 
   return (
-    <View style={[styles.card, multiColumn && styles.cardColumn, multiColumn && columnStyle]}>
+    <SoftSurface variant="panel" style={[styles.card, multiColumn && styles.cardColumn, multiColumn && columnStyle]}>
       <View style={styles.headerRow}>
         <View style={styles.cardMain}>
-          <Text style={styles.name}>{member.name}</Text>
+          <Text listRow style={styles.name}>{member.name}</Text>
           <Text style={styles.meta}>{member.username || member.email || '—'}</Text>
           <Text style={styles.meta}>
             {member.branch_name ? branchDisplayName(member.branch_name) : t('team.noBranch')}
@@ -87,7 +85,7 @@ function StaffCard({
         </View>
         <ActionOverflowMenu items={menuItems} />
       </View>
-    </View>
+    </SoftSurface>
   );
 }
 
@@ -95,7 +93,7 @@ export default function TeamScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { token, user, subscription } = useAuth();
-  const { colors: c } = useTheme();
+  const { colors: c, theme } = useTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { pagePadding, fabRight, fabSize, fabRadius, fabFontSize, listColumnItemStyle } = useResponsiveLayout();
@@ -124,7 +122,6 @@ export default function TeamScreen() {
       backgroundColor: colors.accent,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
-      elevation: 2,
     },
     fabText: { color: '#fff', fontSize: 26, fontWeight: '300' as const, marginTop: -2 },
   }));
@@ -206,7 +203,7 @@ export default function TeamScreen() {
 
       {!readOnly ? (
         <Pressable
-          style={[styles.fab, { right: fabRight, bottom: fabBottom, width: fabSize, height: fabSize, borderRadius: fabRadius }]}
+          style={[styles.fab, fabElevation(theme), { right: fabRight, bottom: fabBottom, width: fabSize, height: fabSize, borderRadius: fabRadius }]}
           onPress={() => router.push('/team/new')}
         >
           <Text style={[styles.fabText, { fontSize: fabFontSize }]}>+</Text>

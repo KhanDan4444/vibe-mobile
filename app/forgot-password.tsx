@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, Pressable, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, Pressable } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { requestForgotPasswordOtp, resetPasswordWithOtp } from '@/src/api/auth';
+import { AuthScreen } from '@/src/components/AuthScreen';
+import { AuthStepDots } from '@/src/components/AuthStepDots';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { ErrorBanner, Field, FormScroll, Label, PrimaryButton } from '@/src/components/Form';
-import { AuthScreen } from '@/src/components/AuthScreen';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { isValidEthiopianPhone } from '@/src/utils/phone';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
@@ -28,6 +30,9 @@ export default function ForgotPasswordScreen() {
   const [showSupportOption, setShowSupportOption] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+
+  const stepIndex = step === 'request' ? 0 : 1;
+  const stepSubtitle = step === 'request' ? t('forgot.stepRequest') : t('forgot.stepReset');
 
   const requestOtp = async () => {
     setError('');
@@ -86,9 +91,12 @@ export default function ForgotPasswordScreen() {
   return (
     <AuthScreen>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <FormScroll contentContainerStyle={{ paddingTop: 72 }}>
-          <Text style={[styles.title, { color: c.text }]}>{t('forgot.title')}</Text>
-          <Text style={[styles.subtitle, { color: c.muted }]}>{t('forgot.subtitle')}</Text>
+        <FormScroll contentContainerStyle={{ paddingTop: 56 }}>
+          <AuthStepDots activeIndex={stepIndex} steps={2} />
+          <Text display style={[styles.title, { color: c.text }]}>
+            {t('forgot.title')}
+          </Text>
+          <Text style={[styles.subtitle, { color: c.muted }]}>{stepSubtitle}</Text>
           <ErrorBanner message={error} />
           {message ? <Text style={[styles.message, { color: c.success }]}>{message}</Text> : null}
 
@@ -138,11 +146,11 @@ export default function ForgotPasswordScreen() {
           </Pressable>
 
           {showSupportOption ? (
-            <View style={[styles.supportCard, { backgroundColor: c.card, borderColor: c.border }]}>
+            <SoftSurface variant="panel" style={styles.supportCard}>
               <Text style={[styles.supportTitle, { color: c.text }]}>{t('forgot.supportTitle')}</Text>
               <Text style={[styles.supportBody, { color: c.muted }]}>{t('forgot.supportBody')}</Text>
               <Text style={[styles.supportBody, { color: c.muted }]}>{t('forgot.supportAfterReset')}</Text>
-            </View>
+            </SoftSurface>
           ) : null}
 
           <Pressable style={styles.back} onPress={() => router.replace('/login')}>
@@ -167,17 +175,15 @@ export default function ForgotPasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 26, fontWeight: '700', textAlign: 'center' },
-  subtitle: { marginTop: 8, marginBottom: 24, fontSize: 14, lineHeight: 21, textAlign: 'center' },
+  title: { fontSize: 26, fontWeight: '600', textAlign: 'center', letterSpacing: -0.4 },
+  subtitle: { marginTop: 8, marginBottom: 20, fontSize: 14, lineHeight: 21, textAlign: 'center' },
   hint: { marginTop: -4, marginBottom: 12, fontSize: 12, lineHeight: 18 },
   message: { marginBottom: 12, fontSize: 14, textAlign: 'center' },
   secondary: { alignItems: 'center', paddingVertical: 14 },
   back: { alignItems: 'center', paddingVertical: 18 },
   secondaryText: { fontSize: 14, fontWeight: '600' },
   supportCard: {
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 14,
+    padding: 16,
     marginTop: 4,
   },
   supportTitle: { fontSize: 15, fontWeight: '700', marginBottom: 8 },

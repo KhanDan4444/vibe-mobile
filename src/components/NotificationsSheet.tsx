@@ -1,16 +1,18 @@
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
+import { BottomSheet } from '@/src/components/BottomSheet';
 import { PageSkeleton } from '@/src/components/Skeleton';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useNotificationInbox } from '@/src/notifications/NotificationInboxContext';
 import type { DashboardNotification } from '@/src/types/api';
 import type { ThemeColors } from '@/src/theme/tokens';
+import { radiusMd, space } from '@/src/theme/tokens';
 import {
   notificationAction,
   notificationActionColor,
@@ -29,6 +31,11 @@ function colorsForType(type: string, c: ThemeColors) {
   if (type === 'danger') return { icon: '#f87171', bg: 'rgba(248,113,113,0.12)' };
   if (type === 'warning') return { icon: c.warning, bg: 'rgba(251,191,36,0.12)' };
   return { icon: c.accentText, bg: c.accentSoft };
+}
+
+function branchLabel(item: DashboardNotification): string | undefined {
+  const row = item as DashboardNotification & { branchName?: string; branch_name?: string };
+  return row.branchName ?? row.branch_name;
 }
 
 function NotificationRow({
@@ -54,10 +61,10 @@ function NotificationRow({
 }) {
   const { t } = useTranslation();
   const resolved = notificationAction(item);
-  // Match web: renew/payment gated by read-only; View member always available.
   const action = resolved && (resolved === 'view' || !readOnly) ? resolved : null;
   const palette = colorsForType(item.type, c);
   const message = stripBranchBracketPrefix(item.message);
+  const branch = branchLabel(item);
 
   return (
     <View
@@ -78,7 +85,7 @@ function NotificationRow({
           </Text>
           {!isRead ? <View style={[styles.unreadDot, { backgroundColor: c.accentText }]} /> : null}
         </View>
-        {showBranchBadge && item.branchName ? (
+        {showBranchBadge && branch ? (
           <View
             style={[
               styles.branchBadge,
@@ -88,7 +95,7 @@ function NotificationRow({
               },
             ]}
           >
-            <Text style={[styles.branchBadgeText, { color: c.accentText }]}>{item.branchName}</Text>
+            <Text style={[styles.branchBadgeText, { color: c.accentText }]}>{branch}</Text>
           </View>
         ) : null}
         <Text style={[styles.rowMessage, { color: c.muted }]} numberOfLines={3}>
@@ -116,7 +123,6 @@ function NotificationRow({
 
 export function NotificationsSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { readOnly } = useGymReadOnly();
   const { selectedBranchId } = useBranchScope();
   const { colors: c } = useTheme();
@@ -139,100 +145,63 @@ export function NotificationsSheet({ visible, onClose }: { visible: boolean; onC
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <Pressable style={styles.backdrop} onPress={onClose} />
-        <View
-          style={[
-            styles.sheet,
-            { backgroundColor: c.bg, paddingBottom: Math.max(insets.bottom, 16) },
-          ]}
-        >
-          <View style={[styles.handle, { backgroundColor: c.border }]} />
-          <View style={[styles.header, { borderBottomColor: c.border }]}>
-            <View style={styles.headerText}>
-              <Text style={[styles.title, { color: c.text }]}>{t('notifications.title')}</Text>
-              <Text style={[styles.subtitle, { color: c.muted }]}>
-                {unread > 0 ? t('notifications.unread', { count: unread }) : t('notifications.caughtUp')}
-              </Text>
-            </View>
-            {unread > 0 ? (
-              <Pressable onPress={markAllRead} hitSlop={8}>
-                <Text style={[styles.markAll, { color: c.accentText }]}>{t('notifications.markAllRead')}</Text>
-              </Pressable>
-            ) : null}
-          </View>
-
-          <ScrollView
-            style={styles.scroll}
-            contentContainerStyle={styles.list}
-            showsVerticalScrollIndicator={false}
-          >
-            {loading ? (
-              <PageSkeleton variant="list-rows" count={4} padded={false} />
-            ) : notifications.length === 0 ? (
-              <Text style={[styles.empty, { color: c.dim }]}>{t('notifications.empty')}</Text>
-            ) : (
-              <View style={[styles.listCard, { backgroundColor: c.card, borderColor: c.border }]}>
-                {notifications.map((item, index) => (
-                  <NotificationRow
-                    key={item.id}
-                    item={item}
-                    isRead={isRead(item.id)}
-                    readOnly={readOnly}
-                    showBranchBadge={showBranchBadge}
-                    colors={c}
-                    isLast={index === notifications.length - 1}
-                    onOpenMember={() => openMember(item)}
-                    onAction={() => runAction(item)}
-                    onDismiss={() => dismiss(item.id)}
-                  />
-                ))}
-              </View>
-            )}
-          </ScrollView>
-        </View>
+    <BottomSheet
+      visible={visible}
+      title={t('notifications.title')}
+      onClose={onClose}
+      showCloseButton
+    >
+      <View style={styles.metaRow}>
+        <Text style={[styles.subtitle, { color: c.muted }]}>
+          {unread > 0 ? t('notifications.unread', { count: unread }) : t('notifications.caughtUp')}
+        </Text>
+        {unread > 0 ? (
+          <Pressable onPress={markAllRead} hitSlop={8}>
+            <Text style={[styles.markAll, { color: c.accentText }]}>{t('notifications.markAllRead')}</Text>
+          </Pressable>
+        ) : null}
       </View>
-    </Modal>
+
+      {loading ? (
+        <PageSkeleton variant="list-rows" count={4} padded={false} />
+      ) : notifications.length === 0 ? (
+        <Text style={[styles.empty, { color: c.dim }]}>{t('notifications.empty')}</Text>
+      ) : (
+        <SoftSurface variant="group" style={styles.listCard}>
+          {notifications.map((item, index) => (
+            <NotificationRow
+              key={item.id}
+              item={item}
+              isRead={isRead(item.id)}
+              readOnly={readOnly}
+              showBranchBadge={showBranchBadge}
+              colors={c}
+              isLast={index === notifications.length - 1}
+              onOpenMember={() => openMember(item)}
+              onAction={() => runAction(item)}
+              onDismiss={() => dismiss(item.id)}
+            />
+          ))}
+        </SoftSurface>
+      )}
+    </BottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, justifyContent: 'flex-end' },
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.5)' },
-  sheet: {
-    maxHeight: '85%',
-    width: '100%',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  handle: {
-    alignSelf: 'center',
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    marginTop: 10,
-    marginBottom: 4,
-  },
-  header: {
+  metaRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+    marginBottom: space.md,
+    gap: space.sm,
   },
-  headerText: { flex: 1, marginRight: 12 },
-  title: { fontSize: 18, fontWeight: '700' },
-  subtitle: { marginTop: 2, fontSize: 13 },
-  markAll: { fontSize: 13, fontWeight: '600', paddingTop: 2 },
-  scroll: { flexGrow: 0 },
-  list: { padding: 16, paddingBottom: 24 },
+  subtitle: { fontSize: 13, flex: 1 },
+  markAll: { fontSize: 13, fontWeight: '600' },
   listCard: {
-    borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
+    paddingVertical: 0,
+    paddingHorizontal: 0,
   },
   row: {
     flexDirection: 'row',
@@ -259,8 +228,8 @@ const styles = StyleSheet.create({
     marginTop: 6,
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 999,
-    borderWidth: 1,
+    borderRadius: radiusMd,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   branchBadgeText: { fontSize: 10, fontWeight: '700' },
   rowMessage: { marginTop: 4, fontSize: 13, lineHeight: 19 },
@@ -269,7 +238,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: radiusMd,
   },
   actionText: { color: '#fff', fontSize: 13, fontWeight: '600' },
   dismissBtn: { padding: 4, marginTop: 2 },

@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useBranchScope, type BranchSelection } from '@/src/context/BranchContext';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
@@ -48,17 +49,13 @@ export function BranchFilterBar({ horizontalPadding = 16 }: { horizontalPadding?
 
   return (
     <View style={[styles.wrap, { paddingHorizontal: horizontalPadding }]}>
-      <Pressable
-        style={[styles.btn, { backgroundColor: c.card, borderColor: c.border }]}
-        onPress={() => setOpen(true)}
-        accessibilityRole="button"
-      >
+      <SoftSurface onPress={() => setOpen(true)} style={styles.btn} accessibilityRole="button">
         <Ionicons name="location-outline" size={18} color={c.muted} />
         <Text style={[styles.label, { color: c.text }]} numberOfLines={1}>
           {currentLabel}
         </Text>
         <Ionicons name="chevron-down" size={18} color={c.muted} />
-      </Pressable>
+      </SoftSurface>
 
       <BottomSheet visible={open} title={t('branch.pickBranch')} onClose={() => setOpen(false)}>
         <SheetOption label={allLabel} selected={selectedBranchId === 'all'} onPress={() => pick('all')} />
@@ -95,8 +92,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    borderWidth: 1,
-    borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
     minHeight: 48,

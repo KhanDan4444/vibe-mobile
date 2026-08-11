@@ -1,17 +1,22 @@
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useTheme } from '@/src/context/PreferencesContext';
-import { radiusMd } from '@/src/theme/tokens';
+import { elevationStyle } from '@/src/theme/elevation';
+import { radiusLg, radiusMd } from '@/src/theme/tokens';
 
 type CardProps = {
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
-  /** Softer surface for nested metrics / list sections */
+  /** Softer inset surface for nested metrics / list sections */
   quiet?: boolean;
+  /** Soft lift — default on raised cards for a modern, comfortable feel. */
+  elevated?: boolean;
 };
 
-/** Softer surface for nested metrics / list sections (surface tier in light). */
-export default function Card({ children, style, quiet = false }: CardProps) {
-  const { colors: c } = useTheme();
+/** Soft surface with optional elevation — primary building block for calm UI. */
+export default function Card({ children, style, quiet = false, elevated }: CardProps) {
+  const { colors: c, theme } = useTheme();
+  const lift = elevated !== false;
+  const level = quiet ? 'soft' : 'raised';
 
   return (
     <View
@@ -19,9 +24,10 @@ export default function Card({ children, style, quiet = false }: CardProps) {
         styles.base,
         {
           backgroundColor: quiet ? c.inputBg : c.card,
-          borderColor: c.cardEdge,
-          borderRadius: radiusMd,
+          borderColor: quiet ? c.border : c.cardEdge,
+          borderRadius: quiet ? radiusMd : radiusLg,
         },
+        lift ? elevationStyle(level, theme) : null,
         style,
       ]}
     >
@@ -32,6 +38,7 @@ export default function Card({ children, style, quiet = false }: CardProps) {
 
 const styles = StyleSheet.create({
   base: {
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: 'visible',
   },
 });

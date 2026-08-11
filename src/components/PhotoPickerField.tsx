@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Alert, Image, Pressable, View } from 'react-native';
+import { Alert, Image, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useTranslation } from 'react-i18next';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
 import { Label } from '@/src/components/Form';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { compressMemberPhoto } from '@/src/utils/compressMemberPhoto';
@@ -49,10 +50,6 @@ export function PhotoPickerField({
     placeholderText: { color: colors.dim, fontSize: 11 },
     actions: { flex: 1, gap: 8 },
     btn: {
-      backgroundColor: colors.card,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 8,
       paddingVertical: 12,
       paddingHorizontal: 14,
       minHeight: 44,
@@ -82,6 +79,13 @@ export function PhotoPickerField({
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
       backgroundColor: colors.accentSoft,
+    },
+    sheetOption: {
+      paddingVertical: 14,
+      paddingHorizontal: 14,
+      marginBottom: 8,
+      minHeight: 56,
+      justifyContent: 'center' as const,
     },
     cancelWrap: { marginTop: 8 },
   }));
@@ -149,23 +153,23 @@ export function PhotoPickerField({
           )}
         </View>
         <View style={styles.actions}>
-          <Pressable
+          <SoftSurface
+            onPress={pickBlocked ? undefined : openPhotoActions}
             style={[styles.btn, pickBlocked ? styles.btnDisabled : null]}
-            onPress={openPhotoActions}
-            disabled={pickBlocked}
             accessibilityLabel={addLabel}
+            flat={pickBlocked}
           >
             <Text style={styles.btnText}>{addLabel}</Text>
-          </Pressable>
+          </SoftSurface>
           {previewUri ? (
-            <Pressable
+            <SoftSurface
+              flat
+              onPress={processing ? undefined : () => onChange('', '')}
               style={[styles.btn, styles.btnSecondary]}
-              onPress={() => onChange('', '')}
-              disabled={processing}
               accessibilityLabel={t('photo.remove')}
             >
               <Text style={styles.btnTextSecondary}>{t('photo.remove')}</Text>
-            </Pressable>
+            </SoftSurface>
           ) : null}
         </View>
       </View>
@@ -176,21 +180,9 @@ export function PhotoPickerField({
         onClose={closeSheet}
         showCloseButton
       >
-        <Pressable
-          style={[
-            {
-              paddingVertical: 14,
-              paddingHorizontal: 14,
-              borderRadius: 10,
-              borderWidth: 1,
-              borderColor: c.border,
-              backgroundColor: c.card,
-              marginBottom: 8,
-              minHeight: 56,
-              justifyContent: 'center',
-            },
-          ]}
+        <SoftSurface
           onPress={() => void pickFromCamera()}
+          style={styles.sheetOption}
           accessibilityRole="button"
         >
           <View style={styles.optionRow}>
@@ -202,23 +194,11 @@ export function PhotoPickerField({
             </Text>
             <Ionicons name="chevron-forward" size={18} color={c.muted} />
           </View>
-        </Pressable>
+        </SoftSurface>
 
-        <Pressable
-          style={[
-            {
-              paddingVertical: 14,
-              paddingHorizontal: 14,
-              borderRadius: 10,
-              borderWidth: 1,
-              borderColor: c.border,
-              backgroundColor: c.card,
-              marginBottom: 8,
-              minHeight: 56,
-              justifyContent: 'center',
-            },
-          ]}
+        <SoftSurface
           onPress={() => void pickFromLibrary()}
+          style={styles.sheetOption}
           accessibilityRole="button"
         >
           <View style={styles.optionRow}>
@@ -230,7 +210,7 @@ export function PhotoPickerField({
             </Text>
             <Ionicons name="chevron-forward" size={18} color={c.muted} />
           </View>
-        </Pressable>
+        </SoftSurface>
 
         <View style={styles.cancelWrap}>
           <SheetOption label={t('common.cancel')} onPress={closeSheet} />

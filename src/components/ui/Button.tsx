@@ -1,7 +1,17 @@
-import { ActivityIndicator, Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTheme } from '@/src/context/PreferencesContext';
+import { elevationStyle } from '@/src/theme/elevation';
+import { springs } from '@/src/theme/motion';
 import { radiusMd } from '@/src/theme/tokens';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 type ButtonProps = {
   label: string;
@@ -19,42 +29,58 @@ function AppButton({
   style,
   variant,
 }: ButtonProps & { variant: 'primary' | 'secondary' }) {
-  const { colors: c } = useTheme();
+  const { colors: c, theme } = useTheme();
   const idle = Boolean(disabled && !loading);
   const busy = Boolean(loading);
   const primary = variant === 'primary';
+  const scale = useSharedValue(1);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const setPressed = (down: boolean) => {
+    if (busy || idle) return;
+    scale.value = withSpring(down ? 0.97 : 1, springs.press);
+  };
 
   return (
-    <Pressable
+    <AnimatedPressable
       accessibilityRole="button"
       disabled={disabled || loading}
-      onPress={onPress}
-      android_ripple={{ color: 'transparent' }}
-      style={({ pressed }) => {
-        const active = pressed && !busy && !idle;
-        return [
-          styles.base,
-          primary
-            ? {
-                backgroundColor: c.accent,
-                borderColor: c.accent,
-                opacity: idle ? 0.55 : active ? 0.88 : 1,
-              }
-            : {
-                backgroundColor: active ? c.accentSoft : 'transparent',
-                borderColor: c.accentText,
-                opacity: idle ? 0.55 : active ? 0.92 : 1,
-              },
-          style,
-        ];
+      onPress={() => {
+        if (Platform.OS !== 'web') {
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        }
+        onPress?.();
       }}
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      android_ripple={{ color: 'transparent' }}
+      style={[
+        animStyle,
+        styles.base,
+        primary
+          ? {
+              backgroundColor: c.accent,
+              borderColor: c.accent,
+              opacity: idle ? 0.55 : 1,
+              ...(idle ? {} : elevationStyle('soft', theme)),
+            }
+          : {
+              backgroundColor: 'transparent',
+              borderColor: c.accentText,
+              opacity: idle ? 0.55 : 1,
+            },
+        style,
+      ]}
     >
       {busy ? (
         <ActivityIndicator color={primary ? '#fff' : c.accentText} />
       ) : (
         <Text style={[styles.label, { color: primary ? '#fff' : c.accentText }]}>{label}</Text>
       )}
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
@@ -75,7 +101,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    overflow: 'hidden',
   },
   label: {
     fontSize: 16,

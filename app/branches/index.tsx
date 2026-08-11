@@ -10,9 +10,11 @@ import { fetchBranches } from '@/src/api/branches';
 import { ActionOverflowMenu } from '@/src/components/ActionOverflowMenu';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { EmptyState } from '@/src/components/EmptyState';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
+import { fabElevation } from '@/src/theme/elevation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { isGymOwner } from '@/src/utils/roles';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
@@ -34,12 +36,8 @@ function BranchCard({
   const { t } = useTranslation();
   const styles = useThemedStyles((c) => ({
     card: {
-      backgroundColor: c.card,
-      borderRadius: 12,
       padding: 16,
-      marginBottom: 10,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: c.border,
+      marginBottom: 12,
     },
     cardColumn: { marginBottom: 0 },
     headerRow: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 8 },
@@ -92,11 +90,11 @@ function BranchCard({
     : [];
 
   return (
-    <View style={[styles.card, multiColumn && styles.cardColumn, multiColumn && columnStyle]}>
+    <SoftSurface variant="panel" style={[styles.card, multiColumn && styles.cardColumn, multiColumn && columnStyle]}>
       <View style={styles.headerRow}>
         <View style={styles.cardMain}>
           <View style={styles.nameRow}>
-            <Text style={styles.name}>{branchDisplayName(branch.name)}</Text>
+            <Text listRow style={styles.name}>{branchDisplayName(branch.name)}</Text>
             {branch.is_default ? <Text style={styles.defaultBadge}>{t('common.defaultBranch')}</Text> : null}
           </View>
           {branch.phone ? <Text style={styles.meta}>{branch.phone}</Text> : null}
@@ -111,7 +109,7 @@ function BranchCard({
         </View>
         {menuItems.length ? <ActionOverflowMenu items={menuItems} /> : null}
       </View>
-    </View>
+    </SoftSurface>
   );
 }
 
@@ -119,7 +117,7 @@ export default function BranchesScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { token, user, subscription } = useAuth();
-  const { colors: c } = useTheme();
+  const { colors: c, theme } = useTheme();
   const insets = useSafeAreaInsets();
   const { pagePadding, fabRight, fabSize, fabRadius, fabFontSize, listColumnItemStyle } = useResponsiveLayout();
   const listColumns = 1;
@@ -137,7 +135,6 @@ export default function BranchesScreen() {
       backgroundColor: colors.accent,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
-      elevation: 2,
     },
     fabText: { color: '#fff', fontSize: 26, fontWeight: '300' as const, marginTop: -2 },
   }));
@@ -203,7 +200,7 @@ export default function BranchesScreen() {
 
       {owner && !readOnly ? (
         <Pressable
-          style={[styles.fab, { right: fabRight, bottom: fabBottom, width: fabSize, height: fabSize, borderRadius: fabRadius }]}
+          style={[styles.fab, fabElevation(theme), { right: fabRight, bottom: fabBottom, width: fabSize, height: fabSize, borderRadius: fabRadius }]}
           onPress={() => router.push('/branch/new')}
         >
           <Text style={[styles.fabText, { fontSize: fabFontSize }]}>+</Text>

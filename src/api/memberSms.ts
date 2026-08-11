@@ -4,7 +4,7 @@ import type { MemberSmsRow, PaginatedResponse } from '@/src/types/api';
 export interface MemberSmsParams {
   page?: number;
   limit?: number;
-  type?: 'all' | 'member_due_soon' | 'member_expires_today' | 'member_expired';
+  type?: 'all' | 'member_due_soon' | 'member_expires_today' | 'member_expired' | 'member_enrolled' | 'member_renewed';
   branch_id?: number | string;
 }
 

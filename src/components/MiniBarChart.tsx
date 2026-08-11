@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, View, type GestureResponderEvent } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View, type GestureResponderEvent } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
@@ -145,7 +145,7 @@ function ChartSummaryFooter({
         </Text>
         <View style={styles.labelsCenter}>
           <Text style={styles.footerCaption}>{caption}</Text>
-          <Text style={[styles.footerAmount, styles.amountText]} numberOfLines={1}>
+          <Text style={[styles.footerAmount, styles.amountText, styles.footerAmountHero]} numberOfLines={1}>
             {formatEtb(Number(focus.amount), { forceCompact: true })}
           </Text>
         </View>
@@ -208,8 +208,8 @@ function LineChartView({
         <Svg width="100%" height="100%" viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} preserveAspectRatio="xMidYMid meet">
           <Defs>
             <LinearGradient id="revenueAreaFill" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor={styles.chartLine.color} stopOpacity="0.34" />
-              <Stop offset="1" stopColor={styles.chartLine.color} stopOpacity="0.03" />
+              <Stop offset="0" stopColor={styles.chartLine.color} stopOpacity="0.18" />
+              <Stop offset="1" stopColor={styles.chartLine.color} stopOpacity="0.02" />
             </LinearGradient>
           </Defs>
           {[0.25, 0.5, 0.75].map((ratio) => (
@@ -341,18 +341,17 @@ function BarChartView({
         <Svg pointerEvents="none" width="100%" height="100%" viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} preserveAspectRatio="xMidYMid meet">
           <Defs>
             <LinearGradient id="barFill" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor={accent} stopOpacity="1" />
-              <Stop offset="0.55" stopColor={barMid} stopOpacity="0.95" />
-              <Stop offset="1" stopColor={barBottom} stopOpacity="0.9" />
+              <Stop offset="0" stopColor={accent} stopOpacity="0.92" />
+              <Stop offset="0.55" stopColor={barMid} stopOpacity="0.82" />
+              <Stop offset="1" stopColor={barBottom} stopOpacity="0.72" />
             </LinearGradient>
             <LinearGradient id="barPeakFill" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor="#ffffff" stopOpacity="0.95" />
-              <Stop offset="0.08" stopColor={accent} stopOpacity="1" />
-              <Stop offset="1" stopColor={barBottom} stopOpacity="1" />
+              <Stop offset="0" stopColor={accent} stopOpacity="1" />
+              <Stop offset="1" stopColor={barBottom} stopOpacity="0.88" />
             </LinearGradient>
             <LinearGradient id="barShine" x1="0" y1="0" x2="1" y2="0">
               <Stop offset="0" stopColor="#ffffff" stopOpacity="0" />
-              <Stop offset="0.45" stopColor="#ffffff" stopOpacity="0.22" />
+              <Stop offset="0.45" stopColor="#ffffff" stopOpacity="0.1" />
               <Stop offset="1" stopColor="#ffffff" stopOpacity="0" />
             </LinearGradient>
           </Defs>
@@ -390,9 +389,9 @@ function BarChartView({
             return (
               <Path
                 key={`glow-${point.date}`}
-                d={barTopRoundedPath(x - 1.5, y - 1, barWidth + 3, barHeight + 1)}
+                d={barTopRoundedPath(x - 1, y - 0.5, barWidth + 2, barHeight + 0.5)}
                 fill={accent}
-                opacity={highlighted ? 0.2 : 0}
+                opacity={highlighted ? 0.08 : 0}
               />
             );
           })}
@@ -411,9 +410,9 @@ function BarChartView({
                 key={point.date}
                 d={path}
                 fill={highlighted ? 'url(#barPeakFill)' : 'url(#barFill)'}
-                stroke={highlighted ? '#ffffff' : accent}
-                strokeOpacity={highlighted ? 0.45 : 0.12}
-                strokeWidth={highlighted ? 1.2 : 0.8}
+                stroke={accent}
+                strokeOpacity={highlighted ? 0.22 : 0.08}
+                strokeWidth={highlighted ? 1 : 0.6}
               />
             );
           })}
@@ -422,8 +421,8 @@ function BarChartView({
             const barHeight = Math.max(6, (amount / max) * (plotHeight - 8));
             const x = clusterStart + index * (barWidth + gap);
             const y = baselineY - barHeight;
-            const shineHeight = Math.min(barHeight * 0.42, 22);
-            if (shineHeight < 4) return null;
+            const shineHeight = Math.min(barHeight * 0.28, 14);
+            if (shineHeight < 5) return null;
 
             return (
               <Rect
@@ -434,7 +433,7 @@ function BarChartView({
                 height={shineHeight}
                 rx={3}
                 fill="url(#barShine)"
-                opacity={0.85}
+                opacity={0.55}
               />
             );
           })}
@@ -667,17 +666,13 @@ function useChartStyles() {
     chartShell: {
       marginTop: 10,
       overflow: 'hidden' as const,
-      borderRadius: 14,
-      backgroundColor: c.accentSoft,
+      borderRadius: 16,
+      backgroundColor: c.inputBg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.cardEdge,
     },
-    barShell: {
-      borderWidth: 1,
-      borderColor: c.border,
-    },
-    pieShell: {
-      borderWidth: 1,
-      borderColor: c.border,
-    },
+    barShell: {},
+    pieShell: {},
     labels: {
       flexDirection: 'row' as const,
       justifyContent: 'space-between' as const,
@@ -689,6 +684,7 @@ function useChartStyles() {
     footerBlock: { marginTop: 8 },
     footerCaption: { fontSize: 10, color: c.dim, textTransform: 'uppercase' as const, letterSpacing: 0.4 },
     footerAmount: { marginTop: 2, fontSize: 16, fontWeight: '700' as const },
+    footerAmountHero: { fontWeight: '800' as const, letterSpacing: -0.2 },
     amountText: { color: c.text },
     label: { fontSize: 11, color: c.dim },
     muted: { color: c.muted },
@@ -699,16 +695,16 @@ function useChartStyles() {
     barBottom: { color: c.accent },
     grid: { color: c.border },
     pieTrack: { color: c.border },
-    pieGap: { color: c.card },
-    pieHub: { color: c.card },
+    pieGap: { color: c.inputBg },
+    pieHub: { color: c.inputBg },
     pieLegend: { marginTop: 12, gap: 8, paddingRight: 8 },
     pieLegendCard: {
       backgroundColor: c.card,
       borderRadius: 12,
       paddingHorizontal: 12,
       paddingVertical: 10,
-      borderWidth: 1,
-      borderColor: c.border,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.cardEdge,
       minWidth: 108,
     },
     pieLegendCardSelected: {

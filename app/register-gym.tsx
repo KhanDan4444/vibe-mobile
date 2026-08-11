@@ -4,10 +4,12 @@ import { AppText as Text } from '@/src/components/AppText';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { completeGymSignup, getPublicSaasPlans, requestGymSignupOtp } from '@/src/api/auth';
+import { AuthScreen } from '@/src/components/AuthScreen';
+import { AuthStepDots } from '@/src/components/AuthStepDots';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { OptionPickerField } from '@/src/components/OptionPickerField';
 import { ErrorBanner, Field, FormScroll, Label, PrimaryButton } from '@/src/components/Form';
-import { AuthScreen } from '@/src/components/AuthScreen';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { PageSkeleton } from '@/src/components/Skeleton';
 import { useTheme } from '@/src/context/PreferencesContext';
 import type { PublicSaasPlan } from '@/src/types/api';
@@ -15,6 +17,8 @@ import { formatEtb } from '@/src/utils/formatMoney';
 import { isValidEthiopianPhone, normalizeEthiopianPhone } from '@/src/utils/phone';
 
 const USERNAME_RE = /^[a-z0-9._]{3,30}$/;
+const STEPS = ['phone', 'gym', 'account'] as const;
+type SignupStep = (typeof STEPS)[number];
 
 export default function RegisterGymScreen() {
   const { t } = useTranslation();
@@ -22,7 +26,7 @@ export default function RegisterGymScreen() {
 
   const [plans, setPlans] = useState<PublicSaasPlan[]>([]);
   const [plansLoading, setPlansLoading] = useState(true);
-  const [step, setStep] = useState<'phone' | 'details'>('phone');
+  const [step, setStep] = useState<SignupStep>('phone');
   const [sessionId, setSessionId] = useState('');
   const [verifiedPhone, setVerifiedPhone] = useState('');
   const [phone, setPhone] = useState('');
@@ -39,6 +43,10 @@ export default function RegisterGymScreen() {
   const [loading, setLoading] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+
+  const stepIndex = STEPS.indexOf(step);
+  const stepSubtitle =
+    step === 'phone' ? t('signup.stepPhone') : step === 'gym' ? t('signup.stepGym') : t('signup.stepAccount');
 
   useEffect(() => {
     let cancelled = false;
@@ -66,7 +74,7 @@ export default function RegisterGymScreen() {
         value: String(p.id),
         label: `${p.name} — ${formatEtb(Number(p.price))} / ${p.duration}mo`,
       })),
-    [plans]
+    [plans],
   );
 
   const requestOtp = async () => {
@@ -93,7 +101,7 @@ export default function RegisterGymScreen() {
       setSessionId(data.sessionId);
       setVerifiedPhone(normalized);
       setMessage(data.message || t('signup.otpSent'));
-      setStep('details');
+      setStep('gym');
     } catch (e) {
       setError(e instanceof Error ? e.message : t('signup.otpFailed'));
     } finally {
@@ -101,14 +109,34 @@ export default function RegisterGymScreen() {
     }
   };
 
-  const submitSignup = async () => {
+  const continueGym = () => {
     setError('');
     if (!code.trim()) {
       setError(t('signup.codeRequired'));
       return;
     }
-    if (!gymName.trim() || !ownerName.trim()) {
-      setError(t('signup.namesRequired'));
+    if (!gymName.trim()) {
+      setError(t('signup.gymNameRequired'));
+      return;
+    }
+    if (!saasPlanId) {
+      setError(t('signup.planRequired'));
+      return;
+    }
+    setStep('account');
+  };
+
+  const backToPhone = () => {
+    setStep('phone');
+    setCode('');
+    setError('');
+    setMessage('');
+  };
+
+  const submitSignup = async () => {
+    setError('');
+    if (!ownerName.trim()) {
+      setError(t('signup.ownerNameRequired'));
       return;
     }
     const cleanUsername = username.trim().toLowerCase();
@@ -122,10 +150,6 @@ export default function RegisterGymScreen() {
     }
     if (password !== confirm) {
       setError(t('signup.passwordMismatch'));
-      return;
-    }
-    if (!saasPlanId) {
-      setError(t('signup.planRequired'));
       return;
     }
 
@@ -142,9 +166,7 @@ export default function RegisterGymScreen() {
         saas_plan_id: parseInt(saasPlanId, 10),
       };
       const trimmedEmail = email.trim().toLowerCase();
-      const data = await completeGymSignup(
-        trimmedEmail ? { ...payload, email: trimmedEmail } : payload
-      );
+      const data = await completeGymSignup(trimmedEmail ? { ...payload, email: trimmedEmail } : payload);
       setSuccessMessage(data.message || t('signup.successBody'));
       setSuccessOpen(true);
     } catch (e) {
@@ -165,12 +187,12 @@ export default function RegisterGymScreen() {
   if (plans.length === 0) {
     return (
       <AuthScreen>
-        <View style={[styles.centered, styles.unavailableCard, { backgroundColor: c.card, borderColor: c.border }]}>
+        <SoftSurface variant="panel" style={[styles.centered, styles.unavailableCard]}>
           <Text style={[styles.unavailableText, { color: c.muted }]}>{t('signup.unavailable')}</Text>
           <Pressable onPress={() => router.replace('/login')} style={styles.backLink}>
             <Text style={[styles.backLinkText, { color: c.accent }]}>{t('signup.backToLogin')}</Text>
           </Pressable>
-        </View>
+        </SoftSurface>
       </AuthScreen>
     );
   }
@@ -178,11 +200,14 @@ export default function RegisterGymScreen() {
   return (
     <AuthScreen>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <FormScroll contentContainerStyle={{ paddingTop: 72 }}>
-          <Text style={[styles.title, { color: c.text }]}>{t('signup.title')}</Text>
-          <Text style={[styles.subtitle, { color: c.muted }]}>{t('signup.subtitle')}</Text>
+        <FormScroll contentContainerStyle={{ paddingTop: 56 }}>
+          <AuthStepDots activeIndex={stepIndex} steps={3} />
+          <Text display style={[styles.title, { color: c.text }]}>
+            {t('signup.title')}
+          </Text>
+          <Text style={[styles.subtitle, { color: c.muted }]}>{stepSubtitle}</Text>
           <ErrorBanner message={error} />
-          {message && step === 'details' ? (
+          {message && step === 'gym' ? (
             <Text style={[styles.message, { color: c.success }]}>{message}</Text>
           ) : null}
 
@@ -199,7 +224,9 @@ export default function RegisterGymScreen() {
               <Text style={[styles.hint, { color: c.dim }]}>{t('signup.phoneHint')}</Text>
               <PrimaryButton label={t('signup.sendOtp')} onPress={requestOtp} loading={loading} />
             </>
-          ) : (
+          ) : null}
+
+          {step === 'gym' ? (
             <>
               <Label>{t('signup.code')}</Label>
               <Field value={code} onChangeText={setCode} keyboardType="numeric" autoCapitalize="none" />
@@ -207,8 +234,26 @@ export default function RegisterGymScreen() {
               <Label>{t('signup.gymName')}</Label>
               <Field value={gymName} onChangeText={setGymName} placeholder={t('signup.gymNamePlaceholder')} />
 
+              <OptionPickerField
+                label={t('signup.plan')}
+                placeholder={t('signup.plan')}
+                options={planOptions}
+                value={saasPlanId}
+                onChange={setSaasPlanId}
+                sheetTitle={t('signup.plan')}
+              />
+
+              <PrimaryButton label={t('common.continue')} onPress={continueGym} />
+              <Pressable style={styles.secondary} onPress={backToPhone}>
+                <Text style={[styles.secondaryText, { color: c.accentText }]}>{t('signup.changePhone')}</Text>
+              </Pressable>
+            </>
+          ) : null}
+
+          {step === 'account' ? (
+            <>
               <Label>{t('signup.ownerName')}</Label>
-              <Field value={ownerName} onChangeText={setOwnerName} />
+              <Field value={ownerName} onChangeText={setOwnerName} autoCapitalize="words" />
 
               <Label>{t('signup.username')}</Label>
               <Field
@@ -226,15 +271,6 @@ export default function RegisterGymScreen() {
                 autoCapitalize="none"
               />
 
-              <OptionPickerField
-                label={t('signup.plan')}
-                placeholder={t('signup.plan')}
-                options={planOptions}
-                value={saasPlanId}
-                onChange={setSaasPlanId}
-                sheetTitle={t('signup.plan')}
-              />
-
               <Label>{t('signup.password')}</Label>
               <Field value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />
 
@@ -246,16 +282,14 @@ export default function RegisterGymScreen() {
               <Pressable
                 style={styles.secondary}
                 onPress={() => {
-                  setStep('phone');
-                  setCode('');
                   setError('');
-                  setMessage('');
+                  setStep('gym');
                 }}
               >
-                <Text style={[styles.secondaryText, { color: c.accentText }]}>{t('signup.changePhone')}</Text>
+                <Text style={[styles.secondaryText, { color: c.accentText }]}>{t('common.back')}</Text>
               </Pressable>
             </>
-          )}
+          ) : null}
 
           <Pressable style={styles.back} onPress={() => router.replace('/login')}>
             <Text style={[styles.backLinkText, { color: c.accent }]}>{t('signup.backToLogin')}</Text>
@@ -281,15 +315,13 @@ export default function RegisterGymScreen() {
 const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   unavailableCard: {
-    borderWidth: 1,
-    borderRadius: 16,
     padding: 24,
     maxWidth: 360,
     width: '100%',
   },
   unavailableText: { fontSize: 15, lineHeight: 22, textAlign: 'center' },
-  title: { fontSize: 26, fontWeight: '700', textAlign: 'center' },
-  subtitle: { marginTop: 8, marginBottom: 24, fontSize: 14, lineHeight: 21, textAlign: 'center' },
+  title: { fontSize: 26, fontWeight: '600', textAlign: 'center', letterSpacing: -0.4 },
+  subtitle: { marginTop: 8, marginBottom: 20, fontSize: 14, lineHeight: 21, textAlign: 'center' },
   message: { marginBottom: 12, fontSize: 14, textAlign: 'center' },
   hint: { fontSize: 12, lineHeight: 18, marginTop: 6, marginBottom: 20 },
   secondary: { alignItems: 'center', paddingVertical: 14 },

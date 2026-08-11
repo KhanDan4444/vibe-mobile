@@ -30,9 +30,11 @@ import { EnrollStepProgress } from '@/src/components/EnrollStepProgress';
 import { PhotoPickerField } from '@/src/components/PhotoPickerField';
 import { PlanPickerField } from '@/src/components/PlanPickerField';
 import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
-import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton, Screen, SecondaryButton } from '@/src/components/Form';
+import { ErrorBanner, Field, FieldError, FormScroll, Label, MoneyAmountField, PrimaryButton, Screen, SecondaryButton } from '@/src/components/Form';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { SkeletonBone } from '@/src/components/Skeleton';
 import { useTheme } from '@/src/context/PreferencesContext';
+import { elevationStyle } from '@/src/theme/elevation';
 import { useOfflineFlash } from '@/src/hooks/useSaveFlash';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
@@ -112,15 +114,11 @@ export default function EnrollScreen() {
   const stepOpacity = useRef(new Animated.Value(1)).current;
   const stepTranslate = useRef(new Animated.Value(0)).current;
   const swipeHintOpacity = useRef(new Animated.Value(1)).current;
-  const { colors: c } = useTheme();
+  const { colors: c, theme } = useTheme();
   const { t } = useTranslation();
   const styles = useThemedStyles((colors) => ({
     hint: { color: colors.dim, fontSize: 14, marginTop: 4 },
     lockedValue: {
-      borderWidth: 1,
-      borderColor: colors.border,
-      backgroundColor: colors.inputBg,
-      borderRadius: 10,
       paddingHorizontal: 14,
       paddingVertical: 12,
       color: colors.text,
@@ -145,10 +143,8 @@ export default function EnrollScreen() {
       borderRadius: 48,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
-      backgroundColor: 'rgba(5,150,105,0.12)',
+      backgroundColor: 'rgba(5,150,105,0.14)',
       marginBottom: 22,
-      borderWidth: 1,
-      borderColor: 'rgba(5,150,105,0.22)',
     },
     checkInner: {
       width: 64,
@@ -185,10 +181,6 @@ export default function EnrollScreen() {
     summary: {
       marginTop: 24,
       width: '100%' as const,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 12,
-      backgroundColor: colors.inputBg,
       overflow: 'hidden' as const,
     },
     summaryRow: {
@@ -213,11 +205,11 @@ export default function EnrollScreen() {
     summaryUnpaid: { color: colors.warning },
     actions: { marginTop: 28, width: '100%' as const, gap: 10 },
     stickyFooter: {
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.border,
       backgroundColor: colors.bg,
       paddingTop: 12,
       alignItems: 'center' as const,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.cardEdge,
     },
     stickyInner: {
       width: '100%' as const,
@@ -237,10 +229,7 @@ export default function EnrollScreen() {
       marginBottom: 14,
       paddingVertical: 8,
       paddingHorizontal: 12,
-      borderRadius: 999,
       backgroundColor: colors.accentSoft,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.border,
     },
     swipeHintText: {
       flexShrink: 1,
@@ -674,7 +663,7 @@ export default function EnrollScreen() {
             </Text>
 
             {rows.length > 0 ? (
-              <View style={styles.summary}>
+              <SoftSurface variant="quiet" style={styles.summary}>
                 {rows.map((row, index) => (
                   <View
                     key={row.label}
@@ -686,7 +675,7 @@ export default function EnrollScreen() {
                     </Text>
                   </View>
                 ))}
-              </View>
+              </SoftSurface>
             ) : null}
 
             <View style={styles.actions}>
@@ -716,7 +705,8 @@ export default function EnrollScreen() {
 
           {showSwipeHint ? (
             <Animated.View style={{ opacity: swipeHintOpacity }}>
-              <Pressable
+              <SoftSurface
+                variant="quiet"
                 onPress={dismissSwipeHint}
                 style={styles.swipeHint}
                 accessibilityRole="button"
@@ -733,7 +723,7 @@ export default function EnrollScreen() {
                 >
                   <Ionicons name="close" size={14} color={c.accentText} />
                 </Pressable>
-              </Pressable>
+              </SoftSurface>
             </Animated.View>
           ) : null}
 
@@ -839,9 +829,11 @@ export default function EnrollScreen() {
                 <FieldError message={startDateError} />
 
                 <Label>{t('enroll.endDate')}</Label>
-                <Text style={[styles.lockedValue, { color: c.muted, fontWeight: '500' }]}>
-                  {endDateValue ? formatDisplayDate(endDateValue) : '—'}
-                </Text>
+                <SoftSurface variant="quiet" style={styles.lockedValue}>
+                  <Text style={{ color: c.muted, fontWeight: '500', fontSize: 16 }}>
+                    {endDateValue ? formatDisplayDate(endDateValue) : '—'}
+                  </Text>
+                </SoftSurface>
                 <Text style={styles.hint}>{t('enroll.endDateHint')}</Text>
               </>
             ) : null}
@@ -863,7 +855,7 @@ export default function EnrollScreen() {
                 {!skipPayment ? (
                   <>
                     <Label>{t('forms.amount')}</Label>
-                    <Text style={styles.lockedValue}>{amount || '—'}</Text>
+                    <MoneyAmountField value={amount || ''} onChangeText={() => {}} disabled />
                     <Text style={styles.hint}>{t('forms.amountFromPlan')}</Text>
 
                     <Label>{t('forms.paymentDate')}</Label>
@@ -884,7 +876,13 @@ export default function EnrollScreen() {
           </Animated.View>
         </FormScroll>
 
-        <View style={[styles.stickyFooter, { paddingBottom: stickyPadBottom, paddingHorizontal: pagePadding }]}>
+        <View
+          style={[
+            styles.stickyFooter,
+            elevationStyle('raised', theme),
+            { paddingBottom: stickyPadBottom, paddingHorizontal: pagePadding },
+          ]}
+        >
           <View style={[styles.stickyInner, { maxWidth: formMaxWidth }]}>
             <View style={styles.stickyRow}>
               {enrollStep > 1 ? (
