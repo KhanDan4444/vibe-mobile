@@ -1,12 +1,9 @@
 import { View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
-import { BottomSheet } from '@/src/components/BottomSheet';
+import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
 import { DateField } from '@/src/components/DateField';
-import { SoftSurface } from '@/src/components/ui/SoftSurface';
-import { useTheme } from '@/src/context/PreferencesContext';
-import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
-import { elevationStyle } from '@/src/theme/elevation';
+import { PrimaryButton } from '@/src/components/ui/Button';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { boundsForCustomRangeFrom, boundsForCustomRangeTo } from '@/src/utils/datePickerBounds';
 import { PAYMENT_METHODS, paymentMethodLabelKey } from '@/src/constants/payments';
@@ -44,7 +41,6 @@ export function RevenueFiltersSheet({
   onUseCustomRange,
 }: Props) {
   const { t } = useTranslation();
-  const { theme } = useTheme();
   const fromBounds = boundsForCustomRangeFrom(customTo);
   const toBounds = boundsForCustomRangeTo(customFrom);
   const styles = useThemedStyles((c) => ({
@@ -57,37 +53,9 @@ export function RevenueFiltersSheet({
       marginBottom: 10,
       marginTop: 8,
     },
-    optionGroup: { gap: 8, marginBottom: 8 },
-    option: {
-      paddingVertical: 12,
-      paddingHorizontal: 14,
-      minHeight: 48,
-      justifyContent: 'center' as const,
-    },
-    optionActive: { borderColor: c.accentText, backgroundColor: c.accentSoft },
-    optionText: { fontSize: 15, color: c.muted },
-    optionTextActive: { color: c.accentText, fontWeight: '600' as const },
-    toggle: {
-      paddingVertical: 12,
-      paddingHorizontal: 14,
-      marginBottom: 10,
-      minHeight: 48,
-      justifyContent: 'center' as const,
-    },
-    toggleActive: { borderColor: c.accentText, backgroundColor: c.accentSoft },
-    toggleText: { fontSize: 15, color: c.muted },
-    dateRow: { flexDirection: 'row' as const, gap: 10, marginBottom: 8 },
-    doneBtn: {
-      marginTop: 4,
-      paddingVertical: 14,
-      borderRadius: 12,
-      backgroundColor: c.accent,
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
-      borderWidth: 0,
-      minHeight: 48,
-    },
-    doneText: { color: '#fff', fontSize: 16, fontWeight: '600' as const },
+    optionGroup: { marginBottom: 8 },
+    dateRow: { flexDirection: 'row' as const, gap: 10, marginBottom: 8, marginTop: 4 },
+    doneBtn: { marginTop: 4 },
   }));
 
   return (
@@ -96,57 +64,42 @@ export function RevenueFiltersSheet({
       title={t('revenue.filters')}
       onClose={onClose}
       showCloseButton
-      footer={
-        <SoftSurface
-          onPress={onClose}
-          style={[styles.doneBtn, elevationStyle('soft', theme)]}
-          accessibilityRole="button"
-        >
-          <Text style={styles.doneText}>{t('common.done')}</Text>
-        </SoftSurface>
-      }
+      footer={<PrimaryButton label={t('common.done')} onPress={onClose} style={styles.doneBtn} />}
     >
       <Text style={styles.sectionLabel}>{t('revenue.sortLabel')}</Text>
       <View style={styles.optionGroup}>
         {REVENUE_SORT_OPTIONS.map((opt) => (
-          <SoftSurface
+          <SheetOption
             key={opt.id}
+            label={t(opt.labelKey)}
+            selected={sort === opt.id}
             onPress={() => onSortChange(opt.id)}
-            style={[styles.option, sort === opt.id && styles.optionActive]}
-          >
-            <Text style={[styles.optionText, sort === opt.id && styles.optionTextActive]}>
-              {t(opt.labelKey)}
-            </Text>
-          </SoftSurface>
+          />
         ))}
       </View>
 
       <Text style={styles.sectionLabel}>{t('revenue.paymentMethodLabel')}</Text>
       <View style={styles.optionGroup}>
         {(['All methods', ...PAYMENT_METHODS] as const).map((method) => (
-          <SoftSurface
+          <SheetOption
             key={method}
-            onPress={() => onMethodChange(method)}
-            style={[styles.option, methodFilter === method && styles.optionActive]}
-          >
-            <Text style={[styles.optionText, methodFilter === method && styles.optionTextActive]}>
-              {method === 'All methods'
+            label={
+              method === 'All methods'
                 ? t('revenue.allMethods')
-                : t(paymentMethodLabelKey(method)!)}
-            </Text>
-          </SoftSurface>
+                : t(paymentMethodLabelKey(method)!)
+            }
+            selected={methodFilter === method}
+            onPress={() => onMethodChange(method)}
+          />
         ))}
       </View>
 
       <Text style={styles.sectionLabel}>{t('revenue.customDateRange')}</Text>
-      <SoftSurface
+      <SheetOption
+        label={useCustomRange ? t('revenue.customRangeOn') : t('revenue.useCustomRange')}
+        selected={useCustomRange}
         onPress={() => onUseCustomRange(!useCustomRange)}
-        style={[styles.toggle, useCustomRange && styles.toggleActive]}
-      >
-        <Text style={styles.toggleText}>
-          {useCustomRange ? t('revenue.customRangeOn') : t('revenue.useCustomRange')}
-        </Text>
-      </SoftSurface>
+      />
       {useCustomRange ? (
         <View style={styles.dateRow}>
           <View style={{ flex: 1 }}>

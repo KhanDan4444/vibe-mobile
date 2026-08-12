@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { AppText as Text, AppTextInput as TextInput } from '@/src/components/AppText';
+import { AppText as Text } from '@/src/components/AppText';
 import { ListFooterSkeleton, PageSkeleton } from '@/src/components/Skeleton';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchDashboard } from '@/src/api/dashboard';
 import { fetchMembers, type MemberListParams } from '@/src/api/members';
@@ -16,14 +15,15 @@ import { SortPicker } from '@/src/components/SortPicker';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { EmptyState } from '@/src/components/EmptyState';
 import { useBranchScope } from '@/src/context/BranchContext';
-import { useTheme, usePreferences } from '@/src/context/PreferencesContext';
+import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
-import { appTextStyle } from '@/src/theme/typography';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import StatusBadge from '@/src/components/StatusBadge';
 import { SecondaryButton } from '@/src/components/ui/Button';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
+import { FilterChip } from '@/src/components/FilterChip';
+import { SearchField } from '@/src/components/SearchField';
 import { type ThemeColors } from '@/src/theme/tokens';
 import { fabElevation } from '@/src/theme/elevation';
 import { DEFAULT_MEMBER_SORT, MEMBER_SORT_OPTIONS, type MemberSortId } from '@/src/utils/listSort';
@@ -44,40 +44,15 @@ const FILTER_LABEL_KEYS: Record<MemberFilter, string> = {
   unpaid: 'members.filterUnpaid',
 };
 
-function filterPalette(c: ThemeColors, option: MemberFilter) {
-  const palettes: Record<MemberFilter, { dot: string; activeBg: string; activeBorder: string; activeText: string }> = {
-    all: {
-      dot: c.statusNeutral,
-      activeBg: `${c.statusNeutral}29`,
-      activeBorder: c.statusNeutral,
-      activeText: c.statusNeutral,
-    },
-    active: {
-      dot: c.statusActive,
-      activeBg: `${c.statusActive}26`,
-      activeBorder: c.statusActive,
-      activeText: c.statusActive,
-    },
-    unpaid: {
-      dot: c.statusUnpaid,
-      activeBg: `${c.statusUnpaid}29`,
-      activeBorder: c.statusUnpaid,
-      activeText: c.statusUnpaid,
-    },
-    due_soon: {
-      dot: c.statusDueSoon,
-      activeBg: `${c.statusDueSoon}29`,
-      activeBorder: c.statusDueSoon,
-      activeText: c.statusDueSoon,
-    },
-    expired: {
-      dot: c.statusExpired,
-      activeBg: `${c.statusExpired}29`,
-      activeBorder: c.statusExpired,
-      activeText: c.statusExpired,
-    },
+function filterDotColor(c: ThemeColors, option: MemberFilter) {
+  const dots: Record<MemberFilter, string> = {
+    all: c.statusNeutral,
+    active: c.statusActive,
+    unpaid: c.statusUnpaid,
+    due_soon: c.statusDueSoon,
+    expired: c.statusExpired,
   };
-  return palettes[option];
+  return dots[option];
 }
 
 function parseFilter(value: string | string[] | undefined): MemberFilter {
@@ -167,7 +142,6 @@ export default function MembersScreen() {
   const owner = isGymOwner(user?.role);
   const showBranchColumn = owner && selectedBranchId === 'all';
   const { colors: c, theme } = useTheme();
-  const { language } = usePreferences();
   const { t } = useTranslation();
   const styles = useThemedStyles(createStyles);
   const { pagePadding, isTablet, fabRight, fabSize, fabRadius, fabFontSize, listColumnItemStyle } = useResponsiveLayout();
@@ -249,70 +223,20 @@ export default function MembersScreen() {
       <BranchFilterBar horizontalPadding={pagePadding} />
       <ReadOnlyBanner />
       <View style={[styles.toolbar, { paddingHorizontal: pagePadding }]}>
-        <SoftSurface style={styles.searchWrap}>
-          <Ionicons name="search" size={18} color={c.dim} style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder={t('members.search')}
-            placeholderTextColor={c.dim}
-            value={search}
-            onChangeText={setSearch}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          {search ? (
-            <Pressable onPress={() => setSearch('')} hitSlop={8}>
-              <Ionicons name="close-circle" size={18} color={c.dim} />
-            </Pressable>
-          ) : null}
-        </SoftSurface>
+        <SearchField value={search} onChangeText={setSearch} placeholder={t('members.search')} />
 
         {isTablet ? (
           <View style={[styles.filters, styles.filtersWrap]}>
-            {FILTER_OPTIONS.map((option) => {
-              const active = filter === option;
-              const palette = filterPalette(c, option);
-              return (
-                <SoftSurface
-                  key={option}
-                  flat
-                  onPress={() => setFilter(option)}
-                  style={[
-                    styles.filterChip,
-                    active
-                      ? { backgroundColor: palette.activeBg, borderColor: palette.activeBorder }
-                      : undefined,
-                  ]}
-                >
-                  <View style={[styles.filterDot, { backgroundColor: palette.dot }]} />
-                  <Text
-                    style={appTextStyle(language, {
-                      ...styles.filterLabel,
-                      color: active ? palette.activeText : c.text,
-                    })}
-                  >
-                    {t(FILTER_LABEL_KEYS[option])}
-                  </Text>
-                  <View
-                    style={[
-                      styles.filterCountBadge,
-                      active
-                        ? { backgroundColor: palette.activeBorder }
-                        : { backgroundColor: c.border },
-                    ]}
-                  >
-                    <Text
-                      style={appTextStyle(language, {
-                        ...styles.filterCount,
-                        color: active ? '#fff' : c.muted,
-                      })}
-                    >
-                      {filterCounts[option]}
-                    </Text>
-                  </View>
-                </SoftSurface>
-              );
-            })}
+            {FILTER_OPTIONS.map((option) => (
+              <FilterChip
+                key={option}
+                label={t(FILTER_LABEL_KEYS[option])}
+                selected={filter === option}
+                onPress={() => setFilter(option)}
+                dotColor={filterDotColor(c, option)}
+                count={filterCounts[option]}
+              />
+            ))}
           </View>
         ) : (
           <ScrollView
@@ -322,50 +246,16 @@ export default function MembersScreen() {
             style={[styles.filterScroll, { marginHorizontal: -pagePadding }]}
             contentContainerStyle={[styles.filters, { paddingHorizontal: pagePadding }]}
           >
-            {FILTER_OPTIONS.map((option) => {
-              const active = filter === option;
-              const palette = filterPalette(c, option);
-              return (
-                <SoftSurface
-                  key={option}
-                  flat
-                  onPress={() => setFilter(option)}
-                  style={[
-                    styles.filterChip,
-                    active
-                      ? { backgroundColor: palette.activeBg, borderColor: palette.activeBorder }
-                      : undefined,
-                  ]}
-                >
-                  <View style={[styles.filterDot, { backgroundColor: palette.dot }]} />
-                  <Text
-                    style={appTextStyle(language, {
-                      ...styles.filterLabel,
-                      color: active ? palette.activeText : c.text,
-                    })}
-                  >
-                    {t(FILTER_LABEL_KEYS[option])}
-                  </Text>
-                  <View
-                    style={[
-                      styles.filterCountBadge,
-                      active
-                        ? { backgroundColor: palette.activeBorder }
-                        : { backgroundColor: c.border },
-                    ]}
-                  >
-                    <Text
-                      style={appTextStyle(language, {
-                        ...styles.filterCount,
-                        color: active ? '#fff' : c.muted,
-                      })}
-                    >
-                      {filterCounts[option]}
-                    </Text>
-                  </View>
-                </SoftSurface>
-              );
-            })}
+            {FILTER_OPTIONS.map((option) => (
+              <FilterChip
+                key={option}
+                label={t(FILTER_LABEL_KEYS[option])}
+                selected={filter === option}
+                onPress={() => setFilter(option)}
+                dotColor={filterDotColor(c, option)}
+                count={filterCounts[option]}
+              />
+            ))}
           </ScrollView>
         )}
 
@@ -448,19 +338,6 @@ function createStyles(c: ThemeColors) {
       paddingBottom: 8,
       gap: 8,
     },
-    searchWrap: {
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
-      paddingHorizontal: 12,
-      minHeight: 44,
-    },
-    searchIcon: { marginRight: 8 },
-    searchInput: {
-      flex: 1,
-      paddingVertical: 10,
-      color: c.text,
-      fontSize: 15,
-    },
     filterScroll: {
       flexGrow: 0,
       marginHorizontal: -16,
@@ -472,39 +349,6 @@ function createStyles(c: ThemeColors) {
       gap: 6,
     },
     filtersWrap: { flexWrap: 'wrap' as const, rowGap: 6 },
-    filterChip: {
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
-      gap: 5,
-      paddingLeft: 10,
-      paddingRight: 7,
-      paddingVertical: 5,
-      borderRadius: 999,
-      flexShrink: 0,
-      alignSelf: 'flex-start' as const,
-      minHeight: 32,
-    },
-    filterDot: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-    },
-    filterLabel: {
-      fontSize: 12,
-      fontWeight: '500' as const,
-    },
-    filterCountBadge: {
-      minWidth: 20,
-      height: 20,
-      borderRadius: 10,
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
-      paddingHorizontal: 5,
-    },
-    filterCount: {
-      fontSize: 11,
-      fontWeight: '600' as const,
-    },
     sortRow: { alignSelf: 'flex-start' as const },
     list: { paddingBottom: 88 },
     columnWrap: { gap: 10 },

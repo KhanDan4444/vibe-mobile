@@ -11,11 +11,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import { AppText as Text } from '@/src/components/AppText';
-import { SoftSurface } from '@/src/components/ui/SoftSurface';
+import { PrimaryButton, SecondaryButton } from '@/src/components/ui/Button';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { elevationStyle } from '@/src/theme/elevation';
 import { springs, timings } from '@/src/theme/motion';
-import { radiusMd, radiusXl } from '@/src/theme/tokens';
+import { radiusXl } from '@/src/theme/tokens';
 
 type ConfirmDialogProps = {
   visible: boolean;
@@ -102,38 +102,28 @@ export function ConfirmDialog({
             cardStyle,
           ]}
         >
-          <Text display style={[styles.title, { color: c.text }]}>{title}</Text>
+          <Text display style={[styles.title, { color: c.text }]}>
+            {title}
+          </Text>
           <Text style={[styles.message, { color: c.muted }]}>{message}</Text>
 
           <View style={styles.actions}>
             {alertOnly ? null : (
-              <SoftSurface
-                flat
-                onPress={confirmLoading ? undefined : dismiss}
-                style={[styles.btn, styles.btnGhost, { borderColor: c.border, opacity: confirmLoading ? 0.55 : 1 }]}
-              >
-                <Text style={[styles.btnText, { color: c.muted }]}>
-                  {cancelLabel ?? t('common.cancel')}
-                </Text>
-              </SoftSurface>
+              <SecondaryButton
+                label={cancelLabel ?? t('common.cancel')}
+                onPress={dismiss}
+                disabled={confirmLoading}
+                style={styles.btn}
+              />
             )}
-            <SoftSurface
-              onPress={confirmLoading ? undefined : onConfirm}
-              style={[
-                styles.btn,
-                alertOnly ? styles.btnFull : null,
-                {
-                  borderWidth: 0,
-                  backgroundColor: destructive && !alertOnly ? '#e11d48' : c.accent,
-                  opacity: confirmLoading ? 0.7 : 1,
-                },
-                elevationStyle('soft', theme),
-              ]}
-            >
-              <Text style={[styles.btnText, styles.btnTextOnAccent]}>
-                {confirmLoading ? '…' : primaryLabel}
-              </Text>
-            </SoftSurface>
+            <PrimaryButton
+              label={primaryLabel}
+              onPress={onConfirm}
+              loading={confirmLoading}
+              disabled={confirmLoading}
+              destructive={destructive && !alertOnly}
+              style={[styles.btn, alertOnly ? styles.btnFull : null]}
+            />
           </View>
         </Animated.View>
       </View>
@@ -173,24 +163,8 @@ const styles = StyleSheet.create({
   },
   btn: {
     flex: 1,
-    minHeight: 48,
-    borderRadius: radiusMd,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 12,
   },
   btnFull: {
     flex: 1,
-  },
-  btnGhost: {
-    borderWidth: StyleSheet.hairlineWidth,
-    backgroundColor: 'transparent',
-  },
-  btnText: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  btnTextOnAccent: {
-    color: '#fff',
   },
 });

@@ -198,10 +198,9 @@ export default function RegisterGymScreen() {
   }
 
   return (
-    <AuthScreen>
+    <AuthScreen headerCenter={<AuthStepDots activeIndex={stepIndex} steps={3} compact />}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <FormScroll contentContainerStyle={{ paddingTop: 56 }}>
-          <AuthStepDots activeIndex={stepIndex} steps={3} />
+        <FormScroll contentContainerStyle={{ paddingTop: 12 }}>
           <Text display style={[styles.title, { color: c.text }]}>
             {t('signup.title')}
           </Text>
@@ -219,6 +218,7 @@ export default function RegisterGymScreen() {
                 onChangeText={setPhone}
                 keyboardType="phone-pad"
                 autoCapitalize="none"
+                latin
                 placeholder={t('signup.phonePlaceholder')}
               />
               <Text style={[styles.hint, { color: c.dim }]}>{t('signup.phoneHint')}</Text>
@@ -229,7 +229,7 @@ export default function RegisterGymScreen() {
           {step === 'gym' ? (
             <>
               <Label>{t('signup.code')}</Label>
-              <Field value={code} onChangeText={setCode} keyboardType="numeric" autoCapitalize="none" />
+              <Field value={code} onChangeText={setCode} keyboardType="numeric" autoCapitalize="none" latin />
 
               <Label>{t('signup.gymName')}</Label>
               <Field value={gymName} onChangeText={setGymName} placeholder={t('signup.gymNamePlaceholder')} />
@@ -260,6 +260,7 @@ export default function RegisterGymScreen() {
                 value={username}
                 onChangeText={(v) => setUsername(v.toLowerCase())}
                 autoCapitalize="none"
+                latin
                 placeholder={t('signup.usernamePlaceholder')}
               />
 
@@ -269,13 +270,14 @@ export default function RegisterGymScreen() {
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                latin
               />
 
               <Label>{t('signup.password')}</Label>
-              <Field value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />
+              <Field value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" latin />
 
               <Label>{t('signup.confirmPassword')}</Label>
-              <Field value={confirm} onChangeText={setConfirm} secureTextEntry autoCapitalize="none" />
+              <Field value={confirm} onChangeText={setConfirm} secureTextEntry autoCapitalize="none" latin />
 
               <Text style={[styles.hint, { color: c.dim }]}>{t('signup.paymentNote')}</Text>
               <PrimaryButton label={t('signup.createAccount')} onPress={submitSignup} loading={loading} />

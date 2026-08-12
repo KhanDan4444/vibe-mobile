@@ -171,7 +171,7 @@ export default function AccountScreen() {
         </ResponsiveContent>
       </ScrollView>
 
-      <BottomSheet visible={langOpen} title={t('profile.language')} onClose={() => setLangOpen(false)}>
+      <BottomSheet visible={langOpen} title={t('profile.language')} onClose={() => setLangOpen(false)} compact>
         {APP_LANGUAGES.map((lng) => (
           <SheetOption
             key={lng}

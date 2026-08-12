@@ -31,6 +31,7 @@ import {
 } from '@/src/utils/reportPdf';
 import { hasGymPortalAccess } from '@/src/utils/roles';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
+import { PrimaryButton, SecondaryButton } from '@/src/components/ui/Button';
 
 type MemberFilter = 'all' | 'active' | 'unpaid' | 'due_soon' | 'expired';
 
@@ -81,17 +82,7 @@ function buildReportStyles(colors: ThemeColors, statCardWidthPercent: string) {
       textAlign: 'center' as const,
     },
     exportRow: { flexDirection: 'row' as const, gap: space.md, marginTop: space.lg },
-    exportBtn: {
-      flex: 1,
-      paddingVertical: space.md,
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
-      minHeight: 48,
-    },
-    exportBtnPrimary: { backgroundColor: colors.accentCta, borderWidth: 0 },
-    exportDisabled: { opacity: 0.45 },
-    exportText: { color: colors.accentText, fontSize: 14, fontWeight: '600' as const },
-    exportTextPrimary: { color: '#fff' },
+    exportBtn: { flex: 1 },
     revenueSummary: {
       marginTop: space.lg,
       padding: space.lg + 2,
@@ -398,19 +389,20 @@ function ExportRow({
 }) {
   return (
     <View style={styles.exportRow}>
-      <SoftSurface
-        variant="quiet"
-        onPress={disabled ? undefined : onCsv}
-        style={[styles.exportBtn, disabled && styles.exportDisabled]}
-      >
-        <Text style={styles.exportText}>{csvLoading ? '…' : t('common.exportCsv')}</Text>
-      </SoftSurface>
-      <SoftSurface
-        onPress={disabled ? undefined : onPdf}
-        style={[styles.exportBtn, styles.exportBtnPrimary, disabled && styles.exportDisabled]}
-      >
-        <Text style={[styles.exportText, styles.exportTextPrimary]}>{pdfLoading ? '…' : t('common.exportPdf')}</Text>
-      </SoftSurface>
+      <SecondaryButton
+        label={csvLoading ? '…' : t('common.exportCsv')}
+        onPress={onCsv}
+        disabled={disabled || csvLoading}
+        loading={csvLoading}
+        style={styles.exportBtn}
+      />
+      <PrimaryButton
+        label={pdfLoading ? '…' : t('common.exportPdf')}
+        onPress={onPdf}
+        disabled={disabled || pdfLoading}
+        loading={pdfLoading}
+        style={styles.exportBtn}
+      />
     </View>
   );
 }

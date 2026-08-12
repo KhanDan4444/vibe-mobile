@@ -33,6 +33,7 @@ import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
 import { ErrorBanner, Field, FieldError, FormScroll, Label, MoneyAmountField, PrimaryButton, Screen, SecondaryButton } from '@/src/components/Form';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { SkeletonBone } from '@/src/components/Skeleton';
+import { FIELD_MIN_HEIGHT, FIELD_RADIUS } from '@/src/theme/fieldChrome';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { elevationStyle } from '@/src/theme/elevation';
 import { useOfflineFlash } from '@/src/hooks/useSaveFlash';
@@ -121,9 +122,14 @@ export default function EnrollScreen() {
     lockedValue: {
       paddingHorizontal: 14,
       paddingVertical: 12,
-      color: colors.text,
-      fontSize: 16,
-      fontWeight: '600' as const,
+      minHeight: FIELD_MIN_HEIGHT,
+      justifyContent: 'center' as const,
+      borderRadius: FIELD_RADIUS,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.inputBorder,
+      backgroundColor: colors.inputBg,
+      elevation: 0,
+      shadowOpacity: 0,
     },
     switchRow: {
       flexDirection: 'row' as const,
@@ -829,11 +835,11 @@ export default function EnrollScreen() {
                 <FieldError message={startDateError} />
 
                 <Label>{t('enroll.endDate')}</Label>
-                <SoftSurface variant="quiet" style={styles.lockedValue}>
+                <View style={styles.lockedValue}>
                   <Text style={{ color: c.muted, fontWeight: '500', fontSize: 16 }}>
                     {endDateValue ? formatDisplayDate(endDateValue) : '—'}
                   </Text>
-                </SoftSurface>
+                </View>
                 <Text style={styles.hint}>{t('enroll.endDateHint')}</Text>
               </>
             ) : null}

@@ -59,7 +59,8 @@ export function SoftSurface({
     borderColor: variant === 'quiet' ? c.border : c.cardEdge,
     borderRadius: radiusFor(variant),
     borderWidth: StyleSheet.hairlineWidth,
-    ...(flat ? {} : elevationStyle(elevationFor(variant), theme)),
+    // Quiet = form/nested chrome — never SoftSurface elevation (avoids field "halo").
+    ...(flat || variant === 'quiet' ? {} : elevationStyle(elevationFor(variant), theme)),
   };
 
   if (onPress) {

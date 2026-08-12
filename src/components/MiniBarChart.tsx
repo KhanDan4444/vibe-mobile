@@ -207,9 +207,10 @@ function LineChartView({
       >
         <Svg width="100%" height="100%" viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} preserveAspectRatio="xMidYMid meet">
           <Defs>
+            {/* Match web OwnerRevenueChart: soft fill, no heavy glow under the line. */}
             <LinearGradient id="revenueAreaFill" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor={styles.chartLine.color} stopOpacity="0.18" />
-              <Stop offset="1" stopColor={styles.chartLine.color} stopOpacity="0.02" />
+              <Stop offset="0.05" stopColor={styles.chartLine.color} stopOpacity="0.1" />
+              <Stop offset="0.95" stopColor={styles.chartLine.color} stopOpacity="0" />
             </LinearGradient>
           </Defs>
           {[0.25, 0.5, 0.75].map((ratio) => (
@@ -222,10 +223,18 @@ function LineChartView({
               stroke={styles.grid.color}
               strokeOpacity="0.35"
               strokeWidth="1"
+              strokeDasharray="4 4"
             />
           ))}
           {areaPath ? <Path d={areaPath} fill="url(#revenueAreaFill)" /> : null}
-          <Path d={linePath} fill="none" stroke={styles.chartLine.color} strokeWidth="3" strokeLinecap="round" />
+          <Path
+            d={linePath}
+            fill="none"
+            stroke={styles.chartLine.color}
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
           {selectedPoint ? (
             <>
               <Line
@@ -234,17 +243,17 @@ function LineChartView({
                 y1={PADDING_TOP}
                 y2={baseline}
                 stroke={styles.chartLine.color}
-                strokeOpacity="0.45"
+                strokeOpacity="0.35"
                 strokeWidth="1"
                 strokeDasharray="3 3"
               />
               <Circle
                 cx={selectedPoint.x}
                 cy={selectedPoint.y}
-                r={5}
+                r={4}
                 fill={styles.chartLine.color}
                 stroke="white"
-                strokeOpacity="0.9"
+                strokeOpacity="0.95"
                 strokeWidth={2}
               />
             </>

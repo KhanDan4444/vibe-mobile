@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
-import { SecondaryButton } from '@/src/components/ui/Button';
+import { PrimaryButton } from '@/src/components/ui/Button';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { space } from '@/src/theme/tokens';
 import { useTranslation } from 'react-i18next';
@@ -33,7 +33,7 @@ export function LoadError({ message, error, onRetry, loading = false }: Props) {
       <SoftSurface variant="panel" style={{ padding: space.lg, width: '100%', maxWidth: 360, alignItems: 'center' }}>
         <Text style={{ textAlign: 'center', color: c.error, fontSize: 15, lineHeight: 22 }}>{display}</Text>
         <View style={{ marginTop: space.md, alignSelf: 'stretch' }}>
-          <SecondaryButton
+          <PrimaryButton
             label={t('gymBoot.retry')}
             loading={busy}
             disabled={busy}

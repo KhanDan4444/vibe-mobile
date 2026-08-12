@@ -15,7 +15,7 @@ import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { elevationStyle } from '@/src/theme/elevation';
 import { springs, timings } from '@/src/theme/motion';
-import { radiusLg, radiusXl } from '@/src/theme/tokens';
+import { radiusMd, radiusXl } from '@/src/theme/tokens';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { appTextStyle, displayTextStyle } from '@/src/theme/typography';
 import { useEffect, useState } from 'react';
@@ -30,6 +30,7 @@ export function BottomSheet({
   children,
   footer,
   showCloseButton = false,
+  compact = false,
 }: {
   visible: boolean;
   title: string;
@@ -39,6 +40,8 @@ export function BottomSheet({
   footer?: React.ReactNode;
   /** Show an X in the title row (in addition to backdrop dismiss). */
   showCloseButton?: boolean;
+  /** Tighter padding for short action menus (Manage, overflow). */
+  compact?: boolean;
 }) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -81,7 +84,7 @@ export function BottomSheet({
       borderTopLeftRadius: radiusXl,
       borderTopRightRadius: radiusXl,
       paddingHorizontal: 20,
-      paddingBottom: Math.max(insets.bottom, 16) + 8,
+      paddingBottom: Math.max(insets.bottom, compact ? 10 : 16) + (compact ? 4 : 8),
       maxHeight: '85%' as const,
       width: '100%' as const,
       alignSelf: 'center' as const,
@@ -93,14 +96,14 @@ export function BottomSheet({
       height: 4,
       borderRadius: 2,
       backgroundColor: colors.border,
-      marginTop: 12,
-      marginBottom: 14,
+      marginTop: compact ? 10 : 12,
+      marginBottom: compact ? 10 : 14,
     },
     titleRow: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       justifyContent: 'space-between' as const,
-      marginBottom: 12,
+      marginBottom: compact ? 6 : 12,
       gap: 12,
     },
     title: {
@@ -175,38 +178,40 @@ export function SheetOption({
   destructive?: boolean;
 }) {
   const { language } = usePreferences();
-  const { theme } = useTheme();
+  const { colors: c } = useTheme();
   const scale = useSharedValue(1);
   const animStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
-  const styles = useThemedStyles((c) => ({
+  const styles = useThemedStyles((colors) => ({
     option: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 12,
       paddingVertical: 14,
       paddingHorizontal: 14,
-      borderRadius: radiusLg,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: c.border,
-      backgroundColor: c.inputBg,
-      marginBottom: 8,
+      borderRadius: radiusMd,
+      backgroundColor: 'transparent',
+      marginBottom: 2,
       minHeight: 48,
+    },
+    optionActive: { backgroundColor: colors.accentSoft },
+    label: { flex: 1, fontSize: 15, color: colors.text },
+    labelMuted: { color: colors.muted },
+    labelActive: { color: colors.accentText, fontWeight: '600' as const },
+    labelDestructive: { color: colors.error, fontWeight: '600' as const },
+    checkSlot: {
+      width: 22,
+      height: 22,
+      alignItems: 'center' as const,
       justifyContent: 'center' as const,
     },
-    optionActive: { borderColor: c.accentText, backgroundColor: c.accentSoft },
-    optionText: { fontSize: 15, color: c.muted },
-    optionTextActive: { color: c.accentText, fontWeight: '600' as const },
-    optionTextDestructive: { color: c.error, fontWeight: '600' as const },
   }));
 
   return (
     <AnimatedPressable
-      style={[
-        animStyle,
-        styles.option,
-        selected && styles.optionActive,
-        selected ? elevationStyle('soft', theme) : null,
-      ]}
+      style={[animStyle, styles.option, selected && styles.optionActive]}
       onPressIn={() => {
         scale.value = withSpring(0.98, springs.press);
       }}
@@ -214,16 +219,25 @@ export function SheetOption({
         scale.value = withSpring(1, springs.press);
       }}
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected: selected != null ? Boolean(selected) : undefined }}
     >
       <Text
         style={appTextStyle(language, {
-          ...styles.optionText,
-          ...(selected ? styles.optionTextActive : {}),
-          ...(destructive ? styles.optionTextDestructive : {}),
+          ...styles.label,
+          ...(selected === false ? styles.labelMuted : {}),
+          ...(selected ? styles.labelActive : {}),
+          ...(destructive ? styles.labelDestructive : {}),
         })}
       >
         {label}
       </Text>
+      {/* Reserve check slot only for picker sheets (selected prop passed). */}
+      {selected != null ? (
+        <View style={styles.checkSlot}>
+          {selected ? <Ionicons name="checkmark" size={20} color={c.accentText} /> : null}
+        </View>
+      ) : null}
     </AnimatedPressable>
   );
 }

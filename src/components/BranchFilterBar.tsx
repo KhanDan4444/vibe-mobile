@@ -4,7 +4,7 @@ import { AppText as Text } from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
-import { SoftSurface } from '@/src/components/ui/SoftSurface';
+import { PickerTrigger } from '@/src/components/PickerTrigger';
 import { useBranchScope, type BranchSelection } from '@/src/context/BranchContext';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
@@ -49,13 +49,12 @@ export function BranchFilterBar({ horizontalPadding = 16 }: { horizontalPadding?
 
   return (
     <View style={[styles.wrap, { paddingHorizontal: horizontalPadding }]}>
-      <SoftSurface onPress={() => setOpen(true)} style={styles.btn} accessibilityRole="button">
+      <PickerTrigger open={open} onPress={() => setOpen(true)}>
         <Ionicons name="location-outline" size={18} color={c.muted} />
         <Text style={[styles.label, { color: c.text }]} numberOfLines={1}>
           {currentLabel}
         </Text>
-        <Ionicons name="chevron-down" size={18} color={c.muted} />
-      </SoftSurface>
+      </PickerTrigger>
 
       <BottomSheet visible={open} title={t('branch.pickBranch')} onClose={() => setOpen(false)}>
         <SheetOption label={allLabel} selected={selectedBranchId === 'all'} onPress={() => pick('all')} />
@@ -88,13 +87,5 @@ export function BranchFilterBar({ horizontalPadding = 16 }: { horizontalPadding?
 
 const styles = StyleSheet.create({
   wrap: { paddingBottom: 10 },
-  btn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    minHeight: 48,
-  },
   label: { flex: 1, fontSize: 15, fontWeight: '600' },
 });

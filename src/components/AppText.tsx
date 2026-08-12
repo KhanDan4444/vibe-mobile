@@ -57,5 +57,13 @@ export const AppTextInput = forwardRef<TextInput, TextInputProps & LatinOpt>(fun
     : listRow
       ? listRowTextStyle(lang, flat)
       : appTextStyle(lang, flat);
-  return <TextInput ref={ref} {...props} style={resolved} />;
+  return (
+    <TextInput
+      ref={ref}
+      underlineColorAndroid="transparent"
+      {...props}
+      // Transparent so Android's default white fill doesn't paint a "mid" box inside field shells.
+      style={[{ backgroundColor: 'transparent' }, resolved]}
+    />
+  );
 });

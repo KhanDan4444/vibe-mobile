@@ -89,10 +89,9 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <AuthScreen>
+    <AuthScreen headerCenter={<AuthStepDots activeIndex={stepIndex} steps={2} compact />}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <FormScroll contentContainerStyle={{ paddingTop: 56 }}>
-          <AuthStepDots activeIndex={stepIndex} steps={2} />
+        <FormScroll contentContainerStyle={{ paddingTop: 12 }}>
           <Text display style={[styles.title, { color: c.text }]}>
             {t('forgot.title')}
           </Text>
@@ -108,6 +107,7 @@ export default function ForgotPasswordScreen() {
                 onChangeText={setIdentifier}
                 autoCapitalize="none"
                 keyboardType="default"
+                latin
                 placeholder={t('forgot.identifierPlaceholder')}
               />
               <Text style={[styles.hint, { color: c.muted }]}>{t('forgot.identifierHint')}</Text>
@@ -116,13 +116,13 @@ export default function ForgotPasswordScreen() {
           ) : (
             <>
               <Label>{t('forgot.code')}</Label>
-              <Field value={code} onChangeText={setCode} keyboardType="numeric" autoCapitalize="none" />
+              <Field value={code} onChangeText={setCode} keyboardType="numeric" autoCapitalize="none" latin />
 
               <Label>{t('forgot.newPassword')}</Label>
-              <Field value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />
+              <Field value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" latin />
 
               <Label>{t('forgot.confirmPassword')}</Label>
-              <Field value={confirm} onChangeText={setConfirm} secureTextEntry autoCapitalize="none" />
+              <Field value={confirm} onChangeText={setConfirm} secureTextEntry autoCapitalize="none" latin />
 
               <PrimaryButton label={t('forgot.updatePassword')} onPress={resetPassword} loading={loading} />
               <Pressable
@@ -177,7 +177,7 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   title: { fontSize: 26, fontWeight: '600', textAlign: 'center', letterSpacing: -0.4 },
   subtitle: { marginTop: 8, marginBottom: 20, fontSize: 14, lineHeight: 21, textAlign: 'center' },
-  hint: { marginTop: -4, marginBottom: 12, fontSize: 12, lineHeight: 18 },
+  hint: { marginTop: 8, marginBottom: 12, fontSize: 12, lineHeight: 18 },
   message: { marginBottom: 12, fontSize: 14, textAlign: 'center' },
   secondary: { alignItems: 'center', paddingVertical: 14 },
   back: { alignItems: 'center', paddingVertical: 18 },

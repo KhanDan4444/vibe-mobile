@@ -2,10 +2,9 @@ import { View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { AppText as Text } from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
-import { SoftSurface } from '@/src/components/ui/SoftSurface';
+import { PrimaryButton } from '@/src/components/ui/Button';
 import { useTheme } from '@/src/context/PreferencesContext';
-import { elevationStyle } from '@/src/theme/elevation';
-import { radiusLg, radiusMd, space } from '@/src/theme/tokens';
+import { radiusLg, space } from '@/src/theme/tokens';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 
 type Props = {
@@ -18,7 +17,7 @@ type Props = {
 
 /** Designed empty list state — warm accent icon, title, one sentence, optional CTA. */
 export function EmptyState({ icon = 'file-tray-outline', title, body, actionLabel, onAction }: Props) {
-  const { colors: c, theme } = useTheme();
+  const { colors: c } = useTheme();
   const styles = useThemedStyles((colors) => ({
     wrap: {
       alignItems: 'center' as const,
@@ -37,6 +36,8 @@ export function EmptyState({ icon = 'file-tray-outline', title, body, actionLabe
       justifyContent: 'center' as const,
       backgroundColor: colors.warmSoft,
       marginBottom: space.lg,
+      elevation: 0,
+      shadowOpacity: 0,
     },
     title: {
       fontSize: 17,
@@ -54,22 +55,13 @@ export function EmptyState({ icon = 'file-tray-outline', title, body, actionLabe
     },
     action: {
       marginTop: 18,
-      paddingHorizontal: 18,
-      paddingVertical: 11,
-      borderRadius: radiusMd,
-      backgroundColor: colors.accent,
-      borderWidth: 0,
-    },
-    actionText: {
-      color: '#fff',
-      fontSize: 15,
-      fontWeight: '600' as const,
+      alignSelf: 'stretch' as const,
     },
   }));
 
   return (
     <Animated.View entering={FadeIn.duration(320)} style={styles.wrap} accessibilityRole="summary">
-      <View style={[styles.iconWrap, elevationStyle('soft', theme)]}>
+      <View style={styles.iconWrap}>
         <Ionicons name={icon} size={26} color={c.warm} />
       </View>
       <Text display style={styles.title}>
@@ -77,13 +69,7 @@ export function EmptyState({ icon = 'file-tray-outline', title, body, actionLabe
       </Text>
       {body ? <Text style={styles.body}>{body}</Text> : null}
       {actionLabel && onAction ? (
-        <SoftSurface
-          onPress={onAction}
-          style={[styles.action, elevationStyle('soft', theme)]}
-          accessibilityRole="button"
-        >
-          <Text style={styles.actionText}>{actionLabel}</Text>
-        </SoftSurface>
+        <PrimaryButton label={actionLabel} onPress={onAction} style={styles.action} />
       ) : null}
     </Animated.View>
   );

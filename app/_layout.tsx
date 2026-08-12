@@ -6,7 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { StyleSheet, LogBox, View } from 'react-native';
-import Animated, { Easing, FadeOut } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { AuthProvider, useAuth } from '@/src/auth/AuthContext';
 import { BootSplashProvider, useBootSplash } from '@/src/context/BootSplashContext';
@@ -17,7 +17,7 @@ import { PreferencesProvider, usePreferences, useTheme } from '@/src/context/Pre
 import { NotificationInboxProvider } from '@/src/notifications/NotificationInboxContext';
 import { NetworkProvider, useNetwork } from '@/src/offline/NetworkProvider';
 import { OfflineStatusStrip, OfflineSyncOverlay } from '@/src/components/OfflineBanner';
-import { AppBootSplash, BOOT_SPLASH_BG_DARK } from '@/src/components/AppBootSplash';
+import { AppBootSplash, BOOT_SPLASH_BG_DARK, bootSplashExiting } from '@/src/components/AppBootSplash';
 import { SubscriptionLockout } from '@/src/components/SubscriptionLockout';
 import { PERSISTED_QUERY_KEYS, queryClient, QUERY_CACHE_STORAGE_KEY } from '@/src/query/client';
 import { SystemChrome } from '@/src/theme/SystemChrome';
@@ -167,7 +167,7 @@ function RootNavigator() {
         <Animated.View
           style={styles.bootOverlay}
           pointerEvents="auto"
-          exiting={FadeOut.duration(520).easing(Easing.out(Easing.cubic))}
+          exiting={bootSplashExiting}
         >
           <AppBootSplash />
         </Animated.View>

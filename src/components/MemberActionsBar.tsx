@@ -1,13 +1,9 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
-import { SoftSurface } from '@/src/components/ui/SoftSurface';
-import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
-import { elevationStyle } from '@/src/theme/elevation';
+import { PrimaryButton, SecondaryButton } from '@/src/components/ui/Button';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
-import { appTextStyle } from '@/src/theme/typography';
 import type { MemberRow } from '@/src/types/api';
 import { canChangePlan, canCollectPayment, canRenewMember } from '@/src/utils/memberRenew';
 
@@ -38,49 +34,11 @@ export function MemberActionsBar({
   onDelete: () => void;
 }) {
   const { t } = useTranslation();
-  const { language } = usePreferences();
-  const { theme } = useTheme();
   const [manageOpen, setManageOpen] = useState(false);
-  const styles = useThemedStyles((c) => ({
-    row: { flexDirection: 'row' as const, gap: 10, marginBottom: 12 },
-    primaryBtn: {
-      flex: 1,
-      backgroundColor: c.accent,
-      paddingVertical: 14,
-      alignItems: 'center' as const,
-      minHeight: 48,
-      justifyContent: 'center' as const,
-      borderWidth: 0,
-    },
-    secondaryBtn: {
-      flex: 1,
-      backgroundColor: c.accentCta,
-      paddingVertical: 14,
-      alignItems: 'center' as const,
-      minHeight: 48,
-      justifyContent: 'center' as const,
-      borderWidth: 0,
-    },
-    manageBtn: {
-      paddingVertical: 14,
-      alignItems: 'center' as const,
-      minHeight: 48,
-      justifyContent: 'center' as const,
-      marginBottom: 12,
-    },
-    btnText: { color: '#fff', fontSize: 15, fontWeight: '600' as const },
-    manageText: { color: c.muted, fontSize: 15, fontWeight: '600' as const },
-    optionDanger: {
-      paddingVertical: 14,
-      paddingHorizontal: 14,
-      marginBottom: 8,
-      minHeight: 48,
-      justifyContent: 'center' as const,
-      borderWidth: 1,
-      borderColor: 'rgba(248,113,113,0.45)',
-      backgroundColor: c.errorBg,
-    },
-    dangerText: { color: c.error, fontSize: 15, fontWeight: '600' as const },
+  const styles = useThemedStyles(() => ({
+    row: { flexDirection: 'row' as const, gap: 10, marginBottom: 10 },
+    half: { flex: 1 },
+    manage: { marginBottom: 4 },
   }));
 
   const showRenew = canRenewMember(member);
@@ -122,50 +80,41 @@ export function MemberActionsBar({
     <View>
       {primaries.length > 0 ? (
         <View style={styles.row}>
-          {primaries.slice(0, 2).map((p) => (
-            <SoftSurface
-              key={p.label}
-              flat
-              onPress={p.onPress}
-              style={[p.secondary ? styles.secondaryBtn : styles.primaryBtn, elevationStyle('soft', theme)]}
-            >
-              <Text style={appTextStyle(language, styles.btnText)}>{p.label}</Text>
-            </SoftSurface>
-          ))}
+          {primaries.slice(0, 2).map((p) =>
+            p.secondary ? (
+              <SecondaryButton key={p.id} label={p.label} onPress={p.onPress} style={styles.half} />
+            ) : (
+              <PrimaryButton key={p.id} label={p.label} onPress={p.onPress} style={styles.half} />
+            )
+          )}
         </View>
       ) : null}
 
       {manageActions.length > 0 ? (
         <>
-          <SoftSurface onPress={() => setManageOpen(true)} variant="quiet" style={styles.manageBtn}>
-            <Text style={appTextStyle(language, styles.manageText)}>{t('member.manage')}</Text>
-          </SoftSurface>
+          <SecondaryButton
+            label={t('member.manage')}
+            onPress={() => setManageOpen(true)}
+            style={styles.manage}
+          />
 
-          <BottomSheet visible={manageOpen} title={t('member.manage')} onClose={() => setManageOpen(false)}>
-            {manageActions.map((action) =>
-              action.destructive ? (
-                <SoftSurface
-                  key={action.id}
-                  flat
-                  onPress={() => {
-                    setManageOpen(false);
-                    action.onPress();
-                  }}
-                  style={styles.optionDanger}
-                >
-                  <Text style={appTextStyle(language, styles.dangerText)}>{action.label}</Text>
-                </SoftSurface>
-              ) : (
-                <SheetOption
-                  key={action.id}
-                  label={action.label}
-                  onPress={() => {
-                    setManageOpen(false);
-                    action.onPress();
-                  }}
-                />
-              )
-            )}
+          <BottomSheet
+            visible={manageOpen}
+            title={t('member.manage')}
+            onClose={() => setManageOpen(false)}
+            compact
+          >
+            {manageActions.map((action) => (
+              <SheetOption
+                key={action.id}
+                label={action.label}
+                destructive={action.destructive}
+                onPress={() => {
+                  setManageOpen(false);
+                  action.onPress();
+                }}
+              />
+            ))}
           </BottomSheet>
         </>
       ) : null}

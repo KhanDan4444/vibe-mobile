@@ -5,18 +5,16 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText as Text, AppTextInput as TextInput } from '@/src/components/AppText';
 import { PrimaryButton as UiPrimaryButton } from '@/src/components/ui/Button';
-import { SoftSurface } from '@/src/components/ui/SoftSurface';
-import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
+import { FilterChip } from '@/src/components/FilterChip';
+import { useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
-import { fieldChrome } from '@/src/theme/fieldChrome';
+import { fieldChrome, fieldRingStyle } from '@/src/theme/fieldChrome';
 import { radiusMd } from '@/src/theme/tokens';
 import type { ThemeColors } from '@/src/theme/tokens';
-import { appTextStyle } from '@/src/theme/typography';
-import { dismissKeyboard } from '@/src/utils/dismissKeyboard';
 
 export { SecondaryButton } from '@/src/components/ui/Button';
 export { MoneyAmountField } from '@/src/components/MoneyAmountField';
-export { FIELD_MIN_HEIGHT, FIELD_RADIUS, fieldChrome } from '@/src/theme/fieldChrome';
+export { FIELD_MIN_HEIGHT, FIELD_RADIUS, fieldChrome, fieldRingStyle } from '@/src/theme/fieldChrome';
 
 /** @deprecated Use useTheme().colors in new code. */
 export const colors = {
@@ -87,9 +85,8 @@ export function FormScroll({
     <ScrollView
       style={style}
       contentContainerStyle={[scrollPad, contentContainerStyle]}
-      keyboardShouldPersistTaps="handled"
+      keyboardShouldPersistTaps="always"
       keyboardDismissMode="on-drag"
-      onScrollBeginDrag={dismissKeyboard}
     >
       <View style={{ width: '100%', maxWidth: formMaxWidth }}>{children}</View>
     </ScrollView>
@@ -167,25 +164,35 @@ export const Field = React.forwardRef<
   const [focused, setFocused] = React.useState(false);
   const [revealed, setRevealed] = React.useState(false);
   const showToggle = Boolean(secureTextEntry);
-  const borderColor = useFieldBorderColor({ error, focused, disabled });
+  // ASCII-oriented keyboards / passwords should not use Ethiopic metrics (layout jump on focus).
+  // Also force Latin face when the visible placeholder/value is ASCII (e.g. "e.g. Monthly").
+  const asciiVisible = /^[\x00-\x7F]*$/.test((value || placeholder || '').trim());
+  const useLatin =
+    latin ??
+    Boolean(
+      secureTextEntry ||
+        keyboardType === 'phone-pad' ||
+        keyboardType === 'numeric' ||
+        keyboardType === 'decimal-pad' ||
+        keyboardType === 'email-address' ||
+        (asciiVisible && Boolean(value || placeholder))
+    );
 
   return (
-    <SoftSurface
-      variant="quiet"
-      flat={!focused || Boolean(disabled)}
+    <View
       style={[
         formStyles.inputShell,
         {
-          backgroundColor: disabled ? c.card : c.inputBg,
-          borderColor,
+          backgroundColor: disabled ? c.inputBg : c.card,
           opacity: disabled ? 0.65 : 1,
         },
+        fieldRingStyle(c, { focused, error, disabled }),
         style,
       ]}
     >
       <TextInput
         ref={ref}
-        latin={latin}
+        latin={useLatin}
         style={[formStyles.inputText, { color: c.text }]}
         value={value}
         onChangeText={onChangeText}
@@ -226,7 +233,7 @@ export const Field = React.forwardRef<
           />
         </Pressable>
       ) : null}
-    </SoftSurface>
+    </View>
   );
 });
 
@@ -234,15 +241,14 @@ export function ErrorBanner({ message }: { message: string }) {
   const { colors: c } = useTheme();
   if (!message) return null;
   return (
-    <SoftSurface
-      flat
+    <View
       style={[
         formStyles.error,
         { backgroundColor: c.errorBg, borderColor: 'rgba(244,63,94,0.35)' },
       ]}
     >
       <Text style={{ color: c.error, fontSize: 14 }}>{message}</Text>
-    </SoftSurface>
+    </View>
   );
 }
 
@@ -251,12 +257,14 @@ export function PrimaryButton({
   onPress,
   loading,
   disabled,
+  destructive,
   style,
 }: {
   label: string;
   onPress: () => void;
   loading?: boolean;
   disabled?: boolean;
+  destructive?: boolean;
   style?: StyleProp<ViewStyle>;
 }) {
   return (
@@ -265,6 +273,7 @@ export function PrimaryButton({
       onPress={onPress}
       loading={loading}
       disabled={disabled}
+      destructive={destructive}
       style={[formStyles.buttonSpacing, style]}
     />
   );
@@ -279,33 +288,16 @@ export function ChipRow<T extends string>({
   value: T;
   onChange: (v: T) => void;
 }) {
-  const { colors: c } = useTheme();
-  const { language } = usePreferences();
   return (
     <View style={formStyles.chipRow}>
-      {options.map((opt) => {
-        const active = value === opt;
-        return (
-          <SoftSurface
-            key={opt}
-            flat={!active}
-            onPress={() => onChange(opt)}
-            style={[
-              formStyles.chip,
-              active && { borderColor: c.accentText, backgroundColor: c.accentSoft },
-            ]}
-          >
-            <Text
-              style={appTextStyle(language, {
-                ...formStyles.chipText,
-                color: active ? c.accentText : c.muted,
-              })}
-            >
-              {opt}
-            </Text>
-          </SoftSurface>
-        );
-      })}
+      {options.map((opt) => (
+        <FilterChip
+          key={opt}
+          label={opt}
+          selected={value === opt}
+          onPress={() => onChange(opt)}
+        />
+      ))}
     </View>
   );
 }

@@ -1,13 +1,11 @@
 import { useState } from 'react';
-import { Alert, Image, View } from 'react-native';
+import { Alert, Image, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
-import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useTranslation } from 'react-i18next';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
 import { Label } from '@/src/components/Form';
-import { SoftSurface } from '@/src/components/ui/SoftSurface';
-import { useTheme } from '@/src/context/PreferencesContext';
+import { SecondaryButton } from '@/src/components/ui/Button';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { compressMemberPhoto } from '@/src/utils/compressMemberPhoto';
 import { dismissKeyboardThen } from '@/src/utils/dismissKeyboard';
@@ -36,7 +34,6 @@ export function PhotoPickerField({
   notice?: string;
 }) {
   const { t } = useTranslation();
-  const { colors: c } = useTheme();
   const [sheetOpen, setSheetOpen] = useState(false);
   const styles = useThemedStyles((colors) => ({
     row: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 16, marginTop: 4 },
@@ -44,22 +41,11 @@ export function PhotoPickerField({
     placeholder: {
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
-      borderWidth: 1,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.border,
     },
     placeholderText: { color: colors.dim, fontSize: 11 },
     actions: { flex: 1, gap: 8 },
-    btn: {
-      paddingVertical: 12,
-      paddingHorizontal: 14,
-      minHeight: 44,
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
-    },
-    btnDisabled: { opacity: 0.45 },
-    btnSecondary: { backgroundColor: 'transparent' },
-    btnText: { color: colors.text, fontSize: 14, fontWeight: '600' as const },
-    btnTextSecondary: { color: colors.muted, fontSize: 14 },
     notice: {
       marginTop: 8,
       marginBottom: 4,
@@ -67,27 +53,6 @@ export function PhotoPickerField({
       lineHeight: 18,
       color: colors.warning,
     },
-    optionRow: {
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
-      gap: 12,
-    },
-    optionIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 10,
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
-      backgroundColor: colors.accentSoft,
-    },
-    sheetOption: {
-      paddingVertical: 14,
-      paddingHorizontal: 14,
-      marginBottom: 8,
-      minHeight: 56,
-      justifyContent: 'center' as const,
-    },
-    cancelWrap: { marginTop: 8 },
   }));
 
   const closeSheet = () => setSheetOpen(false);
@@ -153,68 +118,21 @@ export function PhotoPickerField({
           )}
         </View>
         <View style={styles.actions}>
-          <SoftSurface
-            onPress={pickBlocked ? undefined : openPhotoActions}
-            style={[styles.btn, pickBlocked ? styles.btnDisabled : null]}
-            accessibilityLabel={addLabel}
-            flat={pickBlocked}
-          >
-            <Text style={styles.btnText}>{addLabel}</Text>
-          </SoftSurface>
+          <SecondaryButton label={addLabel} onPress={openPhotoActions} disabled={pickBlocked} loading={processing} />
           {previewUri ? (
-            <SoftSurface
-              flat
-              onPress={processing ? undefined : () => onChange('', '')}
-              style={[styles.btn, styles.btnSecondary]}
-              accessibilityLabel={t('photo.remove')}
-            >
-              <Text style={styles.btnTextSecondary}>{t('photo.remove')}</Text>
-            </SoftSurface>
+            <SecondaryButton
+              label={t('photo.remove')}
+              onPress={() => onChange('', '')}
+              disabled={processing}
+            />
           ) : null}
         </View>
       </View>
 
-      <BottomSheet
-        visible={sheetOpen}
-        title={t('photo.label')}
-        onClose={closeSheet}
-        showCloseButton
-      >
-        <SoftSurface
-          onPress={() => void pickFromCamera()}
-          style={styles.sheetOption}
-          accessibilityRole="button"
-        >
-          <View style={styles.optionRow}>
-            <View style={styles.optionIcon}>
-              <Ionicons name="camera-outline" size={22} color={c.accentText} />
-            </View>
-            <Text style={{ flex: 1, fontSize: 15, fontWeight: '600', color: c.text }}>
-              {t('photo.takePhoto')}
-            </Text>
-            <Ionicons name="chevron-forward" size={18} color={c.muted} />
-          </View>
-        </SoftSurface>
-
-        <SoftSurface
-          onPress={() => void pickFromLibrary()}
-          style={styles.sheetOption}
-          accessibilityRole="button"
-        >
-          <View style={styles.optionRow}>
-            <View style={styles.optionIcon}>
-              <Ionicons name="images-outline" size={22} color={c.accentText} />
-            </View>
-            <Text style={{ flex: 1, fontSize: 15, fontWeight: '600', color: c.text }}>
-              {t('photo.chooseLibrary')}
-            </Text>
-            <Ionicons name="chevron-forward" size={18} color={c.muted} />
-          </View>
-        </SoftSurface>
-
-        <View style={styles.cancelWrap}>
-          <SheetOption label={t('common.cancel')} onPress={closeSheet} />
-        </View>
+      <BottomSheet visible={sheetOpen} title={t('photo.label')} onClose={closeSheet} compact>
+        <SheetOption label={t('photo.takePhoto')} onPress={() => void pickFromCamera()} />
+        <SheetOption label={t('photo.chooseLibrary')} onPress={() => void pickFromLibrary()} />
+        <SheetOption label={t('common.cancel')} onPress={closeSheet} />
       </BottomSheet>
     </View>
   );

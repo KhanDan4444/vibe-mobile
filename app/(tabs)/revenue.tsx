@@ -3,7 +3,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, View, type TextStyle } from 'react-native';
-import { AppText as Text, AppTextInput as TextInput } from '@/src/components/AppText';
+import { AppText as Text } from '@/src/components/AppText';
 import { ListFooterSkeleton, PageSkeleton } from '@/src/components/Skeleton';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -29,6 +29,9 @@ import { statusLabelKey } from '@/src/utils/statusLabels';
 import { isGymOwner } from '@/src/utils/roles';
 import { SecondaryButton } from '@/src/components/ui/Button';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
+import { FilterChip } from '@/src/components/FilterChip';
+import { SearchField } from '@/src/components/SearchField';
+import { fieldRingStyle } from '@/src/theme/fieldChrome';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import {
   formatTrendForDisplay,
@@ -284,37 +287,18 @@ export default function RevenueScreen() {
       borderTopColor: colors.border,
       gap: 8,
     },
-    periodRow: { gap: 8, paddingTop: 10, paddingBottom: 8 },
-    periodPill: {
-      paddingHorizontal: 12,
-      paddingVertical: 7,
-      borderRadius: 12,
-      minHeight: 36,
-      justifyContent: 'center' as const,
-    },
-    periodPillActive: {
-      backgroundColor: colors.accentSoft,
-      borderColor: colors.accentText,
-    },
-    periodPillText: { fontSize: 13, fontWeight: '600' as const, color: colors.muted },
-    periodPillTextActive: { color: colors.accentText },
+    periodRow: { gap: 6, paddingTop: 10, paddingBottom: 8 },
     searchRow: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 10, marginBottom: 8 },
-    searchWrap: {
-      flex: 1,
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
-      paddingHorizontal: 12,
-      minHeight: 44,
-    },
-    searchIcon: { marginRight: 8 },
-    searchInput: { flex: 1, paddingVertical: 11, color: colors.text, fontSize: 15 },
+    searchWrap: { flex: 1 },
     filterBtn: {
       width: 44,
       height: 44,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
+      borderRadius: 12,
+      backgroundColor: colors.card,
     },
-    filterBtnActive: { borderColor: colors.accentText, backgroundColor: colors.accentSoft },
+    filterBtnActive: { backgroundColor: colors.accentSoft },
     filterDot: {
       position: 'absolute' as const,
       top: 8,
@@ -528,63 +512,41 @@ export default function RevenueScreen() {
         {QUICK_PERIODS.map((p) => {
           const active = !useCustomRange && preset === p.value;
           return (
-            <SoftSurface
+            <FilterChip
               key={p.value}
+              label={t(p.labelKey)}
+              selected={active}
               onPress={() => selectPreset(p.value)}
-              style={[styles.periodPill, active && styles.periodPillActive]}
-            >
-              <Text
-                style={appTextStyle(language, {
-                  ...styles.periodPillText,
-                  ...(active ? styles.periodPillTextActive : {}),
-                })}
-              >
-                {t(p.labelKey)}
-              </Text>
-            </SoftSurface>
+            />
           );
         })}
-        <SoftSurface
+        <FilterChip
+          label={t('revenue.periodMore')}
+          selected={useCustomRange}
           onPress={openMorePeriods}
-          style={[styles.periodPill, useCustomRange && styles.periodPillActive]}
-        >
-          <Text
-            style={appTextStyle(language, {
-              ...styles.periodPillText,
-              ...(useCustomRange ? styles.periodPillTextActive : {}),
-            })}
-          >
-            {t('revenue.periodMore')}
-          </Text>
-        </SoftSurface>
+        />
       </ScrollView>
 
       <View style={styles.searchRow}>
-        <SoftSurface style={styles.searchWrap}>
-          <Ionicons name="search" size={18} color={c.dim} style={styles.searchIcon} />
-          <TextInput
-            style={appTextStyle(language, styles.searchInput)}
-            placeholder={t('revenue.search')}
-            placeholderTextColor={c.dim}
-            value={search}
-            onChangeText={setSearch}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          {search ? (
-            <Pressable onPress={() => setSearch('')} hitSlop={8}>
-              <Ionicons name="close-circle" size={18} color={c.dim} />
-            </Pressable>
-          ) : null}
-        </SoftSurface>
-        <SoftSurface
+        <SearchField
+          value={search}
+          onChangeText={setSearch}
+          placeholder={t('revenue.search')}
+          style={styles.searchWrap}
+        />
+        <Pressable
           onPress={() => setFiltersOpen(true)}
-          style={[styles.filterBtn, filtersActive && styles.filterBtnActive]}
+          style={[
+            styles.filterBtn,
+            fieldRingStyle(c, { open: filtersOpen || filtersActive }),
+            filtersActive && styles.filterBtnActive,
+          ]}
           accessibilityRole="button"
+          android_ripple={null}
         >
           <Ionicons name="options-outline" size={22} color={filtersActive ? c.accentText : c.muted} />
           {filtersActive ? <View style={styles.filterDot} /> : null}
-        </SoftSurface>
+        </Pressable>
       </View>
 
       <View style={styles.listHeading}>
@@ -678,7 +640,7 @@ export default function RevenueScreen() {
         onUseCustomRange={setUseCustomRange}
       />
 
-      <BottomSheet visible={morePeriodsOpen} title={t('revenue.periodMoreTitle')} onClose={() => setMorePeriodsOpen(false)}>
+      <BottomSheet visible={morePeriodsOpen} title={t('revenue.periodMoreTitle')} onClose={() => setMorePeriodsOpen(false)} compact>
         {MORE_PERIODS.map((p) => (
           <SheetOption
             key={p.value}

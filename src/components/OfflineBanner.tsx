@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Modal,
   Pressable,
   StyleSheet,
@@ -10,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { AppText as Text } from '@/src/components/AppText';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
+import { PrimaryButton, SecondaryButton } from '@/src/components/ui/Button';
 import { useFlash } from '@/src/context/FlashContext';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { fabElevation } from '@/src/theme/elevation';
@@ -132,25 +132,19 @@ export function OfflineSyncOverlay() {
             ) : null}
 
             <View style={styles.actions}>
-              <Pressable
-                style={[styles.btn, styles.btnGhost, { borderColor: c.border }]}
+              <SecondaryButton
+                label={t('offline.syncLater')}
                 onPress={() => setModalDismissed(true)}
                 disabled={isSyncing}
-              >
-                <Text style={[styles.btnText, { color: c.muted }]}>{t('offline.syncLater')}</Text>
-              </Pressable>
-              <Pressable
-                style={[styles.btn, { backgroundColor: c.accent, opacity: isSyncing ? 0.7 : 1 }]}
+                style={styles.btn}
+              />
+              <PrimaryButton
+                label={t('offline.syncNow')}
                 onPress={() => void onSync()}
+                loading={isSyncing}
                 disabled={isSyncing}
-                accessibilityLabel={t('offline.syncNow')}
-              >
-                {isSyncing ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={[styles.btnText, styles.btnTextOnAccent]}>{t('offline.syncNow')}</Text>
-                )}
-              </Pressable>
+                style={styles.btn}
+              />
             </View>
 
             <Pressable
@@ -213,17 +207,7 @@ const styles = StyleSheet.create({
   message: { marginTop: 8, fontSize: 14, lineHeight: 20 },
   errorDetail: { marginTop: 8, fontSize: 13, lineHeight: 18 },
   actions: { flexDirection: 'row', gap: 10, marginTop: 20 },
-  btn: {
-    flex: 1,
-    minHeight: 48,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-  },
-  btnGhost: { borderWidth: 1, backgroundColor: 'transparent' },
-  btnText: { fontSize: 15, fontWeight: '600' },
-  btnTextOnAccent: { color: '#fff' },
+  btn: { flex: 1 },
   discardBtn: {
     marginTop: 14,
     alignItems: 'center',

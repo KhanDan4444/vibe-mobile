@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
-import { SoftSurface } from '@/src/components/ui/SoftSurface';
+import { PickerTrigger } from '@/src/components/PickerTrigger';
+import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 
 type SortOption = { id: string; label?: string; labelKey?: string };
@@ -19,15 +20,10 @@ export function SortPicker<T extends string>({
   onChange: (id: T) => void;
 }) {
   const { t } = useTranslation();
+  const { colors: c } = useTheme();
   const [open, setOpen] = useState(false);
-  const styles = useThemedStyles((c) => ({
-    btn: {
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      alignSelf: 'flex-start' as const,
-      justifyContent: 'center' as const,
-    },
-    btnText: { color: c.accentText, fontSize: 13, fontWeight: '600' as const },
+  const styles = useThemedStyles(() => ({
+    btnText: { fontSize: 13, fontWeight: '600' as const },
   }));
 
   const resolve = (opt: SortOption | undefined) => {
@@ -40,9 +36,9 @@ export function SortPicker<T extends string>({
 
   return (
     <>
-      <SoftSurface onPress={() => setOpen(true)} style={styles.btn} accessibilityRole="button">
-        <Text style={styles.btnText}>{current}</Text>
-      </SoftSurface>
+      <PickerTrigger size="compact" open={open} onPress={() => setOpen(true)}>
+        <Text style={[styles.btnText, { color: c.accentText }]}>{current}</Text>
+      </PickerTrigger>
 
       <BottomSheet visible={open} title={label} onClose={() => setOpen(false)}>
         {options.map((opt) => (

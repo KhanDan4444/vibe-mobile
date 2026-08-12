@@ -310,7 +310,6 @@ export default function DashboardScreen() {
         </View>
       ) : data ? (
         <Animated.View entering={FadeInDown.duration(timings.enterMs).springify().damping(22)}>
-          {summaryBlock}
           <View style={styles.grid}>
             <StatCard
               label={t('dashboard.active')}
@@ -349,6 +348,7 @@ export default function DashboardScreen() {
               onPress={() => goMembers('unpaid')}
             />
           </View>
+          {summaryBlock}
           {owner ? attentionBlock : null}
         </Animated.View>
       ) : null}
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 12,
   },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md, marginTop: space.lg },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md, marginTop: space.sm },
   statCard: {
     flex: 1,
     paddingVertical: space.md,
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 22, fontWeight: '700', letterSpacing: -0.3 },
   statLabel: { marginTop: 2, fontSize: 12 },
   summary: {
-    marginTop: space.sm,
+    marginTop: space.lg,
     padding: space.lg + 2,
   },
   summaryTitle: { fontSize: 13, fontWeight: '600' },

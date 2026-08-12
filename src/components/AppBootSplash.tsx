@@ -9,6 +9,7 @@ import Animated, {
   useSharedValue,
   withDelay,
   withRepeat,
+  withSequence,
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, RadialGradient, Rect, Stop } from 'react-native-svg';
@@ -20,6 +21,24 @@ export const BOOT_SPLASH_BG_DARK = '#000508';
 export const BOOT_SPLASH_BG_LIGHT = '#000508';
 const BOOT_SPLASH_ICON_WIDTH = 160;
 const RING_SIZE = BOOT_SPLASH_ICON_WIDTH * 1.1;
+
+/** Exit: glow collapses + mark eases back while the overlay lifts. */
+export const BOOT_SPLASH_EXIT_MS = 460;
+
+export function bootSplashExiting() {
+  'worklet';
+  const easing = Easing.bezier(0.22, 1, 0.36, 1);
+  return {
+    initialValues: {
+      opacity: 1,
+      transform: [{ scale: 1 }],
+    },
+    animations: {
+      opacity: withTiming(0, { duration: BOOT_SPLASH_EXIT_MS, easing }),
+      transform: [{ scale: withTiming(0.9, { duration: BOOT_SPLASH_EXIT_MS, easing }) }],
+    },
+  };
+}
 
 type Props = {
   /** When false, keep the system splash up (used only for the very first paint). */
@@ -41,16 +60,20 @@ export function AppBootSplash({ releaseNative = true }: Props) {
   }, [releaseNative]);
 
   useEffect(() => {
-    breathe.value = withRepeat(
-      withTiming(1.025, { duration: 1800, easing: Easing.inOut(Easing.sin) }),
-      -1,
-      true,
+    // A few living cycles, then settle — avoids feeling like an infinite loader on slow boots.
+    breathe.value = withSequence(
+      withRepeat(
+        withTiming(1.025, { duration: 1500, easing: Easing.inOut(Easing.sin) }),
+        4,
+        true,
+      ),
+      withTiming(1, { duration: 500, easing: Easing.out(Easing.cubic) }),
     );
-    glow.value = withTiming(1, { duration: 900, easing: Easing.out(Easing.cubic) });
-    // Small delay so the ring emerges just after the field lights up.
+    glow.value = withTiming(1, { duration: 720, easing: Easing.out(Easing.cubic) });
+    // Tighter heartbeat; stop after three rings and hold the calm mark.
     pulse.value = withDelay(
-      450,
-      withRepeat(withTiming(1, { duration: 2600, easing: Easing.out(Easing.quad) }), -1, false),
+      320,
+      withRepeat(withTiming(1, { duration: 1700, easing: Easing.out(Easing.quad) }), 3, false),
     );
   }, [breathe, glow, pulse]);
 
@@ -65,8 +88,8 @@ export function AppBootSplash({ releaseNative = true }: Props) {
 
   // One soft ring that expands outward and fades — a gentle heartbeat.
   const ringAnim = useAnimatedStyle(() => ({
-    opacity: glow.value * interpolate(pulse.value, [0, 0.15, 1], [0, 0.38, 0]),
-    transform: [{ scale: interpolate(pulse.value, [0, 1], [0.7, 1.9]) }],
+    opacity: glow.value * interpolate(pulse.value, [0, 0.18, 1], [0, 0.38, 0]),
+    transform: [{ scale: interpolate(pulse.value, [0, 1], [0.72, 1.75]) }],
   }));
 
   return (

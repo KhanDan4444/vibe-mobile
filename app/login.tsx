@@ -316,9 +316,11 @@ const phoneStyles = StyleSheet.create({
   },
   inputField: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 0,
     fontSize: 16,
+    lineHeight: 20,
     minHeight: 46,
+    textAlignVertical: 'center',
   },
   eyeButton: {
     paddingLeft: 10,
@@ -399,9 +401,11 @@ const tabletStyles = StyleSheet.create({
   },
   inputField: {
     flex: 1,
-    paddingVertical: 14,
+    paddingVertical: 0,
     fontSize: 17,
+    lineHeight: 22,
     minHeight: 50,
+    textAlignVertical: 'center',
   },
   eyeButton: {
     paddingLeft: 12,

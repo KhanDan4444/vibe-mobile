@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
-import { Ionicons } from '@expo/vector-icons';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
-import { SoftSurface } from '@/src/components/ui/SoftSurface';
-import { useTheme } from '@/src/context/PreferencesContext';
+import { PickerTrigger } from '@/src/components/PickerTrigger';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 
 export type FilterOption<T extends string = string> = {
@@ -26,31 +24,21 @@ export function FilterPickerButton<T extends string>({
   onChange: (value: T) => void;
   sheetTitle?: string;
 }) {
-  const { colors: c } = useTheme();
   const [open, setOpen] = useState(false);
   const selected = options.find((o) => o.value === value);
   const styles = useThemedStyles((colors) => ({
-    btn: {
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
-      gap: 8,
-      paddingHorizontal: 14,
-      paddingVertical: 12,
-      minHeight: 48,
-    },
     dot: { width: 8, height: 8, borderRadius: 4 },
     label: { flex: 1, fontSize: 14, fontWeight: '600' as const, color: colors.text },
   }));
 
   return (
     <View>
-      <SoftSurface onPress={() => setOpen(true)} style={styles.btn} accessibilityRole="button">
+      <PickerTrigger open={open} onPress={() => setOpen(true)}>
         {selected?.color ? <View style={[styles.dot, { backgroundColor: selected.color }]} /> : null}
         <Text style={styles.label} numberOfLines={1}>
           {selected?.label ?? label}
         </Text>
-        <Ionicons name="chevron-down" size={18} color={c.muted} />
-      </SoftSurface>
+      </PickerTrigger>
 
       <BottomSheet visible={open} title={sheetTitle ?? label} onClose={() => setOpen(false)}>
         {options.map((opt) => (
