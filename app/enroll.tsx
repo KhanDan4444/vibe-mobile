@@ -109,12 +109,8 @@ export default function EnrollScreen() {
   const [reduceMotion, setReduceMotion] = useState(false);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const phoneRef = useRef<TextInput>(null);
-  const stepDirectionRef = useRef<1 | -1>(1);
   const checkScale = useRef(new Animated.Value(1)).current;
   const checkOpacity = useRef(new Animated.Value(1)).current;
-  const stepOpacity = useRef(new Animated.Value(1)).current;
-  const stepTranslate = useRef(new Animated.Value(0)).current;
-  const swipeHintOpacity = useRef(new Animated.Value(1)).current;
   const { colors: c, theme } = useTheme();
   const { t } = useTranslation();
   const styles = useThemedStyles((colors) => ({
@@ -254,31 +250,20 @@ export default function EnrollScreen() {
     if (!swipeHintVisibleRef.current) return;
     swipeHintVisibleRef.current = false;
     void AsyncStorage.setItem(SWIPE_HINT_KEY, '1');
-    if (reduceMotion) {
-      setShowSwipeHint(false);
-      return;
-    }
-    Animated.timing(swipeHintOpacity, {
-      toValue: 0,
-      duration: 160,
-      useNativeDriver: true,
-    }).start(({ finished }) => {
-      if (finished) setShowSwipeHint(false);
-    });
-  }, [reduceMotion, swipeHintOpacity]);
+    setShowSwipeHint(false);
+  }, []);
 
   useEffect(() => {
     let alive = true;
     void AsyncStorage.getItem(SWIPE_HINT_KEY).then((v) => {
       if (!alive || v === '1') return;
-      swipeHintOpacity.setValue(1);
       swipeHintVisibleRef.current = true;
       setShowSwipeHint(true);
     });
     return () => {
       alive = false;
     };
-  }, [swipeHintOpacity]);
+  }, []);
 
   const canEnroll = Boolean(user && hasGymPortalAccess(user.role));
   const owner = isGymOwner(user?.role);
@@ -349,22 +334,6 @@ export default function EnrollScreen() {
   }, [enrollDone, checkOpacity, checkScale, reduceMotion]);
 
   useEffect(() => {
-    if (enrollDone) return;
-    if (reduceMotion) {
-      stepOpacity.setValue(1);
-      stepTranslate.setValue(0);
-      return;
-    }
-    const fromX = stepDirectionRef.current * 18;
-    stepOpacity.setValue(0);
-    stepTranslate.setValue(fromX);
-    Animated.parallel([
-      Animated.timing(stepOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
-      Animated.timing(stepTranslate, { toValue: 0, duration: 220, useNativeDriver: true }),
-    ]).start();
-  }, [enrollStep, enrollDone, reduceMotion, stepOpacity, stepTranslate]);
-
-  useEffect(() => {
     if (!showBranchPicker || branchId != null) return;
     const active = branches.filter((b) => b.is_active !== false);
     const preferred = active.find((b) => b.is_default) ?? active[0];
@@ -393,7 +362,6 @@ export default function EnrollScreen() {
     setPhoneError('');
     setPlanError('');
     setStartDateError('');
-    stepDirectionRef.current = 1;
     setEnrollStep(1);
     setEnrollDone(null);
     const active = branches.filter((b) => b.is_active !== false);
@@ -527,7 +495,6 @@ export default function EnrollScreen() {
   ]);
 
   const goToStep = (next: number) => {
-    stepDirectionRef.current = next > enrollStep ? 1 : -1;
     setEnrollStep(next);
   };
 
@@ -710,27 +677,25 @@ export default function EnrollScreen() {
           <EnrollStepProgress steps={enrollSteps} current={enrollStep} />
 
           {showSwipeHint ? (
-            <Animated.View style={{ opacity: swipeHintOpacity }}>
-              <SoftSurface
-                variant="quiet"
+            <SoftSurface
+              variant="quiet"
+              onPress={dismissSwipeHint}
+              style={styles.swipeHint}
+              accessibilityRole="button"
+              accessibilityLabel={t('enroll.swipeHint')}
+            >
+              <Ionicons name="swap-horizontal" size={16} color={c.accentText} />
+              <Text style={styles.swipeHintText}>{t('enroll.swipeHintShort')}</Text>
+              <Pressable
                 onPress={dismissSwipeHint}
-                style={styles.swipeHint}
+                hitSlop={8}
+                style={styles.swipeHintDismiss}
                 accessibilityRole="button"
-                accessibilityLabel={t('enroll.swipeHint')}
+                accessibilityLabel={t('common.dismiss')}
               >
-                <Ionicons name="swap-horizontal" size={16} color={c.accentText} />
-                <Text style={styles.swipeHintText}>{t('enroll.swipeHintShort')}</Text>
-                <Pressable
-                  onPress={dismissSwipeHint}
-                  hitSlop={8}
-                  style={styles.swipeHintDismiss}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('common.dismiss')}
-                >
-                  <Ionicons name="close" size={14} color={c.accentText} />
-                </Pressable>
-              </SoftSurface>
-            </Animated.View>
+                <Ionicons name="close" size={14} color={c.accentText} />
+              </Pressable>
+            </SoftSurface>
           ) : null}
 
           <ErrorBanner
@@ -740,21 +705,17 @@ export default function EnrollScreen() {
             }
           />
 
-          <Animated.View
-            style={{ opacity: stepOpacity, transform: [{ translateX: stepTranslate }] }}
-            accessibilityHint={t('enroll.swipeHint')}
-            {...swipeResponder.panHandlers}
-          >
+          <View accessibilityHint={t('enroll.swipeHint')} {...swipeResponder.panHandlers}>
             {enrollStep === 1 ? (
               <>
-                <Label>{t('forms.name')}</Label>
+                <Label>{t('enroll.fullName')}</Label>
                 <Field
                   value={name}
                   onChangeText={(v) => {
                     setName(v);
                     if (nameError) setNameError('');
                   }}
-                  placeholder={t('forms.memberName')}
+                  placeholder={t('enroll.fullNamePlaceholder')}
                   autoCapitalize="words"
                   error={Boolean(nameError)}
                   onBlur={() => ensureNameValid()}
@@ -879,7 +840,7 @@ export default function EnrollScreen() {
                 )}
               </>
             ) : null}
-          </Animated.View>
+          </View>
         </FormScroll>
 
         <View

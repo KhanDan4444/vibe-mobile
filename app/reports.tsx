@@ -294,7 +294,7 @@ export default function ReportsScreen() {
               label={t('reports.dueSoon')}
               value={counts.dueSoon}
               accent={c.statusDueSoon}
-              tone="attention"
+              tone="neutral"
               align="center"
               layoutStyle={reportStatLayoutStyle}
               onPress={() => setMemberFilter('due_soon')}
@@ -312,7 +312,7 @@ export default function ReportsScreen() {
               label={t('reports.unpaid')}
               value={counts.unpaid}
               accent={c.statusUnpaid}
-              tone="attention"
+              tone="neutral"
               align="center"
               layoutStyle={reportStatLayoutStyle}
               onPress={() => setMemberFilter('unpaid')}

@@ -479,6 +479,8 @@
     "term": "Yeroo",
     "payment": "Kaffaltii",
     "fullNameRequired": "Maqaa guutuu miseensaa galchi.",
+    "fullName": "Maqaa guutuu",
+    "fullNamePlaceholder": "Maqaa guutuu miseensaa",
     "sectionMember": "Miseensa",
     "sectionMembership": "Miseensummaa",
     "sectionPayment": "Kaffaltii",
@@ -617,7 +619,14 @@
     "gymName": "Maqaa jimii",
     "ownerName": "Maqaa abbaa qabeenyaa",
     "passwordSame": "Jechi iccitii haaraan kan ammaa irraa adda ta'uu qaba.",
-    "passwordChangedBody": "Jechi iccitii kee jijjiirameera."
+    "passwordChangedBody": "Jechi iccitii kee jijjiirameera.",
+    "changePasswordHint": "Jecha iccitii ammaa galchi, sana booda haaraa filadhu.",
+    "passwordRequired": "Dirreen kun barbaachisaa dha.",
+    "passwordMin8": "Yoo xiqqaate arfiilee 8",
+    "passwordsMatch": "Jechamoonni iccitii wal-fakkaatu",
+    "passwordTooLong": "Jechi iccitii baay'ee dheeraa dha.",
+    "currentPasswordIncorrect": "Jechi iccitii ammaa sirrii miti.",
+    "passwordUpdateFailed": "Jecha iccitii haaromsuun hin dandeenye. Debi'ii yaali."
   },
   "validation": {
     "selectPlanAndDates": "Karoora haarawa filadhu fi guyyoota sirrii galchi.",
@@ -627,7 +636,18 @@
     "changePlanDuplicate": "Kaffaltiin jijjiirama karooraa guyyaa kana irratti kanaan dura galmeeffameera. Galii keessatti gulaali ykn guyyaa biraa filadhu.",
     "phoneRequired": "SMS yaadachiisaaf lakkoofsi bilbilaa barbaachisaadha.",
     "phoneInvalid": "Lakkoofsa bilbilaa Itoophiyaa sirrii galchi (09… ykn +251…).",
-    "planNotSelected": "Karoora hin filatamne."
+    "planNotSelected": "Karoora hin filatamne.",
+    "nameRequired": "Maqaan barbaachisaadha.",
+    "nameTooLong": "Maqaan baay'ee dheeraadha.",
+    "usernameRequired": "Maqaan fayyadamaa barbaachisaadha.",
+    "usernameTooShort": "Maqaan fayyadamaa yoo xiqqaate arfiilee 3 ta'uu qaba.",
+    "usernameTooLong": "Maqaan fayyadamaa baay'ee dhihaatee arfiilee 30 ta'uu qaba.",
+    "usernameInvalid": "Maqaan fayyadamaa qubeewwan, lakkoofsota, tuqaalee, fi underscoring qofa qabaachuu danda'a.",
+    "emailInvalid": "Teessoo imeelii sirrii galchi.",
+    "planDurationMin": "Turtii yoo xiqqaate ji'a 1 ta'uu qaba.",
+    "planPriceInvalid": "Gatiyaa sirrii galchi (duudaa ykn sanaa ol).",
+    "branchRequired": "Damee filadhu.",
+    "addressTooLong": "Teessoon baay'ee dheeraadha."
   },
   "paymentEdit": {
     "deleteTitle": "Kaffaltii haqamuu?",
@@ -714,7 +734,7 @@
   "messages": {
     "empty": "SMSn miseensaa kan ergame hin jiru.",
     "filterLabel": "Gosa ergaa",
-    "filterAll": "Hunda",
+    "filterAll": "Gosa hundaa",
     "filterEnrolled": "Galmeessa",
     "filterDueSoon": "Dhiyeenyatti kan dhumu",
     "filterExpiresToday": "Har'a dhumata",
@@ -722,11 +742,17 @@
     "filterRenewed": "Kan haaromfame",
     "emptyTitle": "SMSn hin jiru",
     "emptyBody": "Seenaan SMS miseensaa ergaa jalqabaa ergteen booda mul'ata.",
+    "statusLine": "Ergaawwan {{count}}",
     "typeEnrolled": "Galmeessi mirkanaa'e",
     "typeDueSoon": "Yaadachiisa dhuminsa dhihoo",
     "typeExpiresToday": "Har'a dhumata",
     "typeExpired": "Beeksisa kan dhumate",
-    "typeRenewed": "Haaromsa mirkanaa'e"
+    "typeRenewed": "Haaromsa mirkanaa'e",
+    "previewEnrolled": "Galmeessa mirkaneessa fi isaan simata",
+    "previewDueSoon": "Karoora isaanii akka dhiyeenyatti dhumu yaadachiisa",
+    "previewExpiresToday": "Miseensummaan har'a akka dhumu beeksisa",
+    "previewExpired": "Miseensummaan akka dhumate beeksisa",
+    "previewRenewed": "Haaromsa milkaa'e mirkaneessa"
   },
   "team": {
     "noBranch": "Dameen hin jiru",
@@ -765,7 +791,18 @@
     "nameLabel": "Maqaa karooraa",
     "namePlaceholder": "fkn. kan ji'a",
     "durationLabel": "Turtii (ji'oota)",
-    "priceLabel": "Gatii (ETB)"
+    "priceLabel": "Gatii (ETB)",
+    "popular": "Kan baay'ee fayyadamu",
+    "perMonth": "{{amount}} / ji'a",
+    "statusLine": "Karoorawwan {{count}} · {{from}} – {{to}} · miseensota si'aawaa {{members}}",
+    "statusLineSingle": "Karoorawwan {{count}} · {{price}} · miseensota si'aawaa {{members}}",
+    "sortLabel": "Karoorawwan tartiibsi",
+    "sortPriceAsc": "Gatii: gadii hanga ol",
+    "sortPriceDesc": "Gatii: ol hanga gadii",
+    "sortDurationAsc": "Turtii: gabaabaa",
+    "sortDurationDesc": "Turtii: dheeraa",
+    "sortMembersDesc": "Miseensota baay'ee",
+    "sortNameAsc": "Maqaa: A–Z"
   },
   "statusBreakdown": {
     "active": "Si'aawaa",
@@ -777,6 +814,7 @@
     "emptyTitle": "Ammatti dameen hin jiru",
     "emptyBody": "Miseensota dameen gurmeessuuf bakka hojii kee isa jalqabaa dabali.",
     "empty": "Ammatti dameen hin jiru. Bakka hojii kee isa jalqabaa dabali.",
+    "statusLine": "Dameewwan {{count}} · miseensota {{members}} · hojjettoota {{staff}}",
     "membersCount": "Miseensota {{count}}",
     "staffCount": "Hojjettoota {{count}}"
   },

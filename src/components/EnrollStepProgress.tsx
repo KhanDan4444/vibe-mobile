@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, View } from 'react-native';
+import { useEffect, useMemo, useRef } from 'react';
+import { AccessibilityInfo, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 import { AppText as Text } from '@/src/components/AppText';
@@ -18,16 +18,14 @@ type Props = {
 
 const RING_SIZE = 58;
 const RING_STROKE = 4.5;
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 /**
- * Enroll progress: current + next copy, animated circular “n of total” ring.
+ * Enroll progress: current + next copy, circular “n of total” ring.
+ * No enter/step motion — keeps the form from tweaking between steps.
  */
 export function EnrollStepProgress({ steps, current }: Props) {
   const { t } = useTranslation();
   const { colors: c } = useTheme();
-  const [reduceMotion, setReduceMotion] = useState(false);
-  const [displayStep, setDisplayStep] = useState(current);
   const styles = useThemedStyles((colors) => ({
     wrap: {
       marginBottom: 20,
@@ -77,108 +75,9 @@ export function EnrollStepProgress({ steps, current }: Props) {
 
   const radius = (RING_SIZE - RING_STROKE) / 2;
   const circumference = 2 * Math.PI * radius;
-  const targetOffset = circumference * (1 - progress);
+  const dashOffset = circumference * (1 - progress);
 
-  const dashOffset = useRef(new Animated.Value(targetOffset)).current;
-  const ringScale = useRef(new Animated.Value(1)).current;
-  const labelOpacity = useRef(new Animated.Value(1)).current;
-  const titleOpacity = useRef(new Animated.Value(1)).current;
-  const titleTranslate = useRef(new Animated.Value(0)).current;
-  const prevStepRef = useRef(current);
-
-  useEffect(() => {
-    let alive = true;
-    AccessibilityInfo.isReduceMotionEnabled().then((v) => {
-      if (alive) setReduceMotion(Boolean(v));
-    });
-    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
-    return () => {
-      alive = false;
-      sub.remove();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (reduceMotion) {
-      dashOffset.setValue(targetOffset);
-      ringScale.setValue(1);
-      labelOpacity.setValue(1);
-      titleOpacity.setValue(1);
-      titleTranslate.setValue(0);
-      setDisplayStep(current);
-      prevStepRef.current = current;
-      return;
-    }
-
-    const stepped = prevStepRef.current !== current;
-    prevStepRef.current = current;
-
-    Animated.timing(dashOffset, {
-      toValue: targetOffset,
-      duration: 420,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: false,
-    }).start();
-
-    if (!stepped) return;
-
-    ringScale.setValue(0.92);
-    titleOpacity.setValue(0);
-    titleTranslate.setValue(8);
-
-    Animated.parallel([
-      Animated.spring(ringScale, {
-        toValue: 1,
-        friction: 6,
-        tension: 140,
-        useNativeDriver: true,
-      }),
-      Animated.parallel([
-        Animated.timing(titleOpacity, {
-          toValue: 1,
-          duration: 240,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(titleTranslate, {
-          toValue: 0,
-          duration: 240,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-      ]),
-      Animated.sequence([
-        Animated.timing(labelOpacity, {
-          toValue: 0,
-          duration: 90,
-          easing: Easing.in(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.timing(labelOpacity, {
-          toValue: 1,
-          duration: 240,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-          delay: 0,
-        }),
-      ]),
-    ]).start();
-
-    // Swap the count mid-blink so it tracks the arc change.
-    const swapId = setTimeout(() => setDisplayStep(current), 90);
-    return () => clearTimeout(swapId);
-  }, [
-    current,
-    targetOffset,
-    reduceMotion,
-    dashOffset,
-    ringScale,
-    labelOpacity,
-    titleOpacity,
-    titleTranslate,
-  ]);
-
-  const stepOfShort = t('enroll.stepOfShort', { current: displayStep, total });
+  const stepOfShort = t('enroll.stepOfShort', { current, total });
   const nextLabel = next
     ? t('enroll.nextStep', { step: next.label })
     : t('enroll.nextDone');
@@ -203,18 +102,13 @@ export function EnrollStepProgress({ steps, current }: Props) {
       }
       accessibilityValue={{ min: 1, max: total, now: current }}
     >
-      <Animated.View
-        style={[
-          styles.copy,
-          { opacity: titleOpacity, transform: [{ translateY: titleTranslate }] },
-        ]}
-      >
+      <View style={styles.copy}>
         <Text display style={styles.title}>{active?.label ?? ''}</Text>
         <Text style={styles.next}>{nextLabel}</Text>
-      </Animated.View>
+      </View>
 
-      <Animated.View
-        style={[styles.ringWrap, { transform: [{ scale: ringScale }] }]}
+      <View
+        style={styles.ringWrap}
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
       >
@@ -227,7 +121,7 @@ export function EnrollStepProgress({ steps, current }: Props) {
             strokeWidth={RING_STROKE}
             fill="none"
           />
-          <AnimatedCircle
+          <Circle
             cx={RING_SIZE / 2}
             cy={RING_SIZE / 2}
             r={radius}
@@ -240,10 +134,8 @@ export function EnrollStepProgress({ steps, current }: Props) {
             transform={`rotate(-90 ${RING_SIZE / 2} ${RING_SIZE / 2})`}
           />
         </Svg>
-        <Animated.Text style={[styles.ringLabel, { opacity: labelOpacity }]}>
-          {stepOfShort}
-        </Animated.Text>
-      </Animated.View>
+        <Text style={styles.ringLabel}>{stepOfShort}</Text>
+      </View>
     </View>
   );
 }

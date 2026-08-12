@@ -4,7 +4,7 @@ import { AppText as Text } from '@/src/components/AppText';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
 import { PickerTrigger } from '@/src/components/PickerTrigger';
 import { useTheme } from '@/src/context/PreferencesContext';
-import { formStyles } from '@/src/components/Form';
+import { FieldError, Label } from '@/src/components/Form';
 import { dismissKeyboard } from '@/src/utils/dismissKeyboard';
 
 export type PickerOption<T extends string = string> = {
@@ -20,6 +20,8 @@ export function OptionPickerField<T extends string>({
   onChange,
   sheetTitle,
   error,
+  errorMessage,
+  required,
 }: {
   label?: string;
   placeholder: string;
@@ -28,18 +30,21 @@ export function OptionPickerField<T extends string>({
   onChange: (value: T) => void;
   sheetTitle?: string;
   error?: boolean;
+  errorMessage?: string;
+  required?: boolean;
 }) {
   const { colors: c } = useTheme();
   const [open, setOpen] = useState(false);
   const selected = options.find((o) => o.value === value);
   const display = selected?.label ?? placeholder;
+  const showError = Boolean(error || errorMessage);
 
   return (
     <View>
-      {label ? <Text style={[formStyles.label, { color: c.muted }]}>{label}</Text> : null}
+      {label ? <Label required={required}>{label}</Label> : null}
       <PickerTrigger
         open={open}
-        error={error}
+        error={showError}
         onPress={() => {
           setOpen(true);
           dismissKeyboard();
@@ -49,6 +54,7 @@ export function OptionPickerField<T extends string>({
           {display}
         </Text>
       </PickerTrigger>
+      <FieldError message={errorMessage} />
 
       <BottomSheet visible={open} title={sheetTitle ?? label ?? placeholder} onClose={() => setOpen(false)}>
         {options.map((opt) => (

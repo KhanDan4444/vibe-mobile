@@ -13,10 +13,14 @@ export function BranchPicker({
   branches,
   value,
   onChange,
+  required,
+  errorMessage,
 }: {
   branches: BranchRow[];
   value: number | null;
   onChange: (id: number) => void;
+  required?: boolean;
+  errorMessage?: string;
 }) {
   const { t } = useTranslation();
   const active = branches.filter((b) => b.is_active !== false);
@@ -28,7 +32,7 @@ export function BranchPicker({
         value: String(b.id),
         label: branchLabel(b, t),
       })),
-    [active, t]
+    [active, t],
   );
 
   return (
@@ -39,6 +43,8 @@ export function BranchPicker({
       options={options}
       value={value != null ? String(value) : undefined}
       onChange={(v) => onChange(Number(v))}
+      required={required}
+      errorMessage={errorMessage}
     />
   );
 }

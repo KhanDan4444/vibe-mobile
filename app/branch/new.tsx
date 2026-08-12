@@ -6,11 +6,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
 import { createBranch, type BranchPayload } from '@/src/api/branches';
-import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { isOfflineQueued } from '@/src/offline/types';
 import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
+import { hasFieldErrors, validateBranchFields, type FieldErrorMap } from '@/src/utils/formValidation';
 import { isGymOwner } from '@/src/utils/roles';
 
 export default function NewBranchScreen() {
@@ -24,6 +25,7 @@ export default function NewBranchScreen() {
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<FieldErrorMap>({});
   const flashSaved = useSaveFlash();
   const flashOffline = useOfflineFlash();
   const canManageBranches = Boolean(user && isGymOwner(user.role));
@@ -44,7 +46,21 @@ export default function NewBranchScreen() {
     onError: (e: Error) => setError(e.message),
   });
 
-  const canSubmit = name.trim().length > 0;
+  const clearField = (key: string) => {
+    if (fieldErrors[key]) setFieldErrors((prev) => ({ ...prev, [key]: undefined }));
+  };
+
+  const handleSubmit = () => {
+    setError('');
+    const next = validateBranchFields({ name, phone, address });
+    setFieldErrors(next);
+    if (hasFieldErrors(next)) return;
+    mutation.mutate({
+      name: name.trim(),
+      phone: phone.trim() || null,
+      address: address.trim() || null,
+    });
+  };
 
   if (!canManageBranches) {
     return <Redirect href="/login" />;
@@ -64,27 +80,47 @@ export default function NewBranchScreen() {
         <FormScroll>
           <ErrorBanner message={error} />
 
-          <Label>{t('branchEdit.name')}</Label>
-          <Field value={name} onChangeText={setName} autoCapitalize="words" />
+          <Label required>{t('branchEdit.name')}</Label>
+          <Field
+            value={name}
+            onChangeText={(v) => {
+              setName(v);
+              clearField('name');
+            }}
+            autoCapitalize="words"
+            error={Boolean(fieldErrors.name)}
+          />
+          <FieldError message={fieldErrors.name ? t(fieldErrors.name) : undefined} />
 
           <Label>{t('branchEdit.phone')}</Label>
-          <Field value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+          <Field
+            value={phone}
+            onChangeText={(v) => {
+              setPhone(v);
+              clearField('phone');
+            }}
+            keyboardType="phone-pad"
+            error={Boolean(fieldErrors.phone)}
+          />
+          <FieldError message={fieldErrors.phone ? t(fieldErrors.phone) : undefined} />
 
           <Label>{t('branchEdit.address')}</Label>
-          <Field value={address} onChangeText={setAddress} autoCapitalize="sentences" />
+          <Field
+            value={address}
+            onChangeText={(v) => {
+              setAddress(v);
+              clearField('address');
+            }}
+            autoCapitalize="sentences"
+            error={Boolean(fieldErrors.address)}
+          />
+          <FieldError message={fieldErrors.address ? t(fieldErrors.address) : undefined} />
 
           <PrimaryButton
             label={t('screens.newBranch')}
-            onPress={() => {
-              setError('');
-              mutation.mutate({
-                name: name.trim(),
-                phone: phone.trim() || null,
-                address: address.trim() || null,
-              });
-            }}
+            onPress={handleSubmit}
             loading={mutation.isPending}
-            disabled={!canSubmit}
+            disabled={mutation.isPending}
           />
         </FormScroll>
       </KeyboardAvoidingView>

@@ -95,7 +95,7 @@ export function FormScroll({
   );
 }
 
-export function Label({ children }: { children: string }) {
+export function Label({ children, required }: { children: string; required?: boolean }) {
   const { colors: c } = useTheme();
   const authSurface = useAuthThemeForced();
   return (
@@ -107,6 +107,11 @@ export function Label({ children }: { children: string }) {
       ]}
     >
       {children}
+      {required ? (
+        <Text style={{ color: c.error }} accessibilityLabel="required">
+          {' *'}
+        </Text>
+      ) : null}
     </Text>
   );
 }

@@ -8,8 +8,9 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { createStaff } from '@/src/api/team';
 import { fetchBranches } from '@/src/api/branches';
 import { BranchPicker } from '@/src/components/BranchPicker';
-import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
+import { hasFieldErrors, validateStaffFields, type FieldErrorMap } from '@/src/utils/formValidation';
 import { isGymOwner, DEFAULT_STAFF_ROLE, STAFF_ROLE_OPTIONS } from '@/src/utils/roles';
 import { OptionPickerField } from '@/src/components/OptionPickerField';
 
@@ -26,6 +27,7 @@ export default function NewStaffScreen() {
   const [staffRole, setStaffRole] = useState<string>(DEFAULT_STAFF_ROLE);
   const [branchId, setBranchId] = useState<number | null>(null);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<FieldErrorMap>({});
   const canManageTeam = Boolean(user && isGymOwner(user.role));
   const styles = useThemedStyles((colors) => ({
     readOnly: { color: colors.muted, padding: 16, fontSize: 15 },
@@ -38,6 +40,7 @@ export default function NewStaffScreen() {
   });
 
   const branches = branchesQuery.data?.branches ?? [];
+  const requireBranch = branches.filter((b) => b.is_active !== false).length > 1;
 
   useEffect(() => {
     if (branchId != null) return;
@@ -62,11 +65,25 @@ export default function NewStaffScreen() {
     onError: (e: Error) => setError(e.message),
   });
 
-  const canSubmit =
-    name.trim().length > 0 &&
-    username.trim().length > 0 &&
-    password.length >= 6 &&
-    branchId != null;
+  const clearField = (key: string) => {
+    if (fieldErrors[key]) setFieldErrors((prev) => ({ ...prev, [key]: undefined }));
+  };
+
+  const handleSubmit = () => {
+    setError('');
+    const next = validateStaffFields({
+      name,
+      username,
+      email,
+      password,
+      branchId,
+      requireBranch,
+      isEdit: false,
+    });
+    setFieldErrors(next);
+    if (hasFieldErrors(next)) return;
+    mutation.mutate();
+  };
 
   if (!canManageTeam) {
     return <Redirect href="/login" />;
@@ -86,8 +103,17 @@ export default function NewStaffScreen() {
         <FormScroll>
           <ErrorBanner message={error} />
 
-          <Label>{t('forms.name')}</Label>
-          <Field value={name} onChangeText={setName} autoCapitalize="words" />
+          <Label required>{t('forms.name')}</Label>
+          <Field
+            value={name}
+            onChangeText={(v) => {
+              setName(v);
+              clearField('name');
+            }}
+            autoCapitalize="words"
+            error={Boolean(fieldErrors.name)}
+          />
+          <FieldError message={fieldErrors.name ? t(fieldErrors.name) : undefined} />
 
           <OptionPickerField
             label={t('forms.role')}
@@ -99,27 +125,63 @@ export default function NewStaffScreen() {
             }))}
             value={staffRole}
             onChange={setStaffRole}
+            required
           />
 
-          <Label>{t('forms.username')}</Label>
-          <Field value={username} onChangeText={setUsername} autoCapitalize="none" />
+          <Label required>{t('forms.username')}</Label>
+          <Field
+            value={username}
+            onChangeText={(v) => {
+              setUsername(v);
+              clearField('username');
+            }}
+            autoCapitalize="none"
+            error={Boolean(fieldErrors.username)}
+          />
+          <FieldError message={fieldErrors.username ? t(fieldErrors.username) : undefined} />
 
           <Label>{t('forms.emailOptional')}</Label>
-          <Field value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
+          <Field
+            value={email}
+            onChangeText={(v) => {
+              setEmail(v);
+              clearField('email');
+            }}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            error={Boolean(fieldErrors.email)}
+          />
+          <FieldError message={fieldErrors.email ? t(fieldErrors.email) : undefined} />
 
-          <Label>{t('forms.password')}</Label>
-          <Field value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />
+          <Label required>{t('forms.password')}</Label>
+          <Field
+            value={password}
+            onChangeText={(v) => {
+              setPassword(v);
+              clearField('password');
+            }}
+            secureTextEntry
+            autoCapitalize="none"
+            error={Boolean(fieldErrors.password)}
+          />
+          <FieldError message={fieldErrors.password ? t(fieldErrors.password) : undefined} />
 
-          <BranchPicker branches={branches} value={branchId} onChange={setBranchId} />
+          <BranchPicker
+            branches={branches}
+            value={branchId}
+            onChange={(id) => {
+              setBranchId(id);
+              clearField('branchId');
+            }}
+            required
+            errorMessage={fieldErrors.branchId ? t(fieldErrors.branchId) : undefined}
+          />
 
           <PrimaryButton
             label={t('screens.addStaff')}
-            onPress={() => {
-              setError('');
-              mutation.mutate();
-            }}
+            onPress={handleSubmit}
             loading={mutation.isPending}
-            disabled={!canSubmit}
+            disabled={mutation.isPending}
           />
         </FormScroll>
       </KeyboardAvoidingView>

@@ -479,6 +479,8 @@
     "term": "Term",
     "payment": "Payment",
     "fullNameRequired": "Enter the member's full name.",
+    "fullName": "Full name",
+    "fullNamePlaceholder": "Member full name",
     "sectionMember": "Member",
     "sectionMembership": "Membership",
     "sectionPayment": "Payment",
@@ -617,7 +619,14 @@
     "gymName": "Gym name",
     "ownerName": "Owner name",
     "passwordSame": "New password must be different from the current password.",
-    "passwordChangedBody": "Your password has been changed."
+    "passwordChangedBody": "Your password has been changed.",
+    "changePasswordHint": "Enter your current password, then choose a new one.",
+    "passwordRequired": "This field is required.",
+    "passwordMin8": "At least 8 characters",
+    "passwordsMatch": "Passwords match",
+    "passwordTooLong": "Password is too long.",
+    "currentPasswordIncorrect": "Current password is incorrect.",
+    "passwordUpdateFailed": "Could not update password. Try again."
   },
   "validation": {
     "selectPlanAndDates": "Select a plan and valid dates.",
@@ -627,7 +636,18 @@
     "changePlanDuplicate": "A plan-change payment is already recorded on this date. Edit it in Revenue or pick another date.",
     "phoneRequired": "Phone number is required for SMS reminders.",
     "phoneInvalid": "Enter a valid Ethiopian mobile number (09… or +251…).",
-    "planNotSelected": "Plan is not selected."
+    "planNotSelected": "Plan is not selected.",
+    "nameRequired": "Name is required.",
+    "nameTooLong": "Name is too long.",
+    "usernameRequired": "Username is required.",
+    "usernameTooShort": "Username must be at least 3 characters.",
+    "usernameTooLong": "Username must be at most 30 characters.",
+    "usernameInvalid": "Username may only contain letters, numbers, dots, and underscores.",
+    "emailInvalid": "Enter a valid email address.",
+    "planDurationMin": "Duration must be at least 1 month.",
+    "planPriceInvalid": "Enter a valid price (zero or more).",
+    "branchRequired": "Select a branch.",
+    "addressTooLong": "Address is too long."
   },
   "paymentEdit": {
     "deleteTitle": "Delete payment",
@@ -714,7 +734,7 @@
   "messages": {
     "empty": "No SMS messages yet.",
     "filterLabel": "Message type",
-    "filterAll": "All",
+    "filterAll": "All types",
     "filterEnrolled": "Enrollment",
     "filterDueSoon": "Due soon",
     "filterExpiresToday": "Expires today",
@@ -722,11 +742,17 @@
     "filterRenewed": "Renewed",
     "emptyTitle": "No SMS yet",
     "emptyBody": "Member SMS history shows up after you send the first message.",
+    "statusLine": "{{count}} messages",
     "typeEnrolled": "Enrollment confirmed",
     "typeDueSoon": "Due soon reminder",
     "typeExpiresToday": "Expires today",
     "typeExpired": "Expired notice",
-    "typeRenewed": "Renewal confirmed"
+    "typeRenewed": "Renewal confirmed",
+    "previewEnrolled": "Confirms enrollment and welcomes them",
+    "previewDueSoon": "Reminds the member their plan is due soon",
+    "previewExpiresToday": "Lets them know membership ends today",
+    "previewExpired": "Notifies that the membership has expired",
+    "previewRenewed": "Confirms a successful renewal"
   },
   "team": {
     "noBranch": "No branch",
@@ -765,7 +791,18 @@
     "nameLabel": "Plan name",
     "namePlaceholder": "e.g. Monthly",
     "durationLabel": "Duration (months)",
-    "priceLabel": "Price (ETB)"
+    "priceLabel": "Price (ETB)",
+    "popular": "Most used",
+    "perMonth": "{{amount}} / month",
+    "statusLine": "{{count}} plans · {{from}} – {{to}} · {{members}} active members",
+    "statusLineSingle": "{{count}} plans · {{price}} · {{members}} active members",
+    "sortLabel": "Sort plans",
+    "sortPriceAsc": "Price: low to high",
+    "sortPriceDesc": "Price: high to low",
+    "sortDurationAsc": "Duration: shortest",
+    "sortDurationDesc": "Duration: longest",
+    "sortMembersDesc": "Most members",
+    "sortNameAsc": "Name: A to Z"
   },
   "statusBreakdown": {
     "active": "Active",
@@ -777,6 +814,7 @@
     "emptyTitle": "No branches yet",
     "emptyBody": "Add your first location to organize members by branch.",
     "empty": "No branches found.",
+    "statusLine": "{{count}} branches · {{members}} members · {{staff}} staff",
     "membersCount": "{{count}} members",
     "staffCount": "{{count}} staff"
   },

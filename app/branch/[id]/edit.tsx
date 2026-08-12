@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchBranches, updateBranch } from '@/src/api/branches';
 import { OptionPickerField } from '@/src/components/OptionPickerField';
-import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { PageSkeleton } from '@/src/components/Skeleton';
 import { LoadError } from '@/src/components/LoadError';
 import { useTheme } from '@/src/context/PreferencesContext';
@@ -15,6 +15,7 @@ import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { isOfflineQueued } from '@/src/offline/types';
 import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
 import type { UpdateBranchPayload } from '@/src/api/branches';
+import { hasFieldErrors, validateBranchFields, type FieldErrorMap } from '@/src/utils/formValidation';
 import { isGymOwner } from '@/src/utils/roles';
 
 export default function EditBranchScreen() {
@@ -32,6 +33,7 @@ export default function EditBranchScreen() {
   const [isActive, setIsActive] = useState(true);
   const [isDefault, setIsDefault] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<FieldErrorMap>({});
   const flashSaved = useSaveFlash();
   const flashOffline = useOfflineFlash();
   const canManageBranches = Boolean(user && isGymOwner(user.role));
@@ -70,8 +72,15 @@ export default function EditBranchScreen() {
     onError: (e: Error) => setError(e.message),
   });
 
+  const clearField = (key: string) => {
+    if (fieldErrors[key]) setFieldErrors((prev) => ({ ...prev, [key]: undefined }));
+  };
+
   const trySave = () => {
     setError('');
+    const next = validateBranchFields({ name, phone, address });
+    setFieldErrors(next);
+    if (hasFieldErrors(next)) return;
     saveBranch.mutate({
       name: name.trim(),
       phone: phone.trim() || null,
@@ -120,7 +129,6 @@ export default function EditBranchScreen() {
     );
   }
 
-  const canSubmit = name.trim().length > 0;
   const hasStaff = (branch.staff_count ?? 0) > 0;
 
   return (
@@ -129,14 +137,41 @@ export default function EditBranchScreen() {
         <FormScroll>
           <ErrorBanner message={error} />
 
-          <Label>{t('branchEdit.name')}</Label>
-          <Field value={name} onChangeText={setName} autoCapitalize="words" />
+          <Label required>{t('branchEdit.name')}</Label>
+          <Field
+            value={name}
+            onChangeText={(v) => {
+              setName(v);
+              clearField('name');
+            }}
+            autoCapitalize="words"
+            error={Boolean(fieldErrors.name)}
+          />
+          <FieldError message={fieldErrors.name ? t(fieldErrors.name) : undefined} />
 
           <Label>{t('branchEdit.phone')}</Label>
-          <Field value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+          <Field
+            value={phone}
+            onChangeText={(v) => {
+              setPhone(v);
+              clearField('phone');
+            }}
+            keyboardType="phone-pad"
+            error={Boolean(fieldErrors.phone)}
+          />
+          <FieldError message={fieldErrors.phone ? t(fieldErrors.phone) : undefined} />
 
           <Label>{t('branchEdit.address')}</Label>
-          <Field value={address} onChangeText={setAddress} autoCapitalize="sentences" />
+          <Field
+            value={address}
+            onChangeText={(v) => {
+              setAddress(v);
+              clearField('address');
+            }}
+            autoCapitalize="sentences"
+            error={Boolean(fieldErrors.address)}
+          />
+          <FieldError message={fieldErrors.address ? t(fieldErrors.address) : undefined} />
 
           {!branch.is_default ? (
             <OptionPickerField
@@ -174,7 +209,7 @@ export default function EditBranchScreen() {
             label={t('common.save')}
             onPress={trySave}
             loading={saveBranch.isPending}
-            disabled={!canSubmit}
+            disabled={saveBranch.isPending}
           />
         </FormScroll>
       </KeyboardAvoidingView>

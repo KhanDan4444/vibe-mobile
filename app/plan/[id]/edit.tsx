@@ -7,13 +7,14 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchPlans, updatePlan } from '@/src/api/plans';
 import type { PlanPayload } from '@/src/api/plans';
-import { ErrorBanner, Field, FormScroll, Label, MoneyAmountField, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, Field, FieldError, FormScroll, Label, MoneyAmountField, PrimaryButton, Screen } from '@/src/components/Form';
 import { PageSkeleton } from '@/src/components/Skeleton';
 import { LoadError } from '@/src/components/LoadError';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { isOfflineQueued } from '@/src/offline/types';
 import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
+import { hasFieldErrors, validatePlanFields, type FieldErrorMap } from '@/src/utils/formValidation';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
 
 export default function EditPlanScreen() {
@@ -29,6 +30,7 @@ export default function EditPlanScreen() {
   const [duration, setDuration] = useState('');
   const [price, setPrice] = useState('');
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<FieldErrorMap>({});
   const flashSaved = useSaveFlash();
   const flashOffline = useOfflineFlash();
   const canManagePlans = Boolean(user && hasGymPortalAccess(user.role) && isGymOwner(user.role));
@@ -66,12 +68,21 @@ export default function EditPlanScreen() {
     onError: (e: Error) => setError(e.message),
   });
 
-  const canSubmit =
-    name.trim().length > 0 &&
-    Number(duration) >= 1 &&
-    Number.isFinite(Number(duration)) &&
-    Number(price) >= 0 &&
-    Number.isFinite(Number(price));
+  const clearField = (key: string) => {
+    if (fieldErrors[key]) setFieldErrors((prev) => ({ ...prev, [key]: undefined }));
+  };
+
+  const handleSubmit = () => {
+    setError('');
+    const next = validatePlanFields({ name, duration, price });
+    setFieldErrors(next);
+    if (hasFieldErrors(next)) return;
+    mutation.mutate({
+      name: name.trim(),
+      duration: Number(duration),
+      price: Number(price),
+    });
+  };
 
   if (!canManagePlans) {
     return <Redirect href="/login" />;
@@ -118,27 +129,47 @@ export default function EditPlanScreen() {
         <FormScroll>
           <ErrorBanner message={error} />
 
-          <Label>{t('plans.nameLabel')}</Label>
-          <Field value={name} onChangeText={setName} autoCapitalize="words" placeholder={t('plans.namePlaceholder')} />
+          <Label required>{t('plans.nameLabel')}</Label>
+          <Field
+            value={name}
+            onChangeText={(v) => {
+              setName(v);
+              clearField('name');
+            }}
+            autoCapitalize="words"
+            placeholder={t('plans.namePlaceholder')}
+            error={Boolean(fieldErrors.name)}
+          />
+          <FieldError message={fieldErrors.name ? t(fieldErrors.name) : undefined} />
 
-          <Label>{t('plans.durationLabel')}</Label>
-          <Field value={duration} onChangeText={setDuration} keyboardType="numeric" />
+          <Label required>{t('plans.durationLabel')}</Label>
+          <Field
+            value={duration}
+            onChangeText={(v) => {
+              setDuration(v);
+              clearField('duration');
+            }}
+            keyboardType="numeric"
+            error={Boolean(fieldErrors.duration)}
+          />
+          <FieldError message={fieldErrors.duration ? t(fieldErrors.duration) : undefined} />
 
-          <Label>{t('plans.priceLabel')}</Label>
-          <MoneyAmountField value={price} onChangeText={setPrice} />
+          <Label required>{t('plans.priceLabel')}</Label>
+          <MoneyAmountField
+            value={price}
+            onChangeText={(v) => {
+              setPrice(v);
+              clearField('price');
+            }}
+            error={Boolean(fieldErrors.price)}
+          />
+          <FieldError message={fieldErrors.price ? t(fieldErrors.price) : undefined} />
 
           <PrimaryButton
             label={t('common.save')}
-            onPress={() => {
-              setError('');
-              mutation.mutate({
-                name: name.trim(),
-                duration: Number(duration),
-                price: Number(price),
-              });
-            }}
+            onPress={handleSubmit}
             loading={mutation.isPending}
-            disabled={!canSubmit}
+            disabled={mutation.isPending}
           />
         </FormScroll>
       </KeyboardAvoidingView>

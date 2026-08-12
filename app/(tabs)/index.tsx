@@ -84,7 +84,7 @@ function AlertMemberRow({
             }}
             style={({ pressed }) => [styles.alertAction, { opacity: pressed ? 0.65 : 1 }]}
           >
-            <Ionicons name="refresh" size={16} color={colors.statusActive} />
+            <Ionicons name="sync-outline" size={16} color={colors.statusActive} />
             <Text latin style={[styles.alertActionText, { color: colors.statusActive }]}>
               {t('dashboard.renew')}
             </Text>
@@ -279,7 +279,7 @@ export default function DashboardScreen() {
               label={t('dashboard.dueSoon')}
               value={data.dueSoonMembers ?? 0}
               accent={c.statusDueSoon}
-              tone="attention"
+              tone="neutral"
               layoutStyle={statCardLayoutStyle}
               onPress={() => goMembers('due_soon')}
             />
@@ -295,7 +295,7 @@ export default function DashboardScreen() {
               label={t('dashboard.unpaid')}
               value={data.unpaidCount ?? 0}
               accent={c.statusUnpaid}
-              tone="attention"
+              tone="neutral"
               layoutStyle={statCardLayoutStyle}
               onPress={() => goMembers('unpaid')}
             />

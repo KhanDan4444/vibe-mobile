@@ -479,6 +479,8 @@
     "term": "የክፍያ ዘመን",
     "payment": "ክፍያ",
     "fullNameRequired": "የአባሉን ሙሉ ስም ያስገቡ።",
+    "fullName": "ሙሉ ስም",
+    "fullNamePlaceholder": "የአባል ሙሉ ስም",
     "sectionMember": "አባል",
     "sectionMembership": "አባልነት",
     "sectionPayment": "ክፍያ",
@@ -617,7 +619,14 @@
     "gymName": "የጂም ስም",
     "ownerName": "የባለቤት ስም",
     "passwordSame": "አዲሱ የይለፍ ቃል ከአሁኑ የተለየ መሆን አለበት።",
-    "passwordChangedBody": "የይለፍ ቃልዎ ተቀይሯል።"
+    "passwordChangedBody": "የይለፍ ቃልዎ ተቀይሯል።",
+    "changePasswordHint": "የአሁኑን የይለፍ ቃል ያስገቡ፣ ከዚያ አዲስ ይምረጡ።",
+    "passwordRequired": "ይህ መስክ ያስፈልጋል።",
+    "passwordMin8": "ቢያንስ 8 ቁምፊዎች",
+    "passwordsMatch": "የይለፍ ቃሎቹ ይዛመዳሉ",
+    "passwordTooLong": "የይለፍ ቃሉ በጣም ረጅም ነው።",
+    "currentPasswordIncorrect": "የአሁኑ የይለፍ ቃል ትክክል አይደለም።",
+    "passwordUpdateFailed": "የይለፍ ቃል ማዘመን አልተቻለም። እንደገና ይሞክሩ።"
   },
   "validation": {
     "selectPlanAndDates": "ዕቅድ እና ትክክለኛ ቀኖችን ይምረጡ።",
@@ -627,7 +636,18 @@
     "changePlanDuplicate": "በዚህ ቀን የዕቅድ ለውጥ ክፍያ ቀድሞ ተመዝግቧል። በገቢ ውስጥ ያርትዑ ወይም ሌላ ቀን ይምረጡ።",
     "phoneRequired": "ለSMS ማስታወሻ የስልክ ቁጥር ያስፈልጋል።",
     "phoneInvalid": "ትክክለኛ የኢትዮጵያ ሞባይል ቁጥር ያስገቡ (09… ወይም +251…)።",
-    "planNotSelected": "ዕቅድ አልተመረጠም።"
+    "planNotSelected": "ዕቅድ አልተመረጠም።",
+    "nameRequired": "ስም ያስፈልጋል።",
+    "nameTooLong": "ስሙ በጣም ረጅም ነው።",
+    "usernameRequired": "የተጠቃሚ ስም ያስፈልጋል።",
+    "usernameTooShort": "የተጠቃሚ ስም ቢያንስ 3 ቁምፊዎች መሆን አለበት።",
+    "usernameTooLong": "የተጠቃሚ ስም ከ30 ቁምፊዎች መብለጥ የለበትም።",
+    "usernameInvalid": "የተጠቃሚ ስም ፊደላት፣ ቁጥሮች፣ ነጥብ እና ከሰረዝ ምልክቶችን ብቻ መያዝ ይችላል።",
+    "emailInvalid": "ትክክለኛ ኢሜይል ያስገቡ።",
+    "planDurationMin": "የእቅዱ ቆይታ ቢያንስ 1 ወር መሆን አለበት።",
+    "planPriceInvalid": "ትክክለኛ ዋጋ ያስገቡ (ዜሮ ወይም ከዚያ በላይ)።",
+    "branchRequired": "ቅርንጫፍ ይምረጡ።",
+    "addressTooLong": "አድራሻው በጣም ረጅም ነው።"
   },
   "paymentEdit": {
     "deleteTitle": "ክፍያ ሰርዝ",
@@ -714,7 +734,7 @@
   "messages": {
     "empty": "SMS መልዕክት እስካሁን የለም።",
     "filterLabel": "የመልዕክት አይነት",
-    "filterAll": "ሁሉም",
+    "filterAll": "ሁሉም አይነቶች",
     "filterEnrolled": "ምዝገባ",
     "filterDueSoon": "በቅርብ ያበቃ",
     "filterExpiresToday": "ዛሬ ያበቃ",
@@ -722,11 +742,17 @@
     "filterRenewed": "የታደሰ",
     "emptyTitle": "እስካሁን SMS የለም",
     "emptyBody": "የመጀመሪያውን መልእክት ከላኩ በኋላ የአባል SMS ታሪክ ይታያል።",
+    "statusLine": "{{count}} መልዕክቶች",
     "typeEnrolled": "ምዝገባ ተረጋግጧል",
     "typeDueSoon": "በቅርቡ የሚያልቅ ማስታወሻ",
     "typeExpiresToday": "ዛሬ ያልቃል",
     "typeExpired": "ያለፈ ማሳወቂያ",
-    "typeRenewed": "እድሳት ተረጋግጧል"
+    "typeRenewed": "እድሳት ተረጋግጧል",
+    "previewEnrolled": "ምዝገባን ያረጋግጣል እና ይቀበላቸዋል",
+    "previewDueSoon": "ዕቅዳቸው በቅርቡ እንደሚያልቅ ያስታውሳል",
+    "previewExpiresToday": "አባልነት ዛሬ እንደሚያበቃ ያሳውቃል",
+    "previewExpired": "አባልነት ማለቁን ያሳውቃል",
+    "previewRenewed": "የተሳካ እድሳት ያረጋግጣል"
   },
   "team": {
     "noBranch": "ቅርንጫፍ የለም",
@@ -765,7 +791,18 @@
     "nameLabel": "የዕቅድ ስም",
     "namePlaceholder": "ለምሳሌ፦ ወርሃዊ",
     "durationLabel": "ጊዜ (ወራት)",
-    "priceLabel": "ዋጋ (ETB)"
+    "priceLabel": "ዋጋ (ETB)",
+    "popular": "በብዛት ጥቅም ላይ",
+    "perMonth": "{{amount}} / ወር",
+    "statusLine": "{{count}} ዕቅዶች · {{from}} – {{to}} · {{members}} ንቁ አባላት",
+    "statusLineSingle": "{{count}} ዕቅዶች · {{price}} · {{members}} ንቁ አባላት",
+    "sortLabel": "ዕቅዶችን ደርድር",
+    "sortPriceAsc": "ዋጋ፦ ከዝቅተኛ ወደ ከፍተኛ",
+    "sortPriceDesc": "ዋጋ፦ ከከፍተኛ ወደ ዝቅተኛ",
+    "sortDurationAsc": "ጊዜ፦ አጭር",
+    "sortDurationDesc": "ጊዜ፦ ረጅም",
+    "sortMembersDesc": "ብዙ አባላት",
+    "sortNameAsc": "ስም፦ ሀ–ፐ"
   },
   "statusBreakdown": {
     "active": "ንቁ",
@@ -777,6 +814,7 @@
     "emptyTitle": "እስካሁን ቅርንጫፍ የለም",
     "emptyBody": "አባላትን በቅርንጫፍ ለማደራጀት የመጀመሪያ ቦታዎን ያክሉ።",
     "empty": "ቅርንጫፍ አልተገኘም።",
+    "statusLine": "{{count}} ቅርንጫፎች · {{members}} አባላት · {{staff}} ሰራተኞች",
     "membersCount": "{{count}} አባላት",
     "staffCount": "{{count}} ሰራተኞች"
   },

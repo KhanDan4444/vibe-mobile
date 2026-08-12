@@ -9,10 +9,16 @@ import { fetchTeam, resetStaffPassword, updateStaff } from '@/src/api/team';
 import { fetchBranches } from '@/src/api/branches';
 import { BranchPicker } from '@/src/components/BranchPicker';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
-import { ErrorBanner, Field, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { PageSkeleton } from '@/src/components/Skeleton';
 import { LoadError } from '@/src/components/LoadError';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
+import {
+  hasFieldErrors,
+  validateStaffFields,
+  validateStaffPasswordReset,
+  type FieldErrorMap,
+} from '@/src/utils/formValidation';
 import { isGymOwner } from '@/src/utils/roles';
 
 export default function EditStaffScreen() {
@@ -29,6 +35,8 @@ export default function EditStaffScreen() {
   const [branchId, setBranchId] = useState<number | null>(null);
   const [resetPassword, setResetPassword] = useState('');
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<FieldErrorMap>({});
+  const [resetErrors, setResetErrors] = useState<FieldErrorMap>({});
   const [resetNotice, setResetNotice] = useState('');
   const canManageTeam = Boolean(user && isGymOwner(user.role));
   const styles = useThemedStyles((colors) => ({
@@ -63,6 +71,7 @@ export default function EditStaffScreen() {
 
   const staff = teamQuery.data?.staff.find((s) => s.id === staffId);
   const branches = branchesQuery.data?.branches ?? [];
+  const requireBranch = branches.filter((b) => b.is_active !== false).length > 1;
 
   useEffect(() => {
     if (!staff) return;
@@ -92,6 +101,7 @@ export default function EditStaffScreen() {
     onSuccess: () => {
       setResetPassword('');
       setError('');
+      setResetErrors({});
       setResetNotice(
         t('team.passwordUpdatedBody', { name: staff?.name || t('team.staffFallback') }),
       );
@@ -99,8 +109,32 @@ export default function EditStaffScreen() {
     onError: (e: Error) => setError(e.message),
   });
 
-  const canSubmit = name.trim().length > 0 && username.trim().length > 0 && branchId != null;
-  const canReset = resetPassword.trim().length >= 6;
+  const clearField = (key: string) => {
+    if (fieldErrors[key]) setFieldErrors((prev) => ({ ...prev, [key]: undefined }));
+  };
+
+  const handleSave = () => {
+    setError('');
+    const next = validateStaffFields({
+      name,
+      username,
+      email,
+      branchId,
+      requireBranch,
+      isEdit: true,
+    });
+    setFieldErrors(next);
+    if (hasFieldErrors(next)) return;
+    saveMutation.mutate();
+  };
+
+  const handleReset = () => {
+    setError('');
+    const next = validateStaffPasswordReset(resetPassword);
+    setResetErrors(next);
+    if (hasFieldErrors(next)) return;
+    resetMutation.mutate();
+  };
 
   if (!canManageTeam) {
     return <Redirect href="/login" />;
@@ -147,46 +181,81 @@ export default function EditStaffScreen() {
         <FormScroll>
           <ErrorBanner message={error} />
 
-          <Label>{t('forms.name')}</Label>
-          <Field value={name} onChangeText={setName} autoCapitalize="words" />
+          <Label required>{t('forms.name')}</Label>
+          <Field
+            value={name}
+            onChangeText={(v) => {
+              setName(v);
+              clearField('name');
+            }}
+            autoCapitalize="words"
+            error={Boolean(fieldErrors.name)}
+          />
+          <FieldError message={fieldErrors.name ? t(fieldErrors.name) : undefined} />
 
-          <Label>{t('forms.username')}</Label>
-          <Field value={username} onChangeText={setUsername} autoCapitalize="none" />
+          <Label required>{t('forms.username')}</Label>
+          <Field
+            value={username}
+            onChangeText={(v) => {
+              setUsername(v);
+              clearField('username');
+            }}
+            autoCapitalize="none"
+            error={Boolean(fieldErrors.username)}
+          />
+          <FieldError message={fieldErrors.username ? t(fieldErrors.username) : undefined} />
 
           <Label>{t('forms.emailOptional')}</Label>
-          <Field value={email} onChangeText={setEmail} autoCapitalize="none" />
+          <Field
+            value={email}
+            onChangeText={(v) => {
+              setEmail(v);
+              clearField('email');
+            }}
+            autoCapitalize="none"
+            error={Boolean(fieldErrors.email)}
+          />
+          <FieldError message={fieldErrors.email ? t(fieldErrors.email) : undefined} />
 
-          <BranchPicker branches={branches} value={branchId} onChange={setBranchId} />
+          <BranchPicker
+            branches={branches}
+            value={branchId}
+            onChange={(id) => {
+              setBranchId(id);
+              clearField('branchId');
+            }}
+            required
+            errorMessage={fieldErrors.branchId ? t(fieldErrors.branchId) : undefined}
+          />
 
           <PrimaryButton
             label={t('common.save')}
-            onPress={() => {
-              setError('');
-              saveMutation.mutate();
-            }}
+            onPress={handleSave}
             loading={saveMutation.isPending}
-            disabled={!canSubmit || resetMutation.isPending}
+            disabled={saveMutation.isPending || resetMutation.isPending}
           />
 
           <View style={styles.divider} />
           <Text style={styles.sectionTitle}>{t('team.resetPassword')}</Text>
           <Text style={styles.sectionHint}>{t('team.resetPasswordHint')}</Text>
 
-          <Label>{t('forgot.newPassword')}</Label>
+          <Label required>{t('forgot.newPassword')}</Label>
           <Field
             value={resetPassword}
-            onChangeText={setResetPassword}
+            onChangeText={(v) => {
+              setResetPassword(v);
+              if (resetErrors.password) setResetErrors({});
+            }}
             secureTextEntry
             autoCapitalize="none"
+            error={Boolean(resetErrors.password)}
           />
+          <FieldError message={resetErrors.password ? t(resetErrors.password) : undefined} />
 
           <Pressable
-            style={[styles.resetBtn, (!canReset || resetMutation.isPending) && styles.resetBtnDisabled]}
-            onPress={() => {
-              setError('');
-              resetMutation.mutate();
-            }}
-            disabled={!canReset || resetMutation.isPending}
+            style={[styles.resetBtn, resetMutation.isPending && styles.resetBtnDisabled]}
+            onPress={handleReset}
+            disabled={resetMutation.isPending || saveMutation.isPending}
           >
             <Text style={styles.resetBtnText}>
               {resetMutation.isPending ? t('common.updating') : t('team.resetPassword')}

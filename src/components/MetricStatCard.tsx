@@ -9,7 +9,7 @@ type Props = {
   label: string;
   value: string | number;
   accent?: string;
-  /** attention = unpaid / due soon / expired; neutral = active / total. */
+  /** attention = expired wash only; neutral = active / unpaid / due soon / total. */
   tone?: 'attention' | 'neutral';
   layoutStyle?: StyleProp<ViewStyle>;
   onPress?: () => void;
@@ -18,7 +18,7 @@ type Props = {
 };
 
 /**
- * Elevated metric tile — attention counts get a status wash; zeros stay quiet.
+ * Elevated metric tile — expired counts get a status wash; zeros stay quiet.
  * Shared by dashboard + reports.
  */
 export function MetricStatCard({
