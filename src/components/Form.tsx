@@ -8,6 +8,8 @@ import { PrimaryButton as UiPrimaryButton } from '@/src/components/ui/Button';
 import { FilterChip } from '@/src/components/FilterChip';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
+import { useAuthThemeForced } from '@/src/context/AuthThemeContext';
+import { AUTH, authFieldRing } from '@/src/theme/authChrome';
 import { fieldChrome, fieldRingStyle } from '@/src/theme/fieldChrome';
 import { radiusMd } from '@/src/theme/tokens';
 import type { ThemeColors } from '@/src/theme/tokens';
@@ -95,7 +97,18 @@ export function FormScroll({
 
 export function Label({ children }: { children: string }) {
   const { colors: c } = useTheme();
-  return <Text style={[formStyles.label, { color: c.muted }]}>{children}</Text>;
+  const authSurface = useAuthThemeForced();
+  return (
+    <Text
+      style={[
+        formStyles.label,
+        { color: authSurface ? AUTH.textMuted : c.muted },
+        authSurface ? { letterSpacing: 0.2, fontWeight: '500' } : null,
+      ]}
+    >
+      {children}
+    </Text>
+  );
 }
 
 export function FieldError({ message }: { message?: string }) {
@@ -161,6 +174,7 @@ export const Field = React.forwardRef<
 ) {
   const { t } = useTranslation();
   const { colors: c } = useTheme();
+  const authSurface = useAuthThemeForced();
   const [focused, setFocused] = React.useState(false);
   const [revealed, setRevealed] = React.useState(false);
   const showToggle = Boolean(secureTextEntry);
@@ -182,23 +196,35 @@ export const Field = React.forwardRef<
     <View
       style={[
         formStyles.inputShell,
-        {
-          backgroundColor: disabled ? c.inputBg : c.card,
-          opacity: disabled ? 0.65 : 1,
-        },
-        fieldRingStyle(c, { focused, error, disabled }),
+        authSurface
+          ? {
+              backgroundColor: AUTH.fieldBg,
+              minHeight: 50,
+              paddingHorizontal: 16,
+            }
+          : {
+              backgroundColor: disabled ? c.inputBg : c.card,
+              opacity: disabled ? 0.65 : 1,
+            },
+        authSurface
+          ? authFieldRing({ focused, error, disabled })
+          : fieldRingStyle(c, { focused, error, disabled }),
         style,
       ]}
     >
       <TextInput
         ref={ref}
         latin={useLatin}
-        style={[formStyles.inputText, { color: c.text }]}
+        style={[
+          formStyles.inputText,
+          { color: authSurface ? AUTH.text : c.text },
+          authSurface ? { fontWeight: '400', letterSpacing: 0.1, lineHeight: 22 } : null,
+        ]}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={c.dim}
-        selectionColor={c.accentText}
+        placeholderTextColor={authSurface ? AUTH.placeholder : c.dim}
+        selectionColor={authSurface ? AUTH.selection : c.accentText}
         secureTextEntry={secureTextEntry && !revealed}
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize ?? 'sentences'}
@@ -229,7 +255,7 @@ export const Field = React.forwardRef<
           <Ionicons
             name={revealed ? 'eye-off-outline' : 'eye-outline'}
             size={20}
-            color={focused ? c.accentText : c.muted}
+            color={focused ? (authSurface ? AUTH.link : c.accentText) : authSurface ? AUTH.textDim : c.muted}
           />
         </Pressable>
       ) : null}

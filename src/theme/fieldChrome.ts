@@ -5,20 +5,22 @@ import { radiusMd } from '@/src/theme/tokens';
 export const FIELD_MIN_HEIGHT = 48;
 export const FIELD_RADIUS = radiusMd;
 export const FIELD_BORDER = 1;
-export const FIELD_BORDER_ACTIVE = 2;
+/** @deprecated Focus uses color only — kept so older call sites compile. */
+export const FIELD_BORDER_ACTIVE = FIELD_BORDER;
 
 export function fieldRingStyle(
   colors: { inputBorder: string; accentText: string; error: string },
   opts: { focused?: boolean; open?: boolean; error?: boolean; disabled?: boolean } = {},
 ): ViewStyle {
+  // Always 1px — focus/error change color only so fields don’t feel bold or jump.
   if (opts.error) {
-    return { borderColor: colors.error, borderWidth: FIELD_BORDER_ACTIVE };
+    return { borderColor: colors.error, borderWidth: FIELD_BORDER };
   }
   if (opts.disabled) {
     return { borderColor: colors.inputBorder, borderWidth: FIELD_BORDER };
   }
   if (opts.focused || opts.open) {
-    return { borderColor: colors.accentText, borderWidth: FIELD_BORDER_ACTIVE };
+    return { borderColor: colors.accentText, borderWidth: FIELD_BORDER };
   }
   return { borderColor: colors.inputBorder, borderWidth: FIELD_BORDER };
 }

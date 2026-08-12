@@ -8,7 +8,7 @@ import { AuthLanguageButton, AUTH_LANG_BTN_SIZE } from './AuthLanguageButton';
 
 type Props = {
   children: React.ReactNode;
-  /** Login uses brand gradient hero; register/forgot use plain dark background. */
+  /** Teal→slate hero (default on for premium auth surfaces). */
   hero?: boolean;
   onHeroReady?: () => void;
   /** Top-right language control (default on for all auth routes). */
@@ -26,7 +26,7 @@ type Props = {
  */
 export function AuthScreen({
   children,
-  hero = false,
+  hero = true,
   onHeroReady,
   showLanguage = true,
   headerCenter,

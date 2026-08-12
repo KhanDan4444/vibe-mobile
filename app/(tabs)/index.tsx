@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
@@ -25,6 +25,7 @@ import { ResponsiveContent } from '@/src/components/ResponsiveContent';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import StatusBadge from '@/src/components/StatusBadge';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
+import { MetricStatCard } from '@/src/components/MetricStatCard';
 import { SecondaryButton } from '@/src/components/ui/Button';
 import { space } from '@/src/theme/tokens';
 import { timings } from '@/src/theme/motion';
@@ -38,49 +39,6 @@ function filterForMemberStatus(status: string): StatFilter {
   if (normalized === 'expired') return 'expired';
   if (normalized === 'due soon') return 'due_soon';
   return 'unpaid';
-}
-
-function StatCard({
-  label,
-  value,
-  accent,
-  layoutStyle,
-  valueStyle,
-  labelStyle,
-  onPress,
-}: {
-  label: string;
-  value: string | number;
-  accent?: string;
-  layoutStyle: object;
-  valueStyle: object;
-  labelStyle: object;
-  onPress?: () => void;
-}) {
-  const content = (
-    <>
-      <Text display style={[valueStyle, accent ? { color: accent } : null]}>{value}</Text>
-      <Text style={labelStyle}>{label}</Text>
-    </>
-  );
-
-  if (!onPress) {
-    return (
-      <View style={layoutStyle}>
-        <SoftSurface variant="quiet" style={styles.statCard}>
-          {content}
-        </SoftSurface>
-      </View>
-    );
-  }
-
-  return (
-    <View style={layoutStyle}>
-      <SoftSurface variant="quiet" onPress={onPress} style={styles.statCard}>
-        {content}
-      </SoftSurface>
-    </View>
-  );
 }
 
 function AlertMemberRow({
@@ -196,8 +154,6 @@ export default function DashboardScreen() {
     });
   };
 
-  const valueStyle = [styles.statValue, { color: c.text }];
-  const labelStyle = [styles.statLabel, { color: c.muted }];
   const alertMembers = (data?.alertMembers ?? []).slice(0, 5);
   const unpaidCount = data?.unpaidCount ?? 0;
   const attentionHasContent = alertMembers.length > 0 || unpaidCount > 0;
@@ -221,7 +177,7 @@ export default function DashboardScreen() {
         <Text style={[styles.summaryTitle, { color: c.accentText }]}>{t('dashboard.thisMonth')}</Text>
         <Text style={[styles.summaryTitleChevron, { color: c.accentText }]}>›</Text>
       </Pressable>
-      <Text display style={[styles.income, { color: c.text }]}>
+      <Text style={[styles.income, { color: c.text }]}>
         {formatEtb(Number(data.monthlyIncome || 0), { forceCompact: false })}
       </Text>
       {trendLabel ? (
@@ -309,43 +265,39 @@ export default function DashboardScreen() {
           <SecondaryButton label={t('gymBoot.retry')} onPress={() => void refetch()} />
         </View>
       ) : data ? (
-        <Animated.View entering={FadeInDown.duration(timings.enterMs).springify().damping(22)}>
+        <Animated.View entering={FadeIn.duration(timings.fadeMs)}>
           <View style={styles.grid}>
-            <StatCard
-              label={t('dashboard.active')}
-              value={data.activeMembers ?? 0}
-              accent={c.statusActive}
-              layoutStyle={statCardLayoutStyle}
-              valueStyle={valueStyle}
-              labelStyle={labelStyle}
-              onPress={() => goMembers()}
-            />
-            <StatCard
-              label={t('dashboard.dueSoon')}
-              value={data.dueSoonMembers ?? 0}
-              accent={c.statusDueSoon}
-              layoutStyle={statCardLayoutStyle}
-              valueStyle={valueStyle}
-              labelStyle={labelStyle}
-              onPress={() => goMembers('due_soon')}
-            />
-            <StatCard
-              label={t('dashboard.expired')}
-              value={data.expiredMembers ?? 0}
-              accent={c.statusExpired}
-              layoutStyle={statCardLayoutStyle}
-              valueStyle={valueStyle}
-              labelStyle={labelStyle}
-              onPress={() => goMembers('expired')}
-            />
-            <StatCard
+            <MetricStatCard
               label={t('dashboard.unpaid')}
               value={data.unpaidCount ?? 0}
               accent={c.statusUnpaid}
+              tone="attention"
               layoutStyle={statCardLayoutStyle}
-              valueStyle={valueStyle}
-              labelStyle={labelStyle}
               onPress={() => goMembers('unpaid')}
+            />
+            <MetricStatCard
+              label={t('dashboard.dueSoon')}
+              value={data.dueSoonMembers ?? 0}
+              accent={c.statusDueSoon}
+              tone="attention"
+              layoutStyle={statCardLayoutStyle}
+              onPress={() => goMembers('due_soon')}
+            />
+            <MetricStatCard
+              label={t('dashboard.expired')}
+              value={data.expiredMembers ?? 0}
+              accent={c.statusExpired}
+              tone="attention"
+              layoutStyle={statCardLayoutStyle}
+              onPress={() => goMembers('expired')}
+            />
+            <MetricStatCard
+              label={t('dashboard.active')}
+              value={data.activeMembers ?? 0}
+              accent={c.statusActive}
+              tone="neutral"
+              layoutStyle={statCardLayoutStyle}
+              onPress={() => goMembers()}
             />
           </View>
           {summaryBlock}
@@ -378,13 +330,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md, marginTop: space.sm },
-  statCard: {
-    flex: 1,
-    paddingVertical: space.md,
-    paddingHorizontal: space.md,
-  },
-  statValue: { fontSize: 22, fontWeight: '700', letterSpacing: -0.3 },
-  statLabel: { marginTop: 2, fontSize: 12 },
   summary: {
     marginTop: space.lg,
     padding: space.lg + 2,
@@ -397,7 +342,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   summaryTitleChevron: { fontSize: 16, fontWeight: '600', lineHeight: 18 },
-  income: { marginTop: 6, fontSize: 32, fontWeight: '700', letterSpacing: -0.5 },
+  income: { marginTop: 6, fontSize: 30, fontWeight: '700', letterSpacing: -0.8 },
   trend: { marginTop: 6, fontSize: 13, fontWeight: '600' },
   muted: { marginTop: 8, fontSize: 14 },
   errorWrap: { alignItems: 'center', paddingTop: 32, gap: 12 },

@@ -23,6 +23,7 @@ import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { appTextStyle } from '@/src/theme/typography';
 import { formatDisplayDate } from '@/src/utils/date';
+import { formatEtb } from '@/src/utils/formatMoney';
 import { DEFAULT_REVENUE_SORT, type RevenueSortId } from '@/src/utils/listSort';
 import { paymentSourceKey } from '@/src/utils/termPayments';
 import { statusLabelKey } from '@/src/utils/statusLabels';
@@ -124,8 +125,18 @@ function PaymentRowItem({
   const menuItems =
     owner && !readOnly
       ? [
-          { id: 'member', label: t('revenue.viewMember'), onPress: onOpenMember },
-          { id: 'edit', label: t('revenue.editPayment'), onPress: onEdit },
+          {
+            id: 'member',
+            label: t('revenue.viewMember'),
+            icon: 'person-outline' as const,
+            onPress: onOpenMember,
+          },
+          {
+            id: 'edit',
+            label: t('revenue.editPayment'),
+            icon: 'create-outline' as const,
+            onPress: onEdit,
+          },
         ]
       : [];
 
@@ -162,7 +173,12 @@ function PaymentRowItem({
         <Text style={styles.rowAmount}>{Number(payment.amount).toLocaleString()}</Text>
         <Text style={appTextStyle(language, styles.rowCurrency)}>ETB</Text>
       </View>
-      {menuItems.length > 0 ? <ActionOverflowMenu items={menuItems} /> : null}
+      {menuItems.length > 0 ? (
+        <ActionOverflowMenu
+          title={payment.member_name || t('common.actions')}
+          items={menuItems}
+        />
+      ) : null}
     </SoftSurface>
   );
 }
@@ -268,10 +284,10 @@ export default function RevenueScreen() {
     heroLabel: { fontSize: 13, fontWeight: '600' as const, color: colors.muted },
     heroTotal: {
       marginTop: 6,
-      fontSize: 32,
+      fontSize: 30,
       fontWeight: '700' as const,
       color: colors.text,
-      letterSpacing: -0.4,
+      letterSpacing: -0.8,
       fontVariant: ['tabular-nums'] as TextStyle['fontVariant'],
     },
     heroMeta: { flexDirection: 'row' as const, alignItems: 'center' as const, marginTop: 6, flexWrap: 'wrap' as const },
@@ -432,7 +448,9 @@ export default function RevenueScreen() {
         <Text style={appTextStyle(language, styles.heroLabel)}>
           {periodLabel}
         </Text>
-        <Text style={styles.heroTotal}>{Number(summary?.total || 0).toLocaleString()} ETB</Text>
+        <Text style={styles.heroTotal}>
+          {formatEtb(Number(summary?.total || 0), { forceCompact: false })}
+        </Text>
         <View style={styles.heroMeta}>
           <Text style={appTextStyle(language, styles.heroMetaText)}>
             {t('revenue.paymentsCount', { count: summary?.count ?? 0 })}

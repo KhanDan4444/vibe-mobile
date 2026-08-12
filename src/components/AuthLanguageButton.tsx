@@ -38,7 +38,7 @@ export function AuthLanguageButton({ inline = false }: { inline?: boolean }) {
     <>
       {inline ? button : <View style={styles.legacyFloat}>{button}</View>}
 
-      <BottomSheet visible={open} title={t('profile.language')} onClose={() => setOpen(false)} showCloseButton compact>
+      <BottomSheet visible={open} title={t('profile.language')} onClose={() => setOpen(false)} compact>
         {APP_LANGUAGES.map((lng) => (
           <SheetOption
             key={lng}

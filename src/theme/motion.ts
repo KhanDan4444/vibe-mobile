@@ -12,4 +12,6 @@ export const timings = {
   enterMs: 420,
   fadeMs: 220,
   pressMs: 120,
+  /** Bottom sheet open / close — keep enter & exit matched so pickers don’t pop. */
+  sheetMs: 300,
 } as const;

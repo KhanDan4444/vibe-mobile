@@ -1,6 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useAuthThemeForced } from '@/src/context/AuthThemeContext';
 import { useTheme } from '@/src/context/PreferencesContext';
+import { AUTH, authFieldRing } from '@/src/theme/authChrome';
 import { FIELD_MIN_HEIGHT, FIELD_RADIUS, fieldRingStyle } from '@/src/theme/fieldChrome';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 
@@ -28,16 +30,17 @@ export function PickerTrigger({
   accessibilityLabel,
 }: PickerTriggerProps) {
   const { colors: c } = useTheme();
+  const authSurface = useAuthThemeForced();
   const styles = useThemedStyles((colors) => ({
     field: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       gap: 8,
-      paddingHorizontal: 14,
+      paddingHorizontal: authSurface ? 16 : 14,
       paddingVertical: 12,
-      minHeight: FIELD_MIN_HEIGHT,
+      minHeight: authSurface ? 50 : FIELD_MIN_HEIGHT,
       borderRadius: FIELD_RADIUS,
-      backgroundColor: colors.card,
+      backgroundColor: authSurface ? AUTH.fieldBg : colors.card,
       elevation: 0,
       shadowOpacity: 0,
     },
@@ -70,7 +73,9 @@ export function PickerTrigger({
       onPress={onPress}
       style={[
         size === 'compact' ? styles.compact : styles.field,
-        fieldRingStyle(c, { open, error }),
+        authSurface && size === 'field'
+          ? authFieldRing({ open, error })
+          : fieldRingStyle(c, { open, error }),
         style,
       ]}
       accessibilityRole="button"
@@ -78,7 +83,11 @@ export function PickerTrigger({
       android_ripple={null}
     >
       <View style={[styles.body, size === 'field' && styles.bodyField]}>{children}</View>
-      <Ionicons name="chevron-down" size={size === 'compact' ? 16 : 18} color={open ? c.accentText : c.muted} />
+      <Ionicons
+        name="chevron-down"
+        size={size === 'compact' ? 16 : 18}
+        color={open ? (authSurface ? AUTH.link : c.accentText) : authSurface ? AUTH.textDim : c.muted}
+      />
     </Pressable>
   );
 }

@@ -86,7 +86,14 @@ function BranchCard({
   }));
 
   const menuItems = owner
-    ? [{ id: 'edit', label: t('team.edit'), onPress: onEdit }]
+    ? [
+        {
+          id: 'edit',
+          label: t('team.edit'),
+          icon: 'create-outline' as const,
+          onPress: onEdit,
+        },
+      ]
     : [];
 
   return (
@@ -107,7 +114,9 @@ function BranchCard({
             ) : null}
           </View>
         </View>
-        {menuItems.length ? <ActionOverflowMenu items={menuItems} /> : null}
+        {menuItems.length ? (
+          <ActionOverflowMenu title={branchDisplayName(branch.name)} items={menuItems} />
+        ) : null}
       </View>
     </SoftSurface>
   );

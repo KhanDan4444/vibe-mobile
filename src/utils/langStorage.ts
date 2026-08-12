@@ -31,5 +31,25 @@ export async function readStoredLanguage(userId?: number | null, gymId?: number 
   if (!userId && !gymId) return readGuestLanguage();
   const key = langStorageKey(userId, gymId);
   const stored = await AsyncStorage.getItem(key);
-  return normalizeLanguage(stored);
+  if (stored === 'am' || stored === 'en' || stored === 'om') {
+    return stored;
+  }
+  // No per-user preference yet — keep the language chosen on login/guest screens.
+  return readGuestLanguage();
+}
+
+/** Seed user/gym language from guest when the scoped key is still empty. */
+export async function ensureUserLanguageFromGuest(
+  userId?: number | null,
+  gymId?: number | null,
+): Promise<AppLanguage> {
+  const code = await readStoredLanguage(userId, gymId);
+  const key = langStorageKey(userId, gymId);
+  if (key !== GUEST_LANG_KEY) {
+    const existing = await AsyncStorage.getItem(key);
+    if (existing !== 'am' && existing !== 'en' && existing !== 'om') {
+      await AsyncStorage.setItem(key, code);
+    }
+  }
+  return code;
 }

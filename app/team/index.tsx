@@ -61,12 +61,13 @@ function StaffCard({
   }));
 
   const menuItems = [
-    { id: 'edit', label: t('team.edit'), onPress: onEdit },
+    { id: 'edit', label: t('team.edit'), icon: 'create-outline' as const, onPress: onEdit },
     {
       id: 'toggle',
       label: member.is_active ? t('team.disable') : t('team.enable'),
+      icon: member.is_active ? ('ban-outline' as const) : ('checkmark-circle-outline' as const),
       onPress: onToggle,
-      destructive: !member.is_active,
+      destructive: member.is_active,
     },
   ];
 
@@ -83,7 +84,7 @@ function StaffCard({
             {member.is_active ? t('team.active') : t('team.disabled')}
           </Text>
         </View>
-        <ActionOverflowMenu items={menuItems} />
+        <ActionOverflowMenu title={member.name} items={menuItems} />
       </View>
     </SoftSurface>
   );

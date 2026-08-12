@@ -46,6 +46,7 @@
     "chartTypeBar": "Uddisa",
     "chartTypePie": "Pi",
     "chartPeakDay": "Guyyaa ol'aanaa",
+    "chartPeakDayWithDate": "Ol'aanaa · {{date}}",
     "chartDailyTotal": "Guyyaa sana",
     "chartScopeHint": "Walitti qabama guyyaa guyyaa ji'a kanaa",
     "chartRevenueHint": "Kaffaltii hundaaf olaa Ji'a kana cuqaasaa",

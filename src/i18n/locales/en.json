@@ -46,6 +46,7 @@
     "chartTypeBar": "Bar",
     "chartTypePie": "Pie",
     "chartPeakDay": "Peak day",
+    "chartPeakDayWithDate": "Peak · {{date}}",
     "chartDailyTotal": "That day",
     "chartScopeHint": "Daily collections this month",
     "chartRevenueHint": "Tap This month above for every payment",

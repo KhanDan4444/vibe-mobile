@@ -127,21 +127,29 @@ function formatPercent(amount: number, total: number) {
 }
 
 function ChartSummaryFooter({
-  first,
+  start,
+  end,
   focus,
-  caption,
+  isPeak,
   styles,
 }: {
-  first: DashboardChartPoint;
+  start: DashboardChartPoint;
+  end: DashboardChartPoint;
   focus: DashboardChartPoint;
-  caption: string;
+  isPeak: boolean;
   styles: ReturnType<typeof useChartStyles>;
 }) {
+  const { t } = useTranslation();
+  const focusDate = shortDate(focus.date);
+  const caption = isPeak
+    ? t('dashboard.chartPeakDayWithDate', { date: focusDate })
+    : focusDate;
+
   return (
     <View style={styles.footerBlock}>
       <View style={styles.labels}>
         <Text style={styles.label} numberOfLines={1}>
-          {shortDate(first.date)}
+          {shortDate(start.date)}
         </Text>
         <View style={styles.labelsCenter}>
           <Text style={styles.footerCaption}>{caption}</Text>
@@ -150,7 +158,7 @@ function ChartSummaryFooter({
           </Text>
         </View>
         <Text style={[styles.label, styles.labelEnd]} numberOfLines={1}>
-          {shortDate(focus.date)}
+          {shortDate(end.date)}
         </Text>
       </View>
     </View>
@@ -169,18 +177,23 @@ function LineChartView({
   const { t } = useTranslation();
   const points = chartPoints(data);
   const { index: peakIndex, point: peak } = getPeakPoint(data);
-  const first = data[0];
+  const start = data[0];
+  const end = data[data.length - 1] ?? start;
   const linePath = buildLinePath(points);
   const baseline = CHART_HEIGHT - PADDING_BOTTOM;
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [layoutWidth, setLayoutWidth] = useState(0);
   const focusIndex = selectedIndex ?? peakIndex;
   const focus = data[focusIndex] ?? peak;
+  const isPeak = selectedIndex == null;
   const selectedPoint = selectedIndex == null ? null : points[selectedIndex];
   const areaPath =
     points.length > 1
       ? `${linePath} L ${points[points.length - 1].x} ${baseline} L ${points[0].x} ${baseline} Z`
       : '';
+  const a11yCaption = isPeak
+    ? t('dashboard.chartPeakDayWithDate', { date: shortDate(focus.date) })
+    : shortDate(focus.date);
 
   useEffect(() => {
     setSelectedIndex(null);
@@ -203,7 +216,7 @@ function LineChartView({
         onResponderMove={selectFromTouch}
         accessible
         accessibilityRole="adjustable"
-        accessibilityLabel={t('dashboard.chartDailyTotal')}
+        accessibilityLabel={a11yCaption}
       >
         <Svg width="100%" height="100%" viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} preserveAspectRatio="xMidYMid meet">
           <Defs>
@@ -261,9 +274,10 @@ function LineChartView({
         </Svg>
       </View>
       <ChartSummaryFooter
-        first={first}
+        start={start}
+        end={end}
         focus={focus}
-        caption={selectedIndex == null ? t('dashboard.chartPeakDay') : t('dashboard.chartDailyTotal')}
+        isPeak={isPeak}
         styles={styles}
       />
     </>
@@ -299,7 +313,6 @@ function BarChartView({
   height: number;
   styles: ReturnType<typeof useChartStyles>;
 }) {
-  const { t } = useTranslation();
   const amounts = data.map((d) => Number(d.amount) || 0);
   const max = Math.max(...amounts, 1);
   const { index: peakIndex, point: peak } = getPeakPoint(data);
@@ -312,8 +325,10 @@ function BarChartView({
   const clusterWidth = data.length * barWidth + Math.max(0, data.length - 1) * gap;
   const clusterStart = PADDING_X + (barAreaWidth - clusterWidth) / 2;
   const baselineY = PADDING_TOP + plotHeight;
-  const first = data[0];
+  const start = data[0];
+  const end = data[data.length - 1] ?? start;
   const focus = data[selectedIndex ?? peakIndex] ?? peak;
+  const isPeak = selectedIndex == null;
   const showValueLabels = data.length <= 7;
   const accent = styles.chartLine.color;
   const barBottom = styles.barBottom.color;
@@ -473,9 +488,10 @@ function BarChartView({
         </Svg>
       </View>
       <ChartSummaryFooter
-        first={first}
+        start={start}
+        end={end}
         focus={focus}
-        caption={selectedIndex == null ? t('dashboard.chartPeakDay') : t('dashboard.chartDailyTotal')}
+        isPeak={isPeak}
         styles={styles}
       />
     </>

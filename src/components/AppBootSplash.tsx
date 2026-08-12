@@ -22,20 +22,18 @@ export const BOOT_SPLASH_BG_LIGHT = '#000508';
 const BOOT_SPLASH_ICON_WIDTH = 160;
 const RING_SIZE = BOOT_SPLASH_ICON_WIDTH * 1.1;
 
-/** Exit: glow collapses + mark eases back while the overlay lifts. */
-export const BOOT_SPLASH_EXIT_MS = 460;
+/** Exit: fade only — scaling the full-screen overlay made the next screen feel like it shook. */
+export const BOOT_SPLASH_EXIT_MS = 320;
 
 export function bootSplashExiting() {
   'worklet';
-  const easing = Easing.bezier(0.22, 1, 0.36, 1);
+  const easing = Easing.out(Easing.cubic);
   return {
     initialValues: {
       opacity: 1,
-      transform: [{ scale: 1 }],
     },
     animations: {
       opacity: withTiming(0, { duration: BOOT_SPLASH_EXIT_MS, easing }),
-      transform: [{ scale: withTiming(0.9, { duration: BOOT_SPLASH_EXIT_MS, easing }) }],
     },
   };
 }

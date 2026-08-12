@@ -10,7 +10,7 @@ type Props = {
 };
 
 /**
- * Login hero: same teal → slate gradient as the web auth page.
+ * Auth hero: teal → slate gradient (matches web .auth-hero-bg).
  * CSS: linear-gradient(135deg, rgb(19 78 74 / 0.55) 0%, #0f172a 45%, #0f172a 100%)
  */
 export function AuthHeroBackground({ children, style, onReady }: Props) {
@@ -28,7 +28,6 @@ export function AuthHeroBackground({ children, style, onReady }: Props) {
             <Stop offset="100%" stopColor="#0f172a" stopOpacity={1} />
           </LinearGradient>
         </Defs>
-        {/* Base matches web dark body so the translucent teal stop composites the same way */}
         <Rect x="0" y="0" width="100%" height="100%" fill="#13161c" />
         <Rect x="0" y="0" width="100%" height="100%" fill="url(#authHero)" />
       </Svg>

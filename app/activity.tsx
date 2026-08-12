@@ -41,18 +41,44 @@ function ActivityItem({
   columnStyle?: object;
 }) {
   const { t } = useTranslation();
-  const styles = useThemedStyles((c) => ({
+  const isOwner = entry.actor_role === 'Gym Owner';
+  const styles = useThemedStyles((theme) => ({
     card: {
       padding: 14,
       marginBottom: 12,
     },
     cardColumn: { marginBottom: 0 },
     cardHeader: { flexDirection: 'row' as const, justifyContent: 'space-between' as const, gap: 8 },
-    action: { flex: 1, fontSize: 15, fontWeight: '600' as const, color: c.text },
-    time: { fontSize: 11, color: c.dim },
-    entity: { marginTop: 6, fontSize: 14, color: c.muted },
-    details: { marginTop: 4, fontSize: 13, color: c.text },
-    actor: { marginTop: 8, fontSize: 12, color: c.dim },
+    action: { flex: 1, fontSize: 15, fontWeight: '600' as const, color: theme.text },
+    time: { fontSize: 11, color: theme.dim },
+    entity: { marginTop: 6, fontSize: 14, color: theme.muted },
+    details: { marginTop: 4, fontSize: 13, color: theme.text },
+    actorRow: {
+      marginTop: 8,
+      flexDirection: 'row' as const,
+      flexWrap: 'wrap' as const,
+      alignItems: 'center' as const,
+      gap: 6,
+    },
+    actorName: { fontSize: 12, fontWeight: '600' as const, color: theme.muted },
+    roleBadge: {
+      borderRadius: 999,
+      borderWidth: 1,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+    },
+    roleBadgeOwner: {
+      backgroundColor: 'rgba(100, 116, 139, 0.18)',
+      borderColor: 'rgba(100, 116, 139, 0.35)',
+    },
+    roleBadgeStaff: {
+      backgroundColor: 'rgba(249, 115, 22, 0.12)',
+      borderColor: 'rgba(249, 115, 22, 0.28)',
+    },
+    roleBadgeText: { fontSize: 10, fontWeight: '700' as const },
+    roleBadgeTextOwner: { color: theme.statusNeutral },
+    roleBadgeTextStaff: { color: theme.statusUnpaid },
+    branch: { fontSize: 12, color: theme.dim },
   }));
 
   const details = formatAuditDetails(entry, t);
@@ -65,10 +91,17 @@ function ActivityItem({
       </View>
       {entry.entity_label ? <Text style={styles.entity}>{entry.entity_label}</Text> : null}
       {details ? <Text style={styles.details}>{details}</Text> : null}
-      <Text style={styles.actor}>
-        {entry.actor_name || entry.actor_email} · {formatActorRole(entry.actor_role, t)}
-        {entry.branch_name ? ` · ${branchDisplayName(entry.branch_name)}` : ''}
-      </Text>
+      <View style={styles.actorRow}>
+        <Text style={styles.actorName}>{entry.actor_name || entry.actor_email}</Text>
+        <View style={[styles.roleBadge, isOwner ? styles.roleBadgeOwner : styles.roleBadgeStaff]}>
+          <Text style={[styles.roleBadgeText, isOwner ? styles.roleBadgeTextOwner : styles.roleBadgeTextStaff]}>
+            {formatActorRole(entry.actor_role, t)}
+          </Text>
+        </View>
+        {entry.branch_name ? (
+          <Text style={styles.branch}>· {branchDisplayName(entry.branch_name)}</Text>
+        ) : null}
+      </View>
     </SoftSurface>
   );
 }

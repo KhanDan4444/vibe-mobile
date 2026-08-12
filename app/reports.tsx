@@ -31,7 +31,9 @@ import {
 } from '@/src/utils/reportPdf';
 import { hasGymPortalAccess } from '@/src/utils/roles';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
+import { MetricStatCard } from '@/src/components/MetricStatCard';
 import { PrimaryButton, SecondaryButton } from '@/src/components/ui/Button';
+import { formatEtb } from '@/src/utils/formatMoney';
 
 type MemberFilter = 'all' | 'active' | 'unpaid' | 'due_soon' | 'expired';
 
@@ -52,7 +54,7 @@ const REVENUE_PRESET_KEYS: { value: RevenuePreset; labelKey: string }[] = [
   { value: 'this_year', labelKey: 'revenue.periodThisYear' },
 ];
 
-function buildReportStyles(colors: ThemeColors, statCardWidthPercent: string) {
+function buildReportStyles(colors: ThemeColors) {
   return {
     container: { flex: 1, backgroundColor: colors.bg },
     content: { paddingBottom: 40 },
@@ -68,27 +70,15 @@ function buildReportStyles(colors: ThemeColors, statCardWidthPercent: string) {
       letterSpacing: 0.5,
     },
     statsRow: { flexDirection: 'row' as const, flexWrap: 'wrap' as const, gap: space.md, marginTop: space.lg },
-    statBox: {
-      width: statCardWidthPercent as `${number}%`,
-      flexGrow: 1,
-      padding: space.md,
-      alignItems: 'center' as const,
-    },
-    statValue: { fontSize: 22, fontWeight: '700' as const, letterSpacing: -0.3, color: colors.text },
-    statLabel: {
-      marginTop: 4,
-      fontSize: 13,
-      color: colors.dim,
-      textAlign: 'center' as const,
-    },
     exportRow: { flexDirection: 'row' as const, gap: space.md, marginTop: space.lg },
     exportBtn: { flex: 1 },
     revenueSummary: {
       marginTop: space.lg,
       padding: space.lg + 2,
     },
-    revenueTotal: { fontSize: 28, fontWeight: '700' as const, letterSpacing: -0.4, color: colors.text },
-    revenueMeta: { marginTop: 4, fontSize: 13, color: colors.dim },
+    revenuePeriod: { fontSize: 13, fontWeight: '600' as const, color: colors.accentText },
+    revenueTotal: { marginTop: 6, fontSize: 30, fontWeight: '700' as const, letterSpacing: -0.8, color: colors.text },
+    revenueMeta: { marginTop: 6, fontSize: 13, color: colors.dim },
     fullSection: {
       marginTop: space.xxl,
       padding: space.lg + 2,
@@ -106,8 +96,8 @@ export default function ReportsScreen() {
   const { colors: c } = useTheme();
   const { language } = usePreferences();
   const { t } = useTranslation();
-  const { pagePadding, reportStatWidthPercent } = useResponsiveLayout();
-  const styles = useThemedStyles((colors) => buildReportStyles(colors, reportStatWidthPercent));
+  const { pagePadding, reportStatLayoutStyle } = useResponsiveLayout();
+  const styles = useThemedStyles((colors) => buildReportStyles(colors));
   const [memberFilter, setMemberFilter] = useState<MemberFilter>('all');
   const [revenuePreset, setRevenuePreset] = useState<RevenuePreset>('this_month');
   const [exporting, setExporting] = useState<string | null>(null);
@@ -283,11 +273,50 @@ export default function ReportsScreen() {
       ) : (
         <>
           <View style={styles.statsRow}>
-            <StatBox label={t('reports.total')} value={counts.total} styles={styles} language={language} />
-            <StatBox label={t('reports.active')} value={counts.active} accent={c.statusActive} styles={styles} language={language} />
-            <StatBox label={t('reports.dueSoon')} value={counts.dueSoon} accent={c.statusDueSoon} styles={styles} language={language} />
-            <StatBox label={t('reports.expired')} value={counts.expired} accent={c.statusExpired} styles={styles} language={language} />
-            <StatBox label={t('reports.unpaid')} value={counts.unpaid} accent={c.statusUnpaid} styles={styles} language={language} />
+            <MetricStatCard
+              label={t('reports.unpaid')}
+              value={counts.unpaid}
+              accent={c.statusUnpaid}
+              tone="attention"
+              align="center"
+              layoutStyle={reportStatLayoutStyle}
+              onPress={() => setMemberFilter('unpaid')}
+            />
+            <MetricStatCard
+              label={t('reports.dueSoon')}
+              value={counts.dueSoon}
+              accent={c.statusDueSoon}
+              tone="attention"
+              align="center"
+              layoutStyle={reportStatLayoutStyle}
+              onPress={() => setMemberFilter('due_soon')}
+            />
+            <MetricStatCard
+              label={t('reports.expired')}
+              value={counts.expired}
+              accent={c.statusExpired}
+              tone="attention"
+              align="center"
+              layoutStyle={reportStatLayoutStyle}
+              onPress={() => setMemberFilter('expired')}
+            />
+            <MetricStatCard
+              label={t('reports.active')}
+              value={counts.active}
+              accent={c.statusActive}
+              tone="neutral"
+              align="center"
+              layoutStyle={reportStatLayoutStyle}
+              onPress={() => setMemberFilter('active')}
+            />
+            <MetricStatCard
+              label={t('reports.total')}
+              value={counts.total}
+              tone="neutral"
+              align="center"
+              layoutStyle={reportStatLayoutStyle}
+              onPress={() => setMemberFilter('all')}
+            />
           </View>
           <StatusBreakdown counts={counts} barCounts={barCounts} />
         </>
@@ -312,7 +341,10 @@ export default function ReportsScreen() {
 
       {revenueSummary ? (
         <SoftSurface variant="panel" style={styles.revenueSummary}>
-          <Text display style={styles.revenueTotal}>{Number(revenueSummary.total || 0).toLocaleString()} ETB</Text>
+          <Text style={styles.revenuePeriod}>{periodLabel}</Text>
+          <Text style={styles.revenueTotal}>
+            {formatEtb(Number(revenueSummary.total || 0), { forceCompact: false })}
+          </Text>
           <Text style={styles.revenueMeta}>
             {t('reports.paymentsInPeriod', { count: revenueSummary.count ?? 0, period: periodLabel.toLowerCase() })}
           </Text>
@@ -346,27 +378,6 @@ export default function ReportsScreen() {
       onConfirm={() => setExportError('')}
     />
     </TabScreenFrame>
-  );
-}
-
-function StatBox({
-  label,
-  value,
-  accent,
-  styles,
-  language,
-}: {
-  label: string;
-  value: number;
-  accent?: string;
-  styles: ReportStyles;
-  language: AppLanguage;
-}) {
-  return (
-    <SoftSurface variant="quiet" style={styles.statBox}>
-      <Text display style={[styles.statValue, accent ? { color: accent } : null]}>{value}</Text>
-      <Text style={appTextStyle(language, styles.statLabel)}>{label}</Text>
-    </SoftSurface>
   );
 }
 

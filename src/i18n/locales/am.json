@@ -46,6 +46,7 @@
     "chartTypeBar": "አሞሌ",
     "chartTypePie": "ክብ",
     "chartPeakDay": "ከፍተኛ ቀን",
+    "chartPeakDayWithDate": "ከፍተኛ · {{date}}",
     "chartDailyTotal": "ያ ቀን",
     "chartScopeHint": "በዚህ ወር ዕለታዊ ገቢ",
     "chartRevenueHint": "ሁሉንም ክፍያዎች ለማየት ከላይ «በዚህ ወር» ይንኩ",

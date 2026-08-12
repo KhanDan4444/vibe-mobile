@@ -83,8 +83,19 @@ function PlanCard({
   const menuItems =
     owner && !readOnly
       ? [
-          { id: 'edit', label: t('screens.editPlan'), onPress: onEdit },
-          { id: 'delete', label: t('plans.delete'), onPress: onDelete, destructive: true },
+          {
+            id: 'edit',
+            label: t('screens.editPlan'),
+            icon: 'create-outline' as const,
+            onPress: onEdit,
+          },
+          {
+            id: 'delete',
+            label: t('plans.delete'),
+            icon: 'trash-outline' as const,
+            onPress: onDelete,
+            destructive: true,
+          },
         ]
       : [];
 
@@ -101,7 +112,7 @@ function PlanCard({
             <Text style={styles.inactiveCount}>{t('plans.noActiveMembers')}</Text>
           )}
         </View>
-        <ActionOverflowMenu items={menuItems} />
+        <ActionOverflowMenu title={plan.name} items={menuItems} />
       </View>
       <View style={styles.footer}>
         <Text display style={styles.price}>{Number(plan.price).toLocaleString()} ETB</Text>
