@@ -33,7 +33,7 @@ export function SearchField({
         style,
       ]}
     >
-      <Ionicons name="search" size={18} color={focused ? c.accentText : c.dim} />
+      <Ionicons name="search" size={18} color={focused ? c.fieldFocus : c.dim} />
       <TextInput
         latin
         style={[fieldChrome.inputText, { color: c.text, minHeight: 40 }]}
@@ -41,7 +41,7 @@ export function SearchField({
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor={c.dim}
-        selectionColor={c.accentText}
+        selectionColor={c.fieldFocus}
         autoCapitalize="none"
         autoCorrect={false}
         returnKeyType="search"

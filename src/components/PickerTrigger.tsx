@@ -86,7 +86,7 @@ export function PickerTrigger({
       <Ionicons
         name="chevron-down"
         size={size === 'compact' ? 16 : 18}
-        color={open ? (authSurface ? AUTH.link : c.accentText) : authSurface ? AUTH.textDim : c.muted}
+        color={open ? (authSurface ? AUTH.link : c.fieldFocus) : authSurface ? AUTH.textDim : c.muted}
       />
     </Pressable>
   );

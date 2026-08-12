@@ -31,6 +31,8 @@ export type ThemeColors = {
   accentText: string;
   /** Brighter teal fill for small primary CTAs (renew chips, etc.). */
   accentCta: string;
+  /** Focus ring on inputs — light theme stays softer than accentText. */
+  fieldFocus: string;
   /** Brand signature — empty states / highlights, not primary CTAs. */
   warm: string;
   warmSoft: string;
@@ -63,6 +65,7 @@ export const darkTheme: ThemeColors = {
   accentSoft: 'rgba(45,212,191,0.16)',
   accentText: '#2dd4bf',
   accentCta: '#14b8a6',
+  fieldFocus: '#2dd4bf',
   warm: '#fbbf24',
   warmSoft: 'rgba(251,191,36,0.14)',
   warmText: '#fcd34d',
@@ -95,6 +98,7 @@ export const lightTheme: ThemeColors = {
   accentSoft: 'rgba(15,118,110,0.1)',
   accentText: '#0f766e',
   accentCta: '#0d9488',
+  fieldFocus: '#14b8a6',
   warm: '#b45309',
   warmSoft: 'rgba(180,83,9,0.1)',
   warmText: '#92400e',

@@ -13,6 +13,8 @@ export type ActionMenuItem = {
   label: string;
   onPress: () => void;
   destructive?: boolean;
+  /** Soft teal emphasis (edit). */
+  accent?: boolean;
   icon?: IonName;
 };
 
@@ -63,6 +65,7 @@ export function ActionOverflowMenu({
             key={item.id}
             label={item.label}
             icon={item.icon}
+            accent={item.accent}
             destructive={item.destructive}
             onPress={() => {
               setOpen(false);

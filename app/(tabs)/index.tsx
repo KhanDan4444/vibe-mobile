@@ -268,12 +268,12 @@ export default function DashboardScreen() {
         <Animated.View entering={FadeIn.duration(timings.fadeMs)}>
           <View style={styles.grid}>
             <MetricStatCard
-              label={t('dashboard.unpaid')}
-              value={data.unpaidCount ?? 0}
-              accent={c.statusUnpaid}
-              tone="attention"
+              label={t('dashboard.active')}
+              value={data.activeMembers ?? 0}
+              accent={c.statusActive}
+              tone="neutral"
               layoutStyle={statCardLayoutStyle}
-              onPress={() => goMembers('unpaid')}
+              onPress={() => goMembers()}
             />
             <MetricStatCard
               label={t('dashboard.dueSoon')}
@@ -292,12 +292,12 @@ export default function DashboardScreen() {
               onPress={() => goMembers('expired')}
             />
             <MetricStatCard
-              label={t('dashboard.active')}
-              value={data.activeMembers ?? 0}
-              accent={c.statusActive}
-              tone="neutral"
+              label={t('dashboard.unpaid')}
+              value={data.unpaidCount ?? 0}
+              accent={c.statusUnpaid}
+              tone="attention"
               layoutStyle={statCardLayoutStyle}
-              onPress={() => goMembers()}
+              onPress={() => goMembers('unpaid')}
             />
           </View>
           {summaryBlock}

@@ -9,7 +9,7 @@ export const FIELD_BORDER = 1;
 export const FIELD_BORDER_ACTIVE = FIELD_BORDER;
 
 export function fieldRingStyle(
-  colors: { inputBorder: string; accentText: string; error: string },
+  colors: { inputBorder: string; fieldFocus: string; error: string },
   opts: { focused?: boolean; open?: boolean; error?: boolean; disabled?: boolean } = {},
 ): ViewStyle {
   // Always 1px — focus/error change color only so fields don’t feel bold or jump.
@@ -20,7 +20,7 @@ export function fieldRingStyle(
     return { borderColor: colors.inputBorder, borderWidth: FIELD_BORDER };
   }
   if (opts.focused || opts.open) {
-    return { borderColor: colors.accentText, borderWidth: FIELD_BORDER };
+    return { borderColor: colors.fieldFocus, borderWidth: FIELD_BORDER };
   }
   return { borderColor: colors.inputBorder, borderWidth: FIELD_BORDER };
 }

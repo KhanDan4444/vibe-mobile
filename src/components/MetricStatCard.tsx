@@ -3,7 +3,7 @@ import { AppText as Text } from '@/src/components/AppText';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { space } from '@/src/theme/tokens';
-import { statusWash } from '@/src/utils/statusWash';
+import { statusWashOpaque } from '@/src/utils/statusWash';
 
 type Props = {
   label: string;
@@ -45,6 +45,8 @@ export function MetricStatCard({
   const card = (
     <SoftSurface
       variant="row"
+      // Hot wash cards stay flat — Android elevation + tinted fills still halo on some devices.
+      flat={hot}
       onPress={onPress}
       accessibilityLabel={`${label}: ${value}`}
       style={[
@@ -52,8 +54,8 @@ export function MetricStatCard({
         align === 'center' ? styles.cardCenter : null,
         hot && accent
           ? {
-              backgroundColor: statusWash(accent, 0.12),
-              borderColor: statusWash(accent, 0.35),
+              backgroundColor: statusWashOpaque(accent, c.card, 0.12),
+              borderColor: statusWashOpaque(accent, c.cardEdge, 0.35),
             }
           : null,
       ]}

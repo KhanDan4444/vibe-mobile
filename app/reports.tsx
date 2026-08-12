@@ -274,13 +274,21 @@ export default function ReportsScreen() {
         <>
           <View style={styles.statsRow}>
             <MetricStatCard
-              label={t('reports.unpaid')}
-              value={counts.unpaid}
-              accent={c.statusUnpaid}
-              tone="attention"
+              label={t('reports.total')}
+              value={counts.total}
+              tone="neutral"
               align="center"
               layoutStyle={reportStatLayoutStyle}
-              onPress={() => setMemberFilter('unpaid')}
+              onPress={() => setMemberFilter('all')}
+            />
+            <MetricStatCard
+              label={t('reports.active')}
+              value={counts.active}
+              accent={c.statusActive}
+              tone="neutral"
+              align="center"
+              layoutStyle={reportStatLayoutStyle}
+              onPress={() => setMemberFilter('active')}
             />
             <MetricStatCard
               label={t('reports.dueSoon')}
@@ -301,21 +309,13 @@ export default function ReportsScreen() {
               onPress={() => setMemberFilter('expired')}
             />
             <MetricStatCard
-              label={t('reports.active')}
-              value={counts.active}
-              accent={c.statusActive}
-              tone="neutral"
+              label={t('reports.unpaid')}
+              value={counts.unpaid}
+              accent={c.statusUnpaid}
+              tone="attention"
               align="center"
               layoutStyle={reportStatLayoutStyle}
-              onPress={() => setMemberFilter('active')}
-            />
-            <MetricStatCard
-              label={t('reports.total')}
-              value={counts.total}
-              tone="neutral"
-              align="center"
-              layoutStyle={reportStatLayoutStyle}
-              onPress={() => setMemberFilter('all')}
+              onPress={() => setMemberFilter('unpaid')}
             />
           </View>
           <StatusBreakdown counts={counts} barCounts={barCounts} />

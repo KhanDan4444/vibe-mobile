@@ -1,17 +1,23 @@
-import { useState } from 'react';
-import { View } from 'react-native';
+import { useState, type ComponentProps } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
 import { PrimaryButton, SecondaryButton } from '@/src/components/ui/Button';
+import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import type { MemberRow } from '@/src/types/api';
 import { canChangePlan, canCollectPayment, canRenewMember } from '@/src/utils/memberRenew';
+
+type IonName = ComponentProps<typeof Ionicons>['name'];
 
 export type MemberAction = {
   id: string;
   label: string;
   onPress: () => void;
   destructive?: boolean;
+  accent?: boolean;
+  icon?: IonName;
 };
 
 export function MemberActionsBar({
@@ -34,6 +40,7 @@ export function MemberActionsBar({
   onDelete: () => void;
 }) {
   const { t } = useTranslation();
+  const { colors: c } = useTheme();
   const [manageOpen, setManageOpen] = useState(false);
   const styles = useThemedStyles(() => ({
     row: { flexDirection: 'row' as const, gap: 10, marginBottom: 10 },
@@ -61,20 +68,40 @@ export function MemberActionsBar({
   }
 
   const manageActions: MemberAction[] = [];
-  const maybeManage = (id: string, label: string, onPress: () => void, destructive?: boolean) => {
+  const maybeManage = (
+    id: string,
+    label: string,
+    onPress: () => void,
+    icon: IonName,
+    destructive?: boolean,
+  ) => {
     if (primaryIds.has(id)) return;
-    manageActions.push({ id, label, onPress, destructive });
+    manageActions.push({ id, label, onPress, icon, destructive });
   };
 
-  if (showChangePlan) maybeManage('change-plan', t('member.changePlan'), onChangePlan);
-  if (showRenew) maybeManage('renew', t('member.renew'), onRenew);
-  if (showPayment) maybeManage('payment', t('member.collectPayment'), onPayment);
-  manageActions.push({ id: 'edit', label: t('member.edit'), onPress: onEdit });
+  if (showChangePlan) maybeManage('change-plan', t('member.changePlan'), onChangePlan, 'swap-horizontal-outline');
+  if (showRenew) maybeManage('renew', t('member.renew'), onRenew, 'refresh-outline');
+  if (showPayment) maybeManage('payment', t('member.collectPayment'), onPayment, 'cash-outline');
+  manageActions.push({
+    id: 'edit',
+    label: t('member.edit'),
+    onPress: onEdit,
+    icon: 'create-outline',
+    accent: true,
+  });
   if (owner && !readOnly) {
-    manageActions.push({ id: 'delete', label: t('member.delete'), onPress: onDelete, destructive: true });
+    manageActions.push({
+      id: 'delete',
+      label: t('member.delete'),
+      onPress: onDelete,
+      icon: 'trash-outline',
+      destructive: true,
+    });
   }
 
   if (primaries.length === 0 && manageActions.length === 0) return null;
+
+  const sheetTitle = member.name?.trim() || t('member.manage');
 
   return (
     <View>
@@ -100,14 +127,25 @@ export function MemberActionsBar({
 
           <BottomSheet
             visible={manageOpen}
-            title={t('member.manage')}
+            title={sheetTitle}
             onClose={() => setManageOpen(false)}
             compact
+            footer={
+              <View style={[localStyles.cancelWrap, { borderTopColor: c.border }]}>
+                <SheetOption
+                  label={t('common.cancel')}
+                  tone="cancel"
+                  onPress={() => setManageOpen(false)}
+                />
+              </View>
+            }
           >
             {manageActions.map((action) => (
               <SheetOption
                 key={action.id}
                 label={action.label}
+                icon={action.icon}
+                accent={action.accent}
                 destructive={action.destructive}
                 onPress={() => {
                   setManageOpen(false);
@@ -121,3 +159,11 @@ export function MemberActionsBar({
     </View>
   );
 }
+
+const localStyles = StyleSheet.create({
+  cancelWrap: {
+    marginTop: 4,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: 4,
+  },
+});

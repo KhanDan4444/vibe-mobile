@@ -136,6 +136,7 @@ function PaymentRowItem({
             label: t('revenue.editPayment'),
             icon: 'create-outline' as const,
             onPress: onEdit,
+            accent: true,
           },
         ]
       : [];

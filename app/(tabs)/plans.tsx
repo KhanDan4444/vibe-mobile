@@ -88,6 +88,7 @@ function PlanCard({
             label: t('screens.editPlan'),
             icon: 'create-outline' as const,
             onPress: onEdit,
+            accent: true,
           },
           {
             id: 'delete',

@@ -129,7 +129,7 @@ export function useFieldBorderColor(opts: {
   const { colors: c } = useTheme();
   if (opts.error) return c.error;
   if (opts.disabled) return c.inputBorder;
-  if (opts.focused) return c.accentText;
+  if (opts.focused) return c.fieldFocus;
   return c.inputBorder;
 }
 
@@ -224,7 +224,7 @@ export const Field = React.forwardRef<
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor={authSurface ? AUTH.placeholder : c.dim}
-        selectionColor={authSurface ? AUTH.selection : c.accentText}
+        selectionColor={authSurface ? AUTH.selection : c.fieldFocus}
         secureTextEntry={secureTextEntry && !revealed}
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize ?? 'sentences'}
@@ -255,7 +255,7 @@ export const Field = React.forwardRef<
           <Ionicons
             name={revealed ? 'eye-off-outline' : 'eye-outline'}
             size={20}
-            color={focused ? (authSurface ? AUTH.link : c.accentText) : authSurface ? AUTH.textDim : c.muted}
+            color={focused ? (authSurface ? AUTH.link : c.fieldFocus) : authSurface ? AUTH.textDim : c.muted}
           />
         </Pressable>
       ) : null}

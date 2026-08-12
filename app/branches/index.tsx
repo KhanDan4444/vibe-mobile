@@ -92,6 +92,7 @@ function BranchCard({
           label: t('team.edit'),
           icon: 'create-outline' as const,
           onPress: onEdit,
+          accent: true,
         },
       ]
     : [];

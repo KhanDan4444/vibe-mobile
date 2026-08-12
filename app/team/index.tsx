@@ -61,7 +61,7 @@ function StaffCard({
   }));
 
   const menuItems = [
-    { id: 'edit', label: t('team.edit'), icon: 'create-outline' as const, onPress: onEdit },
+    { id: 'edit', label: t('team.edit'), icon: 'create-outline' as const, onPress: onEdit, accent: true },
     {
       id: 'toggle',
       label: member.is_active ? t('team.disable') : t('team.enable'),
