@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/src/config/api';
+import { fetchWithTimeout } from '@/src/api/fetchWithTimeout';
 
 const memoryCache = new Map<string, string | null>();
 const inflight = new Map<string, Promise<string | null>>();
@@ -41,7 +42,7 @@ export async function fetchMemberPhotoDataUri(
   const promise = (async () => {
     try {
       const query = cacheBust ? `?v=${encodeURIComponent(String(cacheBust))}` : '';
-      const res = await fetch(`${API_BASE_URL}/api/members/${memberId}/photo${query}`, {
+      const res = await fetchWithTimeout(`${API_BASE_URL}/api/members/${memberId}/photo${query}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {

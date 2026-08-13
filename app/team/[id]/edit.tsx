@@ -44,17 +44,6 @@ export default function EditStaffScreen() {
     divider: { marginTop: 32, marginBottom: 16, height: 1, backgroundColor: colors.border },
     sectionTitle: { fontSize: 16, fontWeight: '700' as const, color: colors.text },
     sectionHint: { marginTop: 6, marginBottom: 4, fontSize: 13, color: colors.dim, lineHeight: 18 },
-    resetBtn: {
-      marginTop: 8,
-      paddingVertical: 14,
-      borderRadius: 10,
-      alignItems: 'center' as const,
-      borderWidth: 1,
-      borderColor: colors.accentText,
-      backgroundColor: colors.accentSoft,
-    },
-    resetBtnDisabled: { opacity: 0.5 },
-    resetBtnText: { color: colors.accentText, fontSize: 15, fontWeight: '600' as const },
   }));
 
   const teamQuery = useQuery({
@@ -252,15 +241,12 @@ export default function EditStaffScreen() {
           />
           <FieldError message={resetErrors.password ? t(resetErrors.password) : undefined} />
 
-          <Pressable
-            style={[styles.resetBtn, resetMutation.isPending && styles.resetBtnDisabled]}
+          <PrimaryButton
+            label={resetMutation.isPending ? t('common.updating') : t('team.resetPassword')}
             onPress={handleReset}
+            loading={resetMutation.isPending}
             disabled={resetMutation.isPending || saveMutation.isPending}
-          >
-            <Text style={styles.resetBtnText}>
-              {resetMutation.isPending ? t('common.updating') : t('team.resetPassword')}
-            </Text>
-          </Pressable>
+          />
         </FormScroll>
       </KeyboardAvoidingView>
       <ConfirmDialog

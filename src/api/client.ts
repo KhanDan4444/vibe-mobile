@@ -1,4 +1,9 @@
 import { API_BASE_URL } from '@/src/config/api';
+import {
+  fetchWithTimeout,
+  isTimeoutError,
+  REQUEST_TIMEOUT_MESSAGE,
+} from '@/src/api/fetchWithTimeout';
 
 export class ApiError extends Error {
   status: number;
@@ -44,12 +49,15 @@ export async function apiRequest<T>(
 
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}/api${path}`, {
+    response = await fetchWithTimeout(`${API_BASE_URL}/api${path}`, {
       ...rest,
       headers,
     });
-  } catch {
+  } catch (error) {
     // Client-facing copy only — never expose API host or env var names.
+    if (isTimeoutError(error)) {
+      throw new ApiError(REQUEST_TIMEOUT_MESSAGE, 0, undefined, 'TIMEOUT');
+    }
     throw new ApiError(
       'Could not connect to the server. Check your internet and try again.',
       0,
