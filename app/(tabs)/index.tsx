@@ -12,7 +12,6 @@ import { BranchFilterBar } from '@/src/components/BranchFilterBar';
 import { MemberPhoto } from '@/src/components/MemberPhoto';
 import { MiniBarChart } from '@/src/components/MiniBarChart';
 import { PageSkeleton } from '@/src/components/Skeleton';
-import { ReadOnlyBanner } from '@/src/components/ReadOnlyBanner';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useTheme } from '@/src/context/PreferencesContext';
 import type { DashboardAlertMember } from '@/src/types/api';
@@ -304,8 +303,6 @@ export default function DashboardScreen() {
           {owner ? attentionBlock : null}
         </Animated.View>
       ) : null}
-
-      <ReadOnlyBanner />
       </ResponsiveContent>
     </ScrollView>
     </TabScreenFrame>

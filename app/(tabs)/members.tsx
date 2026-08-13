@@ -10,7 +10,6 @@ import { fetchDashboard } from '@/src/api/dashboard';
 import { fetchMembers, type MemberListParams } from '@/src/api/members';
 import { MemberPhoto } from '@/src/components/MemberPhoto';
 import { BranchFilterBar } from '@/src/components/BranchFilterBar';
-import { ReadOnlyBanner } from '@/src/components/ReadOnlyBanner';
 import { SortPicker } from '@/src/components/SortPicker';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { EmptyState } from '@/src/components/EmptyState';
@@ -221,7 +220,6 @@ export default function MembersScreen() {
     <TabScreenFrame>
     <View style={styles.container}>
       <BranchFilterBar horizontalPadding={pagePadding} />
-      <ReadOnlyBanner />
       <View style={[styles.toolbar, { paddingHorizontal: pagePadding }]}>
         <SearchField value={search} onChangeText={setSearch} placeholder={t('members.search')} />
 

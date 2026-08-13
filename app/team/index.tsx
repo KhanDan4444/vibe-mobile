@@ -102,16 +102,6 @@ export default function TeamScreen() {
   const fabBottom = 24 + insets.bottom;
   const styles = useThemedStyles((colors) => ({
     container: { flex: 1, backgroundColor: colors.bg },
-    banner: {
-      marginTop: 16,
-      marginBottom: 0,
-      backgroundColor: 'rgba(251,191,36,0.12)',
-      borderRadius: 10,
-      padding: 12,
-      borderWidth: 1,
-      borderColor: 'rgba(251,191,36,0.35)',
-    },
-    bannerText: { color: '#fcd34d', fontSize: 13 },
     list: { paddingBottom: 88 },
     columnWrap: { gap: 10 },
     empty: { textAlign: 'center' as const, color: colors.dim, marginTop: 40, fontSize: 15 },
@@ -163,12 +153,6 @@ export default function TeamScreen() {
   return (
     <TabScreenFrame>
     <View style={styles.container}>
-      {readOnly ? (
-        <View style={[styles.banner, { marginHorizontal: pagePadding }]}>
-          <Text style={styles.bannerText}>{t('common.readOnly')}</Text>
-        </View>
-      ) : null}
-
       {query.isLoading ? (
         <PageSkeleton variant="list-cards" />
       ) : query.isError ? (

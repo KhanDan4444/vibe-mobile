@@ -1,11 +1,13 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { ReadOnlyBanner } from '@/src/components/ReadOnlyBanner';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 
 /**
  * Centers tab content on tablets with a readable max width; phones stay full-bleed.
  * Applies a consistent top inset (same as horizontal page padding) under the nav header.
+ * Pins the license/branch read-only banner above scrolling tab content.
  */
 export function TabScreenFrame({
   children,
@@ -26,6 +28,9 @@ export function TabScreenFrame({
           isTablet && { maxWidth: contentMaxWidth },
         ]}
       >
+        <View style={{ paddingHorizontal: pagePadding }}>
+          <ReadOnlyBanner />
+        </View>
         {children}
       </View>
     </View>

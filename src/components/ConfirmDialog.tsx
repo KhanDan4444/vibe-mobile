@@ -1,20 +1,10 @@
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
-import Animated, {
-  Easing,
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { useEffect, useState } from 'react';
 import { AppText as Text } from '@/src/components/AppText';
 import { PrimaryButton, SecondaryButton } from '@/src/components/ui/Button';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { elevationStyle } from '@/src/theme/elevation';
-import { springs, timings } from '@/src/theme/motion';
 import { radiusXl } from '@/src/theme/tokens';
 
 type ConfirmDialogProps = {
@@ -35,11 +25,10 @@ type ConfirmDialogProps = {
   onCancel?: () => void;
 };
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
 /**
  * In-app bottom sheet dialog. Prefer this over Alert.alert —
  * system alerts use a mismatched font/tint on Android.
+ * No enter/exit motion — shows and hides instantly.
  */
 export function ConfirmDialog({
   visible,
@@ -56,40 +45,15 @@ export function ConfirmDialog({
   const { t } = useTranslation();
   const { colors: c, theme } = useTheme();
   const insets = useSafeAreaInsets();
-  const [mounted, setMounted] = useState(visible);
-  const progress = useSharedValue(0);
 
   const dismiss = onCancel ?? onConfirm;
   const primaryLabel = confirmLabel ?? (alertOnly ? t('common.ok') : t('common.confirm'));
 
-  useEffect(() => {
-    if (visible) {
-      setMounted(true);
-      progress.value = 0;
-      progress.value = withSpring(1, springs.sheet);
-      return;
-    }
-    progress.value = withTiming(0, { duration: timings.fadeMs, easing: Easing.out(Easing.cubic) }, (finished) => {
-      if (finished) runOnJS(setMounted)(false);
-    });
-  }, [visible, progress]);
-
-  const backdropStyle = useAnimatedStyle(() => ({
-    opacity: progress.value * 0.5,
-  }));
-
-  const cardStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: (1 - progress.value) * 24 }],
-    opacity: 0.4 + progress.value * 0.6,
-  }));
-
-  if (!mounted) return null;
-
   return (
-    <Modal visible={mounted} transparent animationType="none" onRequestClose={dismiss}>
+    <Modal visible={visible} transparent animationType="none" onRequestClose={dismiss}>
       <View style={styles.overlay}>
-        <AnimatedPressable style={[styles.backdrop, backdropStyle]} onPress={dismiss} />
-        <Animated.View
+        <Pressable style={styles.backdrop} onPress={dismiss} accessibilityRole="button" />
+        <View
           style={[
             styles.card,
             elevationStyle('float', theme),
@@ -99,7 +63,6 @@ export function ConfirmDialog({
               borderRadius: radiusXl,
               marginBottom: Math.max(insets.bottom, 16),
             },
-            cardStyle,
           ]}
         >
           <Text display style={[styles.title, { color: c.text }]}>
@@ -108,24 +71,33 @@ export function ConfirmDialog({
           <Text style={[styles.message, { color: c.muted }]}>{message}</Text>
 
           <View style={styles.actions}>
-            {alertOnly ? null : (
+            {alertOnly ? (
               <SecondaryButton
-                label={cancelLabel ?? t('common.cancel')}
-                onPress={dismiss}
+                label={primaryLabel}
+                onPress={onConfirm}
                 disabled={confirmLoading}
-                style={styles.btn}
+                style={styles.btnFull}
               />
+            ) : (
+              <>
+                <SecondaryButton
+                  label={cancelLabel ?? t('common.cancel')}
+                  onPress={dismiss}
+                  disabled={confirmLoading}
+                  style={styles.btn}
+                />
+                <PrimaryButton
+                  label={primaryLabel}
+                  onPress={onConfirm}
+                  loading={confirmLoading}
+                  disabled={confirmLoading}
+                  destructive={destructive}
+                  style={styles.btn}
+                />
+              </>
             )}
-            <PrimaryButton
-              label={primaryLabel}
-              onPress={onConfirm}
-              loading={confirmLoading}
-              disabled={confirmLoading}
-              destructive={destructive && !alertOnly}
-              style={[styles.btn, alertOnly ? styles.btnFull : null]}
-            />
           </View>
-        </Animated.View>
+        </View>
       </View>
     </Modal>
   );
@@ -139,7 +111,7 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#0c0a09',
+    backgroundColor: 'rgba(12, 10, 9, 0.5)',
   },
   card: {
     borderWidth: StyleSheet.hairlineWidth,

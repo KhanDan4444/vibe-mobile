@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { AppText as Text } from '@/src/components/AppText';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -7,7 +8,6 @@ import { completeGymSignup, getPublicSaasPlans, requestGymSignupOtp } from '@/sr
 import { AuthFormEnter } from '@/src/components/AuthFormEnter';
 import { AuthScreen } from '@/src/components/AuthScreen';
 import { AuthStepDots } from '@/src/components/AuthStepDots';
-import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { OptionPickerField } from '@/src/components/OptionPickerField';
 import { ErrorBanner, Field, FormScroll, Label, PrimaryButton } from '@/src/components/Form';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
@@ -21,6 +21,13 @@ import { isValidEthiopianPhone, normalizeEthiopianPhone } from '@/src/utils/phon
 const USERNAME_RE = /^[a-z0-9._]{3,30}$/;
 const STEPS = ['phone', 'gym', 'account'] as const;
 type SignupStep = (typeof STEPS)[number];
+
+type RegisterDone = {
+  gymName: string;
+  username: string;
+  phone?: string;
+  planName?: string;
+};
 
 export default function RegisterGymScreen() {
   const { t } = useTranslation();
@@ -43,8 +50,7 @@ export default function RegisterGymScreen() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [successOpen, setSuccessOpen] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
+  const [registerDone, setRegisterDone] = useState<RegisterDone | null>(null);
 
   const stepIndex = STEPS.indexOf(step);
   const stepSubtitle =
@@ -168,9 +174,14 @@ export default function RegisterGymScreen() {
         saas_plan_id: parseInt(saasPlanId, 10),
       };
       const trimmedEmail = email.trim().toLowerCase();
-      const data = await completeGymSignup(trimmedEmail ? { ...payload, email: trimmedEmail } : payload);
-      setSuccessMessage(data.message || t('signup.successBody'));
-      setSuccessOpen(true);
+      await completeGymSignup(trimmedEmail ? { ...payload, email: trimmedEmail } : payload);
+      const planName = plans.find((p) => String(p.id) === saasPlanId)?.name;
+      setRegisterDone({
+        gymName: gymName.trim(),
+        username: cleanUsername,
+        phone: verifiedPhone || phone.trim() || undefined,
+        planName,
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : t('signup.completeFailed'));
     } finally {
@@ -200,6 +211,62 @@ export default function RegisterGymScreen() {
             </Pressable>
           </SoftSurface>
         </AuthFormEnter>
+      </AuthScreen>
+    );
+  }
+
+  if (registerDone) {
+    const summaryRows = [
+      { label: t('signup.usernameLabel'), value: `@${registerDone.username}` },
+      registerDone.phone ? { label: t('signup.phoneLabel'), value: registerDone.phone } : null,
+      registerDone.planName ? { label: t('signup.planLabel'), value: registerDone.planName } : null,
+    ].filter(Boolean) as { label: string; value: string }[];
+
+    return (
+      <AuthScreen hero>
+        <FormScroll contentContainerStyle={{ paddingTop: 28 }}>
+          <AuthFormEnter delay={40}>
+            <View style={styles.successWrap}>
+              <View style={styles.checkCircle}>
+                <View style={styles.checkInner}>
+                  <Ionicons name="checkmark" size={34} color={AUTH.link} />
+                </View>
+              </View>
+
+              <Text display style={[styles.successTitle, { color: AUTH.text }]}>
+                {t('signup.successTitle')}
+              </Text>
+              <Text style={[styles.successGym, { color: AUTH.text }]} numberOfLines={2}>
+                {registerDone.gymName}
+              </Text>
+              <Text style={[styles.successBody, { color: AUTH.textMuted }]}>{t('signup.successBody')}</Text>
+
+              {summaryRows.length > 0 ? (
+                <SoftSurface variant="panel" style={[styles.summary, { backgroundColor: AUTH.fieldBg }]}>
+                  {summaryRows.map((row, index) => (
+                    <View
+                      key={row.label}
+                      style={[styles.summaryRow, index === summaryRows.length - 1 ? styles.summaryRowLast : null]}
+                    >
+                      <Text style={[styles.summaryLabel, { color: AUTH.textDim }]}>{row.label}</Text>
+                      <Text latin style={[styles.summaryValue, { color: AUTH.text }]} numberOfLines={1}>
+                        {row.value}
+                      </Text>
+                    </View>
+                  ))}
+                </SoftSurface>
+              ) : null}
+
+              <Text style={[styles.successHint, { color: AUTH.textDim }]}>{t('signup.successHint')}</Text>
+
+              <PrimaryButton
+                label={t('auth.signIn')}
+                onPress={() => router.replace('/login')}
+                style={styles.successCta}
+              />
+            </View>
+          </AuthFormEnter>
+        </FormScroll>
       </AuthScreen>
     );
   }
@@ -310,18 +377,6 @@ export default function RegisterGymScreen() {
           </AuthFormEnter>
         </FormScroll>
       </KeyboardAvoidingView>
-      <ConfirmDialog
-        visible={successOpen}
-        title={t('signup.successTitle')}
-        message={successMessage}
-        alertOnly
-        destructive={false}
-        confirmLabel={t('common.done')}
-        onConfirm={() => {
-          setSuccessOpen(false);
-          router.replace('/login');
-        }}
-      />
     </AuthScreen>
   );
 }
@@ -343,4 +398,89 @@ const styles = StyleSheet.create({
   backLink: { marginTop: 16 },
   backLinkText: { fontSize: 14, fontWeight: '700', letterSpacing: 0.15 },
   secondaryText: { fontSize: 14, fontWeight: '600', letterSpacing: 0.15 },
+  successWrap: {
+    width: '100%',
+    alignItems: 'center',
+    paddingBottom: 24,
+  },
+  checkCircle: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(45,212,191,0.12)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(45,212,191,0.35)',
+    marginBottom: 22,
+  },
+  checkInner: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(45,212,191,0.16)',
+  },
+  successTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+    textAlign: 'center',
+  },
+  successGym: {
+    marginTop: 10,
+    fontSize: 26,
+    fontWeight: '700',
+    letterSpacing: -0.4,
+    lineHeight: 32,
+    textAlign: 'center',
+  },
+  successBody: {
+    marginTop: 10,
+    fontSize: 15,
+    lineHeight: 22,
+    textAlign: 'center',
+    letterSpacing: 0.1,
+    maxWidth: 320,
+  },
+  summary: {
+    marginTop: 22,
+    width: '100%',
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(148,163,184,0.25)',
+  },
+  summaryRowLast: {
+    borderBottomWidth: 0,
+  },
+  summaryLabel: {
+    fontSize: 13,
+    flexShrink: 0,
+  },
+  summaryValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    flexShrink: 1,
+    textAlign: 'right',
+  },
+  successHint: {
+    marginTop: 16,
+    fontSize: 12,
+    lineHeight: 18,
+    textAlign: 'center',
+    maxWidth: 300,
+  },
+  successCta: {
+    marginTop: 22,
+    width: '100%',
+  },
 });

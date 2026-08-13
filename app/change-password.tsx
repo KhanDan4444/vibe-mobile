@@ -1,5 +1,5 @@
 import { Redirect, useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation } from '@tanstack/react-query';
@@ -8,7 +8,7 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { ApiError } from '@/src/api/client';
 import { changePassword } from '@/src/api/auth';
 import { AppText as Text } from '@/src/components/AppText';
-import { ConfirmDialog } from '@/src/components/ConfirmDialog';
+import { FormSuccessView } from '@/src/components/FormSuccessView';
 import { ErrorBanner, Field, FieldError, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { useTheme } from '@/src/context/PreferencesContext';
@@ -23,43 +23,39 @@ import {
 } from '@/src/utils/passwordValidation';
 import { hasGymPortalAccess } from '@/src/utils/roles';
 
-function PasswordChecklist({ password, confirm }: { password: string; confirm: string }) {
-  const { t } = useTranslation();
+/** Live password checklist row — empty circle → green check (not alarm X). */
+function PasswordRule({
+  show,
+  ok,
+  label,
+}: {
+  show: boolean;
+  ok: boolean;
+  label: string;
+}) {
   const { colors: c } = useTheme();
   const styles = useThemedStyles((colors) => ({
-    wrap: {
-      marginTop: 4,
-      marginBottom: 4,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-      borderRadius: 10,
-      backgroundColor: colors.inputBg,
-      gap: 8,
+    row: {
+      marginTop: 6,
+      marginBottom: 2,
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 6,
     },
-    row: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 8 },
-    labelOk: { flex: 1, fontSize: 12, color: colors.success },
-    labelIdle: { flex: 1, fontSize: 12, color: colors.dim },
+    labelOk: { flex: 1, fontSize: 12, fontWeight: '500' as const, color: colors.success },
+    labelPending: { flex: 1, fontSize: 12, fontWeight: '500' as const, color: colors.muted },
   }));
 
-  if (!password && !confirm) return null;
-
-  const rules = [
-    { ok: password.length >= MIN_PASSWORD_LENGTH, label: t('forms.passwordMin8') },
-    { ok: password.length > 0 && password === confirm, label: t('forms.passwordsMatch') },
-  ];
+  if (!show) return null;
 
   return (
-    <View style={styles.wrap} accessibilityRole="summary">
-      {rules.map((rule) => (
-        <View key={rule.label} style={styles.row}>
-          <Ionicons
-            name={rule.ok ? 'checkmark-circle' : 'ellipse-outline'}
-            size={16}
-            color={rule.ok ? c.success : c.dim}
-          />
-          <Text style={rule.ok ? styles.labelOk : styles.labelIdle}>{rule.label}</Text>
-        </View>
-      ))}
+    <View style={styles.row} accessibilityRole="text" accessibilityState={{ checked: ok }}>
+      <Ionicons
+        name={ok ? 'checkmark-circle' : 'ellipse-outline'}
+        size={16}
+        color={ok ? c.success : c.muted}
+      />
+      <Text style={ok ? styles.labelOk : styles.labelPending}>{label}</Text>
     </View>
   );
 }
@@ -80,8 +76,15 @@ export default function ChangePasswordScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<PasswordChangeErrors>({});
-  const [successOpen, setSuccessOpen] = useState(false);
+  const [showLengthRule, setShowLengthRule] = useState(false);
+  const [showMatchRule, setShowMatchRule] = useState(false);
+  const [showCurrentRule, setShowCurrentRule] = useState(false);
+  const [done, setDone] = useState(false);
   const canChangePassword = Boolean(user && hasGymPortalAccess(user.role));
+
+  const currentOk = currentPassword.length > 0;
+  const lengthOk = newPassword.length >= MIN_PASSWORD_LENGTH;
+  const matchOk = confirmPassword.length > 0 && newPassword === confirmPassword;
 
   const mutation = useMutation({
     mutationFn: () => changePassword(token!, currentPassword, newPassword),
@@ -91,7 +94,7 @@ export default function ChangePasswordScreen() {
       setConfirmPassword('');
       setFieldErrors({});
       setError('');
-      setSuccessOpen(true);
+      setDone(true);
     },
     onError: (e: Error) => {
       if (isIncorrectCurrentPasswordError(e) || (e instanceof ApiError && e.field === 'currentPassword')) {
@@ -103,16 +106,13 @@ export default function ChangePasswordScreen() {
     },
   });
 
-  const canSubmit = useMemo(
-    () =>
-      currentPassword.length > 0 &&
-      newPassword.length > 0 &&
-      confirmPassword.length > 0 &&
-      !mutation.isPending,
-    [currentPassword, newPassword, confirmPassword, mutation.isPending],
-  );
-
   const resolveError = (key?: string) => (key ? t(key) : undefined);
+
+  const liveNewPasswordError = (value: string, current: string): string | undefined => {
+    if (!value) return undefined;
+    if (current && value === current) return 'forms.passwordSame';
+    return undefined;
+  };
 
   const handleSubmit = () => {
     setError('');
@@ -124,6 +124,29 @@ export default function ChangePasswordScreen() {
 
   if (!canChangePassword) {
     return <Redirect href="/login" />;
+  }
+
+  if (done) {
+    return (
+      <Screen>
+        <TabScreenFrame>
+          <ScrollView
+            contentContainerStyle={[styles.content, { paddingHorizontal: pagePadding }]}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.form}>
+              <FormSuccessView
+                title={t('forms.successAllSet')}
+                hero={t('forms.passwordSuccessHero')}
+                body={t('forms.passwordSuccessBody')}
+                ctaLabel={t('common.done')}
+                onCta={() => router.back()}
+              />
+            </View>
+          </ScrollView>
+        </TabScreenFrame>
+      </Screen>
+    );
   }
 
   return (
@@ -141,43 +164,68 @@ export default function ChangePasswordScreen() {
               <Label>{t('forms.currentPassword')}</Label>
               <Field
                 value={currentPassword}
+                onFocus={() => setShowCurrentRule(true)}
                 onChangeText={(v) => {
                   setCurrentPassword(v);
-                  if (fieldErrors.currentPassword) {
-                    setFieldErrors((prev) => ({ ...prev, currentPassword: undefined }));
-                  }
+                  setShowCurrentRule(true);
+                  setFieldErrors((prev) => ({
+                    ...prev,
+                    currentPassword: undefined,
+                    newPassword: liveNewPasswordError(newPassword, v),
+                  }));
                 }}
                 secureTextEntry
                 autoCapitalize="none"
                 error={Boolean(fieldErrors.currentPassword)}
                 returnKeyType="next"
               />
-              <FieldError message={resolveError(fieldErrors.currentPassword)} />
+              <PasswordRule
+                show={showCurrentRule || currentPassword.length > 0}
+                ok={currentOk}
+                label={t('forms.currentPasswordEntered')}
+              />
+              {fieldErrors.currentPassword ? (
+                <FieldError message={resolveError(fieldErrors.currentPassword)} />
+              ) : null}
 
               <Label>{t('forgot.newPassword')}</Label>
               <Field
                 value={newPassword}
+                onFocus={() => setShowLengthRule(true)}
                 onChangeText={(v) => {
                   setNewPassword(v);
-                  if (fieldErrors.newPassword) {
-                    setFieldErrors((prev) => ({ ...prev, newPassword: undefined }));
-                  }
+                  setShowLengthRule(true);
+                  setFieldErrors((prev) => ({
+                    ...prev,
+                    newPassword: liveNewPasswordError(v, currentPassword),
+                    confirmPassword: undefined,
+                  }));
                 }}
                 secureTextEntry
                 autoCapitalize="none"
                 error={Boolean(fieldErrors.newPassword)}
                 returnKeyType="next"
               />
-              <FieldError message={resolveError(fieldErrors.newPassword)} />
+              <PasswordRule
+                show={showLengthRule || newPassword.length > 0}
+                ok={lengthOk}
+                label={t('forms.passwordMin8')}
+              />
+              {fieldErrors.newPassword ? (
+                <FieldError message={resolveError(fieldErrors.newPassword)} />
+              ) : null}
 
               <Label>{t('forms.confirmNewPassword')}</Label>
               <Field
                 value={confirmPassword}
+                onFocus={() => setShowMatchRule(true)}
                 onChangeText={(v) => {
                   setConfirmPassword(v);
-                  if (fieldErrors.confirmPassword) {
-                    setFieldErrors((prev) => ({ ...prev, confirmPassword: undefined }));
-                  }
+                  setShowMatchRule(true);
+                  setFieldErrors((prev) => ({
+                    ...prev,
+                    confirmPassword: undefined,
+                  }));
                 }}
                 secureTextEntry
                 autoCapitalize="none"
@@ -185,32 +233,22 @@ export default function ChangePasswordScreen() {
                 returnKeyType="done"
                 onSubmitEditing={handleSubmit}
               />
-              <FieldError message={resolveError(fieldErrors.confirmPassword)} />
-
-              <PasswordChecklist password={newPassword} confirm={confirmPassword} />
+              <PasswordRule
+                show={showMatchRule || confirmPassword.length > 0}
+                ok={matchOk}
+                label={t('forms.passwordsMatch')}
+              />
 
               <PrimaryButton
                 label={t('forgot.updatePassword')}
                 onPress={handleSubmit}
                 loading={mutation.isPending}
-                disabled={!canSubmit}
+                disabled={mutation.isPending}
               />
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </TabScreenFrame>
-      <ConfirmDialog
-        visible={successOpen}
-        title={t('forgot.updatedTitle')}
-        message={t('forms.passwordChangedBody')}
-        alertOnly
-        destructive={false}
-        confirmLabel={t('common.ok')}
-        onConfirm={() => {
-          setSuccessOpen(false);
-          router.back();
-        }}
-      />
     </Screen>
   );
 }

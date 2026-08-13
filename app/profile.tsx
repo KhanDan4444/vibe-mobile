@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchGymProfile, updateGymProfile } from '@/src/api/profile';
+import { FormSuccessView } from '@/src/components/FormSuccessView';
 import { ErrorBanner, Field, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { PageSkeleton } from '@/src/components/Skeleton';
 import { LoadError } from '@/src/components/LoadError';
@@ -14,11 +15,18 @@ import { useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { isOfflineQueued } from '@/src/offline/types';
-import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
+import { useOfflineFlash } from '@/src/hooks/useSaveFlash';
 import { useLoadRetry } from '@/src/hooks/useLoadRetry';
 import { runInBackground } from '@/src/utils/runInBackground';
 import { isGymOwner } from '@/src/utils/roles';
 import type { UpdateProfilePayload } from '@/src/types/api';
+
+type ProfileDone = {
+  gymName: string;
+  ownerName: string;
+  phone?: string;
+  username?: string;
+};
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -34,7 +42,7 @@ export default function ProfileScreen() {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
-  const flashSaved = useSaveFlash();
+  const [done, setDone] = useState<ProfileDone | null>(null);
   const flashOffline = useOfflineFlash();
   const canEditProfile = Boolean(user && isGymOwner(user.role));
 
@@ -64,9 +72,14 @@ export default function ProfileScreen() {
         router.back();
         return;
       }
-      flashSaved();
-      router.back();
-      runInBackground(updateGymName(gymName.trim()));
+      const nextGym = gymName.trim();
+      setDone({
+        gymName: nextGym,
+        ownerName: ownerName.trim(),
+        phone: phone.trim() || undefined,
+        username: username.trim() || undefined,
+      });
+      runInBackground(updateGymName(nextGym));
       queryClient.invalidateQueries({ queryKey: ['gym-profile'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
@@ -107,52 +120,82 @@ export default function ProfileScreen() {
 
   const canSubmit = gymName.trim().length > 0 && ownerName.trim().length > 0;
 
+  if (done) {
+    const rows = [
+      { label: t('forms.ownerName'), value: done.ownerName },
+      done.username ? { label: t('forms.username'), value: `@${done.username}`, latin: true } : null,
+      done.phone ? { label: t('forms.phone'), value: done.phone, latin: true } : null,
+    ].filter(Boolean) as { label: string; value: string; latin?: boolean }[];
+
+    return (
+      <Screen>
+        <TabScreenFrame>
+          <ScrollView
+            contentContainerStyle={[styles.content, { paddingHorizontal: pagePadding, alignItems: 'center' }]}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={{ width: '100%', maxWidth: formMaxWidth }}>
+              <FormSuccessView
+                title={t('forms.successAllSet')}
+                hero={done.gymName}
+                body={t('forms.profileSuccessBody')}
+                rows={rows}
+                ctaLabel={t('common.done')}
+                onCta={() => router.back()}
+              />
+            </View>
+          </ScrollView>
+        </TabScreenFrame>
+      </Screen>
+    );
+  }
+
   return (
     <Screen>
       <TabScreenFrame>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
-          contentContainerStyle={[styles.content, { paddingHorizontal: pagePadding, alignItems: 'center' }]}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={{ width: '100%', maxWidth: formMaxWidth }}>
-          <ErrorBanner message={error} />
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <ScrollView
+            contentContainerStyle={[styles.content, { paddingHorizontal: pagePadding, alignItems: 'center' }]}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={{ width: '100%', maxWidth: formMaxWidth }}>
+              <ErrorBanner message={error} />
 
-          <Text style={[styles.section, { color: c.muted }]}>{t('profile.gymSection')}</Text>
-          <Label>{t('forms.gymName')}</Label>
-          <Field value={gymName} onChangeText={setGymName} autoCapitalize="words" />
+              <Text style={[styles.section, { color: c.muted }]}>{t('profile.gymSection')}</Text>
+              <Label>{t('forms.gymName')}</Label>
+              <Field value={gymName} onChangeText={setGymName} autoCapitalize="words" />
 
-          <Label>{t('forms.ownerName')}</Label>
-          <Field value={ownerName} onChangeText={setOwnerName} autoCapitalize="words" />
+              <Label>{t('forms.ownerName')}</Label>
+              <Field value={ownerName} onChangeText={setOwnerName} autoCapitalize="words" />
 
-          <Label>{t('forms.phone')}</Label>
-          <Field value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+              <Label>{t('forms.phone')}</Label>
+              <Field value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
 
-          <Text style={[styles.section, { color: c.muted }]}>{t('profile.loginSection')}</Text>
-          <Label>{t('forms.email')}</Label>
-          <Field value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
+              <Text style={[styles.section, { color: c.muted }]}>{t('profile.loginSection')}</Text>
+              <Label>{t('forms.email')}</Label>
+              <Field value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
 
-          <Label>{t('forms.username')}</Label>
-          <Field value={username} onChangeText={setUsername} autoCapitalize="none" />
+              <Label>{t('forms.username')}</Label>
+              <Field value={username} onChangeText={setUsername} autoCapitalize="none" />
 
-          <PrimaryButton
-            label={t('common.save')}
-            onPress={() => {
-              setError('');
-              mutation.mutate({
-                gym_name: gymName.trim(),
-                name: ownerName.trim(),
-                phone: phone.trim() || undefined,
-                email: email.trim() || undefined,
-                username: username.trim() || undefined,
-              });
-            }}
-            loading={mutation.isPending}
-            disabled={!canSubmit}
-          />
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+              <PrimaryButton
+                label={t('common.save')}
+                onPress={() => {
+                  setError('');
+                  mutation.mutate({
+                    gym_name: gymName.trim(),
+                    name: ownerName.trim(),
+                    phone: phone.trim() || undefined,
+                    email: email.trim() || undefined,
+                    username: username.trim() || undefined,
+                  });
+                }}
+                loading={mutation.isPending}
+                disabled={!canSubmit || mutation.isPending}
+              />
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </TabScreenFrame>
     </Screen>
   );

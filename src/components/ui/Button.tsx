@@ -46,7 +46,7 @@ function AppButton({
     scale.value = withSpring(down ? 0.97 : 1, springs.press);
   };
 
-  const primaryBg = idle ? c.border : destructive ? c.error : c.accent;
+  const primaryBg = idle ? c.border : destructive ? c.errorSolid : c.accent;
   const primaryFg = idle ? c.muted : '#ffffff';
 
   return (

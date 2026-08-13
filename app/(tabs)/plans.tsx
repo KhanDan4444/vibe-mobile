@@ -9,7 +9,6 @@ import { deletePlan, fetchPlans } from '@/src/api/plans';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { ActionOverflowMenu } from '@/src/components/ActionOverflowMenu';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
-import { ReadOnlyBanner } from '@/src/components/ReadOnlyBanner';
 import { SortPicker } from '@/src/components/SortPicker';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { EmptyState } from '@/src/components/EmptyState';
@@ -95,30 +94,46 @@ function PlanCard({
 }) {
   const { t } = useTranslation();
   const styles = useThemedStyles((colors) => ({
+    wrap: {
+      position: 'relative' as const,
+      marginBottom: 12,
+      overflow: 'visible' as const,
+    },
+    wrapPopular: {
+      marginTop: 12,
+      paddingTop: 2,
+    },
+    wrapColumn: {
+      marginBottom: 0,
+    },
     card: {
       padding: 16,
-      marginBottom: 12,
     },
     cardPopular: {
-      borderColor: statusWashOpaque(colors.accentText, colors.cardEdge, 0.55),
-      borderWidth: 1,
-    },
-    cardColumn: {
-      marginBottom: 0,
+      borderColor: statusWashOpaque(colors.accentText, colors.cardEdge, 0.5),
+      borderWidth: 2,
     },
     topRow: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 8 },
     priceBlock: { flex: 1, minWidth: 0 },
     price: { fontSize: 22, fontWeight: '800' as const, letterSpacing: -0.4, color: colors.text },
     priceHint: { marginTop: 4, fontSize: 12, color: colors.dim },
     popularPill: {
-      alignSelf: 'flex-start' as const,
-      marginBottom: 8,
+      position: 'absolute' as const,
+      top: -2,
+      left: 16,
+      zIndex: 4,
       paddingHorizontal: 8,
       paddingVertical: 3,
-      borderRadius: 6,
-      backgroundColor: statusWashOpaque(colors.accentText, colors.card, 0.14),
+      borderRadius: 999,
+      // Match web `bg-teal-800` / `dark:bg-teal-900`
+      backgroundColor: '#115e59',
     },
-    popularText: { fontSize: 11, fontWeight: '700' as const, color: colors.accentText },
+    popularText: {
+      fontSize: 10,
+      fontWeight: '600' as const,
+      letterSpacing: 0.7,
+      color: '#f0fdfa',
+    },
     name: { marginTop: 12, fontSize: 16, fontWeight: '600' as const, color: colors.text },
     metaRow: {
       marginTop: 12,
@@ -164,47 +179,51 @@ function PlanCard({
       : [];
 
   return (
-    <SoftSurface
-      variant="panel"
+    <View
       style={[
-        styles.card,
-        popular ? styles.cardPopular : null,
-        multiColumn && styles.cardColumn,
+        styles.wrap,
+        popular ? styles.wrapPopular : null,
+        multiColumn && styles.wrapColumn,
         multiColumn && columnStyle,
       ]}
     >
       {popular ? (
-        <View style={styles.popularPill}>
-          <Text style={styles.popularText}>{t('plans.popular')}</Text>
+        <View style={styles.popularPill} accessibilityRole="text">
+          <Text style={styles.popularText}>{t('plans.popular').toLocaleUpperCase()}</Text>
         </View>
       ) : null}
-      <View style={styles.topRow}>
-        <View style={styles.priceBlock}>
-          <Text listRow style={styles.price}>
-            {formatEtb(Number(plan.price) || 0, { forceCompact: false })}
-          </Text>
-          <Text style={styles.priceHint}>
-            {perMonth != null
-              ? t('plans.perMonth', { amount: formatEtb(perMonth, { forceCompact: false }) })
-              : formatPlanDuration(plan.duration, t)}
-          </Text>
+      <SoftSurface
+        variant="panel"
+        style={[styles.card, popular ? styles.cardPopular : null]}
+      >
+        <View style={styles.topRow}>
+          <View style={styles.priceBlock}>
+            <Text listRow style={styles.price}>
+              {formatEtb(Number(plan.price) || 0, { forceCompact: false })}
+            </Text>
+            <Text style={styles.priceHint}>
+              {perMonth != null
+                ? t('plans.perMonth', { amount: formatEtb(perMonth, { forceCompact: false }) })
+                : formatPlanDuration(plan.duration, t)}
+            </Text>
+          </View>
+          <ActionOverflowMenu title={displayName} items={menuItems} />
         </View>
-        <ActionOverflowMenu title={displayName} items={menuItems} />
-      </View>
-      <Text listRow style={styles.name} numberOfLines={1}>
-        {displayName}
-      </Text>
-      <View style={styles.metaRow}>
-        <View style={styles.durationBadge}>
-          <Text style={styles.durationText}>{formatPlanDuration(plan.duration, t)}</Text>
-        </View>
-        <Text style={activeCount > 0 ? styles.members : styles.membersQuiet}>
-          {activeCount > 0
-            ? t('plans.activeMembers', { count: activeCount })
-            : t('plans.noActiveMembers')}
+        <Text listRow style={styles.name} numberOfLines={1}>
+          {displayName}
         </Text>
-      </View>
-    </SoftSurface>
+        <View style={styles.metaRow}>
+          <View style={styles.durationBadge}>
+            <Text style={styles.durationText}>{formatPlanDuration(plan.duration, t)}</Text>
+          </View>
+          <Text style={activeCount > 0 ? styles.members : styles.membersQuiet}>
+            {activeCount > 0
+              ? t('plans.activeMembers', { count: activeCount })
+              : t('plans.noActiveMembers')}
+          </Text>
+        </View>
+      </SoftSurface>
+    </View>
   );
 }
 
@@ -215,7 +234,7 @@ export default function PlansScreen() {
   const { t } = useTranslation();
   const styles = useThemedStyles((colors) => ({
     container: { flex: 1, backgroundColor: colors.bg },
-    list: { paddingBottom: 88 },
+    list: { paddingBottom: 88, paddingTop: 6, overflow: 'visible' as const },
     listHeader: { marginBottom: 10, gap: 10 },
     statusLine: { fontSize: 13, color: colors.dim, lineHeight: 18 },
     sortRow: { alignItems: 'flex-start' as const },
@@ -336,8 +355,6 @@ export default function PlansScreen() {
   return (
     <TabScreenFrame>
       <View style={styles.container}>
-        <ReadOnlyBanner />
-
         {query.isLoading ? (
           <PageSkeleton variant="list-cards" />
         ) : query.isError ? (
@@ -354,6 +371,7 @@ export default function PlansScreen() {
             numColumns={listColumns}
             columnWrapperStyle={listColumns > 1 ? { gap: 10 } : undefined}
             keyExtractor={(item) => String(item.id)}
+            removeClippedSubviews={false}
             ListHeaderComponent={
               plans.length > 0 ? (
                 <View style={styles.listHeader}>

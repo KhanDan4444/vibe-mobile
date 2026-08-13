@@ -38,6 +38,8 @@ export type ThemeColors = {
   warmSoft: string;
   warmText: string;
   error: string;
+  /** Solid fill for destructive primary buttons (delete confirms). */
+  errorSolid: string;
   errorBg: string;
   headerBg: string;
   tabBarBg: string;
@@ -70,6 +72,7 @@ export const darkTheme: ThemeColors = {
   warmSoft: 'rgba(251,191,36,0.14)',
   warmText: '#fcd34d',
   error: '#fda4af',
+  errorSolid: '#e11d48',
   errorBg: 'rgba(244,63,94,0.15)',
   headerBg: '#181c24',
   tabBarBg: '#161920',
@@ -103,6 +106,7 @@ export const lightTheme: ThemeColors = {
   warmSoft: 'rgba(180,83,9,0.1)',
   warmText: '#92400e',
   error: '#e11d48',
+  errorSolid: '#e11d48',
   errorBg: 'rgba(225,29,72,0.08)',
   headerBg: '#ffffff',
   tabBarBg: '#ffffff',
