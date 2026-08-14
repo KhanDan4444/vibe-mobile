@@ -24,11 +24,13 @@ export function membersToCsv(members: MemberRow[], showBranch: boolean) {
 }
 
 export function revenueToCsv(payments: PaymentListRow[], showBranch: boolean) {
-  const header = showBranch ? 'Date,Member,Branch,Method,Amount (ETB)' : 'Date,Member,Method,Amount (ETB)';
+  const header = showBranch
+    ? 'Member,Payment received date,Branch,Method,Amount (ETB)'
+    : 'Member,Payment received date,Method,Amount (ETB)';
   const rows = payments.map((p) => {
     const cols = [
-      formatDisplayDate(p.date),
       p.member_name || '',
+      formatDisplayDate(p.date),
       ...(showBranch ? [p.branch_name || ''] : []),
       p.method,
       Number(p.amount).toFixed(2),

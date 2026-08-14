@@ -77,11 +77,13 @@ function membersTableHtml(members: MemberRow[], showBranch: boolean) {
 
 function paymentsTableHtml(payments: PaymentListRow[], showBranch: boolean) {
   if (!payments.length) return '<p>No payments in this period.</p>';
-  const headers = showBranch ? ['Date', 'Member', 'Branch', 'Method', 'Amount (ETB)'] : ['Date', 'Member', 'Method', 'Amount (ETB)'];
+  const headers = showBranch
+    ? ['Member', 'Payment received date', 'Branch', 'Method', 'Amount (ETB)']
+    : ['Member', 'Payment received date', 'Method', 'Amount (ETB)'];
   const rows = payments.slice(0, 300).map((p) => {
     const cols = showBranch
-      ? [formatDisplayDate(p.date), p.member_name || '', p.branch_name || '', p.method, Number(p.amount).toFixed(2)]
-      : [formatDisplayDate(p.date), p.member_name || '', p.method, Number(p.amount).toFixed(2)];
+      ? [p.member_name || '', formatDisplayDate(p.date), p.branch_name || '', p.method, Number(p.amount).toFixed(2)]
+      : [p.member_name || '', formatDisplayDate(p.date), p.method, Number(p.amount).toFixed(2)];
     return `<tr>${cols.map((c) => `<td>${escapeHtml(String(c))}</td>`).join('')}</tr>`;
   });
   const more = payments.length > 300 ? `<p><em>Showing first 300 of ${payments.length} payments.</em></p>` : '';
