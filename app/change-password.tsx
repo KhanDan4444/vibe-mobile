@@ -1,7 +1,6 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -10,8 +9,8 @@ import { changePassword } from '@/src/api/auth';
 import { AppText as Text } from '@/src/components/AppText';
 import { FormSuccessView } from '@/src/components/FormSuccessView';
 import { ErrorBanner, Field, FieldError, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { PasswordRule } from '@/src/components/PasswordRule';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
-import { useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
@@ -22,43 +21,6 @@ import {
   type PasswordChangeErrors,
 } from '@/src/utils/passwordValidation';
 import { hasGymPortalAccess } from '@/src/utils/roles';
-
-/** Live password checklist row — empty circle → green check (not alarm X). */
-function PasswordRule({
-  show,
-  ok,
-  label,
-}: {
-  show: boolean;
-  ok: boolean;
-  label: string;
-}) {
-  const { colors: c } = useTheme();
-  const styles = useThemedStyles((colors) => ({
-    row: {
-      marginTop: 6,
-      marginBottom: 2,
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
-      gap: 6,
-    },
-    labelOk: { flex: 1, fontSize: 12, fontWeight: '500' as const, color: colors.success },
-    labelPending: { flex: 1, fontSize: 12, fontWeight: '500' as const, color: colors.muted },
-  }));
-
-  if (!show) return null;
-
-  return (
-    <View style={styles.row} accessibilityRole="text" accessibilityState={{ checked: ok }}>
-      <Ionicons
-        name={ok ? 'checkmark-circle' : 'ellipse-outline'}
-        size={16}
-        color={ok ? c.success : c.muted}
-      />
-      <Text style={ok ? styles.labelOk : styles.labelPending}>{label}</Text>
-    </View>
-  );
-}
 
 export default function ChangePasswordScreen() {
   const router = useRouter();

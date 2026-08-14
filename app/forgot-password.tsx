@@ -8,33 +8,20 @@ import { requestForgotPasswordOtp, resetPasswordWithOtp } from '@/src/api/auth';
 import { AuthFormEnter } from '@/src/components/AuthFormEnter';
 import { AuthScreen } from '@/src/components/AuthScreen';
 import { AuthStepDots } from '@/src/components/AuthStepDots';
-import { ErrorBanner, Field, FormScroll, Label, PrimaryButton } from '@/src/components/Form';
+import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton } from '@/src/components/Form';
+import { PasswordRule } from '@/src/components/PasswordRule';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { AUTH, authSubtitle, authTitle } from '@/src/theme/authChrome';
-import { isValidEthiopianPhone, normalizeEthiopianPhone } from '@/src/utils/phone';
+import { isValidEthiopianPhone } from '@/src/utils/phone';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
+import {
+  MIN_PASSWORD_LENGTH,
+  validatePasswordPair,
+  type PasswordPairErrors,
+} from '@/src/utils/passwordValidation';
 
 const USERNAME_RE = /^[a-z0-9._]+$/i;
-
-type ResetDone = {
-  accountLabel: string;
-  accountValue: string;
-};
-
-function formatAccount(identifier: string): ResetDone {
-  const trimmed = identifier.trim();
-  if (isValidEthiopianPhone(trimmed)) {
-    return {
-      accountLabel: 'forgot.accountPhone',
-      accountValue: normalizeEthiopianPhone(trimmed) || trimmed,
-    };
-  }
-  return {
-    accountLabel: 'forgot.accountUsername',
-    accountValue: `@${trimmed.toLowerCase()}`,
-  };
-}
 
 export default function ForgotPasswordScreen() {
   const { t } = useTranslation();
@@ -47,9 +34,16 @@ export default function ForgotPasswordScreen() {
   const [confirm, setConfirm] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<PasswordPairErrors & { code?: string }>({});
+  const [showLengthRule, setShowLengthRule] = useState(false);
+  const [showMatchRule, setShowMatchRule] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showSupportOption, setShowSupportOption] = useState(false);
-  const [resetDone, setResetDone] = useState<ResetDone | null>(null);
+  const [resetDone, setResetDone] = useState(false);
+
+  const lengthOk = password.length >= MIN_PASSWORD_LENGTH;
+  const matchOk = confirm.length > 0 && confirm === password;
+  const resolveError = (key?: string) => (key ? t(key) : undefined);
 
   const stepIndex = step === 'request' ? 0 : 1;
   const stepSubtitle = step === 'request' ? t('forgot.stepRequest') : t('forgot.stepReset');
@@ -57,6 +51,7 @@ export default function ForgotPasswordScreen() {
   const requestOtp = async () => {
     setError('');
     setMessage('');
+    setFieldErrors({});
     const trimmed = identifier.trim();
     if (!trimmed) {
       setError(t('forgot.identifierRequired'));
@@ -84,22 +79,17 @@ export default function ForgotPasswordScreen() {
 
   const resetPassword = async () => {
     setError('');
+    const next: PasswordPairErrors & { code?: string } = validatePasswordPair(password, confirm);
     if (!sessionId || !code.trim()) {
-      setError(t('forgot.codeRequired'));
-      return;
+      next.code = 'forgot.codeRequired';
     }
-    if (password.length < 8) {
-      setError(t('forgot.passwordShort'));
-      return;
-    }
-    if (password !== confirm) {
-      setError(t('forgot.passwordMismatch'));
-      return;
-    }
+    setFieldErrors(next);
+    if (Object.keys(next).length > 0) return;
+
     setLoading(true);
     try {
       await resetPasswordWithOtp({ sessionId, code, password });
-      setResetDone(formatAccount(identifier));
+      setResetDone(true);
     } catch (e) {
       setError(userFacingApiMessage(e, t('auth.connectionFailed'), t('forgot.resetFailed')));
     } finally {
@@ -124,15 +114,6 @@ export default function ForgotPasswordScreen() {
               </Text>
               <Text style={[styles.successHero, { color: AUTH.text }]}>{t('forgot.successHero')}</Text>
               <Text style={[styles.successBody, { color: AUTH.textMuted }]}>{t('forgot.successBody')}</Text>
-
-              <SoftSurface variant="panel" style={[styles.summary, { backgroundColor: AUTH.fieldBg }]}>
-                <View style={[styles.summaryRow, styles.summaryRowLast]}>
-                  <Text style={[styles.summaryLabel, { color: AUTH.textDim }]}>{t(resetDone.accountLabel)}</Text>
-                  <Text latin style={[styles.summaryValue, { color: AUTH.text }]} numberOfLines={1}>
-                    {resetDone.accountValue}
-                  </Text>
-                </View>
-              </SoftSurface>
 
               <PrimaryButton
                 label={t('auth.signIn')}
@@ -178,13 +159,62 @@ export default function ForgotPasswordScreen() {
             ) : (
               <>
                 <Label>{t('forgot.code')}</Label>
-                <Field value={code} onChangeText={setCode} keyboardType="numeric" autoCapitalize="none" latin />
+                <Field
+                  value={code}
+                  onChangeText={(v) => {
+                    setCode(v);
+                    setFieldErrors((prev) => ({ ...prev, code: undefined }));
+                  }}
+                  keyboardType="numeric"
+                  autoCapitalize="none"
+                  latin
+                  error={Boolean(fieldErrors.code)}
+                />
+                {fieldErrors.code ? <FieldError message={resolveError(fieldErrors.code)} /> : null}
 
                 <Label>{t('forgot.newPassword')}</Label>
-                <Field value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" latin />
+                <Field
+                  value={password}
+                  onFocus={() => setShowLengthRule(true)}
+                  onChangeText={(v) => {
+                    setPassword(v);
+                    setShowLengthRule(true);
+                    setFieldErrors((prev) => ({ ...prev, password: undefined }));
+                  }}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  latin
+                  error={Boolean(fieldErrors.password)}
+                />
+                <PasswordRule
+                  show={showLengthRule || password.length > 0}
+                  ok={lengthOk}
+                  label={t('forms.passwordMin8')}
+                />
+                {fieldErrors.password ? <FieldError message={resolveError(fieldErrors.password)} /> : null}
 
                 <Label>{t('forgot.confirmPassword')}</Label>
-                <Field value={confirm} onChangeText={setConfirm} secureTextEntry autoCapitalize="none" latin />
+                <Field
+                  value={confirm}
+                  onFocus={() => setShowMatchRule(true)}
+                  onChangeText={(v) => {
+                    setConfirm(v);
+                    setShowMatchRule(true);
+                    setFieldErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+                  }}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  latin
+                  error={Boolean(fieldErrors.confirmPassword)}
+                />
+                <PasswordRule
+                  show={showMatchRule || confirm.length > 0}
+                  ok={matchOk}
+                  label={t('forms.passwordsMatch')}
+                />
+                {fieldErrors.confirmPassword ? (
+                  <FieldError message={resolveError(fieldErrors.confirmPassword)} />
+                ) : null}
 
                 <PrimaryButton label={t('forgot.updatePassword')} onPress={resetPassword} loading={loading} />
                 <Pressable
@@ -196,6 +226,9 @@ export default function ForgotPasswordScreen() {
                     setConfirm('');
                     setError('');
                     setMessage('');
+                    setFieldErrors({});
+                    setShowLengthRule(false);
+                    setShowMatchRule(false);
                   }}
                 >
                   <Text style={[styles.secondaryText, { color: AUTH.link }]}>{t('forgot.resendOtp')}</Text>
@@ -285,34 +318,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 0.1,
     maxWidth: 320,
-  },
-  summary: {
-    marginTop: 22,
-    width: '100%',
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(148,163,184,0.25)',
-  },
-  summaryRowLast: {
-    borderBottomWidth: 0,
-  },
-  summaryLabel: {
-    fontSize: 13,
-    flexShrink: 0,
-  },
-  summaryValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    flexShrink: 1,
-    textAlign: 'right',
   },
   successCta: {
     marginTop: 22,

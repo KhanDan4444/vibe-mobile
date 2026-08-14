@@ -9,7 +9,8 @@ import { AuthFormEnter } from '@/src/components/AuthFormEnter';
 import { AuthScreen } from '@/src/components/AuthScreen';
 import { AuthStepDots } from '@/src/components/AuthStepDots';
 import { OptionPickerField } from '@/src/components/OptionPickerField';
-import { ErrorBanner, Field, FormScroll, Label, PrimaryButton } from '@/src/components/Form';
+import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton } from '@/src/components/Form';
+import { PasswordRule } from '@/src/components/PasswordRule';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { PageSkeleton } from '@/src/components/Skeleton';
 import { useTheme } from '@/src/context/PreferencesContext';
@@ -17,6 +18,11 @@ import { AUTH, authSubtitle, authTitle } from '@/src/theme/authChrome';
 import type { PublicSaasPlan } from '@/src/types/api';
 import { formatEtb } from '@/src/utils/formatMoney';
 import { isValidEthiopianPhone, normalizeEthiopianPhone } from '@/src/utils/phone';
+import {
+  MIN_PASSWORD_LENGTH,
+  validatePasswordPair,
+  type PasswordPairErrors,
+} from '@/src/utils/passwordValidation';
 
 const USERNAME_RE = /^[a-z0-9._]{3,30}$/;
 const STEPS = ['phone', 'gym', 'account'] as const;
@@ -49,6 +55,9 @@ export default function RegisterGymScreen() {
   const [saasPlanId, setSaasPlanId] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<PasswordPairErrors>({});
+  const [showLengthRule, setShowLengthRule] = useState(false);
+  const [showMatchRule, setShowMatchRule] = useState(false);
   const [loading, setLoading] = useState(false);
   const [registerDone, setRegisterDone] = useState<RegisterDone | null>(null);
 
@@ -141,6 +150,10 @@ export default function RegisterGymScreen() {
     setMessage('');
   };
 
+  const lengthOk = password.length >= MIN_PASSWORD_LENGTH;
+  const matchOk = confirm.length > 0 && confirm === password;
+  const resolveError = (key?: string) => (key ? t(key) : undefined);
+
   const submitSignup = async () => {
     setError('');
     if (!ownerName.trim()) {
@@ -152,14 +165,9 @@ export default function RegisterGymScreen() {
       setError(t('signup.usernameInvalid'));
       return;
     }
-    if (password.length < 8) {
-      setError(t('signup.passwordShort'));
-      return;
-    }
-    if (password !== confirm) {
-      setError(t('signup.passwordMismatch'));
-      return;
-    }
+    const next = validatePasswordPair(password, confirm);
+    setFieldErrors(next);
+    if (Object.keys(next).length > 0) return;
 
     setLoading(true);
     try {
@@ -242,19 +250,16 @@ export default function RegisterGymScreen() {
               <Text style={[styles.successBody, { color: AUTH.textMuted }]}>{t('signup.successBody')}</Text>
 
               {summaryRows.length > 0 ? (
-                <SoftSurface variant="panel" style={[styles.summary, { backgroundColor: AUTH.fieldBg }]}>
-                  {summaryRows.map((row, index) => (
-                    <View
-                      key={row.label}
-                      style={[styles.summaryRow, index === summaryRows.length - 1 ? styles.summaryRowLast : null]}
-                    >
+                <View style={styles.summary}>
+                  {summaryRows.map((row) => (
+                    <View key={row.label} style={styles.summaryRow}>
                       <Text style={[styles.summaryLabel, { color: AUTH.textDim }]}>{row.label}</Text>
                       <Text latin style={[styles.summaryValue, { color: AUTH.text }]} numberOfLines={1}>
                         {row.value}
                       </Text>
                     </View>
                   ))}
-                </SoftSurface>
+                </View>
               ) : null}
 
               <Text style={[styles.successHint, { color: AUTH.textDim }]}>{t('signup.successHint')}</Text>
@@ -352,10 +357,48 @@ export default function RegisterGymScreen() {
                 />
 
                 <Label>{t('signup.password')}</Label>
-                <Field value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" latin />
+                <Field
+                  value={password}
+                  onFocus={() => setShowLengthRule(true)}
+                  onChangeText={(v) => {
+                    setPassword(v);
+                    setShowLengthRule(true);
+                    setFieldErrors((prev) => ({ ...prev, password: undefined }));
+                  }}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  latin
+                  error={Boolean(fieldErrors.password)}
+                />
+                <PasswordRule
+                  show={showLengthRule || password.length > 0}
+                  ok={lengthOk}
+                  label={t('forms.passwordMin8')}
+                />
+                {fieldErrors.password ? <FieldError message={resolveError(fieldErrors.password)} /> : null}
 
                 <Label>{t('signup.confirmPassword')}</Label>
-                <Field value={confirm} onChangeText={setConfirm} secureTextEntry autoCapitalize="none" latin />
+                <Field
+                  value={confirm}
+                  onFocus={() => setShowMatchRule(true)}
+                  onChangeText={(v) => {
+                    setConfirm(v);
+                    setShowMatchRule(true);
+                    setFieldErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+                  }}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  latin
+                  error={Boolean(fieldErrors.confirmPassword)}
+                />
+                <PasswordRule
+                  show={showMatchRule || confirm.length > 0}
+                  ok={matchOk}
+                  label={t('forms.passwordsMatch')}
+                />
+                {fieldErrors.confirmPassword ? (
+                  <FieldError message={resolveError(fieldErrors.confirmPassword)} />
+                ) : null}
 
                 <Text style={[styles.hint, { color: AUTH.textDim }]}>{t('signup.paymentNote')}</Text>
                 <PrimaryButton label={t('signup.createAccount')} onPress={submitSignup} loading={loading} />
@@ -363,6 +406,7 @@ export default function RegisterGymScreen() {
                   style={styles.secondary}
                   onPress={() => {
                     setError('');
+                    setFieldErrors({});
                     setStep('gym');
                   }}
                 >
@@ -447,20 +491,13 @@ const styles = StyleSheet.create({
   summary: {
     marginTop: 22,
     width: '100%',
-    paddingHorizontal: 16,
-    paddingVertical: 4,
+    gap: 12,
   },
   summaryRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(148,163,184,0.25)',
-  },
-  summaryRowLast: {
-    borderBottomWidth: 0,
   },
   summaryLabel: {
     fontSize: 13,

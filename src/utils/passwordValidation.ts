@@ -7,6 +7,35 @@ export type PasswordChangeErrors = {
   confirmPassword?: string;
 };
 
+export type PasswordPairErrors = {
+  password?: string;
+  confirmPassword?: string;
+};
+
+/** Client-side checks for new + confirm password (forgot / signup). Keys are i18n paths. */
+export function validatePasswordPair(
+  password: string,
+  confirmPassword: string,
+): PasswordPairErrors {
+  const errors: PasswordPairErrors = {};
+
+  if (!password) {
+    errors.password = 'forms.passwordRequired';
+  } else if (password.length < MIN_PASSWORD_LENGTH) {
+    errors.password = 'forgot.passwordShort';
+  } else if (password.length > MAX_PASSWORD_LENGTH) {
+    errors.password = 'forms.passwordTooLong';
+  }
+
+  if (!confirmPassword) {
+    errors.confirmPassword = 'forms.passwordRequired';
+  } else if (password && confirmPassword !== password) {
+    errors.confirmPassword = 'forgot.passwordMismatch';
+  }
+
+  return errors;
+}
+
 /** Client-side checks for change-password. Keys are i18n paths. */
 export function validatePasswordChange(
   currentPassword: string,
