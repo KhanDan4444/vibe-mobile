@@ -78,11 +78,9 @@ export default function ChangePasswordScreen() {
   const [fieldErrors, setFieldErrors] = useState<PasswordChangeErrors>({});
   const [showLengthRule, setShowLengthRule] = useState(false);
   const [showMatchRule, setShowMatchRule] = useState(false);
-  const [showCurrentRule, setShowCurrentRule] = useState(false);
   const [done, setDone] = useState(false);
   const canChangePassword = Boolean(user && hasGymPortalAccess(user.role));
 
-  const currentOk = currentPassword.length > 0;
   const lengthOk = newPassword.length >= MIN_PASSWORD_LENGTH;
   const matchOk = confirmPassword.length > 0 && newPassword === confirmPassword;
 
@@ -164,10 +162,8 @@ export default function ChangePasswordScreen() {
               <Label>{t('forms.currentPassword')}</Label>
               <Field
                 value={currentPassword}
-                onFocus={() => setShowCurrentRule(true)}
                 onChangeText={(v) => {
                   setCurrentPassword(v);
-                  setShowCurrentRule(true);
                   setFieldErrors((prev) => ({
                     ...prev,
                     currentPassword: undefined,
@@ -178,11 +174,6 @@ export default function ChangePasswordScreen() {
                 autoCapitalize="none"
                 error={Boolean(fieldErrors.currentPassword)}
                 returnKeyType="next"
-              />
-              <PasswordRule
-                show={showCurrentRule || currentPassword.length > 0}
-                ok={currentOk}
-                label={t('forms.currentPasswordEntered')}
               />
               {fieldErrors.currentPassword ? (
                 <FieldError message={resolveError(fieldErrors.currentPassword)} />
