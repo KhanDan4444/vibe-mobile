@@ -8,7 +8,7 @@ import { PageSkeleton } from '@/src/components/Skeleton';
 import { LoadError } from '@/src/components/LoadError';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
-import { deleteMember, fetchMember, fetchMemberPayments } from '@/src/api/members';
+import { deleteMember, fetchMember, fetchMemberPayments, restoreMember } from '@/src/api/members';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { MemberPhoto } from '@/src/components/MemberPhoto';
 import { MemberActionsBar } from '@/src/components/MemberActionsBar';
@@ -20,7 +20,7 @@ import type { AppLanguage } from '@/src/i18n';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useLoadRetry } from '@/src/hooks/useLoadRetry';
 import { useFlash } from '@/src/context/FlashContext';
-import { scheduleDeleteWithUndo } from '@/src/utils/scheduleWithUndo';
+import { scheduleDeleteWithUndo, UNDO_DELAY_MS } from '@/src/utils/scheduleWithUndo';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import type { ThemeColors } from '@/src/theme/tokens';
@@ -121,6 +121,7 @@ export default function MemberDetailScreen() {
   const { showFlash } = useFlash();
   const canViewMember = Boolean(user && hasGymPortalAccess(user.role));
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [restoreBusy, setRestoreBusy] = useState(false);
   const [errorNotice, setErrorNotice] = useState('');
 
   const memberQuery = useQuery({
@@ -176,8 +177,51 @@ export default function MemberDetailScreen() {
   const member = memberQuery.data;
   const payments = paymentsQuery.data ?? [];
   const owner = Boolean(user && isGymOwner(user.role));
+  const isFormer = Boolean(member.deleted_at);
 
   const confirmDeleteMember = () => setDeleteOpen(true);
+
+  const runRestoreMember = async () => {
+    setRestoreBusy(true);
+    try {
+      await restoreMember(token!, member.id);
+      queryClient.invalidateQueries({ queryKey: ['members'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['member', member.id] });
+      router.replace('/(tabs)/members');
+      showFlash({
+        title: t('flash.memberRestored.title'),
+        subtitle: t('flash.memberRestored.subtitle', { name: member.name }),
+        durationMs: UNDO_DELAY_MS,
+        urgent: true,
+        actionHint: t('flash.undoHint'),
+        action: {
+          label: t('common.undo'),
+          onPress: () => {
+            void (async () => {
+              try {
+                await deleteMember(token!, member.id);
+                queryClient.invalidateQueries({ queryKey: ['members'] });
+                queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+                queryClient.invalidateQueries({ queryKey: ['member', member.id] });
+                router.replace({ pathname: '/(tabs)/members', params: { filter: 'former' } });
+                showFlash({
+                  title: t('flash.memberRestoreUndone.title'),
+                  subtitle: t('flash.memberRestoreUndone.subtitle', { name: member.name }),
+                });
+              } catch (err) {
+                setErrorNotice(err instanceof Error ? err.message : t('member.restoreFailed'));
+              }
+            })();
+          },
+        },
+      });
+    } catch (err) {
+      setErrorNotice(err instanceof Error ? err.message : t('member.restoreFailed'));
+    } finally {
+      setRestoreBusy(false);
+    }
+  };
 
   const runDeleteMember = () => {
     setDeleteOpen(false);
@@ -219,10 +263,14 @@ export default function MemberDetailScreen() {
           <View style={styles.headerText}>
             <Text display style={styles.name}>{member.name}</Text>
             <Text style={appTextStyle(language, styles.phone)}>{member.phone || '—'}</Text>
-            <Text style={appTextStyle(language, { ...styles.status, color: statusColor(member.status, c) })}>
-              {t(statusLabelKey(member.status))}
+            <Text style={appTextStyle(language, { ...styles.status, color: isFormer ? c.muted : statusColor(member.status, c) })}>
+              {t(statusLabelKey(isFormer ? 'Former' : member.status))}
             </Text>
-            {member.is_unpaid ? <Text style={appTextStyle(language, styles.unpaid)}>{t('member.paymentRequired')}</Text> : null}
+            {isFormer ? (
+              <Text style={appTextStyle(language, styles.phone)}>{t('member.formerHint')}</Text>
+            ) : member.is_unpaid ? (
+              <Text style={appTextStyle(language, styles.unpaid)}>{t('member.paymentRequired')}</Text>
+            ) : null}
           </View>
         </View>
       </SoftSurface>
@@ -240,6 +288,14 @@ export default function MemberDetailScreen() {
             language={language}
           />
         ) : null}
+        {isFormer && member.deleted_at ? (
+          <Row
+            label={t('member.removedOn')}
+            value={formatDisplayDate(member.deleted_at)}
+            styles={styles}
+            language={language}
+          />
+        ) : null}
       </SoftSurface>
       </View>
 
@@ -247,11 +303,13 @@ export default function MemberDetailScreen() {
         member={member}
         owner={owner}
         readOnly={readOnly}
+        restoreLoading={restoreBusy}
         onRenew={() => router.push(`/renew/${member.id}`)}
         onPayment={() => router.push(`/payment/${member.id}`)}
         onChangePlan={() => router.push(`/change-plan/${member.id}`)}
         onEdit={() => router.push(`/member/${member.id}/edit`)}
         onDelete={confirmDeleteMember}
+        onRestore={() => void runRestoreMember()}
       />
 
       <SoftSurface variant="panel" style={styles.card}>

@@ -69,11 +69,14 @@
   },
   "members": {
     "search": "Maqaa ykn bilbila barbaadi…",
+    "searchFormer": "Miseensota duraan turan barbaadi…",
     "filterAll": "Hunda",
     "filterActive": "Si'aawaa",
     "filterDueSoon": "Dhiyeenyatti kan dhumu",
     "filterExpired": "Kan Dhumate",
     "filterUnpaid": "Hin Kaffalamne",
+    "filterFormer": "Kan duraan turan",
+    "restore": "Deebisi",
     "sort": "Miseensota tartiibessii",
     "filterLabel": "Calaluu",
     "empty": "Miseensi calallii kanaan walsimatu hin jiru.",
@@ -82,7 +85,10 @@
     "emptyTitle": "Miseensonni ammaaf hin jiran",
     "emptyBody": "Turtiilee fi kaffaltiiwwan hordofuu eegaluuf miseensa keessan isa duraa galmeessaa.",
     "emptyFiltered": "Miseensi calallii kanaan walsimatu hin jiru.",
-    "emptyFilteredBody": "Haala biraa yaalaa ykn barbaacha qulqulleessaa."
+    "emptyFilteredBody": "Haala biraa yaalaa ykn barbaacha qulqulleessaa.",
+    "emptyFormer": "Miseensota duraan turan hin jiran",
+    "emptyFormerBody": "Miseensonni tarree irraa haqaman asitti mul'atu. Gara tarree deebisuuf Deebisi fayyadami.",
+    "removedOnDate": "Guyyaa {{date}} haqame"
   },
   "status": {
     "active": "Si'aawaa",
@@ -91,7 +97,8 @@
     "trialing": "Madaallii irra",
     "dueSoon": "Dhiyeenyatti kan dhumu",
     "unknown": "Hin beekamu",
-    "unpaid": "Hin kaffalamne"
+    "unpaid": "Hin kaffalamne",
+    "former": "Kan duraan ture"
   },
   "revenue": {
     "search": "Miseensa barbaadi",
@@ -422,11 +429,19 @@
     },
     "memberDeleted": {
       "title": "Miseensi haqameera",
-      "subtitle": "Galmee fi seenaan kaffaltii isaa haqameera."
+      "subtitle": "Tarree irraa haqameera. Seenaan kaffaltii eegameera."
+    },
+    "memberRestored": {
+      "title": "Miseensi deebi'eera",
+      "subtitle": "{{name}} tarree irratti deebi'eera."
+    },
+    "memberRestoreUndone": {
+      "title": "Deebisuun haqameera",
+      "subtitle": "{{name}} ammayyuu tarree irraa haqameera."
     },
     "memberDeletePending": {
       "title": "Miseensi haquu jira…",
-      "subtitle": "Yoo hin deebi'in {{name}} ni haqama."
+      "subtitle": "Yoo hin deebi'in {{name}} tarree irraa ni haqama."
     },
     "memberDeleteCancelled": {
       "title": "Haquun dhaabbateera",
@@ -472,10 +487,14 @@
     "recordPayment": "Kaffaltii sassaabi",
     "transfer": "Miseensa ceesisi",
     "edit": "Miseensa gulaali",
-    "delete": "Miseensa dhabamsiisuu?",
-    "deleteTitle": "Miseensa dhabamsiisuu?",
-    "deleteBody": "{{name}} haquu? Seenaa kaffaltii isaanis ni haqama. Kun deebi'uu hin danda'u.",
+    "delete": "Tarree irraa haqi",
+    "deleteTitle": "Tarree irraa haquu?",
+    "deleteBody": "{{name}} tarree miseensaa irraa dhokata. Seenaan kaffaltii fi gabaasni hin jijjiiramu.",
     "deleteFailed": "Miseensa haquu hin dandeenye.",
+    "restore": "Gara tarree deebisi",
+    "restoreFailed": "Miseensa deebisuu hin dandeenye.",
+    "removedOn": "Guyyaa haqame",
+    "formerHint": "Seenaan kaffaltii eegameera. Gara tarree jiraatti deebisuuf Deebisi fayyadami.",
     "paymentHistory": "Seenaa kaffaltii",
     "noPayments": "Kaffaltiin galmeeffame hin jiru.",
     "manage": "Bulchi",
@@ -727,6 +746,7 @@
       "member_updated": "Miseensi haaromfameera",
       "member_transferred": "Miseensi ceesifameera",
       "member_deleted": "Miseensi haqameera",
+      "member_restored": "Miseensi deebi'eera",
       "payment_recorded": "Kaffaltiin galmeeffameera",
       "payment_updated": "Kaffaltiin haaromfameera",
       "payment_deleted": "Kaffaltiin haqameera",

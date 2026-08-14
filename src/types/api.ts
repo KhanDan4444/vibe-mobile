@@ -51,6 +51,7 @@ export interface PaginatedResponse<T> {
   page: number;
   limit: number;
   totalPages: number;
+  archivedTotal?: number;
 }
 
 export interface MemberRow {
@@ -66,6 +67,7 @@ export interface MemberRow {
   branch_id?: number | null;
   branch_name: string | null;
   photo_url?: string | null;
+  deleted_at?: string | null;
 }
 
 export interface BranchRow {

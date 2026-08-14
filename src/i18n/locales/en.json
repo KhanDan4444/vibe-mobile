@@ -69,11 +69,14 @@
   },
   "members": {
     "search": "Search name or phone…",
+    "searchFormer": "Search former members…",
     "filterAll": "All",
     "filterActive": "Active",
     "filterDueSoon": "Due soon",
     "filterExpired": "Expired",
     "filterUnpaid": "Unpaid",
+    "filterFormer": "Former",
+    "restore": "Restore",
     "sort": "Sort members",
     "filterLabel": "Filter",
     "empty": "No members match this filter.",
@@ -82,7 +85,10 @@
     "emptyTitle": "No members yet",
     "emptyBody": "Enroll your first member to track terms and payments.",
     "emptyFiltered": "No members match this filter.",
-    "emptyFilteredBody": "Try another status or clear search."
+    "emptyFilteredBody": "Try another status or clear search.",
+    "emptyFormer": "No former members",
+    "emptyFormerBody": "Removed members appear here. Restore one to put them back on the roster.",
+    "removedOnDate": "Removed {{date}}"
   },
   "status": {
     "active": "Active",
@@ -91,7 +97,8 @@
     "trialing": "Trialing",
     "dueSoon": "Due Soon",
     "unknown": "Unknown",
-    "unpaid": "Unpaid"
+    "unpaid": "Unpaid",
+    "former": "Former"
   },
   "revenue": {
     "search": "Search member",
@@ -421,12 +428,20 @@
       "subtitle": "Profile details were saved."
     },
     "memberDeleted": {
-      "title": "Member deleted",
-      "subtitle": "Their record and payment history were removed."
+      "title": "Member removed",
+      "subtitle": "They were removed from the roster. Payment history is kept."
+    },
+    "memberRestored": {
+      "title": "Member restored",
+      "subtitle": "{{name}} is back on the roster."
+    },
+    "memberRestoreUndone": {
+      "title": "Restore undone",
+      "subtitle": "{{name}} is still off the roster."
     },
     "memberDeletePending": {
       "title": "Removing member…",
-      "subtitle": "{{name}} will be deleted unless you undo."
+      "subtitle": "{{name}} will be removed from the roster unless you undo."
     },
     "memberDeleteCancelled": {
       "title": "Delete cancelled",
@@ -472,10 +487,14 @@
     "recordPayment": "Collect payment",
     "transfer": "Transfer branch",
     "edit": "Edit name & phone",
-    "delete": "Delete member",
-    "deleteTitle": "Delete member",
-    "deleteBody": "Remove {{name}}? Their payment history will also be deleted. This cannot be undone.",
-    "deleteFailed": "Could not delete member.",
+    "delete": "Remove from roster",
+    "deleteTitle": "Remove from roster?",
+    "deleteBody": "{{name}} will be hidden from Members. Payment history and reports stay unchanged.",
+    "deleteFailed": "Could not remove member.",
+    "restore": "Restore to roster",
+    "restoreFailed": "Could not restore member.",
+    "removedOn": "Removed on",
+    "formerHint": "Payment history is kept. Restore to put them back on the live roster.",
     "paymentHistory": "Payment history",
     "noPayments": "No payments yet.",
     "manage": "Manage",
@@ -726,7 +745,8 @@
       "member_plan_changed": "Plan changed",
       "member_updated": "Member updated",
       "member_transferred": "Member transferred",
-      "member_deleted": "Member deleted",
+      "member_deleted": "Member removed",
+      "member_restored": "Member restored",
       "payment_recorded": "Payment recorded",
       "payment_updated": "Payment updated",
       "payment_deleted": "Payment deleted",

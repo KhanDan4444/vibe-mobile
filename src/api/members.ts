@@ -26,6 +26,18 @@ export function fetchMembers(token: string, params: MemberListParams = {}) {
   });
 }
 
+export function fetchArchivedMembers(token: string, params: MemberListParams = {}) {
+  const qs = new URLSearchParams();
+  if (params.page) qs.set('page', String(params.page));
+  if (params.limit) qs.set('limit', String(params.limit));
+  if (params.search) qs.set('search', params.search);
+  if (params.branch_id) qs.set('branch_id', String(params.branch_id));
+  const query = qs.toString();
+  return apiRequest<PaginatedResponse<MemberRow>>(`/members/archived${query ? `?${query}` : ''}`, {
+    token,
+  });
+}
+
 export function fetchMember(token: string, id: number) {
   return apiRequest<MemberRow>(`/members/${id}`, { token });
 }
@@ -77,6 +89,13 @@ export function updateMember(token: string, id: number, payload: UpdateMemberPay
 export function deleteMember(token: string, id: number) {
   return apiRequest<{ message: string }>(`/members/${id}`, {
     method: 'DELETE',
+    token,
+  });
+}
+
+export function restoreMember(token: string, id: number) {
+  return apiRequest<MemberRow>(`/members/${id}/restore`, {
+    method: 'POST',
     token,
   });
 }

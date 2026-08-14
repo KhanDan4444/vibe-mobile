@@ -29,6 +29,8 @@ export function MemberActionsBar({
   onChangePlan,
   onEdit,
   onDelete,
+  onRestore,
+  restoreLoading,
 }: {
   member: MemberRow;
   owner: boolean;
@@ -38,6 +40,8 @@ export function MemberActionsBar({
   onChangePlan: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onRestore?: () => void;
+  restoreLoading?: boolean;
 }) {
   const { t } = useTranslation();
   const { colors: c } = useTheme();
@@ -51,6 +55,15 @@ export function MemberActionsBar({
   const showRenew = canRenewMember(member);
   const showPayment = canCollectPayment(member);
   const showChangePlan = canChangePlan(member);
+
+  if (member.deleted_at) {
+    if (!owner || readOnly || !onRestore) return null;
+    return (
+      <View style={styles.manage}>
+        <PrimaryButton label={t('member.restore')} onPress={onRestore} loading={restoreLoading} />
+      </View>
+    );
+  }
 
   const primaryIds = new Set<string>();
   const primaries: { id: string; label: string; onPress: () => void; secondary?: boolean }[] = [];

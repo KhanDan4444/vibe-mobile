@@ -7,5 +7,6 @@ export function statusLabelKey(status: string | null | undefined): string {
   if (value === 'suspended') return 'status.suspended';
   if (value === 'trialing') return 'status.trialing';
   if (value === 'unpaid') return 'status.unpaid';
+  if (value === 'former') return 'status.former';
   return 'status.unknown';
 }

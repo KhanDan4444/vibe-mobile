@@ -11,6 +11,7 @@ const ACTION_KEYS: Record<string, string> = {
   'member.updated': 'activity.actions.member_updated',
   'member.transferred': 'activity.actions.member_transferred',
   'member.deleted': 'activity.actions.member_deleted',
+  'member.restored': 'activity.actions.member_restored',
   'payment.recorded': 'activity.actions.payment_recorded',
   'payment.updated': 'activity.actions.payment_updated',
   'payment.deleted': 'activity.actions.payment_deleted',

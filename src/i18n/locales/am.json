@@ -69,11 +69,14 @@
   },
   "members": {
     "search": "ስም ወይም ስልክ ይፈልጉ…",
+    "searchFormer": "ቀድሞ ያሉ አባላትን ይፈልጉ…",
     "filterAll": "ሁሉም",
     "filterActive": "ንቁ",
     "filterDueSoon": "በቅርብ ያበቃ",
     "filterExpired": "የተጠናቀቀ",
     "filterUnpaid": "ያልተከፈለ",
+    "filterFormer": "ቀድሞ ያሉ",
+    "restore": "መልስ",
     "sort": "አባላትን ደርድር",
     "filterLabel": "ማጣሪያ",
     "empty": "ከዚህ ማጣሪያ ጋር የሚዛመድ አባል የለም።",
@@ -82,7 +85,10 @@
     "emptyTitle": "እስካሁን አባል የለም",
     "emptyBody": "ውሎችንና ክፍያዎችን ለመከታተል የመጀመሪያ አባልዎን ያስመዝግቡ።",
     "emptyFiltered": "ከዚህ ማጣሪያ ጋር የሚዛመድ አባል የለም።",
-    "emptyFilteredBody": "ሌላ ሁኔታ ይሞክሩ ወይም ፍለጋውን ያጽዱ።"
+    "emptyFilteredBody": "ሌላ ሁኔታ ይሞክሩ ወይም ፍለጋውን ያጽዱ።",
+    "emptyFormer": "ቀድሞ የነበሩ አባላት የሉም",
+    "emptyFormerBody": "ከዝርዝር የወጡ አባላት እዚህ ይታያሉ። ወደ ዝርዝር ለመመለስ መልስ ይጠቀሙ።",
+    "removedOnDate": "{{date}} ተወግዷል"
   },
   "status": {
     "active": "ንቁ",
@@ -91,7 +97,8 @@
     "trialing": "በሙከራ",
     "dueSoon": "በቅርብ ጊዜ",
     "unknown": "ያልታወቀ",
-    "unpaid": "ያልተከፈለ"
+    "unpaid": "ያልተከፈለ",
+    "former": "ቀድሞ ያለ"
   },
   "revenue": {
     "search": "አባል ይፈልጉ",
@@ -421,12 +428,20 @@
       "subtitle": "የመገለጫ መረጃ ተቀምጧል።"
     },
     "memberDeleted": {
-      "title": "አባል ተሰርዟል",
-      "subtitle": "መዝገባቸው እና የክፍያ ታሪካቸው ተወግዷል።"
+      "title": "አባል ተወግዷል",
+      "subtitle": "ከዝርዝር ተወግዷል። የክፍያ ታሪክ ተጠብቋል።"
+    },
+    "memberRestored": {
+      "title": "አባል ተመልሷል",
+      "subtitle": "{{name}} ወደ ዝርዝር ተመልሷል።"
+    },
+    "memberRestoreUndone": {
+      "title": "መመለስ ተቀልብሷል",
+      "subtitle": "{{name}} አሁንም ከዝርዝር ውጭ ነው።"
     },
     "memberDeletePending": {
-      "title": "አባል በመሰረዝ ላይ…",
-      "subtitle": "{{name}} ካልመለሱ ይሰረዛል።"
+      "title": "አባል በማስወገድ ላይ…",
+      "subtitle": "{{name}} ካልመለሱ ከዝርዝር ይወገዳል።"
     },
     "memberDeleteCancelled": {
       "title": "መሰረዝ ተሰርዟል",
@@ -472,10 +487,14 @@
     "recordPayment": "ክፍያ ይቀበሉ",
     "transfer": "ቅርንጫፍ ቀይር",
     "edit": "ስም እና ስልክ አርትዕ",
-    "delete": "አባል ሰርዝ",
-    "deleteTitle": "አባል ሰርዝ",
-    "deleteBody": "{{name}} ይወገድ? የክፍያ ታሪኩም ይሰረዛል። ይህ መመለስ አይቻልም።",
-    "deleteFailed": "አባሉን መሰረዝ አልተቻለም።",
+    "delete": "ከዝርዝር አስወግድ",
+    "deleteTitle": "ከዝርዝር ይወገድ?",
+    "deleteBody": "{{name}} ከአባላት ዝርዝር ይደበቃል። የክፍያ ታሪክ እና ሪፖርቶች አይቀየሩም።",
+    "deleteFailed": "አባሉን ማስወገድ አልተቻለም።",
+    "restore": "ወደ ዝርዝር መልስ",
+    "restoreFailed": "አባሉን መመለስ አልተቻለም።",
+    "removedOn": "የተወገደበት",
+    "formerHint": "የክፍያ ታሪክ ተጠብቋል። ወደ ንቁ ዝርዝር ለመመለስ መልስ ይጠቀሙ።",
     "paymentHistory": "የክፍያ ታሪክ",
     "noPayments": "እስካሁን ክፍያ የለም።",
     "manage": "አስተዳድር",
@@ -727,6 +746,7 @@
       "member_updated": "አባል ተዘምኗል",
       "member_transferred": "አባል ተዛውሯል",
       "member_deleted": "አባል ተሰርዟል",
+      "member_restored": "አባል ተመልሷል",
       "payment_recorded": "ክፍያ ተመዝግቧል",
       "payment_updated": "ክፍያ ተዘምኗል",
       "payment_deleted": "ክፍያ ተሰርዟል",
