@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppText as Text } from '@/src/components/AppText';
 import { ListFooterSkeleton, PageSkeleton } from '@/src/components/Skeleton';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -17,6 +18,7 @@ import { useBranchScope } from '@/src/context/BranchContext';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useFlash } from '@/src/context/FlashContext';
+import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { UNDO_DELAY_MS } from '@/src/utils/scheduleWithUndo';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import StatusBadge from '@/src/components/StatusBadge';
@@ -35,7 +37,8 @@ import type { MemberRow } from '@/src/types/api';
 
 type MemberFilter = 'all' | 'active' | 'due_soon' | 'expired' | 'unpaid' | 'former';
 
-const FILTER_OPTIONS: MemberFilter[] = ['all', 'active', 'unpaid', 'due_soon', 'expired'];
+const FILTER_OPTIONS: MemberFilter[] = ['all', 'active', 'unpaid', 'due_soon', 'expired', 'former'];
+const MEMBER_FILTER_STORAGE_KEY = 'vibe.members.statusFilter';
 
 const FILTER_LABEL_KEYS: Record<MemberFilter, string> = {
   all: 'members.filterAll',
@@ -184,15 +187,38 @@ export default function MembersScreen() {
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [filter, setFilter] = useState<MemberFilter>(() => parseFilter(params.filter));
+  const paramFilter = Array.isArray(params.filter) ? params.filter[0] : params.filter;
+  const [filter, setFilter] = useState<MemberFilter>(() => parseFilter(paramFilter));
+  const [filterReady, setFilterReady] = useState(() => Boolean(paramFilter));
   const [sort, setSort] = useState<MemberSortId>(DEFAULT_MEMBER_SORT);
   const [archivedTotal, setArchivedTotal] = useState(0);
   const [restoreBusyId, setRestoreBusyId] = useState<number | null>(null);
   const filterScrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
-    setFilter(parseFilter(params.filter));
-  }, [params.filter, params.focus]);
+    if (paramFilter) {
+      setFilter(parseFilter(paramFilter));
+      setFilterReady(true);
+      return;
+    }
+    let cancelled = false;
+    AsyncStorage.getItem(MEMBER_FILTER_STORAGE_KEY)
+      .then((saved) => {
+        if (!cancelled && saved) setFilter(parseFilter(saved));
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setFilterReady(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [paramFilter, params.focus]);
+
+  useEffect(() => {
+    if (!filterReady) return;
+    AsyncStorage.setItem(MEMBER_FILTER_STORAGE_KEY, filter).catch(() => {});
+  }, [filter, filterReady]);
 
   useEffect(() => {
     if (!params.focus) return;
@@ -245,16 +271,31 @@ export default function MembersScreen() {
   useEffect(() => {
     const first = query.data?.pages[0];
     if (!first) return;
-    if (filter !== 'former' && first.archivedTotal != null) {
-      setArchivedTotal(first.archivedTotal);
-    } else if (filter === 'former' && !debouncedSearch) {
-      setArchivedTotal(first.total);
+    if (filter === 'former') {
+      if (!debouncedSearch) setArchivedTotal(first.total);
+      return;
     }
-  }, [query.data, filter, debouncedSearch]);
+    if (first.archivedTotal != null) {
+      setArchivedTotal(first.archivedTotal);
+      return;
+    }
+    if (!token) return;
+    let cancelled = false;
+    fetchArchivedMembers(token, {
+      page: 1,
+      limit: 1,
+      ...(selectedBranchId !== 'all' ? { branch_id: selectedBranchId } : {}),
+    })
+      .then((data) => {
+        if (!cancelled) setArchivedTotal(data.total ?? 0);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [query.data, filter, debouncedSearch, token, selectedBranchId]);
 
   const showingFormer = filter === 'former';
-  const showFormerChip = archivedTotal > 0 || showingFormer;
-  const filterOptions: MemberFilter[] = showFormerChip ? [...FILTER_OPTIONS, 'former'] : FILTER_OPTIONS;
 
   const filterCounts: Record<MemberFilter, number> = {
     all: counts?.totalMembers ?? 0,
@@ -273,6 +314,7 @@ export default function MembersScreen() {
     try {
       await restoreMember(token, member.id);
       setFilter('all');
+      router.setParams({ filter: 'all' });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['members'] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
@@ -291,6 +333,7 @@ export default function MembersScreen() {
               try {
                 await deleteMember(token, member.id);
                 setFilter('former');
+                router.setParams({ filter: 'former' });
                 await Promise.all([
                   queryClient.invalidateQueries({ queryKey: ['members'] }),
                   queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
@@ -325,7 +368,10 @@ export default function MembersScreen() {
       key={option}
       label={t(FILTER_LABEL_KEYS[option])}
       selected={filter === option}
-      onPress={() => setFilter(option)}
+      onPress={() => {
+        setFilter(option);
+        router.setParams({ filter: option });
+      }}
       dotColor={filterDotColor(c, option)}
       count={filterCounts[option]}
     />
@@ -333,21 +379,17 @@ export default function MembersScreen() {
 
   const statusChips = (
     <>
-      {FILTER_OPTIONS.map(renderStatusChip)}
-      {showFormerChip ? (
-        <>
-          <View style={styles.chipDivider} />
-          {renderStatusChip('former')}
-        </>
-      ) : null}
+      {FILTER_OPTIONS.filter((option) => option !== 'former').map(renderStatusChip)}
+      <View style={styles.chipDivider} />
+      {renderStatusChip('former')}
     </>
   );
 
   useEffect(() => {
-    const index = filterOptions.indexOf(filter);
+    const index = FILTER_OPTIONS.indexOf(filter);
     if (index < 0) return;
     requestAnimationFrame(() => {
-      if (index >= filterOptions.length - 2) {
+      if (index >= FILTER_OPTIONS.length - 2) {
         filterScrollRef.current?.scrollToEnd({ animated: true });
         return;
       }
@@ -356,7 +398,7 @@ export default function MembersScreen() {
         animated: true,
       });
     });
-  }, [filter, showFormerChip]);
+  }, [filter]);
 
   return (
     <TabScreenFrame>

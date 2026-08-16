@@ -30,33 +30,43 @@ export function memberStatusCounts(members: MemberRow[]) {
   let dueSoon = 0;
   let expired = 0;
   let unpaid = 0;
+  let former = 0;
   for (const m of members) {
+    if (m.deleted_at) {
+      former += 1;
+      continue;
+    }
     const s = (m.status || '').toLowerCase();
     if (m.is_unpaid) unpaid += 1;
     if (s === 'active' && !m.is_unpaid) active += 1;
     else if (s === 'due soon') dueSoon += 1;
     else if (s === 'expired') expired += 1;
   }
-  return { active, dueSoon, expired, unpaid, total: members.length };
+  return { active, dueSoon, expired, unpaid, former, total: members.length };
 }
 
 /**
  * Exclusive buckets for a single stacked bar (each member once).
- * Priority: Expired → Due soon → Unpaid → Active.
+ * Priority: Former → Expired → Due soon → Unpaid → Active.
  */
 export function memberStatusBreakdownExclusive(members: MemberRow[]) {
   let active = 0;
   let dueSoon = 0;
   let expired = 0;
   let unpaid = 0;
+  let former = 0;
   for (const m of members) {
+    if (m.deleted_at) {
+      former += 1;
+      continue;
+    }
     const s = (m.status || '').toLowerCase();
     if (s === 'expired') expired += 1;
     else if (s === 'due soon') dueSoon += 1;
     else if (m.is_unpaid) unpaid += 1;
     else if (s === 'active') active += 1;
   }
-  return { active, dueSoon, expired, unpaid, total: members.length };
+  return { active, dueSoon, expired, unpaid, former, total: members.length };
 }
 
 function membersTableHtml(members: MemberRow[], showBranch: boolean) {
@@ -65,7 +75,7 @@ function membersTableHtml(members: MemberRow[], showBranch: boolean) {
     ? ['Name', 'Phone', 'Branch', 'Plan', 'Status', 'End']
     : ['Name', 'Phone', 'Plan', 'Status', 'End'];
   const rows = members.slice(0, 200).map((m) => {
-    const status = m.is_unpaid ? `${m.status} (Unpaid)` : m.status;
+    const status = m.deleted_at ? 'Former' : m.is_unpaid ? `${m.status} (Unpaid)` : m.status;
     const cols = showBranch
       ? [m.name, m.phone || '', m.branch_name || '', m.plan_name || '', status, formatDisplayDate(m.end_date)]
       : [m.name, m.phone || '', m.plan_name || '', status, formatDisplayDate(m.end_date)];
@@ -78,12 +88,14 @@ function membersTableHtml(members: MemberRow[], showBranch: boolean) {
 function paymentsTableHtml(payments: PaymentListRow[], showBranch: boolean) {
   if (!payments.length) return '<p>No payments in this period.</p>';
   const headers = showBranch
-    ? ['Member', 'Payment received date', 'Branch', 'Method', 'Amount (ETB)']
-    : ['Member', 'Payment received date', 'Method', 'Amount (ETB)'];
+    ? ['Member', 'Payment received date', 'Branch', 'Status', 'Method', 'Amount (ETB)']
+    : ['Member', 'Payment received date', 'Status', 'Method', 'Amount (ETB)'];
   const rows = payments.slice(0, 300).map((p) => {
+    const status = p.deleted_at ? 'Former' : (p.status || '').toString();
+    const statusLabel = status ? status.charAt(0).toUpperCase() + status.slice(1) : '';
     const cols = showBranch
-      ? [p.member_name || '', formatDisplayDate(p.date), p.branch_name || '', p.method, Number(p.amount).toFixed(2)]
-      : [p.member_name || '', formatDisplayDate(p.date), p.method, Number(p.amount).toFixed(2)];
+      ? [p.member_name || '', formatDisplayDate(p.date), p.branch_name || '', statusLabel, p.method, Number(p.amount).toFixed(2)]
+      : [p.member_name || '', formatDisplayDate(p.date), statusLabel, p.method, Number(p.amount).toFixed(2)];
     return `<tr>${cols.map((c) => `<td>${escapeHtml(String(c))}</td>`).join('')}</tr>`;
   });
   const more = payments.length > 300 ? `<p><em>Showing first 300 of ${payments.length} payments.</em></p>` : '';
@@ -107,6 +119,7 @@ export function buildMembersPdfHtml(opts: {
       <div class="stat"><label>Due soon</label><strong>${counts.dueSoon}</strong></div>
       <div class="stat"><label>Expired</label><strong>${counts.expired}</strong></div>
       <div class="stat"><label>Unpaid</label><strong>${counts.unpaid}</strong></div>
+      <div class="stat"><label>Former</label><strong>${counts.former}</strong></div>
     </div>
     <h2>Members</h2>
     ${membersTableHtml(opts.members, opts.showBranch)}
@@ -148,11 +161,12 @@ export function buildFullReportPdfHtml(opts: {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>${PDF_STYLES}</style></head><body>
     <h1>${escapeHtml(opts.gymName)}</h1>
     <p class="meta">Full gym report · ${escapeHtml(opts.branchLabel)} · ${escapeHtml(new Date().toLocaleString())}</p>
-    <h2>Members (${escapeHtml(opts.memberFilterLabel)})</h2>
+    <h2>Members (${escapeHtml(opts.memberFilterLabel)} · ${escapeHtml(opts.periodLabel)})</h2>
     <div class="stats">
       <div class="stat"><label>Total</label><strong>${counts.total}</strong></div>
       <div class="stat"><label>Active</label><strong>${counts.active}</strong></div>
       <div class="stat"><label>Unpaid</label><strong>${counts.unpaid}</strong></div>
+      <div class="stat"><label>Former</label><strong>${counts.former}</strong></div>
     </div>
     ${membersTableHtml(opts.members, opts.showBranch)}
     <h2>Revenue (${escapeHtml(opts.periodLabel)})</h2>

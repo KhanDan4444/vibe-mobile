@@ -42,6 +42,8 @@ type FlashToasterProps = {
 
 /** Match web — long enough to read title + subtitle. */
 export const FLASH_DISMISS_MS = 4500;
+/** Brief confirmation after a destructive action has already committed. */
+export const FLASH_COMMITTED_MS = 1000;
 const EXIT_MS = 180;
 const MAX_VISIBLE_TOASTS = 5;
 
@@ -75,7 +77,9 @@ function FlashToastItem({
   const { t } = useTranslation();
   const { colors: c, theme } = useTheme();
   const [reduceMotion, setReduceMotion] = useState(false);
-  const durationMs = toast.durationMs ?? FLASH_DISMISS_MS;
+  const durationMs =
+    toast.durationMs ??
+    (toast.variant === 'danger' && !toast.action ? FLASH_COMMITTED_MS : FLASH_DISMISS_MS);
   const translateY = useSharedValue(18);
   const translateX = useSharedValue(0);
   const opacity = useSharedValue(0);

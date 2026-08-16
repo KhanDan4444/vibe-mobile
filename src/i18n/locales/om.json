@@ -487,9 +487,10 @@
     "recordPayment": "Kaffaltii sassaabi",
     "transfer": "Miseensa ceesisi",
     "edit": "Miseensa gulaali",
-    "delete": "Tarree irraa haqi",
+    "delete": "Haqi",
     "deleteTitle": "Tarree irraa haquu?",
-    "deleteBody": "{{name}} tarree miseensaa irraa dhokata. Seenaan kaffaltii fi gabaasni hin jijjiiramu.",
+    "deleteConfirm": "Haqi",
+    "deleteBody": "{{name}} gara miseensota duraan turanitti ce'a. Seenaan kaffaltii fi gabaasni tura.",
     "deleteFailed": "Miseensa haquu hin dandeenye.",
     "restore": "Gara tarree deebisi",
     "restoreFailed": "Miseensa deebisuu hin dandeenye.",
@@ -716,6 +717,7 @@
     "dueSoon": "Dhiyeenyatti kan dhumu",
     "unpaid": "Hin Kaffalamne",
     "expired": "Kan Dhumate",
+    "former": "Kan duraan ture",
     "allMembers": "Miseensota hunda",
     "paymentsInPeriod": "Kaffaltiiwwan {{count}} {{period}} keessatti",
     "combinedTitle": "Gabaasa walitti makame",
@@ -845,7 +847,8 @@
     "active": "Si'aawaa",
     "dueSoon": "Dhiyeenyatti kan dhumu",
     "expired": "Kan Dhumate",
-    "unpaid": "Hin Kaffalamne"
+    "unpaid": "Hin Kaffalamne",
+    "former": "Kan duraan ture"
   },
   "branches": {
     "emptyTitle": "Ammatti dameen hin jiru",

@@ -233,6 +233,8 @@ export interface PaymentListRow extends PaymentRow {
   member_name?: string;
   member_photo_url?: string | null;
   branch_name?: string | null;
+  status?: string | null;
+  deleted_at?: string | null;
 }
 
 export interface UnpaidMemberSummary {

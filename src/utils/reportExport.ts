@@ -8,6 +8,7 @@ function escapeCsv(value: string | number | null | undefined) {
 }
 
 function memberStatus(m: MemberRow) {
+  if (m.deleted_at) return 'Former';
   const base = m.status || 'Unknown';
   return m.is_unpaid ? `${base} (Unpaid)` : base;
 }
@@ -23,15 +24,22 @@ export function membersToCsv(members: MemberRow[], showBranch: boolean) {
   return [header, ...rows].join('\n');
 }
 
+function paymentMemberStatus(p: PaymentListRow) {
+  if (p.deleted_at) return 'Former';
+  const raw = (p.status || 'Unknown').toString();
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
+}
+
 export function revenueToCsv(payments: PaymentListRow[], showBranch: boolean) {
   const header = showBranch
-    ? 'Member,Payment received date,Branch,Method,Amount (ETB)'
-    : 'Member,Payment received date,Method,Amount (ETB)';
+    ? 'Member,Payment received date,Branch,Status,Method,Amount (ETB)'
+    : 'Member,Payment received date,Status,Method,Amount (ETB)';
   const rows = payments.map((p) => {
     const cols = [
       p.member_name || '',
       formatDisplayDate(p.date),
       ...(showBranch ? [p.branch_name || ''] : []),
+      paymentMemberStatus(p),
       p.method,
       Number(p.amount).toFixed(2),
     ];

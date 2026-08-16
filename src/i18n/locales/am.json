@@ -444,7 +444,7 @@
       "subtitle": "{{name}} ካልመለሱ ከዝርዝር ይወገዳል።"
     },
     "memberDeleteCancelled": {
-      "title": "መሰረዝ ተሰርዟል",
+      "title": "ማስወገድ ተሰርዟል",
       "subtitle": "{{name}} ተጠብቋል።"
     },
     "paymentDeleted": {
@@ -487,9 +487,10 @@
     "recordPayment": "ክፍያ ይቀበሉ",
     "transfer": "ቅርንጫፍ ቀይር",
     "edit": "ስም እና ስልክ አርትዕ",
-    "delete": "ከዝርዝር አስወግድ",
+    "delete": "አስወግድ",
     "deleteTitle": "ከዝርዝር ይወገድ?",
-    "deleteBody": "{{name}} ከአባላት ዝርዝር ይደበቃል። የክፍያ ታሪክ እና ሪፖርቶች አይቀየሩም።",
+    "deleteConfirm": "አስወግድ",
+    "deleteBody": "{{name}} ወደ ቀድሞ ያሉ አባላት ይዛወራል። የክፍያ ታሪክ እና ሪፖርቶች ይቀራሉ።",
     "deleteFailed": "አባሉን ማስወገድ አልተቻለም።",
     "restore": "ወደ ዝርዝር መልስ",
     "restoreFailed": "አባሉን መመለስ አልተቻለም።",
@@ -716,6 +717,7 @@
     "dueSoon": "በቅርብ ያበቃ",
     "unpaid": "ያልተከፈለ",
     "expired": "የተጠናቀቀ",
+    "former": "ቀድሞ ያለ",
     "allMembers": "ሁሉም አባላት",
     "paymentsInPeriod": "{{count}} ክፍያዎች በ{{period}}",
     "combinedTitle": "ሙሉ ሪፖርት",
@@ -845,7 +847,8 @@
     "active": "ንቁ",
     "dueSoon": "በቅርብ ያበቃ",
     "expired": "የተጠናቀቀ",
-    "unpaid": "ያልተከፈለ"
+    "unpaid": "ያልተከፈለ",
+    "former": "ቀድሞ ያለ"
   },
   "branches": {
     "emptyTitle": "እስካሁን ቅርንጫፍ የለም",

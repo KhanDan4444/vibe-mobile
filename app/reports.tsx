@@ -35,17 +35,7 @@ import { MetricStatCard } from '@/src/components/MetricStatCard';
 import { PrimaryButton, SecondaryButton } from '@/src/components/ui/Button';
 import { formatEtb } from '@/src/utils/formatMoney';
 
-type MemberFilter = 'all' | 'active' | 'unpaid' | 'due_soon' | 'expired';
-
 type RevenuePreset = 'this_month' | 'this_week' | 'last_month' | 'this_year';
-
-const MEMBER_FILTER_KEYS: { value: MemberFilter; labelKey: string; query: Record<string, string> }[] = [
-  { value: 'all', labelKey: 'reports.allMembers', query: {} },
-  { value: 'active', labelKey: 'reports.active', query: { status: 'active' } },
-  { value: 'unpaid', labelKey: 'reports.unpaid', query: { filter: 'unpaid' } },
-  { value: 'due_soon', labelKey: 'reports.dueSoon', query: { filter: 'due_soon' } },
-  { value: 'expired', labelKey: 'reports.expired', query: { filter: 'expired' } },
-];
 
 const REVENUE_PRESET_KEYS: { value: RevenuePreset; labelKey: string }[] = [
   { value: 'this_month', labelKey: 'revenue.periodThisMonth' },
@@ -98,29 +88,24 @@ export default function ReportsScreen() {
   const { t } = useTranslation();
   const { pagePadding, reportStatLayoutStyle } = useResponsiveLayout();
   const styles = useThemedStyles((colors) => buildReportStyles(colors));
-  const [memberFilter, setMemberFilter] = useState<MemberFilter>('all');
   const [revenuePreset, setRevenuePreset] = useState<RevenuePreset>('this_month');
   const [exporting, setExporting] = useState<string | null>(null);
   const [exportError, setExportError] = useState('');
   const canViewReports = Boolean(user && hasGymPortalAccess(user.role));
 
-  const memberFilters = useMemo(
-    () => MEMBER_FILTER_KEYS.map((f) => ({ ...f, label: t(f.labelKey) })),
-    [t]
-  );
   const revenuePresets = useMemo(
     () => REVENUE_PRESET_KEYS.map((p) => ({ ...p, label: t(p.labelKey) })),
     [t]
   );
 
   const branchParam = selectedBranchId !== 'all' ? { branch_id: selectedBranchId } : {};
-  const memberMeta = memberFilters.find((f) => f.value === memberFilter) ?? memberFilters[0];
+  const memberFilterLabel = t('reports.allMembers');
   const periodLabel = revenuePresets.find((p) => p.value === revenuePreset)?.label ?? t('revenue.periodThisMonth');
   const displayGym = gymName || t('reports.yourGym');
 
   const membersQuery = useQuery({
-    queryKey: ['report-members-summary', memberFilter, selectedBranchId],
-    queryFn: () => fetchMemberReport(token!, { ...branchParam, ...memberMeta.query, summary: true }),
+    queryKey: ['report-members-summary', selectedBranchId, revenuePreset],
+    queryFn: () => fetchMemberReport(token!, { ...branchParam, preset: revenuePreset, summary: true }),
     enabled: Boolean(token && canViewReports),
   });
 
@@ -138,6 +123,7 @@ export default function ReportsScreen() {
     dueSoon: 0,
     expired: 0,
     unpaid: 0,
+    former: 0,
   };
   const barCounts = membersQuery.data?.barCounts ?? counts;
   const revenueTrend = revenueQuery.data?.chart ?? [];
@@ -145,7 +131,7 @@ export default function ReportsScreen() {
 
   const loadFullExportData = async () => {
     const [memberReport, revenueReport] = await Promise.all([
-      fetchMemberReport(token!, { ...branchParam, ...memberMeta.query }),
+      fetchMemberReport(token!, { ...branchParam, preset: revenuePreset }),
       fetchRevenueReport(token!, { ...branchParam, preset: revenuePreset }),
     ]);
     return {
@@ -169,7 +155,7 @@ export default function ReportsScreen() {
 
       if (kind === 'members') {
         body = membersToCsv(members, showBranch);
-        title = `members-${memberFilter}.csv`;
+        title = 'members.csv';
       } else if (kind === 'revenue') {
         body = revenueToCsv(payments, showBranch);
         title = `revenue-${revenuePreset}.csv`;
@@ -206,7 +192,7 @@ export default function ReportsScreen() {
         html = buildMembersPdfHtml({
           gymName: displayGym,
           branchLabel,
-          filterLabel: memberMeta.label,
+          filterLabel: memberFilterLabel,
           members,
           showBranch,
         });
@@ -225,7 +211,7 @@ export default function ReportsScreen() {
         html = buildFullReportPdfHtml({
           gymName: displayGym,
           branchLabel,
-          memberFilterLabel: memberMeta.label,
+          memberFilterLabel,
           periodLabel,
           members,
           payments,
@@ -252,6 +238,14 @@ export default function ReportsScreen() {
       <Text display style={styles.pageTitle}>{t('reports.title')}</Text>
       <Text style={appTextStyle(language, styles.pageSub)}>{displayGym} · {branchLabel}</Text>
 
+      <OptionPickerField
+        options={revenuePresets.map((p) => ({ value: p.value, label: p.label }))}
+        value={revenuePreset}
+        onChange={setRevenuePreset}
+        placeholder={t('revenue.periodThisMonth')}
+        sheetTitle={t('revenue.period')}
+      />
+
       <Text
         style={appTextStyle(language, {
           ...styles.sectionTitle,
@@ -260,13 +254,6 @@ export default function ReportsScreen() {
       >
         {t('reports.membersSection')}
       </Text>
-      <OptionPickerField
-        options={memberFilters.map((f) => ({ value: f.value, label: f.label }))}
-        value={memberFilter}
-        onChange={setMemberFilter}
-        placeholder={t('reports.allMembers')}
-        sheetTitle={t('reports.membersSection')}
-      />
 
       {loading ? (
         <PageSkeleton variant="reports" padded={false} style={{ marginVertical: 8 }} />
@@ -279,7 +266,6 @@ export default function ReportsScreen() {
               tone="neutral"
               align="center"
               layoutStyle={reportStatLayoutStyle}
-              onPress={() => setMemberFilter('all')}
             />
             <MetricStatCard
               label={t('reports.active')}
@@ -288,7 +274,6 @@ export default function ReportsScreen() {
               tone="neutral"
               align="center"
               layoutStyle={reportStatLayoutStyle}
-              onPress={() => setMemberFilter('active')}
             />
             <MetricStatCard
               label={t('reports.dueSoon')}
@@ -297,7 +282,6 @@ export default function ReportsScreen() {
               tone="neutral"
               align="center"
               layoutStyle={reportStatLayoutStyle}
-              onPress={() => setMemberFilter('due_soon')}
             />
             <MetricStatCard
               label={t('reports.expired')}
@@ -306,7 +290,6 @@ export default function ReportsScreen() {
               tone="attention"
               align="center"
               layoutStyle={reportStatLayoutStyle}
-              onPress={() => setMemberFilter('expired')}
             />
             <MetricStatCard
               label={t('reports.unpaid')}
@@ -315,7 +298,14 @@ export default function ReportsScreen() {
               tone="neutral"
               align="center"
               layoutStyle={reportStatLayoutStyle}
-              onPress={() => setMemberFilter('unpaid')}
+            />
+            <MetricStatCard
+              label={t('reports.former')}
+              value={counts.former ?? 0}
+              accent={c.statusNeutral}
+              tone="neutral"
+              align="center"
+              layoutStyle={reportStatLayoutStyle}
             />
           </View>
           <StatusBreakdown counts={counts} barCounts={barCounts} />
@@ -331,13 +321,6 @@ export default function ReportsScreen() {
       >
         {t('reports.revenueSection')}
       </Text>
-      <OptionPickerField
-        options={revenuePresets.map((p) => ({ value: p.value, label: p.label }))}
-        value={revenuePreset}
-        onChange={setRevenuePreset}
-        placeholder={t('revenue.periodThisMonth')}
-        sheetTitle={t('reports.revenueSection')}
-      />
 
       {revenueSummary ? (
         <SoftSurface variant="panel" style={styles.revenueSummary}>
@@ -355,7 +338,7 @@ export default function ReportsScreen() {
       <SoftSurface variant="panel" style={styles.fullSection}>
         <Text display style={styles.fullTitle}>{t('reports.shareReport')}</Text>
         <Text style={styles.fullSub}>
-          {t('reports.shareReportSub', { memberFilter: memberMeta.label.toLowerCase(), period: periodLabel.toLowerCase() })}
+          {t('reports.shareReportSub', { memberFilter: memberFilterLabel.toLowerCase(), period: periodLabel.toLowerCase() })}
         </Text>
         <ExportRow
           disabled={!hasExportableData || exporting != null}

@@ -21,6 +21,7 @@ export interface MemberStatusCounts {
   dueSoon: number;
   expired: number;
   unpaid: number;
+  former?: number;
 }
 
 export interface MemberReportResponse {

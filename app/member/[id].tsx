@@ -350,7 +350,7 @@ export default function MemberDetailScreen() {
       visible={deleteOpen}
       title={t('member.deleteTitle')}
       message={t('member.deleteBody', { name: member.name })}
-      confirmLabel={t('member.delete')}
+      confirmLabel={t('member.deleteConfirm')}
       destructive
       confirmLoading={false}
       onCancel={() => setDeleteOpen(false)}

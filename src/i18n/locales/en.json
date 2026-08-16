@@ -444,7 +444,7 @@
       "subtitle": "{{name}} will be removed from the roster unless you undo."
     },
     "memberDeleteCancelled": {
-      "title": "Delete cancelled",
+      "title": "Removal cancelled",
       "subtitle": "{{name}} was kept."
     },
     "paymentDeleted": {
@@ -487,9 +487,10 @@
     "recordPayment": "Collect payment",
     "transfer": "Transfer branch",
     "edit": "Edit name & phone",
-    "delete": "Remove from roster",
+    "delete": "Remove",
     "deleteTitle": "Remove from roster?",
-    "deleteBody": "{{name}} will be hidden from Members. Payment history and reports stay unchanged.",
+    "deleteConfirm": "Remove",
+    "deleteBody": "{{name}} will move to Former members. Payment history and reports stay.",
     "deleteFailed": "Could not remove member.",
     "restore": "Restore to roster",
     "restoreFailed": "Could not restore member.",
@@ -716,6 +717,7 @@
     "dueSoon": "Due soon",
     "unpaid": "Unpaid",
     "expired": "Expired",
+    "former": "Former",
     "allMembers": "All members",
     "paymentsInPeriod": "{{count}} payments in {{period}}",
     "combinedTitle": "Combined report",
@@ -845,7 +847,8 @@
     "active": "Active",
     "dueSoon": "Due soon",
     "expired": "Expired",
-    "unpaid": "Unpaid"
+    "unpaid": "Unpaid",
+    "former": "Former"
   },
   "branches": {
     "emptyTitle": "No branches yet",

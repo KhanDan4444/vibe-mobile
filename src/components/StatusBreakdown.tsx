@@ -14,6 +14,7 @@ const SEGMENT_KEYS = [
   { key: 'dueSoon' as const, labelKey: 'statusBreakdown.dueSoon', color: '#0284c7' },
   { key: 'expired' as const, labelKey: 'statusBreakdown.expired', color: '#f87171' },
   { key: 'unpaid' as const, labelKey: 'statusBreakdown.unpaid', color: '#fb923c' },
+  { key: 'former' as const, labelKey: 'statusBreakdown.former', color: '#94a3b8' },
 ];
 
 type Props = {
@@ -66,7 +67,7 @@ export function StatusBreakdown({ members, counts: countsProp, barCounts: barPro
           <View key={seg.key} style={styles.legendItem}>
             <View style={[styles.dot, { backgroundColor: seg.color }]} />
             <Text style={appTextStyle(language, styles.legendLabel)}>{t(seg.labelKey)}</Text>
-            <Text style={styles.legendValue}>{counts[seg.key]}</Text>
+            <Text style={styles.legendValue}>{counts[seg.key] ?? 0}</Text>
           </View>
         ))}
       </View>
