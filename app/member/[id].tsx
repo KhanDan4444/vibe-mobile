@@ -20,7 +20,7 @@ import type { AppLanguage } from '@/src/i18n';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useLoadRetry } from '@/src/hooks/useLoadRetry';
 import { useFlash } from '@/src/context/FlashContext';
-import { scheduleDeleteWithUndo, UNDO_DELAY_MS } from '@/src/utils/scheduleWithUndo';
+import { scheduleDeleteWithUndo, restoreWithUndoFlash } from '@/src/utils/scheduleWithUndo';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import type { ThemeColors } from '@/src/theme/tokens';
@@ -121,7 +121,6 @@ export default function MemberDetailScreen() {
   const { showFlash } = useFlash();
   const canViewMember = Boolean(user && hasGymPortalAccess(user.role));
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [restoreBusy, setRestoreBusy] = useState(false);
   const [errorNotice, setErrorNotice] = useState('');
 
   const memberQuery = useQuery({
@@ -181,46 +180,29 @@ export default function MemberDetailScreen() {
 
   const confirmDeleteMember = () => setDeleteOpen(true);
 
-  const runRestoreMember = async () => {
-    setRestoreBusy(true);
-    try {
-      await restoreMember(token!, member.id);
-      queryClient.invalidateQueries({ queryKey: ['members'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['member', member.id] });
-      router.replace('/(tabs)/members');
-      showFlash({
-        title: t('flash.memberRestored.title'),
-        subtitle: t('flash.memberRestored.subtitle', { name: member.name }),
-        durationMs: UNDO_DELAY_MS,
-        urgent: true,
-        actionHint: t('flash.undoHint'),
-        action: {
-          label: t('common.undo'),
-          onPress: () => {
-            void (async () => {
-              try {
-                await deleteMember(token!, member.id);
-                queryClient.invalidateQueries({ queryKey: ['members'] });
-                queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-                queryClient.invalidateQueries({ queryKey: ['member', member.id] });
-                router.replace({ pathname: '/(tabs)/members', params: { filter: 'former' } });
-                showFlash({
-                  title: t('flash.memberRestoreUndone.title'),
-                  subtitle: t('flash.memberRestoreUndone.subtitle', { name: member.name }),
-                });
-              } catch (err) {
-                setErrorNotice(err instanceof Error ? err.message : t('member.restoreFailed'));
-              }
-            })();
-          },
-        },
-      });
-    } catch (err) {
-      setErrorNotice(err instanceof Error ? err.message : t('member.restoreFailed'));
-    } finally {
-      setRestoreBusy(false);
-    }
+  const runRestoreMember = () => {
+    restoreWithUndoFlash({
+      showFlash,
+      t,
+      name: member.name,
+      restore: () => restoreMember(token!, member.id),
+      rearchive: () => deleteMember(token!, member.id),
+      onRestored: () => {
+        queryClient.invalidateQueries({ queryKey: ['members'] });
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+        queryClient.invalidateQueries({ queryKey: ['member', member.id] });
+        router.replace('/(tabs)/members');
+      },
+      onRearchived: () => {
+        queryClient.invalidateQueries({ queryKey: ['members'] });
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+        queryClient.invalidateQueries({ queryKey: ['member', member.id] });
+        router.replace({ pathname: '/(tabs)/members', params: { filter: 'former' } });
+      },
+      onFailed: (err) => {
+        setErrorNotice(err instanceof Error ? err.message : t('member.restoreFailed'));
+      },
+    });
   };
 
   const runDeleteMember = () => {
@@ -303,7 +285,7 @@ export default function MemberDetailScreen() {
         member={member}
         owner={owner}
         readOnly={readOnly}
-        restoreLoading={restoreBusy}
+        restoreLoading={false}
         onRenew={() => router.push(`/renew/${member.id}`)}
         onPayment={() => router.push(`/payment/${member.id}`)}
         onChangePlan={() => router.push(`/change-plan/${member.id}`)}

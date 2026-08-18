@@ -429,7 +429,7 @@
     },
     "memberDeleted": {
       "title": "አባል ተወግዷል",
-      "subtitle": "ከዝርዝር ተወግዷል። የክፍያ ታሪክ ተጠብቋል።"
+      "subtitle": "{{name}} ከዝርዝር ተወግዷል። የክፍያ ታሪክ ተጠብቋል።"
     },
     "memberRestored": {
       "title": "አባል ተመልሷል",
@@ -439,12 +439,16 @@
       "title": "መመለስ ተቀልብሷል",
       "subtitle": "{{name}} አሁንም ከዝርዝር ውጭ ነው።"
     },
+    "memberRestorePending": {
+      "title": "አባል በመመለስ ላይ…",
+      "subtitle": "{{name}} ካልመለሱ ወደ ዝርዝር ይመለሳል።"
+    },
     "memberDeletePending": {
       "title": "አባል በማስወገድ ላይ…",
       "subtitle": "{{name}} ካልመለሱ ከዝርዝር ይወገዳል።"
     },
     "memberDeleteCancelled": {
-      "title": "ማስወገድ ተሰርዟል",
+      "title": "መሰረዝ ተሰርዟል",
       "subtitle": "{{name}} ተጠብቋል።"
     },
     "paymentDeleted": {
@@ -467,7 +471,8 @@
       "title": "ከመስመር ውጭ ተቀምጧል",
       "subtitle": "ከመስመር ሲመለሱ በራስ-ሰር ይመሳሰላል።"
     },
-    "undoHint": "ለመጠበቅ «መልስ»ን ይጫኑ — ማጥፋት አያስተላልፍም።",
+    "undoHint": "ለመጠበቅ «መልስ»ን ይጫኑ — ይህን ማጥፋት አያስተላልፍም።",
+    "undoDismissHint": "ይህን ማጥፋት አያስተላልፍም።",
     "undoActionLabel": "{{action}} — ለውጡን ሰርዝ",
     "dismissPending": "ማሳወቂያውን ደብቅ — ተግባሩ ይቀጥላል"
   },

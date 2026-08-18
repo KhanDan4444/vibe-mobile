@@ -15,10 +15,10 @@ function memberStatus(m: MemberRow) {
 
 export function membersToCsv(members: MemberRow[], showBranch: boolean) {
   const header = showBranch
-    ? 'Name,Phone,Branch,Plan,Status,Start,End'
-    : 'Name,Phone,Plan,Status,Start,End';
-  const rows = members.map((m) => {
-    const cols = [m.name, m.phone || '', ...(showBranch ? [m.branch_name || ''] : []), m.plan_name || '', memberStatus(m), formatDisplayDate(m.start_date), formatDisplayDate(m.end_date)];
+    ? 'No.,Name,Phone,Branch,Plan,Status,Start,End'
+    : 'No.,Name,Phone,Plan,Status,Start,End';
+  const rows = members.map((m, index) => {
+    const cols = [index + 1, m.name, m.phone || '', ...(showBranch ? [m.branch_name || ''] : []), m.plan_name || '', memberStatus(m), formatDisplayDate(m.start_date), formatDisplayDate(m.end_date)];
     return cols.map(escapeCsv).join(',');
   });
   return [header, ...rows].join('\n');
@@ -32,10 +32,11 @@ function paymentMemberStatus(p: PaymentListRow) {
 
 export function revenueToCsv(payments: PaymentListRow[], showBranch: boolean) {
   const header = showBranch
-    ? 'Member,Payment received date,Branch,Status,Method,Amount (ETB)'
-    : 'Member,Payment received date,Status,Method,Amount (ETB)';
-  const rows = payments.map((p) => {
+    ? 'No.,Member,Payment received date,Branch,Status,Method,Amount (ETB)'
+    : 'No.,Member,Payment received date,Status,Method,Amount (ETB)';
+  const rows = payments.map((p, index) => {
     const cols = [
+      index + 1,
       p.member_name || '',
       formatDisplayDate(p.date),
       ...(showBranch ? [p.branch_name || ''] : []),

@@ -76,7 +76,7 @@ function AlertMemberRow({
         {onAction ? (
           <Pressable
             accessibilityRole="button"
-            hitSlop={8}
+            hitSlop={12}
             onPress={(e) => {
               e.stopPropagation?.();
               onAction();
@@ -365,7 +365,9 @@ const styles = StyleSheet.create({
   alertAction: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 2,
   },
   alertActionText: { fontSize: 14, fontWeight: '600' },
   attentionShortcut: {

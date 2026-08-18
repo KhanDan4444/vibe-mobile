@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppText as Text } from '@/src/components/AppText';
 import { ListFooterSkeleton, PageSkeleton } from '@/src/components/Skeleton';
@@ -19,7 +20,7 @@ import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useFlash } from '@/src/context/FlashContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
-import { UNDO_DELAY_MS } from '@/src/utils/scheduleWithUndo';
+import { restoreWithUndoFlash } from '@/src/utils/scheduleWithUndo';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import StatusBadge from '@/src/components/StatusBadge';
 import { SecondaryButton } from '@/src/components/ui/Button';
@@ -67,6 +68,47 @@ function parseFilter(value: string | string[] | undefined): MemberFilter {
     return raw;
   }
   return 'all';
+}
+
+function RestoreAction({
+  label,
+  colors,
+  busy,
+  onPress,
+}: {
+  label: string;
+  colors: ThemeColors;
+  busy?: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      disabled={busy}
+      hitSlop={12}
+      onPress={(e) => {
+        e.stopPropagation?.();
+        onPress();
+      }}
+      style={({ pressed }) => [
+        {
+          marginTop: 6,
+          flexDirection: 'row' as const,
+          alignItems: 'center' as const,
+          gap: 4,
+          paddingVertical: 4,
+          paddingHorizontal: 2,
+          opacity: busy ? 0.55 : pressed ? 0.65 : 1,
+        },
+      ]}
+    >
+      <Ionicons name="sync-outline" size={16} color={colors.statusActive} />
+      <Text style={{ fontSize: 14, fontWeight: '600', color: colors.statusActive }}>
+        {label}
+      </Text>
+    </Pressable>
+  );
 }
 
 function MemberRowItem({
@@ -132,14 +174,12 @@ function MemberRowItem({
             <StatusBadge status={isFormer ? 'Former' : member.status} />
             {member.is_unpaid && !isFormer ? <Text style={styles.unpaid}>{t('members.unpaidBadge')}</Text> : null}
             {isFormer && canRestore && onRestore ? (
-              <Pressable
+              <RestoreAction
+                label={t('members.restore')}
+                colors={colors}
+                busy={restoreBusy}
                 onPress={onRestore}
-                disabled={restoreBusy}
-                hitSlop={8}
-                style={styles.restoreHit}
-              >
-                <Text style={styles.restore}>{t('members.restore')}</Text>
-              </Pressable>
+              />
             ) : null}
           </View>
         ) : null}
@@ -152,9 +192,12 @@ function MemberRowItem({
           </Text>
           {member.is_unpaid && !isFormer ? <Text style={styles.unpaid}>{t('members.unpaidBadge')}</Text> : null}
           {isFormer && canRestore && onRestore ? (
-            <Pressable onPress={onRestore} disabled={restoreBusy} hitSlop={8}>
-              <Text style={styles.restore}>{t('members.restore')}</Text>
-            </Pressable>
+            <RestoreAction
+              label={t('members.restore')}
+              colors={colors}
+              busy={restoreBusy}
+              onPress={onRestore}
+            />
           ) : null}
         </View>
       ) : null}
@@ -308,59 +351,38 @@ export default function MembersScreen() {
 
   const canRestoreMembers = owner && !readOnly;
 
-  const runRestore = async (member: MemberRow) => {
-    if (!token) return;
+  const runRestore = (member: MemberRow) => {
+    if (!token || restoreBusyId === member.id) return;
     setRestoreBusyId(member.id);
-    try {
-      await restoreMember(token, member.id);
-      setFilter('all');
-      router.setParams({ filter: 'all' });
-      await Promise.all([
+    const refresh = () =>
+      Promise.all([
         queryClient.invalidateQueries({ queryKey: ['members'] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
         queryClient.invalidateQueries({ queryKey: ['member', member.id] }),
       ]);
-      showFlash({
-        title: t('flash.memberRestored.title'),
-        subtitle: t('flash.memberRestored.subtitle', { name: member.name }),
-        durationMs: UNDO_DELAY_MS,
-        urgent: true,
-        actionHint: t('flash.undoHint'),
-        action: {
-          label: t('common.undo'),
-          onPress: () => {
-            void (async () => {
-              try {
-                await deleteMember(token, member.id);
-                setFilter('former');
-                router.setParams({ filter: 'former' });
-                await Promise.all([
-                  queryClient.invalidateQueries({ queryKey: ['members'] }),
-                  queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
-                  queryClient.invalidateQueries({ queryKey: ['member', member.id] }),
-                ]);
-                showFlash({
-                  title: t('flash.memberRestoreUndone.title'),
-                  subtitle: t('flash.memberRestoreUndone.subtitle', { name: member.name }),
-                });
-              } catch (err) {
-                showFlash({
-                  title: err instanceof Error ? err.message : t('member.restoreFailed'),
-                  variant: 'danger',
-                });
-              }
-            })();
-          },
-        },
-      });
-    } catch (err) {
-      showFlash({
-        title: err instanceof Error ? err.message : t('member.restoreFailed'),
-        variant: 'danger',
-      });
-    } finally {
-      setRestoreBusyId(null);
-    }
+    restoreWithUndoFlash({
+      showFlash,
+      t,
+      name: member.name,
+      restore: () => restoreMember(token, member.id),
+      rearchive: () => deleteMember(token, member.id),
+      onRestored: () => {
+        setRestoreBusyId(null);
+        setFilter('all');
+        router.setParams({ filter: 'all' });
+        void refresh();
+      },
+      onRearchived: () => {
+        setFilter('former');
+        router.setParams({ filter: 'former' });
+        void refresh();
+      },
+      onFailed: () => {
+        setRestoreBusyId(null);
+        setFilter('former');
+        router.setParams({ filter: 'former' });
+      },
+    });
   };
 
   const renderStatusChip = (option: MemberFilter) => (
@@ -581,8 +603,6 @@ function createStyles(c: ThemeColors) {
     planStacked: { marginTop: 0 },
     unpaid: { marginTop: 4, fontSize: 11, fontWeight: '700' as const, color: c.statusUnpaid },
     removed: { marginTop: 2, fontSize: 12, color: c.dim },
-    restoreHit: { marginTop: 8 },
-    restore: { marginTop: 2, fontSize: 13, fontWeight: '700' as const, color: c.accentText },
     empty: { textAlign: 'center' as const, color: c.dim, marginTop: 40, fontSize: 15, alignSelf: 'center' as const, maxWidth: 360 },
     errorWrap: { alignItems: 'center' as const, paddingTop: 48, gap: 12, paddingHorizontal: 24 },
     errorText: { textAlign: 'center' as const, color: c.error, fontSize: 15 },

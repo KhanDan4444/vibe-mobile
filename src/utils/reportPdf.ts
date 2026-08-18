@@ -17,6 +17,7 @@ const PDF_STYLES = `
   table { width: 100%; border-collapse: collapse; }
   th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #e2e8f0; }
   th { font-size: 10px; text-transform: uppercase; color: #64748b; }
+  th.col-no, td.col-no { width: 28px; text-align: center; color: #64748b; }
   .total { font-size: 22px; font-weight: 700; color: #0f766e; margin: 8px 0; }
   .stats { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; }
   .stat { background: #f8fafc; padding: 12px 16px; border-radius: 8px; min-width: 100px; }
@@ -72,34 +73,34 @@ export function memberStatusBreakdownExclusive(members: MemberRow[]) {
 function membersTableHtml(members: MemberRow[], showBranch: boolean) {
   if (!members.length) return '<p>No members in this filter.</p>';
   const headers = showBranch
-    ? ['Name', 'Phone', 'Branch', 'Plan', 'Status', 'End']
-    : ['Name', 'Phone', 'Plan', 'Status', 'End'];
-  const rows = members.slice(0, 200).map((m) => {
+    ? ['No.', 'Name', 'Phone', 'Branch', 'Plan', 'Status', 'End']
+    : ['No.', 'Name', 'Phone', 'Plan', 'Status', 'End'];
+  const rows = members.slice(0, 200).map((m, index) => {
     const status = m.deleted_at ? 'Former' : m.is_unpaid ? `${m.status} (Unpaid)` : m.status;
     const cols = showBranch
-      ? [m.name, m.phone || '', m.branch_name || '', m.plan_name || '', status, formatDisplayDate(m.end_date)]
-      : [m.name, m.phone || '', m.plan_name || '', status, formatDisplayDate(m.end_date)];
-    return `<tr>${cols.map((c) => `<td>${escapeHtml(String(c))}</td>`).join('')}</tr>`;
+      ? [String(index + 1), m.name, m.phone || '', m.branch_name || '', m.plan_name || '', status, formatDisplayDate(m.end_date)]
+      : [String(index + 1), m.name, m.phone || '', m.plan_name || '', status, formatDisplayDate(m.end_date)];
+    return `<tr>${cols.map((c, i) => `<td${i === 0 ? ' class="col-no"' : ''}>${escapeHtml(String(c))}</td>`).join('')}</tr>`;
   });
   const more = members.length > 200 ? `<p><em>Showing first 200 of ${members.length} members.</em></p>` : '';
-  return `${more}<table><thead><tr>${headers.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`;
+  return `${more}<table><thead><tr>${headers.map((h, i) => `<th${i === 0 ? ' class="col-no"' : ''}>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`;
 }
 
 function paymentsTableHtml(payments: PaymentListRow[], showBranch: boolean) {
   if (!payments.length) return '<p>No payments in this period.</p>';
   const headers = showBranch
-    ? ['Member', 'Payment received date', 'Branch', 'Status', 'Method', 'Amount (ETB)']
-    : ['Member', 'Payment received date', 'Status', 'Method', 'Amount (ETB)'];
-  const rows = payments.slice(0, 300).map((p) => {
+    ? ['No.', 'Member', 'Payment received date', 'Branch', 'Status', 'Method', 'Amount (ETB)']
+    : ['No.', 'Member', 'Payment received date', 'Status', 'Method', 'Amount (ETB)'];
+  const rows = payments.slice(0, 300).map((p, index) => {
     const status = p.deleted_at ? 'Former' : (p.status || '').toString();
     const statusLabel = status ? status.charAt(0).toUpperCase() + status.slice(1) : '';
     const cols = showBranch
-      ? [p.member_name || '', formatDisplayDate(p.date), p.branch_name || '', statusLabel, p.method, Number(p.amount).toFixed(2)]
-      : [p.member_name || '', formatDisplayDate(p.date), statusLabel, p.method, Number(p.amount).toFixed(2)];
-    return `<tr>${cols.map((c) => `<td>${escapeHtml(String(c))}</td>`).join('')}</tr>`;
+      ? [String(index + 1), p.member_name || '', formatDisplayDate(p.date), p.branch_name || '', statusLabel, p.method, Number(p.amount).toFixed(2)]
+      : [String(index + 1), p.member_name || '', formatDisplayDate(p.date), statusLabel, p.method, Number(p.amount).toFixed(2)];
+    return `<tr>${cols.map((c, i) => `<td${i === 0 ? ' class="col-no"' : ''}>${escapeHtml(String(c))}</td>`).join('')}</tr>`;
   });
   const more = payments.length > 300 ? `<p><em>Showing first 300 of ${payments.length} payments.</em></p>` : '';
-  return `${more}<table><thead><tr>${headers.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`;
+  return `${more}<table><thead><tr>${headers.map((h, i) => `<th${i === 0 ? ' class="col-no"' : ''}>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`;
 }
 
 export function buildMembersPdfHtml(opts: {

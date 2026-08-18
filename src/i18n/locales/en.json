@@ -429,7 +429,7 @@
     },
     "memberDeleted": {
       "title": "Member removed",
-      "subtitle": "They were removed from the roster. Payment history is kept."
+      "subtitle": "{{name}} was removed from the roster. Payment history is kept."
     },
     "memberRestored": {
       "title": "Member restored",
@@ -439,12 +439,16 @@
       "title": "Restore undone",
       "subtitle": "{{name}} is still off the roster."
     },
+    "memberRestorePending": {
+      "title": "Restoring member…",
+      "subtitle": "{{name}} will be restored to the roster unless you undo."
+    },
     "memberDeletePending": {
       "title": "Removing member…",
       "subtitle": "{{name}} will be removed from the roster unless you undo."
     },
     "memberDeleteCancelled": {
-      "title": "Removal cancelled",
+      "title": "Delete cancelled",
       "subtitle": "{{name}} was kept."
     },
     "paymentDeleted": {
@@ -467,7 +471,8 @@
       "title": "Saved offline",
       "subtitle": "Will sync automatically when you are back online."
     },
-    "undoHint": "Tap Undo to keep — swiping away won't cancel.",
+    "undoHint": "Tap Undo to keep — closing this won't cancel.",
+    "undoDismissHint": "Closing won't cancel.",
     "undoActionLabel": "{{action}} — cancel this change",
     "dismissPending": "Hide notification — action still continues"
   },

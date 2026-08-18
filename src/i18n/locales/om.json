@@ -429,7 +429,7 @@
     },
     "memberDeleted": {
       "title": "Miseensi haqameera",
-      "subtitle": "Tarree irraa haqameera. Seenaan kaffaltii eegameera."
+      "subtitle": "{{name}} tarree irraa haqameera. Seenaan kaffaltii eegameera."
     },
     "memberRestored": {
       "title": "Miseensi deebi'eera",
@@ -438,6 +438,10 @@
     "memberRestoreUndone": {
       "title": "Deebisuun haqameera",
       "subtitle": "{{name}} ammayyuu tarree irraa haqameera."
+    },
+    "memberRestorePending": {
+      "title": "Miseensi deebi'aa jira…",
+      "subtitle": "Yoo hin deebi'in {{name}} gara tarree ni deebi'a."
     },
     "memberDeletePending": {
       "title": "Miseensi haquu jira…",
@@ -467,7 +471,8 @@
       "title": "Ala olkaa'ameera",
       "subtitle": "Intarneetii yeroo deebi'an ofumaan walsimsiifama."
     },
-    "undoHint": "Eeguuf Deebi'i tuqi — harkisuu haquu hin dhaabu.",
+    "undoHint": "Eeguuf Deebi'i tuqi — kana cufuun haquu hin dhaabu.",
+    "undoDismissHint": "Kana cufuun haquu hin dhaabu.",
     "undoActionLabel": "{{action}} — jijjiirama kana haqi",
     "dismissPending": "Beeksisa dhoksi — gochi itti fufa"
   },

@@ -9,7 +9,6 @@ import Animated, {
   useSharedValue,
   withDelay,
   withRepeat,
-  withSequence,
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, RadialGradient, Rect, Stop } from 'react-native-svg';
@@ -58,20 +57,17 @@ export function AppBootSplash({ releaseNative = true }: Props) {
   }, [releaseNative]);
 
   useEffect(() => {
-    // A few living cycles, then settle — avoids feeling like an infinite loader on slow boots.
-    breathe.value = withSequence(
-      withRepeat(
-        withTiming(1.025, { duration: 1500, easing: Easing.inOut(Easing.sin) }),
-        4,
-        true,
-      ),
-      withTiming(1, { duration: 500, easing: Easing.out(Easing.cubic) }),
+    // Gentle icon breathe — loops while splash is visible.
+    breathe.value = withRepeat(
+      withTiming(1.025, { duration: 1500, easing: Easing.inOut(Easing.sin) }),
+      -1,
+      true,
     );
     glow.value = withTiming(1, { duration: 720, easing: Easing.out(Easing.cubic) });
-    // Tighter heartbeat; stop after three rings and hold the calm mark.
+    // Heartbeat ring — loops while splash is visible (slow boots can exceed a few seconds).
     pulse.value = withDelay(
       320,
-      withRepeat(withTiming(1, { duration: 1700, easing: Easing.out(Easing.quad) }), 3, false),
+      withRepeat(withTiming(1, { duration: 1700, easing: Easing.out(Easing.quad) }), -1, false),
     );
   }, [breathe, glow, pulse]);
 

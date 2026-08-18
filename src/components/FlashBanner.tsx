@@ -55,7 +55,7 @@ function tabBarClearance(isTablet: boolean) {
 function toastIcon(variant: FlashVariant, icon?: FlashToast['icon']) {
   if (icon) return icon;
   if (variant === 'offline') return 'cloud-offline-outline';
-  if (variant === 'danger') return 'trash-outline';
+  if (variant === 'danger') return 'close-circle-outline';
   return 'checkmark-circle-outline';
 }
 
@@ -218,7 +218,7 @@ function FlashToastItem({
   const variant = toast.variant ?? 'success';
   const accent = toastAccent(variant, c);
   const iconName = toastIcon(variant, toast.icon);
-  const showSubtitle = Boolean(toast.subtitle) && !hasAction;
+  const showSubtitle = Boolean(toast.subtitle);
   const showAction = hasAction;
   const isUrgent = Boolean(toast.urgent);
   const accessibilityHint = [toast.subtitle, toast.actionHint].filter(Boolean).join(' ');
@@ -258,18 +258,16 @@ function FlashToastItem({
       >
         <View style={[styles.accent, { backgroundColor: accent }]} />
 
-        {!showAction ? (
-          <View style={[styles.iconWrap, { backgroundColor: surface.iconBg }]}>
-            <Ionicons name={iconName} size={18} color={accent} />
-          </View>
-        ) : null}
+        <View style={[styles.iconWrap, { backgroundColor: surface.iconBg }]}>
+          <Ionicons name={iconName} size={18} color={accent} />
+        </View>
 
         <View style={styles.copy}>
           <Text style={[styles.title, { color: surface.titleColor }]} numberOfLines={1}>
             {toast.title}
           </Text>
           {showSubtitle ? (
-            <Text style={[styles.subtitle, { color: surface.subtitleColor }]} numberOfLines={1}>
+            <Text style={[styles.subtitle, { color: surface.subtitleColor }]} numberOfLines={2}>
               {toast.subtitle}
             </Text>
           ) : null}
@@ -394,6 +392,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 12,
     lineHeight: 16,
+    marginTop: 2,
   },
   undoBtn: {
     paddingHorizontal: 10,
