@@ -22,6 +22,46 @@ export function formatDisplayDate(date: string | null | undefined): string {
   return `${d}-${m}-${y.slice(-2)}`;
 }
 
+/** Friendlier inbox/detail date: "7 Aug 2026" (locale-aware). */
+export function formatFriendlyDate(date: string | Date | null | undefined, language = 'en'): string {
+  if (!date || date === '—') return '—';
+  const parsed = typeof date === 'string' ? parseLocalDate(toDateString(date)) : date;
+  if (!parsed) return formatDisplayDate(typeof date === 'string' ? date : undefined);
+  const locale = language === 'am' ? 'am-ET' : language === 'om' ? 'om-ET' : 'en-GB';
+  try {
+    return parsed.toLocaleDateString(locale, {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  } catch {
+    return formatDisplayDate(typeof date === 'string' ? date : undefined);
+  }
+}
+
+/** Inbox timestamps: "in 2 days", "yesterday", else a friendly date. */
+export function formatRelativeDay(
+  date: string | Date | null | undefined,
+  t?: (key: string, options?: object) => string,
+  language = 'en',
+): string {
+  if (!date || date === '—' || date === 'Action needed' || date === 'System Alert') return '';
+  const iso = typeof date === 'string' ? toDateString(date) : dateToIso(date);
+  const parsed = parseLocalDate(iso);
+  if (!parsed) return formatFriendlyDate(date, language);
+  const today = new Date();
+  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const target = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+  const diff = Math.round((target.getTime() - start.getTime()) / 86400000);
+  if (typeof t !== 'function') return formatFriendlyDate(date, language);
+  if (diff === 0) return t('notifications.relative.today');
+  if (diff === 1) return t('notifications.relative.tomorrow');
+  if (diff === -1) return t('notifications.relative.yesterday');
+  if (diff > 1 && diff < 14) return t('notifications.relative.inDays', { count: diff });
+  if (diff < -1 && diff > -14) return t('notifications.relative.daysAgo', { count: Math.abs(diff) });
+  return formatFriendlyDate(date, language);
+}
+
 export function formatDisplayDateTime(date: string | null | undefined): string {
   if (!date) return '—';
   const parsed = new Date(date);

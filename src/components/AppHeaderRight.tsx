@@ -25,7 +25,7 @@ export function AppHeaderRight({ leading }: { leading?: React.ReactNode }) {
           <Ionicons name="notifications-outline" size={24} color={c.muted} />
           {unread > 0 ? (
             <View style={[styles.badge, { backgroundColor: c.error }]}>
-              <Text style={styles.badgeText}>{unread > 9 ? '9+' : unread}</Text>
+              <Text style={styles.badgeText}>{unread > 99 ? '99+' : unread}</Text>
             </View>
           ) : null}
         </Pressable>
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 2,
     right: 2,
-    minWidth: 16,
+    minWidth: 18,
     height: 16,
     borderRadius: 8,
     alignItems: 'center',

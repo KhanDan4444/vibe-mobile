@@ -27,6 +27,9 @@ function badgeColors(key: string, c: ThemeColors) {
   if (key === 'trialing' || key === 'unpaid') {
     return { bg: `${c.statusUnpaid}18`, text: c.statusUnpaid, border: `${c.statusUnpaid}33`, dot: c.statusUnpaid };
   }
+  if (key === 'former') {
+    return { bg: `${c.statusFormer}18`, text: c.statusFormer, border: `${c.statusFormer}33`, dot: c.statusFormer };
+  }
   return { bg: `${c.statusNeutral}18`, text: c.statusNeutral, border: `${c.statusNeutral}33`, dot: c.statusNeutral };
 }
 

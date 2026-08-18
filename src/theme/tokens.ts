@@ -53,6 +53,8 @@ export type ThemeColors = {
   statusExpired: string;
   statusUnpaid: string;
   statusNeutral: string;
+  /** Former / archived — warm stone, distinct from All. */
+  statusFormer: string;
 };
 
 export const darkTheme: ThemeColors = {
@@ -86,6 +88,7 @@ export const darkTheme: ThemeColors = {
   statusExpired: '#f87171',
   statusUnpaid: '#fb923c',
   statusNeutral: '#94a3b8',
+  statusFormer: '#a8a29e',
 };
 
 /** Soft warm-gray canvas — calm and inviting without cream/terracotta cliché. */
@@ -120,6 +123,7 @@ export const lightTheme: ThemeColors = {
   statusExpired: '#e11d48',
   statusUnpaid: '#ea580c',
   statusNeutral: '#64748b',
+  statusFormer: '#78716c',
 };
 
 export function colorsForTheme(theme: AppTheme): ThemeColors {

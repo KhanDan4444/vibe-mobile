@@ -14,6 +14,7 @@ import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { EmptyState } from '@/src/components/EmptyState';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useDeleteFlash } from '@/src/hooks/useSaveFlash';
+import { FLASH_PLAN_DELETED_MS } from '@/src/components/FlashBanner';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useTranslation } from 'react-i18next';
@@ -339,7 +340,7 @@ export default function PlansScreen() {
     try {
       await deletePlan(token, planToDelete.id);
       setPlanToDelete(null);
-      flashDeleted('flash.planDeleted');
+      flashDeleted('flash.planDeleted', { durationMs: FLASH_PLAN_DELETED_MS });
       runInBackground(query.refetch());
     } catch (e) {
       setPlanToDelete(null);

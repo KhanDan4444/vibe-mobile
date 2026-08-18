@@ -257,11 +257,56 @@
     "unread": "{{count}} hin dubbifamne",
     "caughtUp": "Hundinuu dubbifameera",
     "markAllRead": "Hunda akka dubbifametti mallatteessi",
-    "empty": "Hundinuu sirriidha! Beeksisi si'aawaa hin jiru.",
+    "empty": "Yeroo ammaa beeksisiin hin jiru.",
     "loading": "Fe'amaa jira…",
     "renew": "Haaromsi",
     "collectPayment": "Kaffaltii sassaabi",
-    "viewMember": "Miseensa ilaali"
+    "viewMember": "Miseensa ilaali",
+    "defaultPlan": "Miseensummaa",
+    "section": {
+      "attention": "Xiyyeeffannaa",
+      "activity": "Sochii"
+    },
+    "kind": {
+      "unpaid": "Kaffaltii",
+      "dueSoon": "Dhumuuf",
+      "expired": "Dhumateera",
+      "paymentRecorded": "Galmaa'e"
+    },
+    "stack": {
+      "unpaid_one": "Miseensa kaffaltii hin qabne {{count}}",
+      "unpaid_other": "Miseensota kaffaltii hin qabne {{count}}",
+      "dueSoon_one": "Miseensummaa dhumuuf jiru {{count}}",
+      "dueSoon_other": "Miseensummaa dhumuuf jiran {{count}}",
+      "expired_one": "Miseensummaan dhumate {{count}}",
+      "expired_other": "Miseensummaa dhumatan {{count}}",
+      "namesMore": "{{names}} +{{count}}"
+    },
+    "relative": {
+      "today": "Har'a",
+      "tomorrow": "Boru",
+      "yesterday": "Kaleessa",
+      "inDays": "guyyaa {{count}} keessatti",
+      "daysAgo": "guyyaa {{count}} dura"
+    },
+    "items": {
+      "unpaid": {
+        "title": "Kaffaltiin Hin Sassaabamne",
+        "message": "Kaffaltiini yeroo kanaaf hin galmeeffamne."
+      },
+      "dueSoon": {
+        "title": "Dhiyeenyatti Dhumata",
+        "message": "{{plan}}"
+      },
+      "expired": {
+        "title": "Miseensummaan Dhumateera",
+        "message": "{{plan}}"
+      },
+      "paymentRecorded": {
+        "title": "Kaffaltiin Galmeeffameera",
+        "message": "{{amount}} galmeeffameera."
+      }
+    }
   },
   "profile": {
     "gymProfile": "Profaayilii jimii",

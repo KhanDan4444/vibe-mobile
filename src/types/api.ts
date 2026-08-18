@@ -143,6 +143,10 @@ export interface DashboardNotification {
   kind?: string;
   memberId?: number;
   memberName?: string;
+  planName?: string;
+  endDate?: string;
+  amount?: number;
+  branchName?: string;
   type: string;
   title: string;
   message: string;

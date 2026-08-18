@@ -261,7 +261,52 @@
     "loading": "Loading…",
     "renew": "Renew",
     "collectPayment": "Collect payment",
-    "viewMember": "View member"
+    "viewMember": "View member",
+    "defaultPlan": "Membership",
+    "section": {
+      "attention": "Needs attention",
+      "activity": "Activity"
+    },
+    "kind": {
+      "unpaid": "Payment",
+      "dueSoon": "Expiring",
+      "expired": "Expired",
+      "paymentRecorded": "Recorded"
+    },
+    "stack": {
+      "unpaid_one": "{{count}} member with no payment",
+      "unpaid_other": "{{count}} members with no payment",
+      "dueSoon_one": "{{count}} membership expiring",
+      "dueSoon_other": "{{count}} memberships expiring",
+      "expired_one": "{{count}} membership expired",
+      "expired_other": "{{count}} memberships expired",
+      "namesMore": "{{names}} +{{count}}"
+    },
+    "relative": {
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "yesterday": "Yesterday",
+      "inDays": "in {{count}} days",
+      "daysAgo": "{{count}} days ago"
+    },
+    "items": {
+      "unpaid": {
+        "title": "Payment not collected",
+        "message": "No payment on file for this term."
+      },
+      "dueSoon": {
+        "title": "Expiring soon",
+        "message": "{{plan}}"
+      },
+      "expired": {
+        "title": "Membership expired",
+        "message": "{{plan}}"
+      },
+      "paymentRecorded": {
+        "title": "Payment recorded",
+        "message": "{{amount}} recorded."
+      }
+    }
   },
   "profile": {
     "gymProfile": "Gym profile",

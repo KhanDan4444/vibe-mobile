@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppText as Text } from '@/src/components/AppText';
 import { ListFooterSkeleton, PageSkeleton } from '@/src/components/Skeleton';
@@ -21,8 +20,10 @@ import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useFlash } from '@/src/context/FlashContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { restoreWithUndoFlash } from '@/src/utils/scheduleWithUndo';
+import { adjustMemberFilterCounts } from '@/src/utils/memberFilterCounts';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import StatusBadge from '@/src/components/StatusBadge';
+import { RowActionLink } from '@/src/components/RowActionLink';
 import { SecondaryButton } from '@/src/components/ui/Button';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { FilterChip } from '@/src/components/FilterChip';
@@ -52,12 +53,12 @@ const FILTER_LABEL_KEYS: Record<MemberFilter, string> = {
 
 function filterDotColor(c: ThemeColors, option: MemberFilter) {
   const dots: Record<MemberFilter, string> = {
-    all: c.statusNeutral,
+    all: c.dim,
     active: c.statusActive,
     unpaid: c.statusUnpaid,
     due_soon: c.statusDueSoon,
     expired: c.statusExpired,
-    former: c.statusNeutral,
+    former: c.statusFormer,
   };
   return dots[option];
 }
@@ -82,32 +83,13 @@ function RestoreAction({
   onPress: () => void;
 }) {
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      disabled={busy}
-      hitSlop={12}
-      onPress={(e) => {
-        e.stopPropagation?.();
-        onPress();
-      }}
-      style={({ pressed }) => [
-        {
-          marginTop: 6,
-          flexDirection: 'row' as const,
-          alignItems: 'center' as const,
-          gap: 4,
-          paddingVertical: 4,
-          paddingHorizontal: 2,
-          opacity: busy ? 0.55 : pressed ? 0.65 : 1,
-        },
-      ]}
-    >
-      <Ionicons name="sync-outline" size={16} color={colors.statusActive} />
-      <Text style={{ fontSize: 14, fontWeight: '600', color: colors.statusActive }}>
-        {label}
-      </Text>
-    </Pressable>
+    <RowActionLink
+      label={label}
+      icon="arrow-undo-outline"
+      color={colors.statusActive}
+      busy={busy}
+      onPress={onPress}
+    />
   );
 }
 
@@ -235,7 +217,7 @@ export default function MembersScreen() {
   const [filterReady, setFilterReady] = useState(() => Boolean(paramFilter));
   const [sort, setSort] = useState<MemberSortId>(DEFAULT_MEMBER_SORT);
   const [archivedTotal, setArchivedTotal] = useState(0);
-  const [restoreBusyId, setRestoreBusyId] = useState<number | null>(null);
+  const [pendingRestoreIds, setPendingRestoreIds] = useState<Set<number>>(() => new Set());
   const filterScrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -308,7 +290,8 @@ export default function MembersScreen() {
     enabled: Boolean(token),
   });
 
-  const members = query.data?.pages.flatMap((p) => p.items) ?? [];
+  const listedMembers = query.data?.pages.flatMap((p) => p.items) ?? [];
+  const members = listedMembers.filter((m) => !(filter === 'former' && pendingRestoreIds.has(m.id)));
   const counts = countsQuery.data;
 
   useEffect(() => {
@@ -339,21 +322,35 @@ export default function MembersScreen() {
   }, [query.data, filter, debouncedSearch, token, selectedBranchId]);
 
   const showingFormer = filter === 'former';
-
+  const adjustedCounts = adjustMemberFilterCounts(
+    {
+      all: counts?.totalMembers ?? 0,
+      active: counts?.activeMembers ?? 0,
+      unpaid: counts?.unpaidCount ?? 0,
+      dueSoon: counts?.dueSoonMembers ?? 0,
+      expired: counts?.expiredMembers ?? 0,
+      former: archivedTotal,
+    },
+    {
+      pendingRestores: showingFormer
+        ? listedMembers.filter((m) => pendingRestoreIds.has(m.id))
+        : [],
+    },
+  );
   const filterCounts: Record<MemberFilter, number> = {
-    all: counts?.totalMembers ?? 0,
-    active: counts?.activeMembers ?? 0,
-    due_soon: counts?.dueSoonMembers ?? 0,
-    expired: counts?.expiredMembers ?? 0,
-    unpaid: counts?.unpaidCount ?? 0,
-    former: archivedTotal,
+    all: adjustedCounts.all,
+    active: adjustedCounts.active,
+    due_soon: adjustedCounts.dueSoon,
+    expired: adjustedCounts.expired,
+    unpaid: adjustedCounts.unpaid,
+    former: adjustedCounts.former,
   };
 
   const canRestoreMembers = owner && !readOnly;
 
   const runRestore = (member: MemberRow) => {
-    if (!token || restoreBusyId === member.id) return;
-    setRestoreBusyId(member.id);
+    if (!token || pendingRestoreIds.has(member.id)) return;
+    setPendingRestoreIds((prev) => new Set(prev).add(member.id));
     const refresh = () =>
       Promise.all([
         queryClient.invalidateQueries({ queryKey: ['members'] }),
@@ -367,20 +364,22 @@ export default function MembersScreen() {
       restore: () => restoreMember(token, member.id),
       rearchive: () => deleteMember(token, member.id),
       onRestored: () => {
-        setRestoreBusyId(null);
-        setFilter('all');
-        router.setParams({ filter: 'all' });
         void refresh();
       },
       onRearchived: () => {
-        setFilter('former');
-        router.setParams({ filter: 'former' });
+        setPendingRestoreIds((prev) => {
+          const next = new Set(prev);
+          next.delete(member.id);
+          return next;
+        });
         void refresh();
       },
       onFailed: () => {
-        setRestoreBusyId(null);
-        setFilter('former');
-        router.setParams({ filter: 'former' });
+        setPendingRestoreIds((prev) => {
+          const next = new Set(prev);
+          next.delete(member.id);
+          return next;
+        });
       },
     });
   };
@@ -395,6 +394,7 @@ export default function MembersScreen() {
         router.setParams({ filter: option });
       }}
       dotColor={filterDotColor(c, option)}
+      selectedColor={option === 'former' ? c.statusFormer : undefined}
       count={filterCounts[option]}
     />
   );
@@ -482,7 +482,7 @@ export default function MembersScreen() {
               columnStyle={listColumnItemStyle}
               colors={c}
               canRestore={canRestoreMembers}
-              restoreBusy={restoreBusyId === item.id}
+              restoreBusy={pendingRestoreIds.has(item.id)}
               onRestore={
                 canRestoreMembers && item.deleted_at
                   ? () => void runRestore(item)
@@ -588,7 +588,7 @@ function createStyles(c: ThemeColors) {
     name: { fontSize: 16, fontWeight: '600' as const, color: c.text },
     phone: { marginTop: 4, fontSize: 13, color: c.muted },
     branch: { marginTop: 2, fontSize: 12, color: c.dim },
-    rowMeta: { alignItems: 'flex-end' as const },
+    rowMeta: { alignItems: 'flex-end' as const, gap: 8 },
     rowMetaStacked: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,

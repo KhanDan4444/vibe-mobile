@@ -47,9 +47,9 @@ export function MemberActionsBar({
   const { colors: c } = useTheme();
   const [manageOpen, setManageOpen] = useState(false);
   const styles = useThemedStyles(() => ({
-    row: { flexDirection: 'row' as const, gap: 10, marginBottom: 10 },
+    row: { flexDirection: 'row' as const, gap: 10, marginBottom: 14 },
     half: { flex: 1 },
-    manage: { marginBottom: 4 },
+    manage: { marginBottom: 14 },
   }));
 
   const showRenew = canRenewMember(member);

@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -23,6 +22,7 @@ import { isGymOwner, isGymStaff } from '@/src/utils/roles';
 import { ResponsiveContent } from '@/src/components/ResponsiveContent';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import StatusBadge from '@/src/components/StatusBadge';
+import { RowActionLink } from '@/src/components/RowActionLink';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { MetricStatCard } from '@/src/components/MetricStatCard';
 import { SecondaryButton } from '@/src/components/ui/Button';
@@ -68,26 +68,21 @@ function AlertMemberRow({
           {member.name}
         </Text>
         <Text style={[styles.alertMeta, { color: colors.dim }]} numberOfLines={1}>
-          {(member.plan_name || t('members.noPlan'))} · {t('dashboard.expires', { date: formatDisplayDate(member.end_date) })}
+          {member.plan_name || t('members.noPlan')}
+        </Text>
+        <Text style={[styles.alertExpires, { color: colors.dim }]} numberOfLines={1}>
+          {t('dashboard.expires', { date: formatDisplayDate(member.end_date) })}
         </Text>
       </View>
       <View style={styles.alertRight}>
         <StatusBadge status={member.status} />
         {onAction ? (
-          <Pressable
-            accessibilityRole="button"
-            hitSlop={12}
-            onPress={(e) => {
-              e.stopPropagation?.();
-              onAction();
-            }}
-            style={({ pressed }) => [styles.alertAction, { opacity: pressed ? 0.65 : 1 }]}
-          >
-            <Ionicons name="sync-outline" size={16} color={colors.statusActive} />
-            <Text latin style={[styles.alertActionText, { color: colors.statusActive }]}>
-              {t('dashboard.renew')}
-            </Text>
-          </Pressable>
+          <RowActionLink
+            label={t('dashboard.renew')}
+            icon="sync-outline"
+            color={colors.statusActive}
+            onPress={onAction}
+          />
         ) : null}
       </View>
     </Pressable>
@@ -355,21 +350,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    paddingVertical: 12,
+    paddingVertical: 13,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
-  alertBody: { flex: 1, minWidth: 0 },
+  alertBody: { flex: 1, minWidth: 0, marginRight: 8 },
   alertName: { fontSize: 14, fontWeight: '600' },
   alertMeta: { marginTop: 3, fontSize: 12 },
+  alertExpires: { marginTop: 2, fontSize: 12 },
   alertRight: { alignItems: 'flex-end', gap: 8 },
-  alertAction: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 4,
-    paddingHorizontal: 2,
-  },
-  alertActionText: { fontSize: 14, fontWeight: '600' },
   attentionShortcut: {
     flexDirection: 'row',
     alignItems: 'center',

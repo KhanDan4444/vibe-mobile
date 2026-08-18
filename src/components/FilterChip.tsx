@@ -11,6 +11,8 @@ type FilterChipProps = {
   onPress: () => void;
   /** Optional leading status dot. */
   dotColor?: string;
+  /** Optional selected fill/text (Former uses stone instead of teal). */
+  selectedColor?: string;
   /** Optional trailing count badge. */
   count?: number | string;
   style?: StyleProp<ViewStyle>;
@@ -20,7 +22,7 @@ type FilterChipProps = {
  * Shared quiet filter chip — period pills, member status filters, etc.
  * No borders; selected = soft fill + accent text.
  */
-export function FilterChip({ label, selected, onPress, dotColor, count, style }: FilterChipProps) {
+export function FilterChip({ label, selected, onPress, dotColor, selectedColor, count, style }: FilterChipProps) {
   const { language } = usePreferences();
   const styles = useThemedStyles((colors) => ({
     chip: {
@@ -75,7 +77,12 @@ export function FilterChip({ label, selected, onPress, dotColor, count, style }:
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.chip, selected && styles.chipActive, style]}
+      style={[
+        styles.chip,
+        selected && styles.chipActive,
+        selected && selectedColor ? { backgroundColor: `${selectedColor}18` } : null,
+        style,
+      ]}
       accessibilityRole="button"
       accessibilityState={{ selected: Boolean(selected) }}
     >
@@ -84,12 +91,19 @@ export function FilterChip({ label, selected, onPress, dotColor, count, style }:
         style={appTextStyle(language, {
           ...styles.label,
           ...(selected ? styles.labelActive : {}),
+          ...(selected && selectedColor ? { color: selectedColor } : {}),
         })}
       >
         {label}
       </Text>
       {count != null ? (
-        <View style={[styles.countBadge, selected && styles.countBadgeActive]}>
+        <View
+          style={[
+            styles.countBadge,
+            selected && styles.countBadgeActive,
+            selected && selectedColor ? { backgroundColor: selectedColor } : null,
+          ]}
+        >
           <Text
             style={appTextStyle(language, {
               ...styles.countText,

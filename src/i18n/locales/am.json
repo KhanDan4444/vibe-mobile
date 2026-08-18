@@ -261,7 +261,52 @@
     "loading": "በመጫን ላይ…",
     "renew": "ያድሱ",
     "collectPayment": "ክፍያ ይቀበሉ",
-    "viewMember": "አባል ይመልከቱ"
+    "viewMember": "አባል ይመልከቱ",
+    "defaultPlan": "አባልነት",
+    "section": {
+      "attention": "ትኩረት ያስፈልጋል",
+      "activity": "እንቅስቃሴ"
+    },
+    "kind": {
+      "unpaid": "ክፍያ",
+      "dueSoon": "ሊያልቅ",
+      "expired": "ጊዜው አልፏል",
+      "paymentRecorded": "ተመዝግቧል"
+    },
+    "stack": {
+      "unpaid_one": "{{count}} አባል ክፍያ የለውም",
+      "unpaid_other": "{{count}} አባላት ክፍያ የላቸውም",
+      "dueSoon_one": "{{count}} አባልነት ሊያልቅ ነው",
+      "dueSoon_other": "{{count}} አባልነቶች ሊያልቁ ነው",
+      "expired_one": "{{count}} አባልነት ጊዜው አልፏል",
+      "expired_other": "{{count}} አባልነቶች ጊዜያቸው አልፏል",
+      "namesMore": "{{names}} +{{count}}"
+    },
+    "relative": {
+      "today": "ዛሬ",
+      "tomorrow": "ነገ",
+      "yesterday": "ትናንት",
+      "inDays": "በ{{count}} ቀናት ውስጥ",
+      "daysAgo": "ከ{{count}} ቀናት በፊት"
+    },
+    "items": {
+      "unpaid": {
+        "title": "ክፍያ አልተሰበሰበም",
+        "message": "ለዚህ የክፍያ ዘመን ክፍያ አልተመዘገበም።"
+      },
+      "dueSoon": {
+        "title": "በቅርብ ጊዜ ያበቃል",
+        "message": "{{plan}}"
+      },
+      "expired": {
+        "title": "የአባልነት ጊዜ አልፏል",
+        "message": "{{plan}}"
+      },
+      "paymentRecorded": {
+        "title": "ክፍያ ተመዝግቧል",
+        "message": "{{amount}} ተመዝግቧል።"
+      }
+    }
   },
   "profile": {
     "gymProfile": "የጂም መገለጫ",

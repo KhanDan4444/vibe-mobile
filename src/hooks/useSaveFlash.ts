@@ -40,12 +40,13 @@ export function useDeleteFlash() {
   const { t } = useTranslation();
 
   return useCallback(
-    (messageKey = 'flash.memberDeleted') => {
+    (messageKey = 'flash.memberDeleted', options?: { durationMs?: number }) => {
       showFlash({
         title: t(`${messageKey}.title`),
         subtitle: t(`${messageKey}.subtitle`),
         icon: FLASH_ICONS[messageKey] ?? 'trash-outline',
         variant: 'danger',
+        durationMs: options?.durationMs,
       });
     },
     [showFlash, t]
