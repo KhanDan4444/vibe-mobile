@@ -13,6 +13,8 @@ type FilterChipProps = {
   dotColor?: string;
   /** Optional selected fill/text (Former uses stone instead of teal). */
   selectedColor?: string;
+  /** Solid selected pill (Team Staff | Trainers). Default soft wash. */
+  solid?: boolean;
   /** Optional trailing count badge. */
   count?: number | string;
   style?: StyleProp<ViewStyle>;
@@ -20,9 +22,18 @@ type FilterChipProps = {
 
 /**
  * Shared quiet filter chip — period pills, member status filters, etc.
- * No borders; selected = soft fill + accent text.
+ * Selected: soft fill by default; `solid` for high-contrast segment controls.
  */
-export function FilterChip({ label, selected, onPress, dotColor, selectedColor, count, style }: FilterChipProps) {
+export function FilterChip({
+  label,
+  selected,
+  onPress,
+  dotColor,
+  selectedColor,
+  solid = false,
+  count,
+  style,
+}: FilterChipProps) {
   const { language } = usePreferences();
   const styles = useThemedStyles((colors) => ({
     chip: {
@@ -39,6 +50,9 @@ export function FilterChip({ label, selected, onPress, dotColor, selectedColor, 
     chipActive: {
       backgroundColor: colors.accentSoft,
     },
+    chipActiveSolid: {
+      backgroundColor: colors.accent,
+    },
     label: {
       fontSize: 13,
       fontWeight: '600' as const,
@@ -46,6 +60,9 @@ export function FilterChip({ label, selected, onPress, dotColor, selectedColor, 
     },
     labelActive: {
       color: colors.accentText,
+    },
+    labelActiveSolid: {
+      color: '#fff',
     },
     dot: {
       width: 6,
@@ -64,6 +81,9 @@ export function FilterChip({ label, selected, onPress, dotColor, selectedColor, 
     countBadgeActive: {
       backgroundColor: colors.accentText,
     },
+    countBadgeActiveSolid: {
+      backgroundColor: 'rgba(255,255,255,0.22)',
+    },
     countText: {
       fontSize: 11,
       fontWeight: '600' as const,
@@ -74,13 +94,17 @@ export function FilterChip({ label, selected, onPress, dotColor, selectedColor, 
     },
   }));
 
+  const solidSelected = Boolean(selected && solid);
+  const softCustom = Boolean(selected && selectedColor && !solid);
+
   return (
     <Pressable
       onPress={onPress}
       style={[
         styles.chip,
-        selected && styles.chipActive,
-        selected && selectedColor ? { backgroundColor: `${selectedColor}18` } : null,
+        selected && !solid ? styles.chipActive : null,
+        solidSelected ? styles.chipActiveSolid : null,
+        softCustom ? { backgroundColor: `${selectedColor}18` } : null,
         style,
       ]}
       accessibilityRole="button"
@@ -90,8 +114,9 @@ export function FilterChip({ label, selected, onPress, dotColor, selectedColor, 
       <Text
         style={appTextStyle(language, {
           ...styles.label,
-          ...(selected ? styles.labelActive : {}),
-          ...(selected && selectedColor ? { color: selectedColor } : {}),
+          ...(selected && !solid ? styles.labelActive : {}),
+          ...(solidSelected ? styles.labelActiveSolid : {}),
+          ...(softCustom ? { color: selectedColor } : {}),
         })}
       >
         {label}
@@ -100,8 +125,9 @@ export function FilterChip({ label, selected, onPress, dotColor, selectedColor, 
         <View
           style={[
             styles.countBadge,
-            selected && styles.countBadgeActive,
-            selected && selectedColor ? { backgroundColor: selectedColor } : null,
+            selected && !solid ? styles.countBadgeActive : null,
+            solidSelected ? styles.countBadgeActiveSolid : null,
+            softCustom ? { backgroundColor: selectedColor } : null,
           ]}
         >
           <Text

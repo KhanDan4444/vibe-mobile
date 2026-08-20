@@ -25,5 +25,6 @@ export function paymentSourceKey(source: string | undefined): string {
   if (s === 'enroll') return 'forms.paymentSourceEnroll';
   if (s === 'renew') return 'forms.paymentSourceRenew';
   if (s === 'change_plan') return 'forms.paymentSourceChangePlan';
+  if (s === 'trainer') return 'forms.paymentSourceTrainer';
   return 'forms.paymentSourceCollect';
 }

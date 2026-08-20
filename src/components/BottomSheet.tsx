@@ -156,7 +156,7 @@ export function SheetOption({
   const { language } = usePreferences();
   const { colors: c } = useTheme();
   const isCancel = tone === 'cancel';
-  const emphasisColor = destructive ? c.error : accent ? c.fieldFocus : null;
+  const emphasisColor = destructive ? c.errorSolid : accent ? c.fieldFocus : null;
 
   const styles = useThemedStyles((colors) => ({
     option: {
@@ -175,7 +175,7 @@ export function SheetOption({
     label: { flex: isCancel ? 0 : 1, fontSize: 15, color: colors.text, fontWeight: '500' as const },
     labelMuted: { color: colors.muted },
     labelActive: { color: colors.accentText, fontWeight: '600' as const },
-    labelDestructive: { color: colors.error, fontWeight: '600' as const },
+    labelDestructive: { color: colors.errorSolid, fontWeight: '600' as const },
     labelAccent: { color: colors.fieldFocus, fontWeight: '600' as const },
     labelCancel: {
       color: colors.muted,

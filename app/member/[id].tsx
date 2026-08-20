@@ -260,6 +260,9 @@ export default function MemberDetailScreen() {
       <SoftSurface variant="panel" style={[styles.card, isTablet && { flex: 1 }]}>
         <Text display style={styles.sectionTitle}>{t('member.membership')}</Text>
         <Row label={t('member.plan')} value={member.plan_name || '—'} styles={styles} language={language} />
+        {member.trainer_name ? (
+          <Row label={t('member.trainer')} value={member.trainer_name} styles={styles} language={language} />
+        ) : null}
         <Row label={t('member.start')} value={formatDisplayDate(member.start_date)} styles={styles} language={language} />
         <Row label={t('member.end')} value={formatDisplayDate(member.end_date)} styles={styles} language={language} />
         {member.branch_name ? (

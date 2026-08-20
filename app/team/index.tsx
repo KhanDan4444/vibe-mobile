@@ -1,5 +1,5 @@
-import { Redirect, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { Redirect, useNavigation, useRouter, type Href } from 'expo-router';
+import { useLayoutEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { PageSkeleton } from '@/src/components/Skeleton';
@@ -7,10 +7,15 @@ import { LoadError } from '@/src/components/LoadError';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchTeam, updateStaff } from '@/src/api/team';
+import { archiveTrainer, fetchTrainers, restoreTrainer } from '@/src/api/trainers';
 import { ActionOverflowMenu } from '@/src/components/ActionOverflowMenu';
+import { BranchFilterBar } from '@/src/components/BranchFilterBar';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
+import { FilterChip } from '@/src/components/FilterChip';
+import { SearchField } from '@/src/components/SearchField';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { EmptyState } from '@/src/components/EmptyState';
+import { useBranchScope } from '@/src/context/BranchContext';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
@@ -20,7 +25,8 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { isGymOwner } from '@/src/utils/roles';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
-import type { StaffRow } from '@/src/types/api';
+import { trainerMutationErrorMessage } from '@/src/utils/trainerErrors';
+import type { StaffRow, TrainerRow } from '@/src/types/api';
 
 function StaffCard({
   member,
@@ -90,10 +96,107 @@ function StaffCard({
   );
 }
 
+function TrainerCard({
+  trainer,
+  former,
+  onEdit,
+  onArchive,
+  onRestore,
+}: {
+  trainer: TrainerRow;
+  former: boolean;
+  onEdit: () => void;
+  onArchive: () => void;
+  onRestore: () => void;
+}) {
+  const { t } = useTranslation();
+  const styles = useThemedStyles((colors) => ({
+    card: { padding: 16, marginBottom: 12 },
+    headerRow: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 8 },
+    cardMain: { flex: 1 },
+    name: { fontSize: 17, fontWeight: '700' as const, color: colors.text },
+    meta: { marginTop: 4, fontSize: 13, color: colors.muted },
+    restoreBtn: {
+      marginTop: 2,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderRadius: 10,
+      backgroundColor: colors.statusActive,
+      alignSelf: 'flex-start' as const,
+    },
+    restoreLabel: { fontSize: 13, fontWeight: '700' as const, color: '#fff' },
+  }));
+
+  if (former) {
+    return (
+      <SoftSurface variant="panel" style={styles.card}>
+        <View style={styles.headerRow}>
+          <View style={styles.cardMain}>
+            <Text listRow style={styles.name}>{trainer.name}</Text>
+            <Text style={styles.meta}>{trainer.phone || '—'}</Text>
+            {trainer.specialty ? <Text style={styles.meta}>{trainer.specialty}</Text> : null}
+            <Text style={styles.meta}>
+              {t('team.assignedMembers', { count: trainer.member_count ?? 0 })}
+            </Text>
+            <Text style={styles.meta}>
+              {trainer.branch_name ? branchDisplayName(trainer.branch_name) : t('team.noBranch')}
+            </Text>
+          </View>
+          <Pressable
+            onPress={onRestore}
+            style={styles.restoreBtn}
+            accessibilityRole="button"
+            accessibilityLabel={t('team.restoreTrainer')}
+          >
+            <Text style={styles.restoreLabel}>{t('team.restoreTrainer')}</Text>
+          </Pressable>
+        </View>
+      </SoftSurface>
+    );
+  }
+
+  const menuItems = [
+    { id: 'edit', label: t('team.edit'), icon: 'create-outline' as const, onPress: onEdit, accent: true },
+    {
+      id: 'archive',
+      label: t('team.archiveTrainer'),
+      icon: 'trash-outline' as const,
+      onPress: onArchive,
+      destructive: true,
+    },
+  ];
+
+  return (
+    <SoftSurface variant="panel" style={styles.card}>
+      <View style={styles.headerRow}>
+        <View style={styles.cardMain}>
+          <Text listRow style={styles.name}>{trainer.name}</Text>
+          <Text style={styles.meta}>{trainer.phone || '—'}</Text>
+          {trainer.specialty ? <Text style={styles.meta}>{trainer.specialty}</Text> : null}
+          <Text style={styles.meta}>
+            {t('team.assignedMembers', { count: trainer.member_count ?? 0 })}
+          </Text>
+          <Text style={styles.meta}>
+            {trainer.branch_name ? branchDisplayName(trainer.branch_name) : t('team.noBranch')}
+          </Text>
+        </View>
+        <ActionOverflowMenu title={trainer.name} items={menuItems} />
+      </View>
+    </SoftSurface>
+  );
+}
+
+function matchesBranch(branchId: number | null | undefined, selectedBranchId: string | number) {
+  if (selectedBranchId === 'all') return true;
+  return String(branchId ?? '') === String(selectedBranchId);
+}
+
 export default function TeamScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const queryClient = useQueryClient();
   const { token, user, subscription } = useAuth();
+  const { selectedBranchId } = useBranchScope();
   const { colors: c, theme } = useTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -104,7 +207,36 @@ export default function TeamScreen() {
     container: { flex: 1, backgroundColor: colors.bg },
     list: { paddingBottom: 88 },
     columnWrap: { gap: 10 },
-    empty: { textAlign: 'center' as const, color: colors.dim, marginTop: 40, fontSize: 15 },
+    toolbar: { paddingBottom: 8, gap: 8 },
+    subtitle: {
+      paddingHorizontal: 0,
+      paddingBottom: 2,
+      fontSize: 13,
+      lineHeight: 18,
+      color: colors.muted,
+    },
+    rosterRow: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      flexWrap: 'wrap' as const,
+      gap: 8,
+    },
+    segment: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 4,
+      padding: 4,
+      borderRadius: 999,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+      backgroundColor: colors.inputBg,
+    },
+    archiveRule: {
+      width: StyleSheet.hairlineWidth,
+      height: 24,
+      backgroundColor: colors.border,
+      marginHorizontal: 2,
+    },
     fab: {
       position: 'absolute' as const,
       width: 48,
@@ -119,13 +251,41 @@ export default function TeamScreen() {
 
   const readOnly = Boolean(subscription?.readOnly);
   const canManageTeam = Boolean(user && isGymOwner(user.role));
+  const [tab, setTab] = useState<'staff' | 'trainers'>('staff');
+  const [formerTrainers, setFormerTrainers] = useState(false);
+  const [search, setSearch] = useState('');
   const [toggleTarget, setToggleTarget] = useState<StaffRow | null>(null);
+  const [archiveTarget, setArchiveTarget] = useState<TrainerRow | null>(null);
   const [errorNotice, setErrorNotice] = useState('');
+  const branchScoped = selectedBranchId !== 'all';
+
+  const pageSubtitle =
+    tab === 'trainers'
+      ? formerTrainers
+        ? t('team.formerTrainersSubtitle')
+        : t('team.trainersSubtitle')
+      : t('team.staffSubtitle');
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ title: t('screens.team') });
+  }, [navigation, t]);
 
   const query = useQuery({
     queryKey: ['team'],
     queryFn: () => fetchTeam(token!),
     enabled: Boolean(token && canManageTeam),
+  });
+
+  const liveTrainersQuery = useQuery({
+    queryKey: ['trainers', false],
+    queryFn: () => fetchTrainers(token!, false),
+    enabled: Boolean(token && canManageTeam),
+  });
+
+  const formerTrainersQuery = useQuery({
+    queryKey: ['trainers', true],
+    queryFn: () => fetchTrainers(token!, true),
+    enabled: Boolean(token && canManageTeam && formerTrainers),
   });
 
   const toggleMutation = useMutation({
@@ -141,7 +301,66 @@ export default function TeamScreen() {
     },
   });
 
-  const staff = query.data?.staff ?? [];
+  const archiveMutation = useMutation({
+    mutationFn: (id: number) => archiveTrainer(token!, id),
+    onSuccess: () => {
+      setArchiveTarget(null);
+      queryClient.invalidateQueries({ queryKey: ['trainers'] });
+    },
+    onError: (e: unknown) => {
+      setArchiveTarget(null);
+      setErrorNotice(
+        trainerMutationErrorMessage(e, t('team.trainersUnavailable'), t('common.error'))
+      );
+    },
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: (id: number) => restoreTrainer(token!, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trainers'] });
+    },
+    onError: (e: unknown) =>
+      setErrorNotice(
+        trainerMutationErrorMessage(e, t('team.trainersUnavailable'), t('common.error'))
+      ),
+  });
+
+  const staffAll = query.data?.staff ?? [];
+  const liveTrainersAll = liveTrainersQuery.data?.trainers ?? [];
+  const formerTrainersAll = formerTrainersQuery.data?.trainers ?? [];
+  const archivedTrainerTotal =
+    liveTrainersQuery.data?.archivedTotal ?? formerTrainersQuery.data?.archivedTotal ?? 0;
+
+  const staff = useMemo(
+    () => staffAll.filter((row) => matchesBranch(row.branch_id, selectedBranchId)),
+    [staffAll, selectedBranchId]
+  );
+  const liveTrainers = useMemo(
+    () => liveTrainersAll.filter((row) => matchesBranch(row.branch_id, selectedBranchId)),
+    [liveTrainersAll, selectedBranchId]
+  );
+  const trainers = useMemo(() => {
+    const source = formerTrainers ? formerTrainersAll : liveTrainersAll;
+    return source.filter((row) => matchesBranch(row.branch_id, selectedBranchId));
+  }, [formerTrainers, formerTrainersAll, liveTrainersAll, selectedBranchId]);
+
+  const liveTrainerTotal = liveTrainers.length;
+  const searchNeedle = search.trim().toLowerCase();
+  const displayedStaff = useMemo(() => {
+    if (!searchNeedle) return staff;
+    return staff.filter((member) =>
+      [member.name, member.email, member.username, member.branch_name]
+        .some((value) => String(value || '').toLowerCase().includes(searchNeedle))
+    );
+  }, [staff, searchNeedle]);
+  const displayedTrainers = useMemo(() => {
+    if (!searchNeedle) return trainers;
+    return trainers.filter((row) =>
+      [row.name, row.phone, row.specialty, row.branch_name]
+        .some((value) => String(value || '').toLowerCase().includes(searchNeedle))
+    );
+  }, [trainers, searchNeedle]);
 
   if (!canManageTeam) {
     return <Redirect href="/(tabs)/more" />;
@@ -150,20 +369,128 @@ export default function TeamScreen() {
   const requestToggle = (member: StaffRow) => setToggleTarget(member);
   const toggleNextActive = toggleTarget ? !toggleTarget.is_active : false;
 
+  const showFormerChip = tab === 'trainers' && (archivedTrainerTotal > 0 || formerTrainers);
+
+  const toolbar = (
+    <View style={[styles.toolbar, { paddingHorizontal: pagePadding }]}>
+      <Text style={styles.subtitle}>{pageSubtitle}</Text>
+      <SearchField
+        value={search}
+        onChangeText={setSearch}
+        placeholder={
+          tab === 'trainers'
+            ? formerTrainers
+              ? t('team.searchFormer')
+              : t('team.searchTrainers')
+            : t('team.searchStaff')
+        }
+      />
+      <View style={styles.rosterRow}>
+        <View style={styles.segment}>
+          <FilterChip
+            label={t('team.tabStaff')}
+            selected={tab === 'staff'}
+            count={staff.length}
+            onPress={() => {
+              setTab('staff');
+              setFormerTrainers(false);
+              setSearch('');
+            }}
+          />
+          <FilterChip
+            label={t('team.tabTrainers')}
+            selected={tab === 'trainers' && !formerTrainers}
+            count={liveTrainerTotal}
+            onPress={() => {
+              setTab('trainers');
+              setFormerTrainers(false);
+              setSearch('');
+            }}
+          />
+        </View>
+        {showFormerChip ? (
+          <>
+            <View style={styles.archiveRule} />
+            <FilterChip
+              label={t('team.formerTrainers')}
+              selected={formerTrainers}
+              count={archivedTrainerTotal}
+              selectedColor={c.statusFormer}
+              onPress={() => {
+                setFormerTrainers((current) => !current);
+                setSearch('');
+              }}
+            />
+          </>
+        ) : null}
+      </View>
+    </View>
+  );
+
+  const loading =
+    tab === 'staff'
+      ? query.isLoading
+      : formerTrainers
+        ? formerTrainersQuery.isLoading
+        : liveTrainersQuery.isLoading;
+  const loadError =
+    tab === 'staff'
+      ? query.isError
+      : formerTrainers
+        ? formerTrainersQuery.isError
+        : liveTrainersQuery.isError;
+  const retry =
+    tab === 'staff'
+      ? query.refetch
+      : formerTrainers
+        ? formerTrainersQuery.refetch
+        : liveTrainersQuery.refetch;
+  const errMsg =
+    tab === 'staff'
+      ? (query.error instanceof Error ? query.error.message : undefined)
+      : formerTrainers
+        ? (formerTrainersQuery.error instanceof Error ? formerTrainersQuery.error.message : undefined)
+        : (liveTrainersQuery.error instanceof Error ? liveTrainersQuery.error.message : undefined);
+
+  const staffEmptyTitle = searchNeedle
+    ? t('team.emptySearchTitle')
+    : branchScoped
+      ? t('team.emptyBranchTitle')
+      : t('team.emptyTitle');
+  const staffEmptyBody = searchNeedle
+    ? t('team.emptySearchBody')
+    : branchScoped
+      ? t('team.emptyBranchBody')
+      : t('team.emptyBody');
+
+  const trainersEmptyTitle = searchNeedle
+    ? t('team.emptySearchTitle')
+    : formerTrainers
+      ? t('team.emptyFormerTrainers')
+      : branchScoped
+        ? t('team.emptyBranchTrainers')
+        : t('team.emptyTrainersTitle');
+  const trainersEmptyBody = searchNeedle
+    ? t('team.emptySearchBody')
+    : formerTrainers
+      ? t('team.emptyFormerTrainersBody')
+      : branchScoped
+        ? t('team.emptyBranchTrainersBody')
+        : t('team.emptyTrainersBody');
+
   return (
     <TabScreenFrame>
     <View style={styles.container}>
-      {query.isLoading ? (
+      <BranchFilterBar horizontalPadding={pagePadding} />
+      <View style={{ paddingTop: 4 }}>{toolbar}</View>
+      {loading ? (
         <PageSkeleton variant="list-cards" />
-      ) : query.isError ? (
-        <LoadError
-          message={query.error instanceof Error ? query.error.message : undefined}
-          onRetry={() => void query.refetch()}
-        />
-      ) : (
+      ) : loadError ? (
+        <LoadError message={errMsg} onRetry={() => void retry()} />
+      ) : tab === 'staff' ? (
         <FlatList
           key={`team-cols-${listColumns}`}
-          data={staff}
+          data={displayedStaff}
           numColumns={listColumns}
           columnWrapperStyle={listColumns > 1 ? styles.columnWrap : undefined}
           keyExtractor={(item) => String(item.id)}
@@ -181,15 +508,48 @@ export default function TeamScreen() {
             <RefreshControl refreshing={query.isRefetching} onRefresh={() => query.refetch()} tintColor={c.accentText} />
           }
           ListEmptyComponent={
-            <EmptyState icon="people-outline" title={t('team.emptyTitle')} body={t('team.emptyBody')} />
+            <EmptyState icon="people-outline" title={staffEmptyTitle} body={staffEmptyBody} />
+          }
+        />
+      ) : (
+        <FlatList
+          data={displayedTrainers}
+          keyExtractor={(item) => String(item.id)}
+          renderItem={({ item }) => (
+            <TrainerCard
+              trainer={item}
+              former={formerTrainers}
+              onEdit={() => router.push(`/team/trainers/${item.id}/edit` as Href)}
+              onArchive={() => setArchiveTarget(item)}
+              onRestore={() => restoreMutation.mutate(item.id)}
+            />
+          )}
+          contentContainerStyle={[styles.list, { paddingHorizontal: pagePadding }]}
+          refreshControl={
+            <RefreshControl
+              refreshing={
+                formerTrainers ? formerTrainersQuery.isRefetching : liveTrainersQuery.isRefetching
+              }
+              onRefresh={() => {
+                void liveTrainersQuery.refetch();
+                if (formerTrainers) void formerTrainersQuery.refetch();
+              }}
+              tintColor={c.accentText}
+            />
+          }
+          ListEmptyComponent={
+            <EmptyState icon="barbell-outline" title={trainersEmptyTitle} body={trainersEmptyBody} />
           }
         />
       )}
 
-      {!readOnly ? (
+      {!readOnly && !(tab === 'trainers' && formerTrainers) ? (
         <Pressable
           style={[styles.fab, fabElevation(theme), { right: fabRight, bottom: fabBottom, width: fabSize, height: fabSize, borderRadius: fabRadius }]}
-          onPress={() => router.push('/team/new')}
+          onPress={() => {
+            if (tab === 'trainers') router.push('/team/trainers/new' as Href);
+            else router.push('/team/new');
+          }}
         >
           <Text style={[styles.fabText, { fontSize: fabFontSize }]}>+</Text>
         </Pressable>
@@ -210,6 +570,19 @@ export default function TeamScreen() {
         onConfirm={() => {
           if (!toggleTarget) return;
           toggleMutation.mutate({ id: toggleTarget.id, is_active: !toggleTarget.is_active });
+        }}
+      />
+      <ConfirmDialog
+        visible={Boolean(archiveTarget)}
+        title={t('team.archiveTrainerTitle')}
+        message={t('team.archiveTrainerBody', { name: archiveTarget?.name ?? '' })}
+        confirmLabel={t('team.archiveTrainer')}
+        destructive
+        confirmLoading={archiveMutation.isPending}
+        onCancel={() => setArchiveTarget(null)}
+        onConfirm={() => {
+          if (!archiveTarget) return;
+          archiveMutation.mutate(archiveTarget.id);
         }}
       />
       <ConfirmDialog

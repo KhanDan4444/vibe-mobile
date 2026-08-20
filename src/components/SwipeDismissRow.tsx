@@ -1,10 +1,18 @@
-import { useEffect, useMemo, useRef } from 'react';
-import { Animated, PanResponder, StyleSheet, View } from 'react-native';
+import { useCallback, useMemo, useRef } from 'react';
+import { PanResponder, StyleSheet, View } from 'react-native';
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTheme } from '@/src/context/PreferencesContext';
 
 const DISMISS_THRESHOLD = 72;
+const VELOCITY_THRESHOLD = 0.7;
 
 export function SwipeDismissRow({
   children,
@@ -16,53 +24,52 @@ export function SwipeDismissRow({
   onDismiss: () => void;
 }) {
   const { colors: c } = useTheme();
-  const translateX = useRef(new Animated.Value(0)).current;
+  const translateX = useSharedValue(0);
   const committed = useRef(false);
 
-  useEffect(() => {
-    translateX.setValue(0);
-    committed.current = false;
-  }, [translateX]);
+  const fireDismiss = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onDismiss();
+  }, [onDismiss]);
 
   const pan = useMemo(
     () =>
       PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gesture) =>
-          gesture.dx < -10 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.4,
-        onPanResponderMove: (_, gesture) => {
-          if (gesture.dx < 0) translateX.setValue(Math.max(gesture.dx, -140));
+        onMoveShouldSetPanResponder: (_, g) =>
+          g.dx < -10 && Math.abs(g.dx) > Math.abs(g.dy) * 1.4,
+        onPanResponderMove: (_, g) => {
+          if (g.dx < 0) translateX.value = Math.max(g.dx, -140);
         },
-        onPanResponderRelease: (_, gesture) => {
-          const shouldDismiss = gesture.dx < -DISMISS_THRESHOLD || gesture.vx < -0.7;
-          if (shouldDismiss && !committed.current) {
+        onPanResponderRelease: (_, g) => {
+          if (
+            (g.dx < -DISMISS_THRESHOLD || g.vx < -VELOCITY_THRESHOLD) &&
+            !committed.current
+          ) {
             committed.current = true;
-            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            Animated.timing(translateX, {
-              toValue: -420,
-              duration: 180,
-              useNativeDriver: true,
-            }).start(() => onDismiss());
+            translateX.value = withTiming(-420, { duration: 180 }, () => {
+              runOnJS(fireDismiss)();
+            });
             return;
           }
-          Animated.spring(translateX, {
-            toValue: 0,
-            useNativeDriver: true,
-            bounciness: 6,
-          }).start();
+          translateX.value = withSpring(0, { damping: 18, stiffness: 200 });
         },
         onPanResponderTerminate: () => {
-          Animated.spring(translateX, { toValue: 0, useNativeDriver: true }).start();
+          translateX.value = withSpring(0, { damping: 18, stiffness: 200 });
         },
       }),
-    [onDismiss, translateX],
+    [fireDismiss, translateX],
   );
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
 
   return (
     <View style={styles.clip}>
       <View style={[styles.behind, { backgroundColor: c.errorSolid }]}>
         <Text style={styles.behindLabel}>{label}</Text>
       </View>
-      <Animated.View style={{ transform: [{ translateX }] }} {...pan.panHandlers}>
+      <Animated.View style={animatedStyle} {...pan.panHandlers}>
         {children}
       </Animated.View>
     </View>

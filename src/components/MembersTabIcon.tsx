@@ -32,7 +32,7 @@ export function MembersTabIcon({ color, size = 24 }: { color: string; size?: num
     <View style={styles.wrap}>
       <Ionicons name="people" color={color} size={size} />
       {badgeCount > 0 ? (
-        <View style={[styles.badge, { backgroundColor: c.error, borderColor: c.tabBarBg }]}>
+        <View style={[styles.badge, { backgroundColor: c.errorSolid, borderColor: c.tabBarBg }]}>
           <Text style={styles.badgeText}>{badgeCount > 9 ? '9+' : badgeCount}</Text>
         </View>
       ) : null}

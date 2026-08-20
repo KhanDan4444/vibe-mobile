@@ -84,7 +84,7 @@ function NotificationRow({
   const actionColor = action === 'payment' ? c.statusUnpaid : c.accentText;
 
   return (
-    <View style={[styles.row, nested && styles.rowNested, { backgroundColor: c.card }, !isRead && { backgroundColor: `${c.accent}0D` }]}>
+    <View style={[styles.row, nested && styles.rowNested, { backgroundColor: c.card }]}>
       {!isRead ? <View style={[styles.unreadBar, { backgroundColor: c.accentText }]} /> : null}
 
       {nested ? null : (
@@ -194,7 +194,7 @@ function KindStack({
       >
         <Pressable
           onPress={onToggle}
-          style={[styles.row, { backgroundColor: c.card }, anyUnread && { backgroundColor: `${c.accent}0D` }]}
+          style={[styles.row, { backgroundColor: c.card }]}
         >
           {anyUnread ? <View style={[styles.unreadBar, { backgroundColor: c.accentText }]} /> : null}
           <View style={[styles.iconWrap, { backgroundColor: palette.bg }]}>
@@ -272,7 +272,11 @@ export function NotificationsSheet({ visible, onClose }: { visible: boolean; onC
       {loading ? (
         <PageSkeleton variant="list-rows" count={4} padded={false} />
       ) : notifications.length === 0 ? (
-        <Text style={[styles.empty, { color: c.dim }]}>{t('notifications.empty')}</Text>
+        <View style={styles.emptyWrap}>
+          <Ionicons name="checkmark-circle-outline" size={40} color={`${c.accentText}66`} />
+          <Text style={[styles.emptyTitle, { color: c.text }]}>{t('notifications.caughtUp')}</Text>
+          <Text style={[styles.emptySubtitle, { color: c.dim }]}>{t('notifications.empty')}</Text>
+        </View>
       ) : (
         <SoftSurface variant="group" style={styles.listCard}>
           {sections.map((section, sectionIndex) => (
@@ -388,5 +392,7 @@ const styles = StyleSheet.create({
   actionText: { fontSize: 13, fontWeight: '600' },
   metaCol: { alignItems: 'flex-end', gap: 6, paddingTop: 1 },
   dateText: { fontSize: 11 },
-  empty: { textAlign: 'center', marginTop: 32, fontSize: 15 },
+  emptyWrap: { alignItems: 'center', gap: 8, paddingVertical: 40 },
+  emptyTitle: { fontSize: 15, fontWeight: '600' },
+  emptySubtitle: { fontSize: 13 },
 });

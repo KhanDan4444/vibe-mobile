@@ -171,6 +171,7 @@ function MemberRowItem({
           <StatusBadge status={isFormer ? 'Former' : member.status} />
           <Text style={[styles.plan, styles.planStacked]} numberOfLines={1}>
             {member.plan_name || t('members.noPlan')}
+            {member.trainer_name ? ` · ${member.trainer_name}` : ''}
           </Text>
           {member.is_unpaid && !isFormer ? <Text style={styles.unpaid}>{t('members.unpaidBadge')}</Text> : null}
           {isFormer && canRestore && onRestore ? (
@@ -581,7 +582,7 @@ function createStyles(c: ThemeColors) {
     },
     rowTop: {
       flexDirection: 'row' as const,
-      alignItems: 'center' as const,
+      alignItems: 'flex-start' as const,
       gap: 12,
     },
     rowMain: { flex: 1, marginRight: 8, minWidth: 0 },

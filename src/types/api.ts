@@ -68,6 +68,8 @@ export interface MemberRow {
   branch_name: string | null;
   photo_url?: string | null;
   deleted_at?: string | null;
+  trainer_id?: number | null;
+  trainer_name?: string | null;
 }
 
 export interface BranchRow {
@@ -95,6 +97,23 @@ export interface StaffRow {
 export interface TeamResponse {
   staff: StaffRow[];
   staff_roles: string[];
+  canManage: boolean;
+}
+
+export interface TrainerRow {
+  id: number;
+  name: string;
+  phone: string | null;
+  specialty: string | null;
+  branch_id: number;
+  branch_name: string | null;
+  deleted_at?: string | null;
+  member_count?: number;
+}
+
+export interface TrainersResponse {
+  trainers: TrainerRow[];
+  archivedTotal: number;
   canManage: boolean;
 }
 
@@ -259,6 +278,10 @@ export interface UpdateMemberPayload {
   phone?: string;
   branch_id?: number;
   photo?: string | null;
+  trainer_id?: number | null;
+  trainer_fee?: number;
+  trainer_fee_date?: string;
+  trainer_fee_method?: string;
 }
 
 export interface EnrollPayload {
@@ -272,6 +295,10 @@ export interface EnrollPayload {
   method?: string;
   branch_id?: number;
   photo?: string;
+  trainer_id?: number;
+  trainer_fee?: number;
+  trainer_fee_date?: string;
+  trainer_fee_method?: string;
 }
 
 export interface ChangePlanPayload {

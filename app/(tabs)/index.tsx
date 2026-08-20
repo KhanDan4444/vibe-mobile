@@ -79,7 +79,7 @@ function AlertMemberRow({
         {onAction ? (
           <RowActionLink
             label={t('dashboard.renew')}
-            icon="sync-outline"
+            icon="sync"
             color={colors.statusActive}
             onPress={onAction}
           />

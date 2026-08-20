@@ -150,6 +150,8 @@ function RootNavigator() {
           <Stack.Screen name="team/index" options={{ ...stackScreen, title: t('screens.team') }} />
           <Stack.Screen name="team/new" options={{ ...stackScreen, title: t('screens.addStaff') }} />
           <Stack.Screen name="team/[id]/edit" options={{ ...stackScreen, title: t('screens.editStaff') }} />
+          <Stack.Screen name="team/trainers/new" options={{ ...stackScreen, title: t('screens.addTrainer') }} />
+          <Stack.Screen name="team/trainers/[id]/edit" options={{ ...stackScreen, title: t('screens.editTrainer') }} />
           <Stack.Screen name="branches/index" options={{ ...stackScreen, title: t('screens.branches') }} />
           <Stack.Screen name="branch/new" options={{ ...stackScreen, title: t('screens.newBranch') }} />
           <Stack.Screen name="branch/[id]/edit" options={{ ...stackScreen, title: t('screens.editBranch') }} />

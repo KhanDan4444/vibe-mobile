@@ -102,6 +102,26 @@ export function validateBranchFields(fields: {
   return errors;
 }
 
+export function validateTrainerFields(fields: {
+  name: string;
+  phone?: string;
+  branchId: number | null;
+  requireBranch: boolean;
+}): FieldErrorMap {
+  const errors: FieldErrorMap = {};
+  const name = fields.name.trim();
+  if (!name) errors.name = 'validation.nameRequired';
+  else if (name.length > MAX_NAME_LENGTH) errors.name = 'validation.nameTooLong';
+  if (fields.requireBranch && fields.branchId == null) {
+    errors.branchId = 'validation.branchRequired';
+  }
+  const phone = (fields.phone ?? '').trim();
+  if (phone && !isValidEthiopianPhone(phone)) {
+    errors.phone = 'validation.phoneInvalid';
+  }
+  return errors;
+}
+
 export function hasFieldErrors(errors: FieldErrorMap): boolean {
   return Object.values(errors).some(Boolean);
 }

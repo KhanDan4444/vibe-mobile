@@ -24,12 +24,14 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { fetchBranches } from '@/src/api/branches';
 import { enrollMember } from '@/src/api/members';
 import { fetchPlans } from '@/src/api/plans';
+import { fetchTrainers } from '@/src/api/trainers';
 import { BranchPicker } from '@/src/components/BranchPicker';
 import { DateField } from '@/src/components/DateField';
 import { EnrollStepProgress } from '@/src/components/EnrollStepProgress';
 import { PhotoPickerField } from '@/src/components/PhotoPickerField';
 import { PlanPickerField } from '@/src/components/PlanPickerField';
 import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
+import { OptionPickerField } from '@/src/components/OptionPickerField';
 import { ErrorBanner, Field, FieldError, FormScroll, Label, MoneyAmountField, PrimaryButton, Screen, SecondaryButton } from '@/src/components/Form';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { SkeletonBone } from '@/src/components/Skeleton';
@@ -58,6 +60,7 @@ import { formatApiError } from '@/src/utils/paymentValidation';
 import { flashHaptic, selectionHaptic } from '@/src/utils/flashHaptic';
 import { validateRequiredEthiopianPhone } from '@/src/utils/phone';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
+import { clearEnrollDraft, useEnrollDraft, type EnrollDraft } from '@/src/utils/useEnrollDraft';
 import type { EnrollPayload, PlanRow } from '@/src/types/api';
 
 function planPrice(plan: PlanRow): number {
@@ -74,6 +77,9 @@ type EnrollDone = {
   skipPayment: boolean;
   amount?: number;
   method?: string;
+  trainerName?: string;
+  trainerFee?: number;
+  trainerFeeMethod?: string;
 };
 
 const SWIPE_HINT_KEY = 'niku.enroll.swipeHintSeen';
@@ -95,6 +101,9 @@ export default function EnrollScreen() {
   const [paymentDate, setPaymentDate] = useState(todayString());
   const [method, setMethod] = useState<(typeof PAYMENT_METHODS)[number]>('Cash');
   const [skipPayment, setSkipPayment] = useState(false);
+  const [trainerId, setTrainerId] = useState<number | null>(null);
+  const [trainerFee, setTrainerFee] = useState('');
+  const [trainerFeeMethod, setTrainerFeeMethod] = useState<(typeof PAYMENT_METHODS)[number]>('Cash');
   const [branchId, setBranchId] = useState<number | null>(null);
   const [photoDataUrl, setPhotoDataUrl] = useState('');
   const [photoPreview, setPhotoPreview] = useState('');
@@ -105,6 +114,7 @@ export default function EnrollScreen() {
   const [planError, setPlanError] = useState('');
   const [startDateError, setStartDateError] = useState('');
   const [enrollStep, setEnrollStep] = useState(1);
+  const [enrollMaxStep, setEnrollMaxStep] = useState(1);
   const [enrollDone, setEnrollDone] = useState<EnrollDone | null>(null);
   const [reduceMotion, setReduceMotion] = useState(false);
   const [showSwipeHint, setShowSwipeHint] = useState(false);
@@ -135,6 +145,7 @@ export default function EnrollScreen() {
       paddingVertical: 8,
     },
     switchLabel: { color: colors.text, fontSize: 15, flex: 1, marginRight: 12 },
+    trainerPanel: { padding: 14, gap: 10, marginTop: 8 },
     successWrap: {
       alignItems: 'center' as const,
       paddingVertical: 8,
@@ -242,6 +253,25 @@ export default function EnrollScreen() {
     swipeHintDismiss: {
       padding: 2,
     },
+    warningBox: {
+      marginTop: 12,
+      flexDirection: 'row' as const,
+      alignItems: 'flex-start' as const,
+      gap: 10,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: `${colors.warning}40`,
+      backgroundColor: colors.warmSoft,
+    },
+    warningText: {
+      flex: 1,
+      color: colors.warmText,
+      fontSize: 13,
+      lineHeight: 19,
+      fontWeight: '500' as const,
+    },
   }));
 
   const swipeHintVisibleRef = useRef(false);
@@ -284,8 +314,15 @@ export default function EnrollScreen() {
     enabled: Boolean(token && owner),
   });
 
+  const trainersQuery = useQuery({
+    queryKey: ['trainers', false],
+    queryFn: () => fetchTrainers(token!, false),
+    enabled: Boolean(token && canEnroll),
+  });
+
   const plans = plansQuery.data ?? [];
   const branches = branchesQuery.data?.branches ?? [];
+  const trainers = trainersQuery.data?.trainers ?? [];
   const showBranchPicker = owner && branches.filter((b) => b.is_active !== false).length > 1;
   const selectedPlan = plans.find((p) => p.id === planId) ?? null;
   const enrollStartBounds = boundsForEnrollStart(skipPayment);
@@ -303,10 +340,12 @@ export default function EnrollScreen() {
   }, [enrollDone, navigation, t]);
 
   useEffect(() => {
-    if (!enrollDone) return;
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-      router.replace('/(tabs)/members');
-      return true;
+      if (enrollDone) {
+        router.replace('/(tabs)/members');
+        return true;
+      }
+      return false;
     });
     return () => sub.remove();
   }, [enrollDone, router]);
@@ -355,6 +394,9 @@ export default function EnrollScreen() {
     setPaymentDate(todayString());
     setMethod('Cash');
     setSkipPayment(false);
+    setTrainerId(null);
+    setTrainerFee('');
+    setTrainerFeeMethod('Cash');
     setPhotoDataUrl('');
     setPhotoPreview('');
     setError('');
@@ -363,11 +405,59 @@ export default function EnrollScreen() {
     setPlanError('');
     setStartDateError('');
     setEnrollStep(1);
+    setEnrollMaxStep(1);
     setEnrollDone(null);
+    void clearEnrollDraft();
     const active = branches.filter((b) => b.is_active !== false);
     const preferred = active.find((b) => b.is_default) ?? active[0];
     setBranchId(preferred?.id ?? null);
   }, [branches]);
+
+  const applyDraft = useCallback((next: EnrollDraft) => {
+    setName(next.name);
+    setPhone(next.phone);
+    setPlanId(next.planId);
+    setStartDate(next.startDate);
+    setPaymentDate(next.paymentDate);
+    setMethod(PAYMENT_METHODS.includes(next.method) ? next.method : 'Cash');
+    setSkipPayment(Boolean(next.skipPayment));
+    setTrainerId(next.trainerId ?? null);
+    setTrainerFee(next.trainerFee ?? '');
+    setTrainerFeeMethod(
+      next.trainerFeeMethod && PAYMENT_METHODS.includes(next.trainerFeeMethod)
+        ? next.trainerFeeMethod
+        : 'Cash'
+    );
+    setBranchId(next.branchId);
+    setEnrollStep(Math.min(3, Math.max(1, next.enrollStep || 1)));
+    setEnrollMaxStep(Math.min(3, Math.max(1, next.enrollMaxStep || 1)));
+  }, []);
+
+  const enrollDraft = useMemo<EnrollDraft>(
+    () => ({
+      name,
+      phone,
+      planId,
+      startDate,
+      paymentDate,
+      method,
+      skipPayment,
+      trainerId,
+      trainerFee,
+      trainerFeeMethod,
+      branchId,
+      enrollStep,
+      enrollMaxStep,
+    }),
+    [name, phone, planId, startDate, paymentDate, method, skipPayment, trainerId, trainerFee, trainerFeeMethod, branchId, enrollStep, enrollMaxStep],
+  );
+
+  useEnrollDraft({
+    enabled: canEnroll && !readOnly && !enrollDone,
+    today: todayString(),
+    draft: enrollDraft,
+    apply: applyDraft,
+  });
 
   const ensurePhoneValid = useCallback(
     (value = phone) => {
@@ -426,6 +516,18 @@ export default function EnrollScreen() {
           }),
       ...(showBranchPicker && branchId ? { branch_id: branchId } : {}),
       ...(photoDataUrl ? { photo: photoDataUrl } : {}),
+      ...(trainerId
+        ? {
+            trainer_id: trainerId,
+            ...(Number(trainerFee) > 0
+              ? {
+                  trainer_fee: Number(trainerFee),
+                  trainer_fee_date: paymentDate.trim() || todayString(),
+                  trainer_fee_method: skipPayment ? trainerFeeMethod : method,
+                }
+              : {}),
+          }
+        : {}),
     };
   };
 
@@ -433,6 +535,7 @@ export default function EnrollScreen() {
     jobType: 'enroll',
     mutationFn: (payload: EnrollPayload) => enrollMember(token!, payload),
     onSuccess: (data) => {
+      void clearEnrollDraft();
       if (isOfflineQueued(data)) {
         flashOffline();
         queryClient.invalidateQueries({ queryKey: ['members'] });
@@ -459,6 +562,11 @@ export default function EnrollScreen() {
         skipPayment,
         amount: skipPayment ? undefined : selectedPlan ? planPrice(selectedPlan) : Number(amount) || undefined,
         method: skipPayment ? undefined : method,
+        trainerName: trainers.find((tr) => tr.id === trainerId)?.name,
+        trainerFee: trainerId && Number(trainerFee) > 0 ? Number(trainerFee) : undefined,
+        trainerFeeMethod: trainerId && Number(trainerFee) > 0
+          ? (skipPayment ? trainerFeeMethod : method)
+          : undefined,
       });
     },
     onError: (e: Error) => setError(formatApiError(e.message)),
@@ -496,6 +604,37 @@ export default function EnrollScreen() {
 
   const goToStep = (next: number) => {
     setEnrollStep(next);
+    setEnrollMaxStep((m) => Math.max(m, next));
+  };
+
+  const validateStep = (step: number) => {
+    if (step === 1) {
+      if (!ensureNameValid()) return false;
+      if (!ensurePhoneValid()) return false;
+      if (showBranchPicker && !branchId) {
+        setError(t('validation.branchRequired'));
+        return false;
+      }
+      return true;
+    }
+    if (step === 2) {
+      if (plans.length === 0) {
+        setError(t('validation.createPlanFirst'));
+        return false;
+      }
+      if (!planId) {
+        setPlanError(t('validation.planNotSelected'));
+        return false;
+      }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
+        setStartDateError(t('enroll.startDateRequired'));
+        return false;
+      }
+      setPlanError('');
+      setStartDateError('');
+      return true;
+    }
+    return true;
   };
 
   const goNext = () => {
@@ -503,27 +642,13 @@ export default function EnrollScreen() {
     dismissKeyboard();
     setError('');
     if (enrollStep === 1) {
-      if (!ensureNameValid()) return;
-      if (!ensurePhoneValid()) return;
-      if (showBranchPicker && !branchId) {
-        setError(t('member.branch'));
-        return;
-      }
+      if (!validateStep(1)) return;
       void selectionHaptic();
       goToStep(2);
       return;
     }
     if (enrollStep === 2) {
-      if (!planId) {
-        setPlanError(t('validation.planNotSelected'));
-        return;
-      }
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
-        setStartDateError(t('enroll.startDateRequired'));
-        return;
-      }
-      setPlanError('');
-      setStartDateError('');
+      if (!validateStep(2)) return;
       void selectionHaptic();
       goToStep(3);
     }
@@ -535,7 +660,21 @@ export default function EnrollScreen() {
     dismissKeyboard();
     setError('');
     void selectionHaptic();
-    goToStep(enrollStep - 1);
+    setEnrollStep(enrollStep - 1);
+  };
+
+  const selectEnrollStep = (n: number) => {
+    if (n < 1 || n > enrollMaxStep || n === enrollStep) return;
+    dismissSwipeHint();
+    dismissKeyboard();
+    if (n > enrollStep) {
+      for (let s = enrollStep; s < n; s += 1) {
+        if (!validateStep(s)) return;
+      }
+    }
+    setError('');
+    void selectionHaptic();
+    setEnrollStep(n);
   };
 
   const goNextRef = useRef(goNext);
@@ -547,14 +686,16 @@ export default function EnrollScreen() {
     () =>
       PanResponder.create({
         onMoveShouldSetPanResponder: (_e, g) =>
-          Math.abs(g.dx) > 14 && Math.abs(g.dx) > Math.abs(g.dy) * 1.4,
-        onMoveShouldSetPanResponderCapture: (_e, g) =>
-          Math.abs(g.dx) > 18 && Math.abs(g.dx) > Math.abs(g.dy) * 1.6,
+          g.dy === undefined
+            ? false
+            : Math.abs(g.dy) < 12 && Math.abs(g.dx) > 28 && Math.abs(g.dx) > Math.abs(g.dy) * 2.4,
+        onMoveShouldSetPanResponderCapture: () => false,
         onPanResponderTerminationRequest: () => true,
         onPanResponderRelease: (_e, g) => {
-          const enoughDistance = Math.abs(g.dx) >= 56;
-          const enoughVelocity = Math.abs(g.vx) >= 0.35;
+          const enoughDistance = Math.abs(g.dx) >= 72;
+          const enoughVelocity = Math.abs(g.vx) >= 0.55;
           if (!enoughDistance && !enoughVelocity) return;
+          if (Math.abs(g.dy) > Math.abs(g.dx) * 0.6) return;
           dismissSwipeHint();
           if (g.dx < 0) goNextRef.current();
           else goBackRef.current();
@@ -566,16 +707,14 @@ export default function EnrollScreen() {
   const submitEnroll = () => {
     dismissKeyboard();
     setError('');
-    if (!ensureNameValid() || !ensurePhoneValid()) {
+    if (!validateStep(1)) {
       goToStep(1);
       return;
     }
-    if (!planId) {
-      setPlanError(t('validation.planNotSelected'));
+    if (!validateStep(2)) {
       goToStep(2);
       return;
     }
-    setPlanError('');
     mutation.mutate(buildPayload());
   };
 
@@ -616,6 +755,22 @@ export default function EnrollScreen() {
       enrollDone.planName ? { label: t('forms.plan'), value: enrollDone.planName } : null,
       termLabel ? { label: t('enroll.term'), value: termLabel } : null,
       paymentLabel ? { label: t('enroll.payment'), value: paymentLabel, unpaid: enrollDone.skipPayment } : null,
+      enrollDone.trainerName ? { label: t('enroll.trainer'), value: enrollDone.trainerName } : null,
+      enrollDone.trainerFee != null
+        ? {
+            label: t('enroll.trainerFee'),
+            value: [
+              formatEtb(enrollDone.trainerFee),
+              enrollDone.trainerFeeMethod
+                ? (paymentMethodLabelKey(enrollDone.trainerFeeMethod)
+                    ? t(paymentMethodLabelKey(enrollDone.trainerFeeMethod)!)
+                    : enrollDone.trainerFeeMethod)
+                : null,
+            ]
+              .filter(Boolean)
+              .join(' · '),
+          }
+        : null,
     ].filter(Boolean) as { label: string; value: string; unpaid?: boolean }[];
 
     return (
@@ -674,7 +829,13 @@ export default function EnrollScreen() {
         keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}
       >
         <FormScroll contentContainerStyle={{ paddingBottom: 24 }}>
-          <EnrollStepProgress steps={enrollSteps} current={enrollStep} />
+          <EnrollStepProgress
+            steps={enrollSteps}
+            current={enrollStep}
+            maxReached={enrollMaxStep}
+            onSelect={selectEnrollStep}
+            reduceMotion={reduceMotion}
+          />
 
           {showSwipeHint ? (
             <SoftSurface
@@ -701,7 +862,7 @@ export default function EnrollScreen() {
           <ErrorBanner
             message={
               error ||
-              (photoBlocksOffline && enrollStep === 1 ? t('offline.photoRemoveToEnrollOffline') : '')
+              (photoBlocksOffline ? t('offline.photoRemoveToEnrollOffline') : '')
             }
           />
 
@@ -739,6 +900,7 @@ export default function EnrollScreen() {
                   }}
                 />
                 <FieldError message={phoneError} />
+                <Text style={styles.hint}>{t('enroll.phoneHint')}</Text>
 
                 {showBranchPicker ? (
                   <BranchPicker branches={branches} value={branchId} onChange={setBranchId} />
@@ -832,12 +994,45 @@ export default function EnrollScreen() {
                       minimumDate={paymentBounds.minimumDate}
                       maximumDate={paymentBounds.maximumDate}
                     />
+                    {startDate ? (
+                      <Text style={styles.hint}>
+                        {t('enroll.paymentDateBoundHint', { date: formatDisplayDate(startDate) })}
+                      </Text>
+                    ) : null}
 
                     <PaymentMethodPicker value={method} onChange={setMethod} />
                   </>
                 ) : (
-                  <Text style={styles.hint}>{t('forms.enrollWithoutPayment')}</Text>
+                  <View style={styles.warningBox}>
+                    <Ionicons name="alert-circle" size={18} color={c.warning} style={{ marginTop: 1 }} />
+                    <Text style={styles.warningText}>{t('enroll.unpaidWarning')}</Text>
+                  </View>
                 )}
+                <SoftSurface variant="quiet" style={styles.trainerPanel}>
+                <OptionPickerField
+                  label={t('enroll.trainer')}
+                  placeholder={t('enroll.noTrainer')}
+                  options={[
+                    { value: '', label: t('enroll.noTrainer') },
+                    ...trainers.map((tr) => ({
+                      value: String(tr.id),
+                      label: tr.specialty ? `${tr.name} · ${tr.specialty}` : tr.name,
+                    })),
+                  ]}
+                  value={trainerId == null ? '' : String(trainerId)}
+                  onChange={(v) => setTrainerId(v ? Number(v) : null)}
+                />
+                {trainerId ? (
+                  <>
+                    <Label>{t('enroll.trainerFee')}</Label>
+                    <MoneyAmountField value={trainerFee} onChangeText={setTrainerFee} />
+                    <Text style={styles.hint}>{t('enroll.trainerFeeHint')}</Text>
+                    {skipPayment && Number(trainerFee) > 0 ? (
+                      <PaymentMethodPicker value={trainerFeeMethod} onChange={setTrainerFeeMethod} />
+                    ) : null}
+                  </>
+                ) : null}
+                </SoftSurface>
               </>
             ) : null}
           </View>
@@ -863,6 +1058,11 @@ export default function EnrollScreen() {
                 <PrimaryButton
                   label={t('common.continue')}
                   onPress={goNext}
+                  disabled={
+                    enrollStep === 1
+                      ? !name.trim() || !phone.trim() || Boolean(phoneError) || (showBranchPicker && !branchId)
+                      : plans.length === 0 || !planId || !/^\d{4}-\d{2}-\d{2}$/.test(startDate)
+                  }
                   style={styles.stickyBtn}
                 />
               ) : (

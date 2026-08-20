@@ -6,9 +6,12 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchBranches } from '@/src/api/branches';
 import { fetchMember, updateMember } from '@/src/api/members';
+import { fetchTrainers } from '@/src/api/trainers';
 import { BranchPicker } from '@/src/components/BranchPicker';
+import { OptionPickerField } from '@/src/components/OptionPickerField';
 import { PhotoPickerField } from '@/src/components/PhotoPickerField';
-import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
+import { ErrorBanner, Field, FieldError, FormScroll, Label, MoneyAmountField, PrimaryButton, Screen } from '@/src/components/Form';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
@@ -21,7 +24,9 @@ import { bumpMemberPhotoCache } from '@/src/utils/memberPhotoCache';
 import { dismissKeyboard } from '@/src/utils/dismissKeyboard';
 import { runInBackground } from '@/src/utils/runInBackground';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
+import { todayString } from '@/src/utils/date';
 import { validateRequiredEthiopianPhone } from '@/src/utils/phone';
+import { PAYMENT_METHODS } from '@/src/constants/payments';
 import type { UpdateMemberPayload } from '@/src/types/api';
 import { useTranslation } from 'react-i18next';
 
@@ -43,6 +48,9 @@ export default function EditMemberScreen() {
   const [hadExistingPhoto, setHadExistingPhoto] = useState(false);
   const [photoRemoved, setPhotoRemoved] = useState(false);
   const [photoProcessing, setPhotoProcessing] = useState(false);
+  const [trainerId, setTrainerId] = useState<number | null>(null);
+  const [trainerFee, setTrainerFee] = useState('');
+  const [trainerFeeMethod, setTrainerFeeMethod] = useState<(typeof PAYMENT_METHODS)[number]>('Cash');
   const [error, setError] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const phoneRef = useRef<TextInput>(null);
@@ -65,7 +73,14 @@ export default function EditMemberScreen() {
     enabled: Boolean(token && owner),
   });
 
+  const trainersQuery = useQuery({
+    queryKey: ['trainers', false],
+    queryFn: () => fetchTrainers(token!, false),
+    enabled: Boolean(token && canEditMember),
+  });
+
   const branches = branchesQuery.data?.branches ?? [];
+  const trainers = trainersQuery.data?.trainers ?? [];
   const showBranchPicker = owner && branches.filter((b) => b.is_active !== false).length > 1;
 
   useEffect(() => {
@@ -78,6 +93,9 @@ export default function EditMemberScreen() {
     setBranchId(memberBranchId);
     setInitialBranchId(memberBranchId);
     setHadExistingPhoto(Boolean(member.photo_url));
+    setTrainerId(member.trainer_id ?? null);
+    setTrainerFee('');
+    setTrainerFeeMethod('Cash');
     setPhotoRemoved(false);
     setPhotoDataUrl(null);
     setPhotoPreview('');
@@ -163,6 +181,12 @@ export default function EditMemberScreen() {
     } else if (photoRemoved && hadExistingPhoto) {
       payload.photo = null;
     }
+    payload.trainer_id = trainerId;
+    if (trainerId && Number(trainerFee) > 0) {
+      payload.trainer_fee = Number(trainerFee);
+      payload.trainer_fee_date = todayString();
+      payload.trainer_fee_method = trainerFeeMethod;
+    }
     return payload;
   };
 
@@ -237,6 +261,31 @@ export default function EditMemberScreen() {
             </View>
           ) : null}
 
+          <SoftSurface variant="quiet" style={styles.trainerPanel}>
+            <OptionPickerField
+              label={t('member.trainer')}
+              placeholder={t('enroll.noTrainer')}
+              options={[
+                { value: '', label: t('enroll.noTrainer') },
+                ...trainers.map((tr) => ({
+                  value: String(tr.id),
+                  label: tr.specialty ? `${tr.name} · ${tr.specialty}` : tr.name,
+                })),
+              ]}
+              value={trainerId == null ? '' : String(trainerId)}
+              onChange={(v) => setTrainerId(v ? Number(v) : null)}
+            />
+            {trainerId ? (
+              <>
+                <Label>{t('enroll.trainerFee')}</Label>
+                <MoneyAmountField value={trainerFee} onChangeText={setTrainerFee} />
+                {Number(trainerFee) > 0 ? (
+                  <PaymentMethodPicker value={trainerFeeMethod} onChange={setTrainerFeeMethod} />
+                ) : null}
+              </>
+            ) : null}
+          </SoftSurface>
+
           <Text style={[styles.hint, { color: c.dim }]}>{t('member.planDatesLocked')}</Text>
 
           <PrimaryButton
@@ -267,4 +316,5 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
   },
+  trainerPanel: { padding: 14, gap: 10, marginTop: 8 },
 });

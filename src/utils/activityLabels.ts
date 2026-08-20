@@ -20,6 +20,10 @@ const ACTION_KEYS: Record<string, string> = {
   'plan.deleted': 'activity.actions.plan_deleted',
   'staff.created': 'activity.actions.staff_created',
   'staff.updated': 'activity.actions.staff_updated',
+  'trainer.created': 'activity.actions.trainer_created',
+  'trainer.updated': 'activity.actions.trainer_updated',
+  'trainer.deleted': 'activity.actions.trainer_deleted',
+  'trainer.restored': 'activity.actions.trainer_restored',
 };
 
 export function formatAuditAction(action: string, t: TFunction) {

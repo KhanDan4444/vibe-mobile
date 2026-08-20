@@ -24,7 +24,7 @@ export function AppHeaderRight({ leading }: { leading?: React.ReactNode }) {
         <Pressable style={styles.bellBtn} onPress={() => setNotificationsOpen(true)}>
           <Ionicons name="notifications-outline" size={24} color={c.muted} />
           {unread > 0 ? (
-            <View style={[styles.badge, { backgroundColor: c.error }]}>
+            <View style={[styles.badge, { backgroundColor: c.errorSolid }]}>
               <Text style={styles.badgeText}>{unread > 99 ? '99+' : unread}</Text>
             </View>
           ) : null}
