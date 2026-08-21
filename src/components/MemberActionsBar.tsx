@@ -93,7 +93,7 @@ export function MemberActionsBar({
   };
 
   if (showChangePlan) maybeManage('change-plan', t('member.changePlan'), onChangePlan, 'swap-horizontal-outline');
-  if (showRenew) maybeManage('renew', t('member.renew'), onRenew, 'sync');
+  if (showRenew) maybeManage('renew', t('member.renew'), onRenew, 'refresh-outline');
   if (showPayment) maybeManage('payment', t('member.collectPayment'), onPayment, 'cash-outline');
   manageActions.push({
     id: 'edit',

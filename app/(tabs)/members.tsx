@@ -153,7 +153,7 @@ function MemberRowItem({
         </View>
         {!multiColumn ? (
           <View style={styles.rowMeta}>
-            <StatusBadge status={isFormer ? 'Former' : member.status} />
+            <StatusBadge status={isFormer ? 'Former' : member.status} style={styles.metaBadge} />
             {member.is_unpaid && !isFormer ? <Text style={styles.unpaid}>{t('members.unpaidBadge')}</Text> : null}
             {isFormer && canRestore && onRestore ? (
               <RestoreAction
@@ -590,6 +590,7 @@ function createStyles(c: ThemeColors) {
     phone: { marginTop: 4, fontSize: 13, color: c.muted },
     branch: { marginTop: 2, fontSize: 12, color: c.dim },
     rowMeta: { alignItems: 'flex-end' as const, gap: 8 },
+    metaBadge: { alignSelf: 'flex-end' as const },
     rowMetaStacked: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,

@@ -13,44 +13,59 @@ type Props = {
   body?: string;
   actionLabel?: string;
   onAction?: () => void;
+  /** warm = default accent; quiet = muted desk empties; brand = teal wash */
+  tone?: 'warm' | 'quiet' | 'brand';
+  compact?: boolean;
 };
 
 /** Designed empty list state — warm accent icon, title, one sentence, optional CTA. */
-export function EmptyState({ icon = 'file-tray-outline', title, body, actionLabel, onAction }: Props) {
+export function EmptyState({
+  icon = 'file-tray-outline',
+  title,
+  body,
+  actionLabel,
+  onAction,
+  tone = 'warm',
+  compact = false,
+}: Props) {
   const { colors: c } = useTheme();
+  const quiet = tone === 'quiet';
+  const brand = tone === 'brand';
+  const iconColor = quiet ? c.dim : brand ? c.accentText : c.warm;
+  const iconBg = quiet ? c.inputBg : brand ? c.accentSoft : c.warmSoft;
+
   const styles = useThemedStyles((colors) => ({
     wrap: {
       alignItems: 'center' as const,
-      paddingTop: space.xxl + 16,
+      paddingTop: compact ? space.lg : space.xxl + 16,
       paddingHorizontal: space.xl,
-      paddingBottom: space.xl,
+      paddingBottom: compact ? space.md : space.xl,
       alignSelf: 'center' as const,
       maxWidth: 360,
       width: '100%' as const,
     },
     iconWrap: {
-      width: 56,
-      height: 56,
+      width: compact || quiet ? 44 : 56,
+      height: compact || quiet ? 44 : 56,
       borderRadius: radiusLg,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
-      backgroundColor: colors.warmSoft,
-      marginBottom: space.lg,
+      marginBottom: compact ? space.md : space.lg,
       elevation: 0,
       shadowOpacity: 0,
     },
     title: {
-      fontSize: 17,
+      fontSize: quiet || compact ? 15 : 17,
       fontWeight: '600' as const,
       letterSpacing: -0.2,
-      color: colors.text,
+      color: quiet ? colors.muted : colors.text,
       textAlign: 'center' as const,
     },
     body: {
       marginTop: 6,
-      fontSize: 14,
-      lineHeight: 22,
-      color: colors.muted,
+      fontSize: 13,
+      lineHeight: 20,
+      color: colors.dim,
       textAlign: 'center' as const,
     },
     action: {
@@ -60,11 +75,11 @@ export function EmptyState({ icon = 'file-tray-outline', title, body, actionLabe
   }));
 
   return (
-    <Animated.View entering={FadeIn.duration(320)} style={styles.wrap} accessibilityRole="summary">
-      <View style={styles.iconWrap}>
-        <Ionicons name={icon} size={26} color={c.warm} />
+    <Animated.View entering={FadeIn.duration(280)} style={styles.wrap} accessibilityRole="summary">
+      <View style={[styles.iconWrap, { backgroundColor: iconBg }]}>
+        <Ionicons name={icon} size={compact || quiet ? 22 : 26} color={iconColor} />
       </View>
-      <Text display style={styles.title}>
+      <Text display={!quiet} style={styles.title}>
         {title}
       </Text>
       {body ? <Text style={styles.body}>{body}</Text> : null}

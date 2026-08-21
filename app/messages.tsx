@@ -10,6 +10,7 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { fetchMemberSms } from '@/src/api/memberSms';
 import { BranchFilterBar } from '@/src/components/BranchFilterBar';
 import { FilterPickerButton } from '@/src/components/FilterPickerButton';
+import { MemberPhoto } from '@/src/components/MemberPhoto';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { EmptyState } from '@/src/components/EmptyState';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
@@ -23,7 +24,6 @@ import {
   formatSmsPreview,
   formatSmsType,
   smsTypeAccent,
-  smsTypeIcon,
 } from '@/src/utils/smsLabels';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
 import { statusWashOpaque } from '@/src/utils/statusWash';
@@ -35,6 +35,7 @@ type SmsFilter = (typeof SMS_TYPE_FILTER_KEYS)[number]['value'];
 
 function SmsItem({
   row,
+  token,
   multiColumn,
   columnStyle,
   showBranch,
@@ -42,6 +43,7 @@ function SmsItem({
   onPress,
 }: {
   row: MemberSmsRow;
+  token: string;
   multiColumn?: boolean;
   columnStyle?: object;
   showBranch?: boolean;
@@ -51,7 +53,6 @@ function SmsItem({
   const { t } = useTranslation();
   const { colors: c } = useTheme();
   const accent = smsTypeAccent(row.message_type, c);
-  const icon = smsTypeIcon(row.message_type);
   const preview = typeFiltered ? '' : formatSmsPreview(row.message_type, t);
   const phone = row.recipient_phone || row.member_phone || '—';
   const branch = row.branch_name ? branchDisplayName(row.branch_name) : null;
@@ -64,14 +65,6 @@ function SmsItem({
     },
     cardColumn: { marginBottom: 0 },
     row: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 12 },
-    iconWrap: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
-      backgroundColor: statusWashOpaque(accent, colors.card, 0.16),
-    },
     body: { flex: 1, minWidth: 0 },
     header: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 8 },
     member: { flex: 1, fontSize: 15, fontWeight: '600' as const, color: colors.text },
@@ -109,9 +102,13 @@ function SmsItem({
       accessibilityLabel={`${row.member_name}, ${formatSmsType(row.message_type, t)}`}
     >
       <View style={styles.row}>
-        <View style={styles.iconWrap}>
-          <Ionicons name={icon} size={18} color={accent} />
-        </View>
+        <MemberPhoto
+          memberId={row.member_id}
+          name={row.member_name || '?'}
+          token={token}
+          size={40}
+          hasPhoto={Boolean(row.member_photo_url)}
+        />
         <View style={styles.body}>
           <View style={styles.header}>
             <Text listRow style={styles.member} numberOfLines={1}>
@@ -226,6 +223,7 @@ export default function MessagesScreen() {
             renderItem={({ item }) => (
               <SmsItem
                 row={item}
+                token={token!}
                 multiColumn={listColumns > 1}
                 columnStyle={listColumnItemStyle}
                 showBranch={showBranchFilter}

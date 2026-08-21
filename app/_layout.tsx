@@ -160,6 +160,7 @@ function RootNavigator() {
           <Stack.Screen name="profile" options={{ ...stackScreen, title: t('screens.gymProfile') }} />
           <Stack.Screen name="change-password" options={{ ...stackScreen, title: t('screens.changePassword') }} />
           <Stack.Screen name="reports" options={{ ...stackScreen, title: t('screens.reports') }} />
+          <Stack.Screen name="plans" options={{ ...stackScreen, title: t('screens.plans') }} />
         </Stack>
       </View>
       {user ? <OfflineSyncOverlay /> : null}

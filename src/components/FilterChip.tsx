@@ -15,6 +15,8 @@ type FilterChipProps = {
   selectedColor?: string;
   /** Solid selected pill (Team Staff | Trainers). Default soft wash. */
   solid?: boolean;
+  /** Full capsule radius — use inside oval segment tracks. */
+  pill?: boolean;
   /** Optional trailing count badge. */
   count?: number | string;
   style?: StyleProp<ViewStyle>;
@@ -31,6 +33,7 @@ export function FilterChip({
   dotColor,
   selectedColor,
   solid = false,
+  pill = false,
   count,
   style,
 }: FilterChipProps) {
@@ -41,8 +44,8 @@ export function FilterChip({
       alignItems: 'center' as const,
       gap: 6,
       paddingHorizontal: 12,
-      paddingVertical: 7,
-      borderRadius: radiusMd,
+      paddingVertical: pill ? 6 : 7,
+      borderRadius: pill ? 999 : radiusMd,
       minHeight: 36,
       backgroundColor: 'transparent',
       flexShrink: 0,
@@ -72,7 +75,7 @@ export function FilterChip({
     countBadge: {
       minWidth: 20,
       height: 20,
-      borderRadius: 10,
+      borderRadius: 999,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
       paddingHorizontal: 5,

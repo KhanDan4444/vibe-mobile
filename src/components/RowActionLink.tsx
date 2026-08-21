@@ -5,7 +5,7 @@ import { AppText as Text } from '@/src/components/AppText';
 
 type IonName = ComponentProps<typeof Ionicons>['name'];
 
-/** Green row CTA (Renew / Restore) — 44px tap target so it is easy to hit. */
+/** Quiet row CTA (Renew / Restore) — outline icon + label, easy 44px hit target. */
 export function RowActionLink({
   label,
   icon,
@@ -34,18 +34,27 @@ export function RowActionLink({
           minHeight: 44,
           minWidth: 44,
           paddingVertical: 8,
-          paddingHorizontal: 8,
-          marginRight: -8,
+          paddingHorizontal: 4,
+          marginRight: -4,
           flexDirection: 'row' as const,
           alignItems: 'center' as const,
           justifyContent: 'flex-end' as const,
-          gap: 6,
-          opacity: busy ? 0.55 : pressed ? 0.65 : 1,
+          gap: 5,
+          opacity: busy ? 0.55 : pressed ? 0.7 : 1,
         },
       ]}
     >
-      <Ionicons name={icon} size={18} color={color} />
-      <Text style={{ fontSize: 14, fontWeight: '600', color }}>{label}</Text>
+      <Ionicons name={icon} size={16} color={color} />
+      <Text
+        style={{
+          fontSize: 13,
+          fontWeight: '700',
+          letterSpacing: 0.15,
+          color,
+        }}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }

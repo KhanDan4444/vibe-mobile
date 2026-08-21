@@ -21,7 +21,7 @@ const TAB_ROUTES = [
   { segment: 'index', href: '/(tabs)' },
   { segment: 'members', href: '/(tabs)/members' },
   { segment: 'revenue', href: '/(tabs)/revenue' },
-  { segment: 'plans', href: '/(tabs)/plans' },
+  { segment: 'check-in', href: '/(tabs)/check-in' },
   { segment: 'more', href: '/(tabs)/more' },
 ] as const;
 
@@ -125,10 +125,12 @@ export default function TabLayout() {
             }}
           />
           <Tabs.Screen
-            name="plans"
+            name="check-in"
             options={{
-              title: t('tabs.plans'),
-              tabBarIcon: ({ color }) => <Ionicons name="barbell" color={color} size={tabIconSize} />,
+              title: t('tabs.checkIn'),
+              tabBarIcon: ({ color }) => (
+                <Ionicons name="checkbox-outline" color={color} size={tabIconSize} />
+              ),
             }}
           />
           <Tabs.Screen

@@ -12,6 +12,7 @@ import { ActionOverflowMenu } from '@/src/components/ActionOverflowMenu';
 import { BranchFilterBar } from '@/src/components/BranchFilterBar';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { FilterChip } from '@/src/components/FilterChip';
+import { InitialsAvatar } from '@/src/components/InitialsAvatar';
 import { SearchField } from '@/src/components/SearchField';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { EmptyState } from '@/src/components/EmptyState';
@@ -48,13 +49,17 @@ function StaffCard({
       marginBottom: 12,
     },
     cardColumn: { marginBottom: 0 },
-    headerRow: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 8 },
-    cardMain: { flex: 1, marginBottom: 0 },
-    name: { fontSize: 17, fontWeight: '700' as const, color: c.text },
+    headerRow: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 12 },
+    cardMain: { flex: 1, marginBottom: 0, minWidth: 0 },
+    titleRow: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 8,
+      flexWrap: 'wrap' as const,
+    },
+    name: { flexShrink: 1, fontSize: 16, fontWeight: '700' as const, color: c.text },
     meta: { marginTop: 4, fontSize: 13, color: c.muted },
     badge: {
-      marginTop: 8,
-      alignSelf: 'flex-start' as const,
       fontSize: 11,
       fontWeight: '700' as const,
       paddingHorizontal: 8,
@@ -65,6 +70,9 @@ function StaffCard({
     active: { color: c.success, backgroundColor: 'rgba(52,211,153,0.15)' },
     inactive: { color: '#f87171', backgroundColor: 'rgba(248,113,113,0.15)' },
   }));
+
+  const login = member.username || member.email || '—';
+  const branch = member.branch_name ? branchDisplayName(member.branch_name) : t('team.noBranch');
 
   const menuItems = [
     { id: 'edit', label: t('team.edit'), icon: 'create-outline' as const, onPress: onEdit, accent: true },
@@ -80,14 +88,18 @@ function StaffCard({
   return (
     <SoftSurface variant="panel" style={[styles.card, multiColumn && styles.cardColumn, multiColumn && columnStyle]}>
       <View style={styles.headerRow}>
+        <InitialsAvatar name={member.name} size={44} />
         <View style={styles.cardMain}>
-          <Text listRow style={styles.name}>{member.name}</Text>
-          <Text style={styles.meta}>{member.username || member.email || '—'}</Text>
-          <Text style={styles.meta}>
-            {member.branch_name ? branchDisplayName(member.branch_name) : t('team.noBranch')}
-          </Text>
-          <Text style={[styles.badge, member.is_active ? styles.active : styles.inactive]}>
-            {member.is_active ? t('team.active') : t('team.disabled')}
+          <View style={styles.titleRow}>
+            <Text listRow style={styles.name} numberOfLines={1}>
+              {member.name}
+            </Text>
+            <Text style={[styles.badge, member.is_active ? styles.active : styles.inactive]}>
+              {member.is_active ? t('team.active') : t('team.disabled')}
+            </Text>
+          </View>
+          <Text style={styles.meta} numberOfLines={1}>
+            {`${login} · ${branch}`}
           </Text>
         </View>
         <ActionOverflowMenu title={member.name} items={menuItems} />
@@ -112,44 +124,53 @@ function TrainerCard({
   const { t } = useTranslation();
   const styles = useThemedStyles((colors) => ({
     card: { padding: 16, marginBottom: 12 },
-    headerRow: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 8 },
-    cardMain: { flex: 1 },
-    name: { fontSize: 17, fontWeight: '700' as const, color: colors.text },
+    headerRow: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 12 },
+    cardMain: { flex: 1, minWidth: 0 },
+    name: { fontSize: 16, fontWeight: '700' as const, color: colors.text },
     meta: { marginTop: 4, fontSize: 13, color: colors.muted },
+    sideCol: { alignItems: 'flex-end' as const, gap: 8 },
     restoreBtn: {
-      marginTop: 2,
       paddingVertical: 8,
       paddingHorizontal: 12,
       borderRadius: 10,
       backgroundColor: colors.statusActive,
-      alignSelf: 'flex-start' as const,
     },
     restoreLabel: { fontSize: 13, fontWeight: '700' as const, color: '#fff' },
   }));
+
+  const detailParts = [
+    trainer.specialty || null,
+    t('team.assignedMembers', { count: trainer.member_count ?? 0 }),
+    trainer.branch_name ? branchDisplayName(trainer.branch_name) : t('team.noBranch'),
+  ].filter(Boolean);
+  const detailLine = detailParts.join(' · ');
 
   if (former) {
     return (
       <SoftSurface variant="panel" style={styles.card}>
         <View style={styles.headerRow}>
+          <InitialsAvatar name={trainer.name} size={44} />
           <View style={styles.cardMain}>
-            <Text listRow style={styles.name}>{trainer.name}</Text>
-            <Text style={styles.meta}>{trainer.phone || '—'}</Text>
-            {trainer.specialty ? <Text style={styles.meta}>{trainer.specialty}</Text> : null}
-            <Text style={styles.meta}>
-              {t('team.assignedMembers', { count: trainer.member_count ?? 0 })}
+            <Text listRow style={styles.name} numberOfLines={1}>
+              {trainer.name}
             </Text>
-            <Text style={styles.meta}>
-              {trainer.branch_name ? branchDisplayName(trainer.branch_name) : t('team.noBranch')}
+            <Text style={styles.meta} numberOfLines={1}>
+              {trainer.phone || '—'}
+            </Text>
+            <Text style={styles.meta} numberOfLines={2}>
+              {detailLine}
             </Text>
           </View>
-          <Pressable
-            onPress={onRestore}
-            style={styles.restoreBtn}
-            accessibilityRole="button"
-            accessibilityLabel={t('team.restoreTrainer')}
-          >
-            <Text style={styles.restoreLabel}>{t('team.restoreTrainer')}</Text>
-          </Pressable>
+          <View style={styles.sideCol}>
+            <Pressable
+              onPress={onRestore}
+              style={styles.restoreBtn}
+              accessibilityRole="button"
+              accessibilityLabel={t('team.restoreTrainer')}
+            >
+              <Text style={styles.restoreLabel}>{t('team.restoreTrainer')}</Text>
+            </Pressable>
+          </View>
         </View>
       </SoftSurface>
     );
@@ -169,15 +190,16 @@ function TrainerCard({
   return (
     <SoftSurface variant="panel" style={styles.card}>
       <View style={styles.headerRow}>
+        <InitialsAvatar name={trainer.name} size={44} />
         <View style={styles.cardMain}>
-          <Text listRow style={styles.name}>{trainer.name}</Text>
-          <Text style={styles.meta}>{trainer.phone || '—'}</Text>
-          {trainer.specialty ? <Text style={styles.meta}>{trainer.specialty}</Text> : null}
-          <Text style={styles.meta}>
-            {t('team.assignedMembers', { count: trainer.member_count ?? 0 })}
+          <Text listRow style={styles.name} numberOfLines={1}>
+            {trainer.name}
           </Text>
-          <Text style={styles.meta}>
-            {trainer.branch_name ? branchDisplayName(trainer.branch_name) : t('team.noBranch')}
+          <Text style={styles.meta} numberOfLines={1}>
+            {trainer.phone || '—'}
+          </Text>
+          <Text style={styles.meta} numberOfLines={2}>
+            {detailLine}
           </Text>
         </View>
         <ActionOverflowMenu title={trainer.name} items={menuItems} />
@@ -207,12 +229,12 @@ export default function TeamScreen() {
     container: { flex: 1, backgroundColor: colors.bg },
     list: { paddingBottom: 88 },
     columnWrap: { gap: 10 },
-    toolbar: { paddingBottom: 8, gap: 8 },
+    toolbar: { paddingBottom: 6, gap: 6 },
     subtitle: {
       paddingHorizontal: 0,
-      paddingBottom: 2,
-      fontSize: 13,
-      lineHeight: 18,
+      paddingBottom: 0,
+      fontSize: 12,
+      lineHeight: 16,
       color: colors.muted,
     },
     rosterRow: {
@@ -229,7 +251,8 @@ export default function TeamScreen() {
       borderRadius: 999,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.border,
-      backgroundColor: colors.inputBg,
+      // Match web `.team-segment` (app-bg track + soft brand pill)
+      backgroundColor: colors.bg,
     },
     archiveRule: {
       width: StyleSheet.hairlineWidth,
@@ -373,21 +396,10 @@ export default function TeamScreen() {
 
   const toolbar = (
     <View style={[styles.toolbar, { paddingHorizontal: pagePadding }]}>
-      <Text style={styles.subtitle}>{pageSubtitle}</Text>
-      <SearchField
-        value={search}
-        onChangeText={setSearch}
-        placeholder={
-          tab === 'trainers'
-            ? formerTrainers
-              ? t('team.searchFormer')
-              : t('team.searchTrainers')
-            : t('team.searchStaff')
-        }
-      />
       <View style={styles.rosterRow}>
         <View style={styles.segment}>
           <FilterChip
+            pill
             label={t('team.tabStaff')}
             selected={tab === 'staff'}
             count={staff.length}
@@ -398,6 +410,7 @@ export default function TeamScreen() {
             }}
           />
           <FilterChip
+            pill
             label={t('team.tabTrainers')}
             selected={tab === 'trainers' && !formerTrainers}
             count={liveTrainerTotal}
@@ -424,6 +437,18 @@ export default function TeamScreen() {
           </>
         ) : null}
       </View>
+      <SearchField
+        value={search}
+        onChangeText={setSearch}
+        placeholder={
+          tab === 'trainers'
+            ? formerTrainers
+              ? t('team.searchFormer')
+              : t('team.searchTrainers')
+            : t('team.searchStaff')
+        }
+      />
+      <Text style={styles.subtitle}>{pageSubtitle}</Text>
     </View>
   );
 

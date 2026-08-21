@@ -750,7 +750,6 @@ function useChartStyles() {
     pieLegendAmount: { marginTop: 2, fontSize: 11, color: c.dim },
     chartNote: { marginTop: 6, fontSize: 11, color: c.dim, textAlign: 'center' as const },
     chartScopeHint: { marginTop: 6, fontSize: 11, color: c.dim, textAlign: 'center' as const },
-    chartRevenueHint: { marginTop: 10, fontSize: 11, color: c.dim, textAlign: 'center' as const },
   }));
 }
 
@@ -778,7 +777,6 @@ export function MiniBarChart({
       <Text style={styles.chartScopeHint}>{t('dashboard.chartScopeHint')}</Text>
       {chartNote ? <Text style={styles.chartNote}>{chartNote}</Text> : null}
       <LineChartView data={lineBarBundle.points} height={height} styles={styles} />
-      <Text style={styles.chartRevenueHint}>{t('dashboard.chartRevenueHint')}</Text>
     </View>
   );
 }

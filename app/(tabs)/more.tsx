@@ -20,6 +20,8 @@ type MenuItem = {
 };
 
 const MENU_KEYS = {
+  plans: 'more.plans',
+  plansSub: 'more.plansSub',
   activity: 'more.activity',
   activitySub: 'more.activitySub',
   team: 'more.team',
@@ -33,6 +35,7 @@ const MENU_KEYS = {
 } as const;
 
 const MENU: MenuItem[] = [
+  { labelKey: 'plans', subtitleKey: 'plansSub', icon: 'barbell-outline', route: '/plans' },
   { labelKey: 'activity', subtitleKey: 'activitySub', icon: 'time-outline', route: '/activity', ownerOnly: true },
   { labelKey: 'team', subtitleKey: 'teamSub', icon: 'people-outline', route: '/team', ownerOnly: true },
   { labelKey: 'branches', subtitleKey: 'branchesSub', icon: 'business-outline', route: '/branches', ownerOnly: true },

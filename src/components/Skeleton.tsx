@@ -197,6 +197,42 @@ export function ListFooterSkeleton() {
   );
 }
 
+/** Check-in search results — ring + identity + CTA bones. */
+export function CheckInSearchSkeleton({
+  count = 2,
+  columns = 1,
+}: {
+  count?: number;
+  columns?: number;
+}) {
+  const multi = columns > 1;
+  return (
+    <View
+      style={multi ? styles.checkInGrid : undefined}
+      accessibilityLabel="Loading"
+      accessibilityRole="progressbar"
+    >
+      {Array.from({ length: count }, (_, i) => (
+        <SoftSurface
+          key={i}
+          variant="panel"
+          style={[styles.checkInCard, multi ? styles.checkInCardHalf : null]}
+        >
+          <View style={styles.checkInTop}>
+            <SkeletonBone width={84} height={84} radius={42} />
+            <View style={{ flex: 1, gap: 8 }}>
+              <SkeletonBone width="70%" height={15} />
+              <SkeletonBone width="45%" height={12} />
+              <SkeletonBone width="32%" height={18} radius={999} />
+            </View>
+          </View>
+          <SkeletonBone width="100%" height={44} radius={12} style={{ marginTop: 12 }} />
+        </SoftSurface>
+      ))}
+    </View>
+  );
+}
+
 function defaultCount(variant: Variant) {
   switch (variant) {
     case 'form':
@@ -229,6 +265,26 @@ const styles = StyleSheet.create({
   card: {
     padding: 14,
     marginBottom: 10,
+  },
+  checkInCard: {
+    padding: 14,
+    marginBottom: 10,
+  },
+  checkInGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  checkInCardHalf: {
+    flexGrow: 1,
+    flexBasis: 0,
+    maxWidth: '48.5%',
+    marginBottom: 0,
+  },
+  checkInTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
   },
   statGrid: {
     flexDirection: 'row',

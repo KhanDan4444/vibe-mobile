@@ -126,6 +126,7 @@ export interface MemberSmsRow {
   sent_at: string;
   member_name: string;
   member_phone: string | null;
+  member_photo_url?: string | null;
   branch_id: number | null;
   branch_name: string | null;
 }
@@ -217,6 +218,7 @@ export interface DashboardStats {
   alertMembers?: DashboardAlertMember[];
   revenueChart?: DashboardChartPoint[];
   readOnly?: boolean;
+  checkedInToday?: number;
 }
 
 export interface PlanRow {

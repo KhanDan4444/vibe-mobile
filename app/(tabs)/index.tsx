@@ -30,6 +30,7 @@ import { space } from '@/src/theme/tokens';
 import { timings } from '@/src/theme/motion';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
+import { formatPlanDisplayName } from '@/src/utils/planFormat';
 
 type StatFilter = 'due_soon' | 'expired' | 'unpaid';
 
@@ -68,7 +69,7 @@ function AlertMemberRow({
           {member.name}
         </Text>
         <Text style={[styles.alertMeta, { color: colors.dim }]} numberOfLines={1}>
-          {member.plan_name || t('members.noPlan')}
+          {formatPlanDisplayName(member.plan_name) || t('members.noPlan')}
         </Text>
         <Text style={[styles.alertExpires, { color: colors.dim }]} numberOfLines={1}>
           {t('dashboard.expires', { date: formatDisplayDate(member.end_date) })}
@@ -79,7 +80,7 @@ function AlertMemberRow({
         {onAction ? (
           <RowActionLink
             label={t('dashboard.renew')}
-            icon="sync"
+            icon="refresh-outline"
             color={colors.statusActive}
             onPress={onAction}
           />
@@ -294,6 +295,25 @@ export default function DashboardScreen() {
               onPress={() => goMembers('unpaid')}
             />
           </View>
+          {typeof data.checkedInToday === 'number' ? (
+            <SoftSurface
+              variant="panel"
+              onPress={() => router.push('/(tabs)/check-in' as never)}
+              style={styles.checkInTodayCard}
+              accessibilityRole="button"
+              accessibilityLabel={t('dashboard.checkedInTodayAria', { count: data.checkedInToday })}
+            >
+              <Text style={[styles.checkInTodayLabel, { color: c.accentText }]}>
+                {t('dashboard.checkedInToday')}
+              </Text>
+              <Text display style={[styles.checkInTodayValue, { color: c.text }]}>
+                {data.checkedInToday}
+              </Text>
+              <Text style={[styles.checkInTodayHint, { color: c.muted }]}>
+                {t('dashboard.checkedInTodayHint')}
+              </Text>
+            </SoftSurface>
+          ) : null}
           {summaryBlock}
           {owner ? attentionBlock : null}
         </Animated.View>
@@ -322,6 +342,23 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md, marginTop: space.sm },
+  checkInTodayCard: {
+    marginTop: space.md,
+    padding: space.lg,
+  },
+  checkInTodayLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+  },
+  checkInTodayValue: {
+    marginTop: 4,
+    fontSize: 36,
+    fontWeight: '700',
+    letterSpacing: -0.8,
+  },
+  checkInTodayHint: { marginTop: 4, fontSize: 13 },
   summary: {
     marginTop: space.lg,
     padding: space.lg + 2,
@@ -349,15 +386,15 @@ const styles = StyleSheet.create({
   alertRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    paddingVertical: 13,
+    gap: 12,
+    paddingVertical: 16,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   alertBody: { flex: 1, minWidth: 0, marginRight: 8 },
   alertName: { fontSize: 14, fontWeight: '600' },
   alertMeta: { marginTop: 3, fontSize: 12 },
   alertExpires: { marginTop: 2, fontSize: 12 },
-  alertRight: { alignItems: 'flex-end', gap: 8 },
+  alertRight: { alignItems: 'flex-end', gap: 10 },
   attentionShortcut: {
     flexDirection: 'row',
     alignItems: 'center',

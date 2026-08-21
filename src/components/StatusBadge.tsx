@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTheme } from '@/src/context/PreferencesContext';
@@ -8,6 +8,7 @@ import { statusLabelKey } from '@/src/utils/statusLabels';
 type StatusBadgeProps = {
   status: string;
   showDot?: boolean;
+  style?: StyleProp<ViewStyle>;
 };
 
 function statusKey(status: string) {
@@ -33,14 +34,14 @@ function badgeColors(key: string, c: ThemeColors) {
   return { bg: `${c.statusNeutral}18`, text: c.statusNeutral, border: `${c.statusNeutral}33`, dot: c.statusNeutral };
 }
 
-export default function StatusBadge({ status, showDot = true }: StatusBadgeProps) {
+export default function StatusBadge({ status, showDot = true, style }: StatusBadgeProps) {
   const { t } = useTranslation();
   const { colors: c } = useTheme();
   const key = statusKey(status);
   const colors = badgeColors(key, c);
 
   return (
-    <View style={[styles.badge, { backgroundColor: colors.bg, borderColor: colors.border }]}>
+    <View style={[styles.badge, { backgroundColor: colors.bg, borderColor: colors.border }, style]}>
       {showDot ? <View style={[styles.dot, { backgroundColor: colors.dot }]} /> : null}
       <Text style={[styles.label, { color: colors.text }]}>{t(statusLabelKey(status))}</Text>
     </View>

@@ -9,13 +9,22 @@ export class ApiError extends Error {
   status: number;
   field?: string;
   code?: string;
+  /** Full error JSON body when available (e.g. check-in eligibility). */
+  details?: Record<string, unknown>;
 
-  constructor(message: string, status: number, field?: string, code?: string) {
+  constructor(
+    message: string,
+    status: number,
+    field?: string,
+    code?: string,
+    details?: Record<string, unknown>
+  ) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.field = field;
     this.code = code;
+    this.details = details;
   }
 }
 
@@ -68,7 +77,13 @@ export async function apiRequest<T>(
 
   const data = await parseJson(response);
   if (!response.ok) {
-    throw new ApiError(data.error || 'Request failed', response.status, data.field, data.code);
+    throw new ApiError(
+      data.error || 'Request failed',
+      response.status,
+      data.field,
+      data.code,
+      typeof data === 'object' && data ? data : undefined
+    );
   }
   return data as T;
 }
