@@ -19,6 +19,7 @@ import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { EmptyState } from '@/src/components/EmptyState';
 import { LoadError } from '@/src/components/LoadError';
 import { MemberPhoto } from '@/src/components/MemberPhoto';
+import { ScanMemberQrSheet } from '@/src/components/ScanMemberQrSheet';
 import { SearchField } from '@/src/components/SearchField';
 import { CheckInSearchSkeleton, PageSkeleton } from '@/src/components/Skeleton';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
@@ -90,7 +91,10 @@ export default function CheckInScreen() {
     member: CheckInMember;
     visits: number;
     limit: number | null;
+    passToken?: string;
   } | null>(null);
+  const [scanOpen, setScanOpen] = useState(false);
+  const [scanBusy, setScanBusy] = useState(false);
 
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
   const showBranchOnToday = showBranchFilter;
@@ -280,6 +284,77 @@ export default function CheckInScreen() {
     checkInMutation.mutate({ member, force });
   };
 
+  const runCheckInFromPass = async (passToken: string, force = false) => {
+    if (readOnly || !token || !passToken) return;
+    setScanBusy(true);
+    try {
+      const data = await createCheckIn(token, { member_pass_token: passToken, force });
+      const memberId = data.member?.id ?? data.checkIn?.member_id;
+      if (memberId != null) {
+        setCardErrors((prev) => ({
+          ...prev,
+          [memberId]: { code: 'ALREADY_TODAY', message: t('checkIn.alreadyToday') },
+        }));
+        setSuccessIds((prev) => ({ ...prev, [memberId]: true }));
+        setTimeout(() => {
+          setSuccessIds((prev) => {
+            const next = { ...prev };
+            delete next[memberId];
+            return next;
+          });
+        }, 900);
+      }
+      await invalidateCheckIns();
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      showFlash({
+        title: t('checkIn.checkedInTitle'),
+        subtitle: t('checkIn.checkedInSub', {
+          name: data.member?.name || '—',
+          progress:
+            data.visits_limit != null
+              ? `${data.visits_this_week}/${data.visits_limit}`
+              : String(data.visits_this_week),
+        }),
+        variant: 'success',
+      });
+      setScanOpen(false);
+    } catch (err) {
+      const apiErr = err instanceof ApiError ? err : null;
+      const code = apiErr?.code || '';
+      const details = (apiErr?.details || {}) as Record<string, unknown>;
+      if (code === 'WEEKLY_LIMIT' && details.can_force && apiErr?.status === 409) {
+        setForceTarget({
+          member: {
+            id: Number(details.member_id) || 0,
+            name: String(details.member_name || t('checkIn.scanTitle')),
+            phone: null,
+            photo_url: null,
+            plan_name: null,
+            branch_id: null,
+            branch_name: null,
+            status: 'active',
+            end_date: null,
+            is_unpaid: false,
+            trainer_name: null,
+            visits_this_week: Number(details.visits_this_week) || 0,
+            visits_limit:
+              details.visits_limit == null ? null : Number(details.visits_limit),
+          },
+          visits: Number(details.visits_this_week) || 0,
+          limit: details.visits_limit == null ? null : Number(details.visits_limit),
+          passToken,
+        });
+        return;
+      }
+      showFlash({
+        title: userFacingApiMessage(err, t('checkIn.checkInFailed'), t('checkIn.checkInFailed')),
+        variant: 'danger',
+      });
+    } finally {
+      setScanBusy(false);
+    }
+  };
+
   const refreshing = todayQuery.isRefetching || settingsQuery.isRefetching;
   const onRefresh = () => {
     void todayQuery.refetch();
@@ -443,8 +518,8 @@ export default function CheckInScreen() {
     resultItem: {
       marginBottom: 0,
     },
-    idleWrap: { paddingHorizontal: 12, paddingTop: 14, paddingBottom: 16 },
-    idleCopy: { alignItems: 'center' as const, marginBottom: 14, gap: 4 },
+    idleWrap: { paddingHorizontal: 12, paddingTop: 8, paddingBottom: 8 },
+    idleCopy: { alignItems: 'center' as const, gap: 6, paddingVertical: 20 },
     idleTitle: {
       fontSize: 14,
       fontWeight: '700' as const,
@@ -459,37 +534,10 @@ export default function CheckInScreen() {
       textAlign: 'center' as const,
       maxWidth: 280,
     },
-    idleHint: {
-      marginTop: 12,
-      fontSize: 11,
-      color: theme.dim,
-      textAlign: 'center' as const,
-    },
-    ghostRow: {
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
-      gap: 12,
-      paddingVertical: 10,
-      paddingHorizontal: 8,
-      opacity: 0.35,
-    },
-    ghostAvatar: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: theme.border,
-    },
-    ghostLines: { flex: 1, gap: 8 },
-    ghostLine: {
-      height: 10,
-      borderRadius: 999,
-      backgroundColor: theme.border,
-    },
-    ghostTime: {
-      width: 36,
-      height: 10,
-      borderRadius: 999,
-      backgroundColor: theme.border,
+    idleAction: {
+      marginTop: 10,
+      alignSelf: 'stretch' as const,
+      maxWidth: 220,
     },
     sheetBody: { fontSize: 13, lineHeight: 19, color: theme.muted, marginBottom: 10 },
   }));
@@ -564,6 +612,12 @@ export default function CheckInScreen() {
               onChangeText={setQuery}
               placeholder={t('checkIn.searchPlaceholder')}
             />
+            {!readOnly ? (
+              <SecondaryButton
+                label={t('checkIn.scanAction')}
+                onPress={() => setScanOpen(true)}
+              />
+            ) : null}
           </SoftSurface>
         </Animated.View>
 
@@ -649,18 +703,15 @@ export default function CheckInScreen() {
                   {t('checkIn.todayEmptyTitle')}
                 </Text>
                 <Text style={styles.idleBody}>{t('checkIn.todayEmpty')}</Text>
-              </View>
-              {[0, 1, 2].map((i) => (
-                <View key={i} style={styles.ghostRow} accessibilityElementsHidden>
-                  <View style={styles.ghostAvatar} />
-                  <View style={styles.ghostLines}>
-                    <View style={[styles.ghostLine, { width: '42%' }]} />
-                    <View style={[styles.ghostLine, { width: '28%', height: 8 }]} />
+                {!readOnly ? (
+                  <View style={styles.idleAction}>
+                    <SecondaryButton
+                      label={t('checkIn.scanAction')}
+                      onPress={() => setScanOpen(true)}
+                    />
                   </View>
-                  <View style={styles.ghostTime} />
-                </View>
-              ))}
-              <Text style={styles.idleHint}>{t('checkIn.todayEmptyHint')}</Text>
+                ) : null}
+              </View>
             </SoftSurface>
           ) : (
             <SoftSurface variant="panel" style={styles.todayPanel}>
@@ -749,13 +800,26 @@ export default function CheckInScreen() {
         })}
         confirmLabel={t('checkIn.forceConfirm')}
         destructive={false}
-        confirmLoading={checkInMutation.isPending}
+        confirmLoading={checkInMutation.isPending || scanBusy}
         onCancel={() => setForceTarget(null)}
         onConfirm={() => {
-          const member = forceTarget?.member;
+          const target = forceTarget;
           setForceTarget(null);
-          if (member) runCheckIn(member, true);
+          if (target?.passToken) {
+            void runCheckInFromPass(target.passToken, true);
+            return;
+          }
+          if (target?.member) runCheckIn(target.member, true);
         }}
+      />
+
+      <ScanMemberQrSheet
+        visible={scanOpen}
+        busy={scanBusy}
+        onClose={() => {
+          if (!scanBusy) setScanOpen(false);
+        }}
+        onScan={(token) => runCheckInFromPass(token)}
       />
     </TabScreenFrame>
   );

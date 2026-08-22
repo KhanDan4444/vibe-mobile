@@ -6,6 +6,8 @@ export interface TrainerPayload {
   phone?: string | null;
   specialty?: string | null;
   branch_id: number;
+  /** Data URL; `null` clears an existing certification on update. */
+  certification?: string | null;
 }
 
 export function fetchTrainers(token: string, archived = false) {

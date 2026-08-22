@@ -8,6 +8,7 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { fetchTrainers, updateTrainer } from '@/src/api/trainers';
 import { fetchBranches } from '@/src/api/branches';
 import { BranchPicker } from '@/src/components/BranchPicker';
+import { CertAttachmentField } from '@/src/components/CertAttachmentField';
 import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { PageSkeleton } from '@/src/components/Skeleton';
 import { LoadError } from '@/src/components/LoadError';
@@ -28,6 +29,9 @@ export default function EditTrainerScreen() {
   const [phone, setPhone] = useState('');
   const [specialty, setSpecialty] = useState('');
   const [branchId, setBranchId] = useState<number | null>(null);
+  const [certification, setCertification] = useState<string | null | undefined>(undefined);
+  const [hadCertification, setHadCertification] = useState(false);
+  const [certProcessing, setCertProcessing] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldErrorMap>({});
   const [ready, setReady] = useState(false);
@@ -51,6 +55,10 @@ export default function EditTrainerScreen() {
   const trainer = (trainersQuery.data?.trainers ?? []).find((row) => row.id === trainerId);
   const branches = branchesQuery.data?.branches ?? [];
   const requireBranch = branches.filter((b) => b.is_active !== false).length > 1;
+  const showCertAttached =
+    typeof certification === 'string'
+      ? Boolean(certification)
+      : hadCertification && certification !== null;
 
   useEffect(() => {
     if (!trainer || ready) return;
@@ -58,17 +66,23 @@ export default function EditTrainerScreen() {
     setPhone(trainer.phone || '');
     setSpecialty(trainer.specialty || '');
     setBranchId(trainer.branch_id);
+    setHadCertification(Boolean(trainer.has_certification || trainer.certification_url));
+    setCertification(undefined);
     setReady(true);
   }, [trainer, ready]);
 
   const mutation = useMutation({
-    mutationFn: () =>
-      updateTrainer(token!, trainerId, {
+    mutationFn: () => {
+      const payload: Parameters<typeof updateTrainer>[2] = {
         name: name.trim(),
-        phone: phone.trim() || null,
+        phone: phone.trim(),
         specialty: specialty.trim() || null,
         branch_id: branchId ?? undefined,
-      }),
+      };
+      if (typeof certification === 'string') payload.certification = certification;
+      else if (certification === null) payload.certification = null;
+      return updateTrainer(token!, trainerId, payload);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trainers'] });
       router.back();
@@ -141,7 +155,7 @@ export default function EditTrainerScreen() {
           />
           <FieldError message={fieldErrors.name ? t(fieldErrors.name) : ''} />
 
-          <Label>{t('forms.phone')}</Label>
+          <Label required>{t('forms.phone')}</Label>
           <Field
             value={phone}
             onChangeText={(v) => {
@@ -155,6 +169,20 @@ export default function EditTrainerScreen() {
 
           <Label>{t('team.specialty')}</Label>
           <Field value={specialty} onChangeText={setSpecialty} />
+
+          <CertAttachmentField
+            attached={showCertAttached}
+            fileLabel={
+              typeof certification === 'string'
+                ? t('team.certAttached')
+                : hadCertification
+                  ? t('team.certAttached')
+                  : undefined
+            }
+            onChange={(next) => setCertification(next)}
+            processing={certProcessing}
+            setProcessing={setCertProcessing}
+          />
 
           {requireBranch ? (
             <BranchPicker
@@ -173,6 +201,7 @@ export default function EditTrainerScreen() {
             label={t('common.save')}
             onPress={handleSubmit}
             loading={mutation.isPending}
+            disabled={certProcessing}
           />
         </FormScroll>
       </KeyboardAvoidingView>

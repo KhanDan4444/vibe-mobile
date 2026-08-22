@@ -24,6 +24,7 @@ export default function NewStaffScreen() {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [staffRole, setStaffRole] = useState<string>(DEFAULT_STAFF_ROLE);
   const [branchId, setBranchId] = useState<number | null>(null);
   const [error, setError] = useState('');
@@ -76,6 +77,7 @@ export default function NewStaffScreen() {
       username,
       email,
       password,
+      confirmPassword,
       branchId,
       requireBranch,
       isEdit: false,
@@ -159,12 +161,28 @@ export default function NewStaffScreen() {
             onChangeText={(v) => {
               setPassword(v);
               clearField('password');
+              clearField('confirmPassword');
             }}
             secureTextEntry
             autoCapitalize="none"
             error={Boolean(fieldErrors.password)}
           />
           <FieldError message={fieldErrors.password ? t(fieldErrors.password) : undefined} />
+
+          <Label required>{t('forgot.confirmPassword')}</Label>
+          <Field
+            value={confirmPassword}
+            onChangeText={(v) => {
+              setConfirmPassword(v);
+              clearField('confirmPassword');
+            }}
+            secureTextEntry
+            autoCapitalize="none"
+            error={Boolean(fieldErrors.confirmPassword)}
+          />
+          <FieldError
+            message={fieldErrors.confirmPassword ? t(fieldErrors.confirmPassword) : undefined}
+          />
 
           <BranchPicker
             branches={branches}

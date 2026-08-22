@@ -1,12 +1,13 @@
 import type { ThemeColors } from '@/src/theme/tokens';
 
-export const PAYMENT_METHODS = ['Cash', 'Card', 'Bank Transfer'] as const;
+export const PAYMENT_METHODS = ['Cash', 'Card', 'Bank Transfer', 'Tele Birr'] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
 const METHOD_LABEL_KEYS: Record<string, string> = {
   Cash: 'revenue.methodCash',
   Card: 'revenue.methodCard',
   'Bank Transfer': 'revenue.methodBankTransfer',
+  'Tele Birr': 'revenue.methodTeleBirr',
 };
 
 /** Compact labels for tight hero method columns (Amharic-friendly). */
@@ -14,13 +15,18 @@ const METHOD_SHORT_LABEL_KEYS: Record<string, string> = {
   Cash: 'revenue.methodCashShort',
   Card: 'revenue.methodCardShort',
   'Bank Transfer': 'revenue.methodBankTransferShort',
+  'Tele Birr': 'revenue.methodTeleBirrShort',
 };
 
 /** Ionicons names for method chips. */
-const METHOD_ICONS: Record<string, 'cash-outline' | 'card-outline' | 'swap-horizontal-outline' | 'wallet-outline'> = {
+const METHOD_ICONS: Record<
+  string,
+  'cash-outline' | 'card-outline' | 'swap-horizontal-outline' | 'phone-portrait-outline' | 'wallet-outline'
+> = {
   Cash: 'cash-outline',
   Card: 'card-outline',
   'Bank Transfer': 'swap-horizontal-outline',
+  'Tele Birr': 'phone-portrait-outline',
 };
 
 type MethodTone = { bg: string; text: string; border: string };

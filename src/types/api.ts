@@ -107,6 +107,8 @@ export interface TrainerRow {
   specialty: string | null;
   branch_id: number;
   branch_name: string | null;
+  certification_url?: string | null;
+  has_certification?: boolean;
   deleted_at?: string | null;
   member_count?: number;
 }

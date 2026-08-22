@@ -25,7 +25,8 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA"
       ]
     },
     "androidNavigationBar": {
@@ -44,6 +45,12 @@
         "expo-image-picker",
         {
           "photosPermission": "Allow ንቁ to access photos for member profile pictures."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow ንቁ to scan member check-in QR codes."
         }
       ],
       [

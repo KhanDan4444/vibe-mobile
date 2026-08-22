@@ -1,5 +1,9 @@
 export function toDateString(date: string | Date | null | undefined): string {
   if (!date) return '';
+  if (date instanceof Date) {
+    if (Number.isNaN(date.getTime())) return '';
+    return dateToIso(date);
+  }
   return String(date).split('T')[0];
 }
 
@@ -62,10 +66,12 @@ export function formatRelativeDay(
   return formatFriendlyDate(date, language);
 }
 
-export function formatDisplayDateTime(date: string | null | undefined): string {
+export function formatDisplayDateTime(date: string | Date | null | undefined): string {
   if (!date) return '—';
-  const parsed = new Date(date);
-  if (Number.isNaN(parsed.getTime())) return formatDisplayDate(date);
+  const parsed = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(parsed.getTime())) {
+    return typeof date === 'string' ? formatDisplayDate(date) : '—';
+  }
   const day = String(parsed.getDate()).padStart(2, '0');
   const month = String(parsed.getMonth() + 1).padStart(2, '0');
   const year = String(parsed.getFullYear()).slice(-2);

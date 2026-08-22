@@ -92,7 +92,7 @@ export function MemberActionsBar({
     manageActions.push({ id, label, onPress, icon, destructive });
   };
 
-  if (showChangePlan) maybeManage('change-plan', t('member.changePlan'), onChangePlan, 'swap-horizontal-outline');
+  if (showChangePlan) maybeManage('change-plan', t('member.changePlan'), onChangePlan, 'layers-outline');
   if (showRenew) maybeManage('renew', t('member.renew'), onRenew, 'refresh-outline');
   if (showPayment) maybeManage('payment', t('member.collectPayment'), onPayment, 'cash-outline');
   manageActions.push({

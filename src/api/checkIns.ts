@@ -113,7 +113,12 @@ export function listCheckIns(
 
 export function createCheckIn(
   token: string,
-  payload: { member_id: number; force?: boolean; notes?: string }
+  payload: {
+    member_id?: number;
+    member_pass_token?: string;
+    force?: boolean;
+    notes?: string;
+  }
 ) {
   return apiRequest<CreateCheckInResult>('/check-ins', {
     token,

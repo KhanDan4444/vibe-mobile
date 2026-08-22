@@ -8,6 +8,7 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { createTrainer } from '@/src/api/trainers';
 import { fetchBranches } from '@/src/api/branches';
 import { BranchPicker } from '@/src/components/BranchPicker';
+import { CertAttachmentField } from '@/src/components/CertAttachmentField';
 import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { hasFieldErrors, validateTrainerFields, type FieldErrorMap } from '@/src/utils/formValidation';
@@ -24,6 +25,8 @@ export default function NewTrainerScreen() {
   const [phone, setPhone] = useState('');
   const [specialty, setSpecialty] = useState('');
   const [branchId, setBranchId] = useState<number | null>(null);
+  const [certification, setCertification] = useState<string | null>(null);
+  const [certProcessing, setCertProcessing] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldErrorMap>({});
   const canManage = Boolean(user && isGymOwner(user.role));
@@ -50,9 +53,10 @@ export default function NewTrainerScreen() {
     mutationFn: () =>
       createTrainer(token!, {
         name: name.trim(),
-        phone: phone.trim() || null,
+        phone: phone.trim(),
         specialty: specialty.trim() || null,
         branch_id: branchId!,
+        ...(certification ? { certification } : {}),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trainers'] });
@@ -99,7 +103,7 @@ export default function NewTrainerScreen() {
           />
           <FieldError message={fieldErrors.name ? t(fieldErrors.name) : ''} />
 
-          <Label>{t('forms.phone')}</Label>
+          <Label required>{t('forms.phone')}</Label>
           <Field
             value={phone}
             onChangeText={(v) => {
@@ -113,6 +117,13 @@ export default function NewTrainerScreen() {
 
           <Label>{t('team.specialty')}</Label>
           <Field value={specialty} onChangeText={setSpecialty} />
+
+          <CertAttachmentField
+            attached={Boolean(certification)}
+            onChange={setCertification}
+            processing={certProcessing}
+            setProcessing={setCertProcessing}
+          />
 
           {requireBranch ? (
             <BranchPicker
@@ -131,6 +142,7 @@ export default function NewTrainerScreen() {
             label={t('team.saveTrainer')}
             onPress={handleSubmit}
             loading={mutation.isPending}
+            disabled={certProcessing}
           />
         </FormScroll>
       </KeyboardAvoidingView>

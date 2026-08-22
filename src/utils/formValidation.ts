@@ -37,6 +37,7 @@ export function validateStaffFields(fields: {
   username: string;
   email?: string;
   password?: string;
+  confirmPassword?: string;
   branchId: number | null;
   requireBranch: boolean;
   isEdit?: boolean;
@@ -62,20 +63,26 @@ export function validateStaffFields(fields: {
   }
 
   const password = fields.password ?? '';
+  const confirmPassword = fields.confirmPassword ?? '';
   if (!fields.isEdit) {
     if (!password) errors.password = 'forms.passwordRequired';
     else if (password.length < MIN_PASSWORD_LENGTH) errors.password = 'forgot.passwordShort';
     else if (password.length > MAX_PASSWORD_LENGTH) errors.password = 'forms.passwordTooLong';
+    else if (password !== confirmPassword) errors.confirmPassword = 'forgot.passwordMismatch';
   }
 
   return errors;
 }
 
-export function validateStaffPasswordReset(password: string): FieldErrorMap {
+export function validateStaffPasswordReset(
+  password: string,
+  confirmPassword = ''
+): FieldErrorMap {
   const errors: FieldErrorMap = {};
   if (!password.trim()) errors.password = 'forms.passwordRequired';
   else if (password.length < MIN_PASSWORD_LENGTH) errors.password = 'forgot.passwordShort';
   else if (password.length > MAX_PASSWORD_LENGTH) errors.password = 'forms.passwordTooLong';
+  else if (password !== confirmPassword) errors.confirmPassword = 'forgot.passwordMismatch';
   return errors;
 }
 
@@ -116,7 +123,8 @@ export function validateTrainerFields(fields: {
     errors.branchId = 'validation.branchRequired';
   }
   const phone = (fields.phone ?? '').trim();
-  if (phone && !isValidEthiopianPhone(phone)) {
+  if (!phone) errors.phone = 'validation.phoneRequired';
+  else if (!isValidEthiopianPhone(phone)) {
     errors.phone = 'validation.phoneInvalid';
   }
   return errors;

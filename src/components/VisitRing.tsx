@@ -75,7 +75,8 @@ export function VisitRing({
   const r = (size - drawStroke) / 2;
   const circ = 2 * Math.PI * r;
 
-  const fill = warnRed ? c.statusExpired : warnAmber ? c.statusDueSoon : c.accent;
+  const ringAmber = theme === 'light' ? '#b45309' : '#fbbf24';
+  const fill = warnRed ? c.statusExpired : warnAmber ? ringAmber : c.accentText;
   const track = empty
     ? theme === 'light'
       ? 'rgba(15,23,42,0.28)'
@@ -83,13 +84,8 @@ export function VisitRing({
     : theme === 'light'
       ? 'rgba(15,23,42,0.08)'
       : 'rgba(148,163,184,0.18)';
-  const countColor = warnRed ? c.statusExpired : warnAmber ? c.statusDueSoon : c.text;
-  const discBg =
-    warnRed
-      ? 'rgba(225,29,72,0.08)'
-      : warnAmber
-        ? 'rgba(2,132,215,0.08)'
-        : c.inputBg;
+  const countColor = warnRed ? c.statusExpired : c.text;
+  const discBg = theme === 'light' ? c.inputBg : '#0c0e12';
 
   const progressSv = useSharedValue(progress);
   const tickScale = useSharedValue(0);
@@ -253,7 +249,7 @@ export function VisitRing({
         <Svg width={tickSize} height={tickSize} viewBox="0 0 24 24">
           <Path
             d="M5.5 12.5l4.2 4.2L18.5 7.5"
-            stroke={c.accentCta}
+            stroke={fill}
             strokeWidth={2.6}
             strokeLinecap="round"
             strokeLinejoin="round"

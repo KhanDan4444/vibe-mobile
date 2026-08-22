@@ -11,6 +11,7 @@ const TYPE_KEYS: Record<string, string> = {
   member_expires_today: 'messages.typeExpiresToday',
   member_expired: 'messages.typeExpired',
   member_renewed: 'messages.typeRenewed',
+  member_pass_link: 'messages.typePassLink',
 };
 
 const PREVIEW_KEYS: Record<string, string> = {
@@ -19,6 +20,7 @@ const PREVIEW_KEYS: Record<string, string> = {
   member_expires_today: 'messages.previewExpiresToday',
   member_expired: 'messages.previewExpired',
   member_renewed: 'messages.previewRenewed',
+  member_pass_link: 'messages.previewPassLink',
 };
 
 export function formatSmsType(type: string, t: TFunction) {
@@ -36,6 +38,7 @@ export function smsTypeAccent(type: string, c: ThemeColors): string {
   switch (type) {
     case 'member_enrolled':
     case 'member_renewed':
+    case 'member_pass_link':
       return c.statusActive;
     case 'member_due_soon':
     case 'member_expires_today':
@@ -60,6 +63,8 @@ export function smsTypeIcon(type: string): IonName {
       return 'alert-circle-outline';
     case 'member_renewed':
       return 'sync-outline';
+    case 'member_pass_link':
+      return 'qr-code-outline';
     default:
       return 'chatbubble-ellipses-outline';
   }
@@ -72,4 +77,5 @@ export const SMS_TYPE_FILTER_KEYS = [
   { value: 'member_expires_today' as const, labelKey: 'messages.filterExpiresToday' },
   { value: 'member_expired' as const, labelKey: 'messages.filterExpired' },
   { value: 'member_renewed' as const, labelKey: 'messages.filterRenewed' },
+  { value: 'member_pass_link' as const, labelKey: 'messages.filterPassLink' },
 ] as const;

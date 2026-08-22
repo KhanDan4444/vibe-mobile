@@ -99,3 +99,40 @@ export function restoreMember(token: string, id: number) {
     token,
   });
 }
+
+export type MemberPassResponse = {
+  token: string;
+  pass_version: number;
+  qr_data_url: string;
+  gym_name?: string | null;
+  member: {
+    id: number;
+    name: string;
+    phone: string | null;
+    photo_url: string | null;
+    photo_data_url?: string | null;
+    branch_id: number | null;
+    branch_name?: string | null;
+    plan_name?: string | null;
+    start_date?: string | null;
+    end_date?: string | null;
+  };
+};
+
+export function fetchMemberPass(token: string, id: number) {
+  return apiRequest<MemberPassResponse>(`/members/${id}/pass`, { token });
+}
+
+export function regenerateMemberPass(token: string, id: number) {
+  return apiRequest<MemberPassResponse>(`/members/${id}/pass/regenerate`, {
+    method: 'POST',
+    token,
+  });
+}
+
+export function sendMemberPassSms(token: string, id: number) {
+  return apiRequest<{ ok: boolean; phone: string }>(`/members/${id}/pass/sms`, {
+    method: 'POST',
+    token,
+  });
+}

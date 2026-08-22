@@ -72,7 +72,10 @@ function StaffCard({
   }));
 
   const login = member.username || member.email || '—';
-  const branch = member.branch_name ? branchDisplayName(member.branch_name) : t('team.noBranch');
+  const { activeBranches } = useBranchScope();
+  const defaultBranch =
+    activeBranches.find((b) => b.is_default)?.name || activeBranches[0]?.name || 'Main';
+  const branch = branchDisplayName(member.branch_name || defaultBranch);
 
   const menuItems = [
     { id: 'edit', label: t('team.edit'), icon: 'create-outline' as const, onPress: onEdit, accent: true },
@@ -138,10 +141,13 @@ function TrainerCard({
     restoreLabel: { fontSize: 13, fontWeight: '700' as const, color: '#fff' },
   }));
 
+  const { activeBranches } = useBranchScope();
+  const defaultBranch =
+    activeBranches.find((b) => b.is_default)?.name || activeBranches[0]?.name || 'Main';
   const detailParts = [
     trainer.specialty || null,
     t('team.assignedMembers', { count: trainer.member_count ?? 0 }),
-    trainer.branch_name ? branchDisplayName(trainer.branch_name) : t('team.noBranch'),
+    branchDisplayName(trainer.branch_name || defaultBranch),
   ].filter(Boolean);
   const detailLine = detailParts.join(' · ');
 

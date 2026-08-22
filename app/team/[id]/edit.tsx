@@ -34,6 +34,7 @@ export default function EditStaffScreen() {
   const [username, setUsername] = useState('');
   const [branchId, setBranchId] = useState<number | null>(null);
   const [resetPassword, setResetPassword] = useState('');
+  const [resetConfirmPassword, setResetConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldErrorMap>({});
   const [resetErrors, setResetErrors] = useState<FieldErrorMap>({});
@@ -89,6 +90,7 @@ export default function EditStaffScreen() {
     mutationFn: () => resetStaffPassword(token!, staffId, resetPassword.trim()),
     onSuccess: () => {
       setResetPassword('');
+      setResetConfirmPassword('');
       setError('');
       setResetErrors({});
       setResetNotice(
@@ -119,7 +121,7 @@ export default function EditStaffScreen() {
 
   const handleReset = () => {
     setError('');
-    const next = validateStaffPasswordReset(resetPassword);
+    const next = validateStaffPasswordReset(resetPassword, resetConfirmPassword);
     setResetErrors(next);
     if (hasFieldErrors(next)) return;
     resetMutation.mutate();
@@ -233,13 +235,30 @@ export default function EditStaffScreen() {
             value={resetPassword}
             onChangeText={(v) => {
               setResetPassword(v);
-              if (resetErrors.password) setResetErrors({});
+              if (resetErrors.password || resetErrors.confirmPassword) setResetErrors({});
             }}
             secureTextEntry
             autoCapitalize="none"
             error={Boolean(resetErrors.password)}
           />
           <FieldError message={resetErrors.password ? t(resetErrors.password) : undefined} />
+
+          <Label required>{t('forgot.confirmPassword')}</Label>
+          <Field
+            value={resetConfirmPassword}
+            onChangeText={(v) => {
+              setResetConfirmPassword(v);
+              if (resetErrors.confirmPassword) {
+                setResetErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+              }
+            }}
+            secureTextEntry
+            autoCapitalize="none"
+            error={Boolean(resetErrors.confirmPassword)}
+          />
+          <FieldError
+            message={resetErrors.confirmPassword ? t(resetErrors.confirmPassword) : undefined}
+          />
 
           <PrimaryButton
             label={resetMutation.isPending ? t('common.updating') : t('team.resetPassword')}

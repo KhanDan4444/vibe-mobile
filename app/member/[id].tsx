@@ -12,9 +12,12 @@ import { deleteMember, fetchMember, fetchMemberPayments, restoreMember } from '@
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { MemberPhoto } from '@/src/components/MemberPhoto';
 import { MemberActionsBar } from '@/src/components/MemberActionsBar';
+import { MemberPassSheet } from '@/src/components/MemberPassSheet';
 import { ResponsiveContent } from '@/src/components/ResponsiveContent';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
+import { SecondaryButton } from '@/src/components/ui/Button';
+import { formatPlanDisplayName } from '@/src/utils/formatPlanDisplayName';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import type { AppLanguage } from '@/src/i18n';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
@@ -121,6 +124,7 @@ export default function MemberDetailScreen() {
   const { showFlash } = useFlash();
   const canViewMember = Boolean(user && hasGymPortalAccess(user.role));
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [passOpen, setPassOpen] = useState(false);
   const [errorNotice, setErrorNotice] = useState('');
 
   const memberQuery = useQuery({
@@ -259,7 +263,12 @@ export default function MemberDetailScreen() {
 
       <SoftSurface variant="panel" style={[styles.card, isTablet && { flex: 1 }]}>
         <Text display style={styles.sectionTitle}>{t('member.membership')}</Text>
-        <Row label={t('member.plan')} value={member.plan_name || '—'} styles={styles} language={language} />
+        <Row
+          label={t('member.plan')}
+          value={formatPlanDisplayName(member.plan_name) || '—'}
+          styles={styles}
+          language={language}
+        />
         {member.trainer_name ? (
           <Row label={t('member.trainer')} value={member.trainer_name} styles={styles} language={language} />
         ) : null}
@@ -282,6 +291,14 @@ export default function MemberDetailScreen() {
           />
         ) : null}
       </SoftSurface>
+
+      {!isFormer ? (
+        <SecondaryButton
+          label={t('checkIn.showPass')}
+          onPress={() => setPassOpen(true)}
+          style={{ marginBottom: 14 }}
+        />
+      ) : null}
       </View>
 
       <MemberActionsBar
@@ -348,6 +365,13 @@ export default function MemberDetailScreen() {
       alertOnly
       destructive={false}
       onConfirm={() => setErrorNotice('')}
+    />
+    <MemberPassSheet
+      visible={passOpen}
+      memberId={member.id}
+      memberName={member.name}
+      memberPhone={member.phone}
+      onClose={() => setPassOpen(false)}
     />
     </TabScreenFrame>
   );
