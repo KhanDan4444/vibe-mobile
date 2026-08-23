@@ -126,6 +126,7 @@
     "periodMoreTitle": "ተጨማሪ ጊዜያት",
     "viewMember": "አባል ይመልከቱ",
     "editPayment": "ክፍያ አርትዕ",
+    "deletePayment": "ክፍያ ሰርዝ",
     "paymentsCount": "{{count}} ክፍያዎች",
     "vsPrior": "{{trend}} ከቀድሞው ጊዜ",
     "tapToEdit": "ለማስተካከል ይንኩ",
@@ -592,12 +593,12 @@
       "subtitle": "{{name}} ተጠብቋል።"
     },
     "paymentDeleted": {
-      "title": "ክፍያ ተሰርዟል",
-      "subtitle": "ይህ ክፍያ ከገቢ ተወግዷል።"
+      "title": "ክፍያ ተወግዷል",
+      "subtitle": "ይህ ክፍያ ከገቢ እንደ እርማት ተወግዷል።"
     },
     "paymentDeletePending": {
       "title": "ክፍያ በመሰረዝ ላይ…",
-      "subtitle": "ያልመለሱ ይህ ክፍያ ይሰረዛል።"
+      "subtitle": "ለጥቂት ሰከንዶች መልሰው ክፍያውን ማቆየት ይችላሉ።"
     },
     "paymentDeleteCancelled": {
       "title": "መሰረዝ ተሰርዟል",
@@ -649,7 +650,7 @@
   "enroll": {
     "successDone": "ተጠናቋል",
     "successTitle": "አባል ተመዝግቧል",
-    "successPaid": "ክፍያ ተመዝግቧል። ለአገልግሎት ዝግጁ ናቸው።",
+    "successPaid": "ክፍያ ተመዝግቧል። በአባላት ዝርዝር ላይ ናቸው።",
     "successSkip": "እንዳልከፈሉ ምልክት ተደርጓል — ክፍያ ሲዘጋጁ ይቀበሉ።",
     "smsFailedTitle": "የSMS መልእክት አልተላከም!",
     "smsFailedBody": "አባሉ ተመዝግቧል፣ ነገር ግን መልእክቱ አልደረሰም። ከመገለጫቸው የፓስ አገናኝ እንደገና መላክ ይችላሉ።",
@@ -663,6 +664,7 @@
     "fullNamePlaceholder": "የአባል ሙሉ ስም",
     "sectionMember": "አባል",
     "sectionMembership": "አባልነት",
+    "sectionPlan": "ዕቅድ",
     "sectionPayment": "ክፍያ",
     "stepOf": "ደረጃ {{current}} ከ {{total}}",
     "stepOfShort": "{{current}} ከ {{total}}",
@@ -675,7 +677,12 @@
     "unpaidWarning": "ክፍያ እስኪሰበሰብ ድረስ አባሉ እንዳልከፈለ ምልክት ይደረግበታል።",
     "paymentDateBoundHint": "ከመጀመሪያው ቀን ({{date}}) በኋላ ወይም በዚያው ቀን መሆን አለበት።",
     "swipeHint": "በደረጃዎች መካከል ለመንቀሳቀስ ወደ ግራ ወይም ቀኝ ያንሸራቱ።",
-    "swipeHintShort": "በደረጃዎች መካከል ያንሸራቱ"
+    "swipeHintShort": "በደረጃዎች መካከል ያንሸራቱ",
+    "trainer": "አሰልጣኝ",
+    "noTrainer": "አሰልጣኝ የለም",
+    "trainerFee": "የአሰልጣኝ ክፍያ (አማራጭ)",
+    "trainerFeeDone": "የአሰልጣኝ ክፍያ",
+    "trainerFeeHint": "እንደ የአባልነት ክፍያ አይቆጠርም።"
   },
   "screens": {
     "account": "መለያ",
@@ -841,8 +848,8 @@
     "addressTooLong": "አድራሻው በጣም ረጅም ነው።"
   },
   "paymentEdit": {
-    "deleteTitle": "ክፍያ ሰርዝ",
-    "deleteBody": "ይህ የክፍያ መዝገብ ይወገድ? ይህ መመለስ አይቻልም።",
+    "deleteTitle": "ክፍያ ይሰረዝ?",
+    "deleteBody": "ይህን ግብይት ከገቢ ያስወግዳል (ለማረም ብቻ)። ብቸኛ ክፍያቸው ከሆነ እንዳልከፈሉ ሊታዩ ይችላሉ። ለጥቂት ሰከንዶች መልሰው ማቆየት ይችላሉ።",
     "delete": "ክፍያ ሰርዝ"
   },
   "photo": {
@@ -850,6 +857,9 @@
     "noPhoto": "ፎቶ የለም",
     "add": "ፎቶ ጨምር",
     "change": "ቀይር",
+    "changePhoto": "ፎቶ ቀይር",
+    "tapToReplace": "ለመቀየር ይንኩ",
+    "optionalHint": "ካሜራ ወይም ቤተ-መጽሐፍት",
     "remove": "አስወግድ",
     "processing": "በማቀናበር ላይ…",
     "takePhoto": "ፎቶ አንሳ",

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, View, type TextStyle } from 'react-native';
@@ -7,8 +7,9 @@ import { AppText as Text } from '@/src/components/AppText';
 import { ListFooterSkeleton, PageSkeleton } from '@/src/components/Skeleton';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/src/auth/AuthContext';
-import { fetchPayments } from '@/src/api/payments';
+import { deletePayment, fetchPayments } from '@/src/api/payments';
 import { ActionOverflowMenu } from '@/src/components/ActionOverflowMenu';
+import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { MemberPhoto } from '@/src/components/MemberPhoto';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
 import { BranchFilterBar } from '@/src/components/BranchFilterBar';
@@ -17,6 +18,7 @@ import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { EmptyState } from '@/src/components/EmptyState';
 import { PAYMENT_METHODS, paymentMethodBadgeStyle, paymentMethodIcon, paymentMethodLabelKey, paymentMethodShortLabelKey } from '@/src/constants/payments';
 import { useBranchScope } from '@/src/context/BranchContext';
+import { useFlash } from '@/src/context/FlashContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
@@ -29,6 +31,7 @@ import { DEFAULT_REVENUE_SORT, type RevenueSortId } from '@/src/utils/listSort';
 import { paymentSourceKey } from '@/src/utils/termPayments';
 import { statusLabelKey } from '@/src/utils/statusLabels';
 import { isGymOwner } from '@/src/utils/roles';
+import { scheduleDeleteWithUndo } from '@/src/utils/scheduleWithUndo';
 import { SecondaryButton } from '@/src/components/ui/Button';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { FilterChip } from '@/src/components/FilterChip';
@@ -72,6 +75,7 @@ function PaymentRowItem({
   columnStyle,
   onOpenMember,
   onEdit,
+  onDelete,
 }: {
   payment: PaymentListRow;
   token: string;
@@ -81,6 +85,7 @@ function PaymentRowItem({
   columnStyle?: object;
   onOpenMember: () => void;
   onEdit: () => void;
+  onDelete: () => void;
 }) {
   const { t } = useTranslation();
   const { colors: c } = useTheme();
@@ -127,17 +132,18 @@ function PaymentRowItem({
     owner && !readOnly
       ? [
           {
-            id: 'member',
-            label: t('revenue.viewMember'),
-            icon: 'person-outline' as const,
-            onPress: onOpenMember,
-          },
-          {
             id: 'edit',
             label: t('revenue.editPayment'),
             icon: 'create-outline' as const,
             onPress: onEdit,
             accent: true,
+          },
+          {
+            id: 'delete',
+            label: t('revenue.deletePayment'),
+            icon: 'trash-outline' as const,
+            onPress: onDelete,
+            destructive: true,
           },
         ]
       : [];
@@ -276,6 +282,9 @@ export default function RevenueScreen() {
   const { token, user } = useAuth();
   const { colors: c } = useTheme();
   const { language } = usePreferences();
+  const queryClient = useQueryClient();
+  const { showFlash } = useFlash();
+  const [deleteTarget, setDeleteTarget] = useState<PaymentListRow | null>(null);
   const styles = useThemedStyles((colors) => ({
     container: { flex: 1, backgroundColor: colors.bg },
     headerBlock: { paddingTop: 0 },
@@ -441,6 +450,26 @@ export default function RevenueScreen() {
         method: payment.method,
         member_id: String(payment.member_id),
         member_name: payment.member_name || '',
+      },
+    });
+  };
+
+  const confirmDeletePayment = () => {
+    const payment = deleteTarget;
+    setDeleteTarget(null);
+    if (!payment || !token) return;
+    scheduleDeleteWithUndo({
+      showFlash,
+      t,
+      pendingKey: 'flash.paymentDeletePending',
+      cancelledKey: 'flash.paymentDeleteCancelled',
+      committedKey: 'flash.paymentDeleted',
+      onUndo: () => {},
+      onCommit: async () => {
+        await deletePayment(token, payment.id);
+        await queryClient.invalidateQueries({ queryKey: ['payments'] });
+        await queryClient.invalidateQueries({ queryKey: ['member-payments', payment.member_id] });
+        await queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       },
     });
   };
@@ -623,6 +652,7 @@ export default function RevenueScreen() {
               columnStyle={listColumnItemStyle}
               onOpenMember={() => router.push(`/member/${item.member_id}`)}
               onEdit={() => openEdit(item)}
+              onDelete={() => setDeleteTarget(item)}
             />
           )}
           contentContainerStyle={[
@@ -648,6 +678,16 @@ export default function RevenueScreen() {
           }
         />
       )}
+
+      <ConfirmDialog
+        visible={Boolean(deleteTarget)}
+        title={t('paymentEdit.deleteTitle')}
+        message={t('paymentEdit.deleteBody')}
+        confirmLabel={t('revenue.deletePayment')}
+        destructive
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={confirmDeletePayment}
+      />
 
       <RevenueFiltersSheet
         visible={filtersOpen}

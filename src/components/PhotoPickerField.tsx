@@ -1,12 +1,21 @@
 import { useState } from 'react';
-import { Alert, Image, StyleSheet, View } from 'react-native';
-import { AppText as Text } from '@/src/components/AppText';
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useTranslation } from 'react-i18next';
+import { AppText as Text } from '@/src/components/AppText';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
 import { Label } from '@/src/components/Form';
-import { SecondaryButton } from '@/src/components/ui/Button';
-import { useThemedStyles } from '@/src/theme/useThemedStyles';
+import { SoftSurface } from '@/src/components/ui/SoftSurface';
+import { useTheme } from '@/src/context/PreferencesContext';
+import { radiusMd } from '@/src/theme/tokens';
 import { compressMemberPhoto } from '@/src/utils/compressMemberPhoto';
 import { dismissKeyboardThen } from '@/src/utils/dismissKeyboard';
 
@@ -17,6 +26,10 @@ const PICKER_OPTIONS = {
   quality: 1,
 };
 
+/**
+ * One composed photo control — avatar + action in a single tappable surface
+ * (not a placeholder disc beside a separate Add button).
+ */
 export function PhotoPickerField({
   previewUri,
   onChange,
@@ -34,26 +47,8 @@ export function PhotoPickerField({
   notice?: string;
 }) {
   const { t } = useTranslation();
+  const { colors: c } = useTheme();
   const [sheetOpen, setSheetOpen] = useState(false);
-  const styles = useThemedStyles((colors) => ({
-    row: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 16, marginTop: 4 },
-    preview: { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.border },
-    placeholder: {
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.border,
-    },
-    placeholderText: { color: colors.dim, fontSize: 11 },
-    actions: { flex: 1, gap: 8 },
-    notice: {
-      marginTop: 8,
-      marginBottom: 4,
-      fontSize: 13,
-      lineHeight: 18,
-      color: colors.warning,
-    },
-  }));
 
   const closeSheet = () => setSheetOpen(false);
 
@@ -100,34 +95,65 @@ export function PhotoPickerField({
     dismissKeyboardThen(() => setSheetOpen(true));
   };
 
-  const addLabel = processing ? t('photo.processing') : previewUri ? t('photo.change') : t('photo.add');
+  const hasPhoto = Boolean(previewUri);
+  const title = processing
+    ? t('photo.processing')
+    : hasPhoto
+      ? t('photo.changePhoto')
+      : t('photo.add');
+  const subtitle = hasPhoto ? t('photo.tapToReplace') : t('photo.optionalHint');
   const pickBlocked = processing || pickDisabled;
 
   return (
     <View>
       <Label>{t('photo.label')}</Label>
-      {notice ? <Text style={styles.notice}>{notice}</Text> : null}
-      <View style={styles.row}>
-        <View>
-          {previewUri ? (
-            <Image source={{ uri: previewUri }} style={styles.preview} />
+      {notice ? <Text style={[styles.notice, { color: c.warning }]}>{notice}</Text> : null}
+
+      <SoftSurface
+        variant="quiet"
+        flat
+        onPress={pickBlocked ? undefined : openPhotoActions}
+        accessibilityRole="button"
+        accessibilityLabel={title}
+        style={[styles.tile, pickBlocked && styles.tileDisabled]}
+      >
+        <View style={[styles.avatar, { backgroundColor: c.accentSoft }]}>
+          {processing ? (
+            <ActivityIndicator color={c.accentText} />
+          ) : hasPhoto ? (
+            <Image source={{ uri: previewUri }} style={styles.avatarImage} />
           ) : (
-            <View style={[styles.preview, styles.placeholder]}>
-              <Text style={styles.placeholderText}>{t('photo.noPhoto')}</Text>
-            </View>
+            <Ionicons name="camera-outline" size={22} color={c.accentText} />
           )}
         </View>
-        <View style={styles.actions}>
-          <SecondaryButton label={addLabel} onPress={openPhotoActions} disabled={pickBlocked} loading={processing} />
-          {previewUri ? (
-            <SecondaryButton
-              label={t('photo.remove')}
-              onPress={() => onChange('', '')}
-              disabled={processing}
-            />
-          ) : null}
+
+        <View style={styles.copy}>
+          <Text style={[styles.title, { color: pickBlocked ? c.dim : c.text }]}>{title}</Text>
+          <Text style={[styles.subtitle, { color: c.dim }]} numberOfLines={1}>
+            {subtitle}
+          </Text>
         </View>
-      </View>
+
+        {!processing ? (
+          <Ionicons
+            name={hasPhoto ? 'create-outline' : 'add-circle-outline'}
+            size={20}
+            color={pickBlocked ? c.dim : c.accentText}
+          />
+        ) : null}
+      </SoftSurface>
+
+      {hasPhoto && !processing ? (
+        <Pressable
+          onPress={() => onChange('', '')}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={t('photo.remove')}
+          style={styles.removeHit}
+        >
+          <Text style={[styles.remove, { color: c.dim }]}>{t('photo.remove')}</Text>
+        </Pressable>
+      ) : null}
 
       <BottomSheet visible={sheetOpen} title={t('photo.label')} onClose={closeSheet} compact>
         <SheetOption label={t('photo.takePhoto')} onPress={() => void pickFromCamera()} />
@@ -137,3 +163,48 @@ export function PhotoPickerField({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  notice: {
+    marginTop: 4,
+    marginBottom: 8,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  tile: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginTop: 4,
+    borderRadius: radiusMd,
+  },
+  tileDisabled: {
+    opacity: 0.72,
+  },
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+  },
+  copy: { flex: 1, minWidth: 0 },
+  title: { fontSize: 15, fontWeight: '600', letterSpacing: -0.1 },
+  subtitle: { marginTop: 2, fontSize: 13, lineHeight: 18 },
+  removeHit: {
+    alignSelf: 'flex-start',
+    marginTop: 10,
+    marginLeft: 4,
+    minHeight: 32,
+    justifyContent: 'center',
+  },
+  remove: { fontSize: 14, fontWeight: '500' },
+});

@@ -126,6 +126,7 @@
     "periodMoreTitle": "More periods",
     "viewMember": "View member",
     "editPayment": "Edit payment",
+    "deletePayment": "Delete payment",
     "paymentsCount": "{{count}} payments",
     "vsPrior": "{{trend}} vs prior period",
     "tapToEdit": "Tap row to edit",
@@ -592,12 +593,12 @@
       "subtitle": "{{name}} was kept."
     },
     "paymentDeleted": {
-      "title": "Payment deleted",
-      "subtitle": "This payment was removed from revenue."
+      "title": "Payment removed",
+      "subtitle": "This payment was removed from revenue as a correction."
     },
     "paymentDeletePending": {
       "title": "Removing payment…",
-      "subtitle": "This payment will be deleted unless you undo."
+      "subtitle": "Undo within a few seconds to keep this payment."
     },
     "paymentDeleteCancelled": {
       "title": "Delete cancelled",
@@ -650,7 +651,7 @@
   "enroll": {
     "successDone": "Done",
     "successTitle": "Member enrolled",
-    "successPaid": "Payment recorded. They're ready for the floor.",
+    "successPaid": "Payment recorded. They're on the members list.",
     "successSkip": "Marked unpaid — collect payment when they're ready.",
     "smsFailedTitle": "SMS message is not sent!",
     "smsFailedBody": "The member is enrolled, but the phone message could not be delivered. You can resend the pass link from their profile.",
@@ -664,6 +665,7 @@
     "fullNamePlaceholder": "Member full name",
     "sectionMember": "Member",
     "sectionMembership": "Membership",
+    "sectionPlan": "Plan",
     "sectionPayment": "Payment",
     "stepOf": "Step {{current}} of {{total}}",
     "stepOfShort": "{{current}} of {{total}}",
@@ -680,6 +682,7 @@
     "trainer": "Trainer",
     "noTrainer": "No trainer",
     "trainerFee": "Trainer fee (optional)",
+    "trainerFeeDone": "Trainer fee",
     "trainerFeeHint": "Does not count as membership payment."
   },
   "screens": {
@@ -849,8 +852,8 @@
     "addressTooLong": "Address is too long."
   },
   "paymentEdit": {
-    "deleteTitle": "Delete payment",
-    "deleteBody": "Remove this payment record? This cannot be undone.",
+    "deleteTitle": "Delete payment?",
+    "deleteBody": "Removes this transaction from revenue (correction only). If it was their only payment, they may show as unpaid. You can undo for a few seconds.",
     "delete": "Delete payment"
   },
   "photo": {
@@ -858,6 +861,9 @@
     "noPhoto": "No photo",
     "add": "Add photo",
     "change": "Change",
+    "changePhoto": "Change photo",
+    "tapToReplace": "Tap to replace",
+    "optionalHint": "Camera or library",
     "remove": "Remove",
     "processing": "Processing…",
     "takePhoto": "Take photo",

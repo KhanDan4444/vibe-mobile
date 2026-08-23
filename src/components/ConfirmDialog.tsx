@@ -1,11 +1,12 @@
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { AppText as Text } from '@/src/components/AppText';
 import { PrimaryButton, SecondaryButton } from '@/src/components/ui/Button';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { elevationStyle } from '@/src/theme/elevation';
-import { radiusXl } from '@/src/theme/tokens';
+import { radiusMd, radiusXl } from '@/src/theme/tokens';
 
 type ConfirmDialogProps = {
   visible: boolean;
@@ -65,6 +66,12 @@ export function ConfirmDialog({
             },
           ]}
         >
+          {destructive && !alertOnly ? (
+            <View style={[styles.iconWell, { backgroundColor: c.errorBg }]}>
+              <Ionicons name="warning-outline" size={22} color={c.errorSolid} />
+            </View>
+          ) : null}
+
           <Text display style={[styles.title, { color: c.text }]}>
             {title}
           </Text>
@@ -117,6 +124,14 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     padding: 20,
     zIndex: 1,
+  },
+  iconWell: {
+    width: 40,
+    height: 40,
+    borderRadius: radiusMd,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
   },
   title: {
     fontSize: 17,

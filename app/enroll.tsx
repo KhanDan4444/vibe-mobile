@@ -56,6 +56,7 @@ import {
   clampPaymentToTerm,
 } from '@/src/utils/datePickerBounds';
 import { formatEtb } from '@/src/utils/formatMoney';
+import { formatPlanDisplayName } from '@/src/utils/formatPlanDisplayName';
 import { formatApiError } from '@/src/utils/paymentValidation';
 import { flashHaptic, selectionHaptic } from '@/src/utils/flashHaptic';
 import { validateRequiredEthiopianPhone } from '@/src/utils/phone';
@@ -216,8 +217,14 @@ export default function EnrollScreen() {
       gap: 12,
       paddingHorizontal: 14,
       paddingVertical: 11,
-      borderBottomWidth: 1,
+      borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.border,
+    },
+    summaryRowSection: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.border,
+      marginTop: 4,
+      paddingTop: 14,
     },
     summaryRowLast: { borderBottomWidth: 0 },
     summaryLabel: { color: colors.muted, fontSize: 14, flexShrink: 0 },
@@ -590,7 +597,7 @@ export default function EnrollScreen() {
   const enrollSteps = useMemo(
     () => [
       { id: 'member', label: t('enroll.sectionMember') },
-      { id: 'membership', label: t('enroll.sectionMembership') },
+      { id: 'membership', label: t('enroll.sectionPlan') },
       { id: 'payment', label: t('enroll.sectionPayment') },
     ],
     [t]
@@ -764,16 +771,24 @@ export default function EnrollScreen() {
           .filter(Boolean)
           .join(' · ');
 
-    const rows: { label: string; value: string; unpaid?: boolean }[] = [
+    const rows: { label: string; value: string; unpaid?: boolean; sectionStart?: boolean }[] = [
       enrollDone.phone ? { label: t('forms.phone'), value: enrollDone.phone } : null,
       enrollDone.branchName ? { label: t('member.branch'), value: enrollDone.branchName } : null,
-      enrollDone.planName ? { label: t('forms.plan'), value: enrollDone.planName } : null,
+      enrollDone.planName
+        ? {
+            label: t('forms.plan'),
+            value: formatPlanDisplayName(enrollDone.planName) || enrollDone.planName,
+            sectionStart: true,
+          }
+        : null,
       termLabel ? { label: t('enroll.term'), value: termLabel } : null,
       paymentLabel ? { label: t('enroll.payment'), value: paymentLabel, unpaid: enrollDone.skipPayment } : null,
-      enrollDone.trainerName ? { label: t('enroll.trainer'), value: enrollDone.trainerName } : null,
+      enrollDone.trainerName
+        ? { label: t('enroll.trainer'), value: enrollDone.trainerName, sectionStart: true }
+        : null,
       enrollDone.trainerFee != null
         ? {
-            label: t('enroll.trainerFee'),
+            label: t('enroll.trainerFeeDone'),
             value: [
               formatEtb(enrollDone.trainerFee),
               enrollDone.trainerFeeMethod
@@ -786,7 +801,7 @@ export default function EnrollScreen() {
               .join(' · '),
           }
         : null,
-    ].filter(Boolean) as { label: string; value: string; unpaid?: boolean }[];
+    ].filter(Boolean) as { label: string; value: string; unpaid?: boolean; sectionStart?: boolean }[];
 
     return (
       <Screen>
@@ -819,7 +834,11 @@ export default function EnrollScreen() {
                 {rows.map((row, index) => (
                   <View
                     key={row.label}
-                    style={[styles.summaryRow, index === rows.length - 1 ? styles.summaryRowLast : null]}
+                    style={[
+                      styles.summaryRow,
+                      row.sectionStart && index > 0 ? styles.summaryRowSection : null,
+                      index === rows.length - 1 ? styles.summaryRowLast : null,
+                    ]}
                   >
                     <Text style={styles.summaryLabel}>{row.label}</Text>
                     <Text style={[styles.summaryValue, row.unpaid ? styles.summaryUnpaid : null]} numberOfLines={2}>

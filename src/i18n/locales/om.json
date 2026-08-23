@@ -126,6 +126,7 @@
     "periodMoreTitle": "Yeroo dabalataa",
     "viewMember": "Miseensa ilaali",
     "editPayment": "Kaffaltii jijjiiri",
+    "deletePayment": "Kaffaltii haqi",
     "paymentsCount": "Kaffaltiiwwan {{count}}",
     "vsPrior": "{{trend}} yeroo duraa waliin",
     "tapToEdit": "Gulaaluuf tarree cuqaasaa",
@@ -593,11 +594,11 @@
     },
     "paymentDeleted": {
       "title": "Kaffaltiin haqameera",
-      "subtitle": "Kaffaltiin kun galii irraa haqameera."
+      "subtitle": "Kaffaltiin kun akka sirreeffamaatti galii irraa haqameera."
     },
     "paymentDeletePending": {
       "title": "Kaffaltiin haquu jira…",
-      "subtitle": "Yoo hin deebi'in kaffaltiin kun ni haqama."
+      "subtitle": "Sekondii muraasa keessatti deebisuu dandeessa."
     },
     "paymentDeleteCancelled": {
       "title": "Haquun dhaabbateera",
@@ -649,7 +650,7 @@
   "enroll": {
     "successDone": "Xumurameera",
     "successTitle": "Miseensi galmaa'eera",
-    "successPaid": "Kaffaltiin galmeeffameera. Tajaajilaaf qophaa'aa dha.",
+    "successPaid": "Kaffaltiin galmeeffameera. Tarree miseensotaa irratti jiru.",
     "successSkip": "Akka hin kaffalamneetti mallatteeffame — yeroo qophaa'an kaffaltii sassaabi.",
     "smsFailedTitle": "Ergaan SMS hin ergamne!",
     "smsFailedBody": "Miseensi galmaa'eera, garuu ergaan hin geenye. Liinkii paasii irraa profile isaani irraa deebisuu dandeessa.",
@@ -663,6 +664,7 @@
     "fullNamePlaceholder": "Maqaa guutuu miseensaa",
     "sectionMember": "Miseensa",
     "sectionMembership": "Miseensummaa",
+    "sectionPlan": "Karoora",
     "sectionPayment": "Kaffaltii",
     "stepOf": "Tarkaanfii {{current}} keessaa {{total}}",
     "stepOfShort": "{{current}}/{{total}}",
@@ -675,7 +677,12 @@
     "unpaidWarning": "Miseensi kun hanga kaffaltiin sassaabamutti kan hin kaffalamne ta'a.",
     "paymentDateBoundHint": "Guyyaa jalqabaa ({{date}}) irratti ykn sana booda ta'uu qaba.",
     "swipeHint": "Tarkaanfiiwwan gidduutti socho'uuf bitaa ykn mirgaatti harkisi.",
-    "swipeHintShort": "Tarkaanfiiwwan gidduutti harkisi"
+    "swipeHintShort": "Tarkaanfiiwwan gidduutti harkisi",
+    "trainer": "Leenjistaa",
+    "noTrainer": "Leenjistaa hin jiru",
+    "trainerFee": "Kaffaltii leenjistaa (filannoo)",
+    "trainerFeeDone": "Kaffaltii leenjistaa",
+    "trainerFeeHint": "Akka kaffaltii miseensummaa hin lakkaawamu."
   },
   "screens": {
     "account": "Akkaawuntii",
@@ -842,7 +849,7 @@
   },
   "paymentEdit": {
     "deleteTitle": "Kaffaltii haqamuu?",
-    "deleteBody": "Kun deebi'uu hin danda'u.",
+    "deleteBody": "Daldaala kana galii irraa haqa (sirreeffamaaf qofa). Yoo kaffaltii isaanii tokkicha ta'e akka hin kaffalleetti mul'achuu danda'a. Sekondii muraasa keessatti deebisuu dandeessa.",
     "delete": "Kaffaltii haqi"
   },
   "photo": {
@@ -850,6 +857,9 @@
     "noPhoto": "Suuraa hin jiru",
     "add": "Suuraa dabali",
     "change": "Jijjiiri",
+    "changePhoto": "Suuraa jijjiiri",
+    "tapToReplace": "Jijjiiruuf tuqi",
+    "optionalHint": "Kaameraa ykn kuusaa",
     "remove": "Dhabamsiisi",
     "processing": "Adeemsisamaa jira…",
     "takePhoto": "Suuraa kaasi",
