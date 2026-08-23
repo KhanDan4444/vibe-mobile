@@ -110,7 +110,7 @@ export default function NewStaffScreen() {
         <FormScroll>
           <ErrorBanner message={error} />
 
-          <Label required>{t('forms.name')}</Label>
+          <Label required>{t('enroll.fullName')}</Label>
           <Field
             value={name}
             onChangeText={(v) => {

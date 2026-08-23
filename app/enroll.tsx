@@ -127,6 +127,14 @@ export default function EnrollScreen() {
   const { colors: c, theme } = useTheme();
   const { t } = useTranslation();
   const styles = useThemedStyles((colors) => ({
+    sectionTitle: {
+      color: colors.muted,
+      fontSize: 15,
+      fontWeight: '600' as const,
+      letterSpacing: -0.15,
+      marginBottom: 12,
+      marginTop: 2,
+    },
     hint: { color: colors.dim, fontSize: 14, marginTop: 4 },
     lockedValue: {
       paddingHorizontal: 14,
@@ -912,6 +920,7 @@ export default function EnrollScreen() {
           <View accessibilityHint={t('enroll.swipeHint')} {...swipeResponder.panHandlers}>
             {enrollStep === 1 ? (
               <>
+                <Text style={styles.sectionTitle}>{t('enroll.sectionMember')}</Text>
                 <Label>{t('enroll.fullName')}</Label>
                 <Field
                   value={name}
@@ -966,6 +975,7 @@ export default function EnrollScreen() {
 
             {enrollStep === 2 ? (
               <>
+                <Text style={styles.sectionTitle}>{t('enroll.sectionMembership')}</Text>
                 {plansQuery.isLoading ? (
                   <View style={{ gap: 10, marginVertical: 8 }}>
                     <SkeletonBone width="40%" height={12} />
@@ -1012,6 +1022,7 @@ export default function EnrollScreen() {
 
             {enrollStep === 3 ? (
               <>
+                <Text style={styles.sectionTitle}>{t('enroll.sectionPayment')}</Text>
                 <View style={styles.switchRow}>
                   <Text style={styles.switchLabel}>{t('forms.enrollWithoutPayment')}</Text>
                   <Switch

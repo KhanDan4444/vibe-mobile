@@ -214,7 +214,7 @@ export default function EditMemberScreen() {
             }
           />
 
-          <Label>{t('forms.name')}</Label>
+          <Label>{t('enroll.fullName')}</Label>
           <Field value={name} onChangeText={setName} autoCapitalize="words" />
 
           <Label>{t('forms.phone')}</Label>

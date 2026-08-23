@@ -143,7 +143,7 @@ export default function EditTrainerScreen() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <FormScroll>
           <ErrorBanner message={error} />
-          <Label required>{t('forms.name')}</Label>
+          <Label required>{t('enroll.fullName')}</Label>
           <Field
             value={name}
             onChangeText={(v) => {
