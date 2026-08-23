@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { AppText as Text } from '@/src/components/AppText';
@@ -18,6 +20,7 @@ import { formatDisplayDate } from '@/src/utils/date';
 import { formatEtb } from '@/src/utils/formatMoney';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
+import { useTabBarOverlayInset } from '@/src/theme/tabBar';
 import { isGymOwner, isGymStaff } from '@/src/utils/roles';
 import { ResponsiveContent } from '@/src/components/ResponsiveContent';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
@@ -31,6 +34,8 @@ import { timings } from '@/src/theme/motion';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
 import { formatPlanDisplayName } from '@/src/utils/planFormat';
+
+const ATTENTION_PREVIEW = 4;
 
 type StatFilter = 'due_soon' | 'expired' | 'unpaid';
 
@@ -101,6 +106,7 @@ export default function DashboardScreen() {
   const staffUser = isGymStaff(user?.role);
   const { readOnly } = useGymReadOnly();
   const { statCardLayoutStyle, isTablet, pagePadding, chartHeight } = useResponsiveLayout();
+  const tabOverlayInset = useTabBarOverlayInset();
   const staffBranchLabel = staffUser
     ? branchDisplayName(user?.branch_name) || (user?.branch_id ? `Branch #${user.branch_id}` : null)
     : null;
@@ -149,12 +155,16 @@ export default function DashboardScreen() {
     });
   };
 
-  const alertMembers = (data?.alertMembers ?? []).slice(0, 5);
+  const [attentionExpanded, setAttentionExpanded] = useState(false);
+  const allAlertMembers = data?.alertMembers ?? [];
+  const alertMembers = attentionExpanded
+    ? allAlertMembers
+    : allAlertMembers.slice(0, ATTENTION_PREVIEW);
   const unpaidCount = data?.unpaidCount ?? 0;
-  const attentionHasContent = alertMembers.length > 0 || unpaidCount > 0;
-  const alertFilter = alertMembers.some((member) => member.status.toLowerCase() === 'expired')
+  const attentionHasContent = allAlertMembers.length > 0 || unpaidCount > 0;
+  const alertFilter = allAlertMembers.some((member) => member.status.toLowerCase() === 'expired')
     ? 'expired'
-    : alertMembers.some((member) => member.status.toLowerCase() === 'due soon')
+    : allAlertMembers.some((member) => member.status.toLowerCase() === 'due soon')
       ? 'due_soon'
       : unpaidCount > 0
         ? 'unpaid'
@@ -162,17 +172,34 @@ export default function DashboardScreen() {
 
   const summaryBlock = data ? (
     <SoftSurface variant="panel" style={styles.summary}>
-      <Pressable
-        onPress={() => router.push('/(tabs)/revenue')}
-        hitSlop={8}
-        accessibilityRole="link"
-        accessibilityLabel={t('dashboard.thisMonth')}
-        style={styles.summaryTitleRow}
-      >
-        <Text style={[styles.summaryTitle, { color: c.accentText }]}>{t('dashboard.thisMonth')}</Text>
-        <Text style={[styles.summaryTitleChevron, { color: c.accentText }]}>›</Text>
-      </Pressable>
-      <Text style={[styles.income, { color: c.text }]}>
+      <View style={styles.heroHeader}>
+        <Pressable
+          onPress={() => router.push('/(tabs)/revenue')}
+          hitSlop={8}
+          accessibilityRole="link"
+          accessibilityLabel={t('dashboard.thisMonth')}
+          style={styles.summaryTitleRow}
+        >
+          <Text style={[styles.summaryTitle, { color: c.muted }]}>{t('dashboard.thisMonth')}</Text>
+          <Text style={[styles.summaryTitleChevron, { color: c.muted }]}>›</Text>
+        </Pressable>
+        <Ionicons
+          name={
+            trendLabel
+              ? trendNegative
+                ? 'trending-down-outline'
+                : 'trending-up-outline'
+              : 'cash-outline'
+          }
+          size={18}
+          color={
+            trendLabel ? (trendNegative ? c.statusExpired : c.success) : c.muted
+          }
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+        />
+      </View>
+      <Text display style={[styles.income, { color: c.text }]}>
         {formatEtb(Number(data.monthlyIncome || 0), { forceCompact: false })}
       </Text>
       {trendLabel ? (
@@ -200,20 +227,39 @@ export default function DashboardScreen() {
           </Pressable>
         </View>
         {alertMembers.length ? (
-          alertMembers.map((member) => {
-            const status = member.status.toLowerCase();
-            const route = status === 'expired' || status === 'due soon' ? `/renew/${member.id}` : `/member/${member.id}`;
-            return (
-              <AlertMemberRow
-                key={member.id}
-                member={member}
-                colors={c}
-                token={token!}
-                onOpen={() => goMembers(filterForMemberStatus(member.status))}
-                onAction={readOnly ? undefined : () => router.push(route as never)}
-              />
-            );
-          })
+          <>
+            {alertMembers.map((member) => {
+              const status = member.status.toLowerCase();
+              const route = status === 'expired' || status === 'due soon' ? `/renew/${member.id}` : `/member/${member.id}`;
+              return (
+                <AlertMemberRow
+                  key={member.id}
+                  member={member}
+                  colors={c}
+                  token={token!}
+                  onOpen={() => goMembers(filterForMemberStatus(member.status))}
+                  onAction={readOnly ? undefined : () => router.push(route as never)}
+                />
+              );
+            })}
+            {allAlertMembers.length > ATTENTION_PREVIEW && !attentionExpanded ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('dashboard.showMore')}
+                hitSlop={6}
+                onPress={() => setAttentionExpanded(true)}
+                style={({ pressed }) => [
+                  styles.showMoreRow,
+                  { borderTopColor: c.border, opacity: pressed ? 0.65 : 1 },
+                ]}
+              >
+                <Text style={[styles.showMoreLabel, { color: c.statusActive }]}>
+                  {t('dashboard.showMore')}
+                </Text>
+                <Ionicons name="chevron-down" size={16} color={c.statusActive} />
+              </Pressable>
+            ) : null}
+          </>
         ) : (
           <SoftSurface
             variant="quiet"
@@ -239,7 +285,11 @@ export default function DashboardScreen() {
     <TabScreenFrame>
     <ScrollView
       style={[styles.container, { backgroundColor: c.bg }]}
-      contentContainerStyle={[styles.content, isTablet && styles.contentTablet]}
+      contentContainerStyle={[
+        styles.content,
+        isTablet && styles.contentTablet,
+        { paddingBottom: 40 + tabOverlayInset },
+      ]}
       refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={c.accentText} />}
     >
       <ResponsiveContent style={{ paddingHorizontal: pagePadding }}>
@@ -248,7 +298,7 @@ export default function DashboardScreen() {
         <Text style={[styles.branchLabel, { color: c.muted }]}>{t('branch.staffAt', { name: staffBranchLabel })}</Text>
       ) : null}
 
-      <BranchFilterBar horizontalPadding={0} />
+      <BranchFilterBar horizontalPadding={0} emphasis />
 
       {isLoading ? (
         <PageSkeleton variant="dashboard" padded={false} />
@@ -290,7 +340,7 @@ export default function DashboardScreen() {
               label={t('dashboard.unpaid')}
               value={data.unpaidCount ?? 0}
               accent={c.statusUnpaid}
-              tone="neutral"
+              tone="attention"
               layoutStyle={statCardLayoutStyle}
               onPress={() => goMembers('unpaid')}
             />
@@ -303,13 +353,22 @@ export default function DashboardScreen() {
               accessibilityRole="button"
               accessibilityLabel={t('dashboard.checkedInTodayAria', { count: data.checkedInToday })}
             >
-              <Text style={[styles.checkInTodayLabel, { color: c.accentText }]}>
-                {t('dashboard.checkedInToday')}
-              </Text>
+              <View style={styles.heroHeader}>
+                <Text style={[styles.checkInTodayLabel, { color: c.muted }]}>
+                  {t('dashboard.checkedInToday')}
+                </Text>
+                <Ionicons
+                  name="checkbox-outline"
+                  size={18}
+                  color={c.accentText}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no"
+                />
+              </View>
               <Text display style={[styles.checkInTodayValue, { color: c.text }]}>
                 {data.checkedInToday}
               </Text>
-              <Text style={[styles.checkInTodayHint, { color: c.muted }]}>
+              <Text style={[styles.checkInTodayHint, { color: c.dim }]}>
                 {t('dashboard.checkedInTodayHint')}
               </Text>
             </SoftSurface>
@@ -346,24 +405,30 @@ const styles = StyleSheet.create({
     marginTop: space.md,
     padding: space.lg,
   },
+  heroHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
   checkInTodayLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1.2,
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.6,
     textTransform: 'uppercase',
   },
   checkInTodayValue: {
-    marginTop: 4,
-    fontSize: 36,
+    marginTop: 6,
+    fontSize: 40,
     fontWeight: '700',
-    letterSpacing: -0.8,
+    letterSpacing: -1,
   },
-  checkInTodayHint: { marginTop: 4, fontSize: 13 },
+  checkInTodayHint: { marginTop: 6, fontSize: 13 },
   summary: {
-    marginTop: space.lg,
-    padding: space.lg + 2,
+    marginTop: space.md,
+    padding: space.lg,
   },
-  summaryTitle: { fontSize: 13, fontWeight: '600' },
+  summaryTitle: { fontSize: 12, fontWeight: '600', letterSpacing: 0.4, textTransform: 'uppercase' },
   summaryTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -371,9 +436,9 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   summaryTitleChevron: { fontSize: 16, fontWeight: '600', lineHeight: 18 },
-  income: { marginTop: 6, fontSize: 30, fontWeight: '700', letterSpacing: -0.8 },
+  income: { marginTop: 6, fontSize: 32, fontWeight: '700', letterSpacing: -0.8 },
   trend: { marginTop: 6, fontSize: 13, fontWeight: '600' },
-  muted: { marginTop: 8, fontSize: 14 },
+  muted: { marginTop: 6, fontSize: 13 },
   errorWrap: { alignItems: 'center', paddingTop: 32, gap: 12 },
   errorText: { textAlign: 'center', fontSize: 15 },
   alertCard: {
@@ -406,6 +471,17 @@ const styles = StyleSheet.create({
   attentionShortcutBody: { flex: 1, minWidth: 0 },
   attentionShortcutTitle: { fontSize: 14, fontWeight: '600' },
   attentionShortcutMeta: { marginTop: 3, fontSize: 12, lineHeight: 16 },
+  showMoreRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    marginTop: 4,
+    paddingTop: 14,
+    paddingBottom: 4,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  showMoreLabel: { fontSize: 14, fontWeight: '600', letterSpacing: 0.1 },
   banner: {
     marginTop: 20,
     backgroundColor: 'rgba(251,191,36,0.12)',

@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import { useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { AppText as Text } from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +11,9 @@ import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
+import { timings } from '@/src/theme/motion';
+import { useTabBarOverlayInset } from '@/src/theme/tabBar';
+import { radiusMd } from '@/src/theme/tokens';
 import { isGymOwner } from '@/src/utils/roles';
 
 type MenuItem = {
@@ -17,6 +22,7 @@ type MenuItem = {
   icon: keyof typeof Ionicons.glyphMap;
   route: string;
   ownerOnly?: boolean;
+  section: 'gym' | 'insights';
 };
 
 const MENU_KEYS = {
@@ -35,43 +41,135 @@ const MENU_KEYS = {
 } as const;
 
 const MENU: MenuItem[] = [
-  { labelKey: 'plans', subtitleKey: 'plansSub', icon: 'barbell-outline', route: '/plans' },
-  { labelKey: 'activity', subtitleKey: 'activitySub', icon: 'time-outline', route: '/activity', ownerOnly: true },
-  { labelKey: 'team', subtitleKey: 'teamSub', icon: 'people-outline', route: '/team', ownerOnly: true },
-  { labelKey: 'branches', subtitleKey: 'branchesSub', icon: 'business-outline', route: '/branches', ownerOnly: true },
-  { labelKey: 'messages', subtitleKey: 'messagesSub', icon: 'chatbubble-outline', route: '/messages', ownerOnly: true },
-  { labelKey: 'reports', subtitleKey: 'reportsSub', icon: 'document-text-outline', route: '/reports' },
+  { labelKey: 'plans', subtitleKey: 'plansSub', icon: 'barbell-outline', route: '/plans', section: 'gym' },
+  { labelKey: 'team', subtitleKey: 'teamSub', icon: 'people-outline', route: '/team', ownerOnly: true, section: 'gym' },
+  {
+    labelKey: 'branches',
+    subtitleKey: 'branchesSub',
+    icon: 'business-outline',
+    route: '/branches',
+    ownerOnly: true,
+    section: 'gym',
+  },
+  {
+    labelKey: 'activity',
+    subtitleKey: 'activitySub',
+    icon: 'time-outline',
+    route: '/activity',
+    ownerOnly: true,
+    section: 'insights',
+  },
+  {
+    labelKey: 'messages',
+    subtitleKey: 'messagesSub',
+    icon: 'chatbubble-outline',
+    route: '/messages',
+    ownerOnly: true,
+    section: 'insights',
+  },
+  {
+    labelKey: 'reports',
+    subtitleKey: 'reportsSub',
+    icon: 'document-text-outline',
+    route: '/reports',
+    section: 'insights',
+  },
 ];
 
-export default function MoreScreen() {
+function MenuRow({
+  item,
+  showDivider,
+  onPress,
+}: {
+  item: MenuItem;
+  showDivider: boolean;
+  onPress: () => void;
+}) {
+  const { colors: c } = useTheme();
+  const { t } = useTranslation();
+
+  return (
+    <View>
+      {showDivider ? <View style={[styles.divider, { backgroundColor: c.border }]} /> : null}
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={t(MENU_KEYS[item.labelKey])}
+        style={({ pressed }) => [styles.row, pressed && { opacity: 0.72 }]}
+      >
+        <View style={[styles.iconWell, { backgroundColor: c.accentSoft }]}>
+          <Ionicons name={item.icon} size={20} color={c.accentText} />
+        </View>
+        <View style={styles.rowText}>
+          <Text style={[styles.rowLabel, { color: c.text }]}>{t(MENU_KEYS[item.labelKey])}</Text>
+          {item.subtitleKey ? (
+            <Text style={[styles.rowSub, { color: c.dim }]} numberOfLines={1}>
+              {t(MENU_KEYS[item.subtitleKey])}
+            </Text>
+          ) : null}
+        </View>
+        <Ionicons name="chevron-forward" size={16} color={c.dim} />
+      </Pressable>
+    </View>
+  );
+}
+
+function MenuSection({
+  title,
+  items,
+  delay,
+}: {
+  title: string;
+  items: MenuItem[];
+  delay: number;
+}) {
   const router = useRouter();
+  const { colors: c } = useTheme();
+  if (items.length === 0) return null;
+
+  return (
+    <Animated.View entering={FadeIn.duration(timings.fadeMs).delay(delay)}>
+      <Text style={[styles.sectionLabel, { color: c.dim }]}>{title}</Text>
+      <SoftSurface variant="group" flat style={styles.group}>
+        {items.map((item, index) => (
+          <MenuRow
+            key={item.route}
+            item={item}
+            showDivider={index > 0}
+            onPress={() => router.push(item.route as never)}
+          />
+        ))}
+      </SoftSurface>
+    </Animated.View>
+  );
+}
+
+export default function MoreScreen() {
   const { user } = useAuth();
   const { colors: c } = useTheme();
   const { t } = useTranslation();
   const { pagePadding } = useResponsiveLayout();
+  const tabOverlayInset = useTabBarOverlayInset();
   const owner = isGymOwner(user?.role);
 
-  const items = MENU.filter((item) => !item.ownerOnly || owner);
+  const { gymItems, insightItems } = useMemo(() => {
+    const visible = MENU.filter((item) => !item.ownerOnly || owner);
+    return {
+      gymItems: visible.filter((item) => item.section === 'gym'),
+      insightItems: visible.filter((item) => item.section === 'insights'),
+    };
+  }, [owner]);
 
   return (
     <TabScreenFrame>
-      <ScrollView style={[styles.container, { backgroundColor: c.bg }]} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={[styles.container, { backgroundColor: c.bg }]}
+        contentContainerStyle={[styles.content, { paddingBottom: 40 + tabOverlayInset }]}
+      >
         <ResponsiveContent style={{ paddingHorizontal: pagePadding }}>
-          <Text style={[styles.hint, { color: c.dim }]}>{t('more.hint')}</Text>
-
-          <View style={styles.menuGrid}>
-            {items.map((item) => (
-              <SoftSurface key={item.route} onPress={() => router.push(item.route as never)} style={styles.row}>
-                <Ionicons name={item.icon} size={22} color={c.muted} style={styles.rowIcon} />
-                <View style={styles.rowText}>
-                  <Text style={[styles.rowLabel, { color: c.text }]}>{t(MENU_KEYS[item.labelKey])}</Text>
-                  {item.subtitleKey ? (
-                    <Text style={[styles.rowSub, { color: c.dim }]}>{t(MENU_KEYS[item.subtitleKey])}</Text>
-                  ) : null}
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={c.dim} />
-              </SoftSurface>
-            ))}
+          <View style={styles.sections}>
+            <MenuSection title={t('more.sectionGym')} items={gymItems} delay={40} />
+            <MenuSection title={t('more.sectionInsights')} items={insightItems} delay={100} />
           </View>
         </ResponsiveContent>
       </ScrollView>
@@ -82,22 +180,38 @@ export default function MoreScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { paddingBottom: 40, flexGrow: 1 },
-  hint: {
-    fontSize: 13,
-    lineHeight: 20,
-    marginBottom: 16,
+  sections: { gap: 22 },
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.7,
+    textTransform: 'uppercase',
+    marginBottom: 8,
     paddingHorizontal: 4,
   },
-  menuGrid: {
-    gap: 12,
+  group: {
+    paddingVertical: 2,
+    overflow: 'hidden',
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    marginLeft: 66,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    gap: 12,
   },
-  rowIcon: { marginRight: 14 },
+  iconWell: {
+    width: 36,
+    height: 36,
+    borderRadius: radiusMd,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   rowText: { flex: 1, minWidth: 0 },
-  rowLabel: { fontSize: 16, fontWeight: '600' },
-  rowSub: { marginTop: 3, fontSize: 13 },
+  rowLabel: { fontSize: 16, fontWeight: '600', letterSpacing: -0.15 },
+  rowSub: { marginTop: 2, fontSize: 13, lineHeight: 18 },
 });

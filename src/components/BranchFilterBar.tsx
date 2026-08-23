@@ -16,7 +16,17 @@ function branchOptionLabel(name: string, isDefault?: boolean, inactive?: boolean
   return label;
 }
 
-export function BranchFilterBar({ horizontalPadding = 16 }: { horizontalPadding?: number }) {
+export function BranchFilterBar({
+  horizontalPadding = 16,
+  emphasis = false,
+  quiet = false,
+}: {
+  horizontalPadding?: number;
+  /** Stronger face on screens where branch scope is a primary control (dashboard). */
+  emphasis?: boolean;
+  /** Minimal chrome — nest under a hero / desk card without looking like a second panel. */
+  quiet?: boolean;
+}) {
   const { t } = useTranslation();
   const { colors: c } = useTheme();
   const [open, setOpen] = useState(false);
@@ -47,11 +57,52 @@ export function BranchFilterBar({ horizontalPadding = 16 }: { horizontalPadding?
     setOpen(false);
   };
 
+  const triggerStyle = quiet
+    ? {
+        backgroundColor: 'transparent',
+        borderColor: 'transparent',
+        borderWidth: 0,
+        minHeight: 34,
+        paddingVertical: 4,
+        paddingHorizontal: 0,
+        elevation: 0,
+        shadowOpacity: 0,
+      }
+    : emphasis
+      ? {
+          borderColor: c.accentText,
+          backgroundColor: c.accentSoft,
+        }
+      : undefined;
+
   return (
-    <View style={[styles.wrap, { paddingHorizontal: horizontalPadding }]}>
-      <PickerTrigger open={open} onPress={() => setOpen(true)}>
-        <Ionicons name="location-outline" size={18} color={c.muted} />
-        <Text style={[styles.label, { color: c.text }]} numberOfLines={1}>
+    <View
+      style={[
+        styles.wrap,
+        { paddingHorizontal: horizontalPadding },
+        quiet && styles.wrapQuiet,
+      ]}
+    >
+      <PickerTrigger
+        open={open}
+        onPress={() => setOpen(true)}
+        size={quiet ? 'compact' : 'field'}
+        style={triggerStyle}
+        accessibilityLabel={t('branch.pickBranch')}
+      >
+        <Ionicons
+          name="location-outline"
+          size={quiet ? 16 : 18}
+          color={quiet ? c.dim : emphasis ? c.accentText : c.muted}
+        />
+        <Text
+          style={[
+            styles.label,
+            quiet && styles.labelQuiet,
+            { color: quiet ? c.muted : emphasis ? c.accentText : c.text },
+          ]}
+          numberOfLines={1}
+        >
           {currentLabel}
         </Text>
       </PickerTrigger>
@@ -87,5 +138,7 @@ export function BranchFilterBar({ horizontalPadding = 16 }: { horizontalPadding?
 
 const styles = StyleSheet.create({
   wrap: { paddingBottom: 10 },
+  wrapQuiet: { paddingBottom: 0, alignSelf: 'stretch' },
   label: { flex: 1, fontSize: 15, fontWeight: '600' },
+  labelQuiet: { flex: 0, flexShrink: 1, fontSize: 13, fontWeight: '600', letterSpacing: 0.1 },
 });

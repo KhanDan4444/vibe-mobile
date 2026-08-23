@@ -80,6 +80,8 @@ type EnrollDone = {
   trainerName?: string;
   trainerFee?: number;
   trainerFeeMethod?: string;
+  smsSent?: boolean;
+  smsError?: string;
 };
 
 const SWIPE_HINT_KEY = 'niku.enroll.swipeHintSeen';
@@ -190,6 +192,17 @@ export default function EnrollScreen() {
       color: colors.muted,
       textAlign: 'center' as const,
       paddingHorizontal: 8,
+    },
+    smsWarnRow: {
+      marginTop: 16,
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      gap: 6,
+    },
+    smsWarnText: {
+      fontSize: 14,
+      fontWeight: '600' as const,
     },
     summary: {
       marginTop: 24,
@@ -567,6 +580,8 @@ export default function EnrollScreen() {
         trainerFeeMethod: trainerId && Number(trainerFee) > 0
           ? (skipPayment ? trainerFeeMethod : method)
           : undefined,
+        smsSent: data.sms_sent,
+        smsError: data.sms_error || undefined,
       });
     },
     onError: (e: Error) => setError(formatApiError(e.message)),
@@ -789,6 +804,15 @@ export default function EnrollScreen() {
             <Text style={styles.successSub}>
               {enrollDone.skipPayment ? t('enroll.successSkip') : t('enroll.successPaid')}
             </Text>
+
+            {enrollDone.phone && enrollDone.smsSent === false ? (
+              <View style={styles.smsWarnRow}>
+                <Ionicons name="warning-outline" size={16} color={c.warning} />
+                <Text style={[styles.smsWarnText, { color: c.warning }]}>
+                  {t('enroll.smsFailedTitle')}
+                </Text>
+              </View>
+            ) : null}
 
             {rows.length > 0 ? (
               <SoftSurface variant="quiet" style={styles.summary}>

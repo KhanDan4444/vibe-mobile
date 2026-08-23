@@ -69,7 +69,8 @@
     "unpaidShortcutBody": "Kaffaltii sassaabi ykn hordofi",
     "expires": "Guyyaa {{date}} dhumata",
     "renew": "Haaromsi",
-    "viewAll": "Hunda ilaali"
+    "viewAll": "Hunda ilaali",
+    "showMore": "Dabalataan agarsiisi"
   },
   "members": {
     "search": "Maqaa ykn bilbila barbaadi…",
@@ -86,6 +87,7 @@
     "empty": "Miseensi calallii kanaan walsimatu hin jiru.",
     "noPlan": "Karoora hin jiru",
     "unpaidBadge": "Hin Kaffalamne",
+    "collect": "Sassaabi",
     "emptyTitle": "Miseensonni ammaaf hin jiran",
     "emptyBody": "Turtiilee fi kaffaltiiwwan hordofuu eegaluuf miseensa keessan isa duraa galmeessaa.",
     "emptyFiltered": "Miseensi calallii kanaan walsimatu hin jiru.",
@@ -342,6 +344,8 @@
   },
   "more": {
     "hint": "Meeshaalee jimii fi gabaasota bulchi.",
+    "sectionGym": "Jimii",
+    "sectionInsights": "Hubannoo",
     "plans": "Karoora",
     "plansSub": "Oomishaalee miseensummaa fi gatiiwwan",
     "account": "Akkaawuntii",
@@ -360,7 +364,7 @@
   "checkIn": {
     "deskLabel": "Deskii fuulduraa",
     "heroHint": "Miseensa barbaadii daawwannaa har'aa galmeessi. Ringiin daawwannaa torbee agarsiisa.",
-    "searchPlaceholder": "Maqaa ykn bilbilaan barbaadi…",
+    "searchPlaceholder": "Miseensota barbaadi…",
     "resultsTitle": "Bu'uura",
     "noMatchesTitle": "Miseensi hin argamne",
     "noMatchesBody": "Maqaa ykn bilbila biraa yaali.",
@@ -371,6 +375,11 @@
     "weeklyLimitReached": "Daangaan torbee guuteera",
     "weeklyLimitShort": "Daangaa guute",
     "todayTitle": "Har'a galan",
+    "todayTimeLabel": "Yeroo",
+    "ringLabel": "Torbee kana",
+    "ringProgress": "{{count}} keessaa {{limit}} daawwannaa",
+    "ringUnlimited": "Daawwannaa {{count}} torbee kana",
+    "openCheckInFor": "{{name}} galchi",
     "todayCount": "har'a",
     "todayEmptyTitle": "Galchiinsi ammaaf hin jiru",
     "todayEmpty": "Daawwannaa jalqabaa har'aa galmeessuuf miseensa barbaadi ykn QR scan godhi.",
@@ -405,7 +414,7 @@
     "scanBody": "Kaameeraa gara paasii miseensaa qajeelchi. Yeroo dubbisu galchuu ni galmeessina.",
     "scanCameraError": "QR miseensaa skaaniuuf hayyama kaameeraa barbaachisa.",
     "scanAllowCamera": "Kaameeraa hayyami",
-    "memberPassTitle": "Paasii miseensaa",
+    "memberPassTitle": "Paasii check-in miseensaa",
     "memberPassBody": "Galchuuf QR kana desk irratti agarsiisi. Haaromsuun koodii walfakkaataa eega. Liinkin paasii SMS galmeessuu fi haaromsuu wajjin ni ergamu — yoo barbaachise Resend fayyadami.",
     "memberPassQrAlt": "QR galchuu {{name}}",
     "passVersion": "Paasii v{{version}}",
@@ -420,11 +429,11 @@
     "passRegeneratedTitle": "QR haaromfameera",
     "passRegeneratedSub": "Koodoonni durii {{name}} ammas hin hojjetan.",
     "passRegeneratedSmsSub": "Koodoonni durii {{name}} ammas hin hojjetan. Liinkin haaraa gara {{phone}} ergameera.",
-    "printPass": "Paasii maxxansi",
+    "printPass": "QR buusi",
     "smsPass": "Liinkii paasii deebisii ergi",
-    "passPrintedTitle": "Paasii qophaa'e",
-    "passPrintedSub": "PDF {{name}} qoodi ykn maxxansi.",
-    "printPassFailed": "Paasii maxxansuu hin dandeenye",
+    "passPrintedTitle": "QR buufameera",
+    "passPrintedSub": "PDF {{name}} qabameera.",
+    "printPassFailed": "QR buusuu hin dandeenye",
     "passSmsSentTitle": "Liinkin paasii deebi'ee ergameera",
     "passSmsSentSub": "SMS gara {{name}} ({{phone}}) deebi'ee ergameera.",
     "passSmsFailed": "SMS paasii erguu hin dandeenye",
@@ -462,6 +471,7 @@
     "create": "Galmeessi",
     "cancel": "Dhiisi",
     "confirm": "Mirkaneessi",
+    "details": "Ibsa",
     "ok": "Tole",
     "done": "Haa ta'u",
     "dismiss": "Dhiisi",
@@ -536,6 +546,10 @@
     "renewed": {
       "title": "Miseensummaan haaromfameera",
       "subtitle": "Guyyoonni yeroo haaraa haaromfameera."
+    },
+    "renewedSmsFailed": {
+      "title": "Miseensummaan haaromfameera",
+      "subtitle": "Ergaan SMS hin ergamne!"
     },
     "paymentRecorded": {
       "title": "Kaffaltiin galmeeffameera",
@@ -637,6 +651,9 @@
     "successTitle": "Miseensi galmaa'eera",
     "successPaid": "Kaffaltiin galmeeffameera. Tajaajilaaf qophaa'aa dha.",
     "successSkip": "Akka hin kaffalamneetti mallatteeffame — yeroo qophaa'an kaffaltii sassaabi.",
+    "smsFailedTitle": "Ergaan SMS hin ergamne!",
+    "smsFailedBody": "Miseensi galmaa'eera, garuu ergaan hin geenye. Liinkii paasii irraa profile isaani irraa deebisuu dandeessa.",
+    "smsFailedDetail": "Miseensi galmaa'eera, garuu SMS hin milkoofne: {{detail}}",
     "enrollAnother": "Kan biraa galmeessi",
     "viewMembers": "Miseensota ilaali",
     "term": "Yeroo",

@@ -44,10 +44,10 @@ export function RowActionLink({
         },
       ]}
     >
-      <Ionicons name={icon} size={16} color={color} />
+      <Ionicons name={icon} size={18} color={color} />
       <Text
         style={{
-          fontSize: 13,
+          fontSize: 16,
           fontWeight: '700',
           letterSpacing: 0.15,
           color,

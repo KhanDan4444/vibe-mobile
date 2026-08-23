@@ -22,6 +22,7 @@ import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { restoreWithUndoFlash } from '@/src/utils/scheduleWithUndo';
 import { adjustMemberFilterCounts } from '@/src/utils/memberFilterCounts';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
+import { useTabBarOverlayInset } from '@/src/theme/tabBar';
 import StatusBadge from '@/src/components/StatusBadge';
 import { RowActionLink } from '@/src/components/RowActionLink';
 import { SecondaryButton } from '@/src/components/ui/Button';
@@ -35,6 +36,7 @@ import { isGymOwner } from '@/src/utils/roles';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
 import { formatDisplayDate } from '@/src/utils/date';
+import { canCollectPayment, canRenewMember } from '@/src/utils/memberRenew';
 import type { MemberRow } from '@/src/types/api';
 
 type MemberFilter = 'all' | 'active' | 'due_soon' | 'expired' | 'unpaid' | 'former';
@@ -105,6 +107,9 @@ function MemberRowItem({
   canRestore,
   restoreBusy,
   onRestore,
+  readOnly,
+  onRenew,
+  onCollect,
 }: {
   member: MemberRow;
   onPress: () => void;
@@ -117,9 +122,50 @@ function MemberRowItem({
   canRestore?: boolean;
   restoreBusy?: boolean;
   onRestore?: () => void;
+  readOnly?: boolean;
+  onRenew?: () => void;
+  onCollect?: () => void;
 }) {
   const { t } = useTranslation();
   const isFormer = Boolean(member.deleted_at);
+  const showRenew = !readOnly && !isFormer && canRenewMember(member);
+  const showCollect = !readOnly && !isFormer && canCollectPayment(member);
+
+  const actions = (
+    <View style={styles.rowActions}>
+      {showRenew && onRenew ? (
+        <RowActionLink
+          label={t('dashboard.renew')}
+          icon="refresh-outline"
+          color={colors.statusActive}
+          onPress={onRenew}
+        />
+      ) : null}
+      {showCollect && onCollect ? (
+        <RowActionLink
+          label={t('members.collect')}
+          icon="cash-outline"
+          color={colors.statusUnpaid}
+          onPress={onCollect}
+        />
+      ) : null}
+      <RowActionLink
+        label={t('common.details')}
+        icon="open-outline"
+        color={colors.accentText}
+        onPress={onPress}
+      />
+      {isFormer && canRestore && onRestore ? (
+        <RestoreAction
+          label={t('members.restore')}
+          colors={colors}
+          busy={restoreBusy}
+          onPress={onRestore}
+        />
+      ) : null}
+    </View>
+  );
+
   return (
     <SoftSurface
       onPress={onPress}
@@ -155,14 +201,7 @@ function MemberRowItem({
           <View style={styles.rowMeta}>
             <StatusBadge status={isFormer ? 'Former' : member.status} style={styles.metaBadge} />
             {member.is_unpaid && !isFormer ? <Text style={styles.unpaid}>{t('members.unpaidBadge')}</Text> : null}
-            {isFormer && canRestore && onRestore ? (
-              <RestoreAction
-                label={t('members.restore')}
-                colors={colors}
-                busy={restoreBusy}
-                onPress={onRestore}
-              />
-            ) : null}
+            {actions}
           </View>
         ) : null}
       </View>
@@ -174,14 +213,7 @@ function MemberRowItem({
             {member.trainer_name ? ` · ${member.trainer_name}` : ''}
           </Text>
           {member.is_unpaid && !isFormer ? <Text style={styles.unpaid}>{t('members.unpaidBadge')}</Text> : null}
-          {isFormer && canRestore && onRestore ? (
-            <RestoreAction
-              label={t('members.restore')}
-              colors={colors}
-              busy={restoreBusy}
-              onPress={onRestore}
-            />
-          ) : null}
+          {actions}
         </View>
       ) : null}
     </SoftSurface>
@@ -208,6 +240,7 @@ export default function MembersScreen() {
   const { t } = useTranslation();
   const styles = useThemedStyles(createStyles);
   const { pagePadding, isTablet, fabRight, fabSize, fabRadius, fabFontSize, listColumnItemStyle } = useResponsiveLayout();
+  const tabOverlayInset = useTabBarOverlayInset();
   // Members read better as a full-width list (photo + status row), not a 2-col grid.
   const listColumns = 1;
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
@@ -482,6 +515,7 @@ export default function MembersScreen() {
               multiColumn={listColumns > 1}
               columnStyle={listColumnItemStyle}
               colors={c}
+              readOnly={readOnly}
               canRestore={canRestoreMembers}
               restoreBusy={pendingRestoreIds.has(item.id)}
               onRestore={
@@ -489,10 +523,23 @@ export default function MembersScreen() {
                   ? () => void runRestore(item)
                   : undefined
               }
+              onRenew={
+                !readOnly && canRenewMember(item)
+                  ? () => router.push(`/renew/${item.id}`)
+                  : undefined
+              }
+              onCollect={
+                !readOnly && canCollectPayment(item)
+                  ? () => router.push(`/payment/${item.id}`)
+                  : undefined
+              }
               onPress={() => router.push(`/member/${item.id}`)}
             />
           )}
-          contentContainerStyle={[styles.list, { paddingHorizontal: pagePadding }]}
+          contentContainerStyle={[
+            styles.list,
+            { paddingHorizontal: pagePadding, paddingBottom: 88 + tabOverlayInset },
+          ]}
           onEndReached={() => {
             if (query.hasNextPage && !query.isFetchingNextPage) query.fetchNextPage();
           }}
@@ -524,7 +571,17 @@ export default function MembersScreen() {
 
       {!readOnly && !showingFormer ? (
         <Pressable
-          style={[styles.fab, fabElevation(theme), { right: fabRight, width: fabSize, height: fabSize, borderRadius: fabRadius }]}
+          style={[
+            styles.fab,
+            fabElevation(theme),
+            {
+              right: fabRight,
+              bottom: 24 + tabOverlayInset,
+              width: fabSize,
+              height: fabSize,
+              borderRadius: fabRadius,
+            },
+          ]}
           onPress={() => router.push('/enroll')}
         >
           <Text style={[styles.fabText, { fontSize: fabFontSize }]}>+</Text>
@@ -590,6 +647,7 @@ function createStyles(c: ThemeColors) {
     phone: { marginTop: 4, fontSize: 13, color: c.muted },
     branch: { marginTop: 2, fontSize: 12, color: c.dim },
     rowMeta: { alignItems: 'flex-end' as const, gap: 8 },
+    rowActions: { alignItems: 'flex-end' as const, gap: 2, marginTop: 4 },
     metaBadge: { alignSelf: 'flex-end' as const },
     rowMetaStacked: {
       flexDirection: 'row' as const,

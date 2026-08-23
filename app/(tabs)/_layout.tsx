@@ -1,10 +1,14 @@
-import { Redirect, Tabs, router, usePathname } from 'expo-router';
-import { useCallback } from 'react';
+import { PlatformPressable } from '@react-navigation/elements';
+import { Redirect, Tabs, router, usePathname, type Href } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+import { useCallback, type ComponentProps } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { AppBootSplash } from '@/src/components/AppBootSplash';
 import { AppHeaderRight } from '@/src/components/AppHeaderRight';
+import { AppTabBarBackground } from '@/src/components/AppTabBarBackground';
+import { AppTabBarIcon } from '@/src/components/AppTabBarIcon';
+import { AppText as Text } from '@/src/components/AppText';
 import { GymBootError } from '@/src/components/GymBootError';
 import { MembersTabIcon } from '@/src/components/MembersTabIcon';
 import { TabSwipeShell } from '@/src/components/TabSwipeShell';
@@ -32,6 +36,19 @@ function activeTabIndex(pathname: string) {
   return index >= 0 ? index : 0;
 }
 
+function TabBarButton(props: ComponentProps<typeof PlatformPressable>) {
+  return (
+    <PlatformPressable
+      {...props}
+      pressOpacity={0.72}
+      onPressIn={(e) => {
+        void Haptics.selectionAsync();
+        props.onPressIn?.(e);
+      }}
+    />
+  );
+}
+
 export default function TabLayout() {
   const { user, loading } = useAuth();
   const { colors: c } = useTheme();
@@ -41,16 +58,37 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const { tabIconSize, isTablet } = useResponsiveLayout();
   const pathname = usePathname();
-  const tabBarBottom = Math.max(insets.bottom, isTablet ? 10 : 6);
+  const tabBarBottom = Math.max(insets.bottom, isTablet ? 10 : 8);
   const tabIndex = activeTabIndex(pathname);
-  const amharicLabelStyle =
-    language === 'am'
-      ? { fontFamily: NOTO_ETHIOPIC, fontSize: 11, lineHeight: lineHeightFor(11) }
-      : { fontFamily: DM_SANS, fontSize: 11 };
+  const isAm = language === 'am';
+
+  const renderLabel = (title: string, desk = false) =>
+    function TabLabel({ focused, color }: { focused: boolean; color: string }) {
+      const deskFocused = desk && focused;
+      return (
+        <Text
+          style={[
+            {
+              color: deskFocused ? c.accentText : color,
+              marginTop: 3,
+              letterSpacing: focused ? 0.15 : 0,
+              fontSize: isTablet ? 12 : 11,
+              lineHeight: lineHeightFor(isTablet ? 12 : 11),
+              fontFamily: isAm ? NOTO_ETHIOPIC : focused ? DM_SANS_SEMI : DM_SANS,
+              fontWeight: isAm ? (focused ? '600' : '500') : undefined,
+            },
+          ]}
+          numberOfLines={1}
+        >
+          {title}
+        </Text>
+      );
+    };
 
   const goToTab = useCallback((nextIndex: number) => {
     if (nextIndex < 0 || nextIndex >= TAB_ROUTES.length) return;
-    router.navigate(TAB_ROUTES[nextIndex].href);
+    void Haptics.selectionAsync();
+    router.navigate(TAB_ROUTES[nextIndex].href as Href);
   }, []);
 
   const onSwipeLeft = useCallback(() => goToTab(tabIndex + 1), [goToTab, tabIndex]);
@@ -76,15 +114,21 @@ export default function TabLayout() {
             sceneStyle: { backgroundColor: c.bg },
             tabBarActiveTintColor: c.accentText,
             tabBarInactiveTintColor: c.dim,
-            tabBarLabelStyle: amharicLabelStyle,
+            tabBarHideOnKeyboard: true,
+            tabBarButton: TabBarButton,
+            tabBarBackground: () => <AppTabBarBackground />,
             tabBarStyle: {
-              backgroundColor: c.tabBarBg,
-              borderTopColor: c.tabBarBorder,
-              borderTopWidth: StyleSheet.hairlineWidth,
-              paddingBottom: tabBarBottom,
-              height: (isTablet ? 58 : 52) + tabBarBottom,
+              position: 'absolute',
+              backgroundColor: 'transparent',
+              borderTopWidth: 0,
               elevation: 0,
               shadowOpacity: 0,
+              paddingTop: 8,
+              paddingBottom: tabBarBottom,
+              height: (isTablet ? 64 : 58) + tabBarBottom,
+            },
+            tabBarItemStyle: {
+              paddingTop: 0,
             },
             headerStyle: {
               backgroundColor: c.headerBg,
@@ -94,10 +138,9 @@ export default function TabLayout() {
               shadowOpacity: 0,
             },
             headerTintColor: c.text,
-            headerTitleStyle:
-              language === 'am'
-                ? { fontFamily: NOTO_ETHIOPIC, fontWeight: '600', lineHeight: lineHeightFor(17) }
-                : { fontFamily: DM_SANS_SEMI, fontWeight: '600' },
+            headerTitleStyle: isAm
+              ? { fontFamily: NOTO_ETHIOPIC, fontWeight: '600', lineHeight: lineHeightFor(17) }
+              : { fontFamily: DM_SANS_SEMI, fontWeight: '600' },
             headerRight,
             // Root offline strip already owns the top inset.
             ...(!isOnline ? { safeAreaInsets: { top: 0 } } : {}),
@@ -107,29 +150,58 @@ export default function TabLayout() {
             name="index"
             options={{
               title: t('tabs.dashboard'),
-              tabBarIcon: ({ color }) => <Ionicons name="stats-chart" color={color} size={tabIconSize} />,
+              tabBarLabel: renderLabel(t('tabs.dashboard')),
+              tabBarIcon: ({ color, focused }) => (
+                <AppTabBarIcon
+                  name="stats-chart-outline"
+                  nameFocused="stats-chart"
+                  color={color}
+                  size={tabIconSize}
+                  focused={focused}
+                />
+              ),
             }}
           />
           <Tabs.Screen
             name="members"
             options={{
               title: t('tabs.members'),
-              tabBarIcon: ({ color }) => <MembersTabIcon color={color} size={tabIconSize} />,
+              tabBarLabel: renderLabel(t('tabs.members')),
+              tabBarIcon: ({ color, focused }) => (
+                <MembersTabIcon color={color} size={tabIconSize} focused={focused} />
+              ),
             }}
           />
           <Tabs.Screen
             name="revenue"
             options={{
               title: t('tabs.revenue'),
-              tabBarIcon: ({ color }) => <Ionicons name="cash" color={color} size={tabIconSize} />,
+              tabBarLabel: renderLabel(t('tabs.revenue')),
+              tabBarIcon: ({ color, focused }) => (
+                <AppTabBarIcon
+                  name="cash-outline"
+                  nameFocused="cash"
+                  color={color}
+                  size={tabIconSize}
+                  focused={focused}
+                />
+              ),
             }}
           />
           <Tabs.Screen
             name="check-in"
             options={{
               title: t('tabs.checkIn'),
-              tabBarIcon: ({ color }) => (
-                <Ionicons name="checkbox-outline" color={color} size={tabIconSize} />
+              tabBarLabel: renderLabel(t('tabs.checkIn'), true),
+              tabBarIcon: ({ color, focused }) => (
+                <AppTabBarIcon
+                  name="scan-outline"
+                  nameFocused="scan"
+                  color={color}
+                  size={tabIconSize}
+                  focused={focused}
+                  emphasis="desk"
+                />
               ),
             }}
           />
@@ -137,7 +209,16 @@ export default function TabLayout() {
             name="more"
             options={{
               title: t('tabs.more'),
-              tabBarIcon: ({ color }) => <Ionicons name="menu" color={color} size={tabIconSize} />,
+              tabBarLabel: renderLabel(t('tabs.more')),
+              tabBarIcon: ({ color, focused }) => (
+                <AppTabBarIcon
+                  name="ellipsis-horizontal-outline"
+                  nameFocused="ellipsis-horizontal"
+                  color={color}
+                  size={tabIconSize}
+                  focused={focused}
+                />
+              ),
             }}
           />
         </Tabs>

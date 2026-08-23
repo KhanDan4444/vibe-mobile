@@ -47,7 +47,11 @@ export function fetchMemberPayments(token: string, id: number) {
 }
 
 export function enrollMember(token: string, payload: EnrollPayload) {
-  return apiRequest<{ member: MemberRow }>('/members/enroll', {
+  return apiRequest<{
+    member: MemberRow;
+    sms_sent?: boolean;
+    sms_error?: string | null;
+  }>('/members/enroll', {
     method: 'POST',
     token,
     body: JSON.stringify(payload),
@@ -55,7 +59,11 @@ export function enrollMember(token: string, payload: EnrollPayload) {
 }
 
 export function renewMember(token: string, id: number, payload: RenewPayload) {
-  return apiRequest<{ member: MemberRow }>(`/members/${id}/renew`, {
+  return apiRequest<{
+    member: MemberRow;
+    sms_sent?: boolean;
+    sms_error?: string | null;
+  }>(`/members/${id}/renew`, {
     method: 'POST',
     token,
     body: JSON.stringify(payload),

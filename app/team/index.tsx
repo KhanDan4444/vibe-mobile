@@ -19,6 +19,7 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
+import { RowActionLink } from '@/src/components/RowActionLink';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { fabElevation } from '@/src/theme/elevation';
@@ -125,6 +126,7 @@ function TrainerCard({
   onRestore: () => void;
 }) {
   const { t } = useTranslation();
+  const { colors: c } = useTheme();
   const styles = useThemedStyles((colors) => ({
     card: { padding: 16, marginBottom: 12 },
     headerRow: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 12 },
@@ -132,13 +134,6 @@ function TrainerCard({
     name: { fontSize: 16, fontWeight: '700' as const, color: colors.text },
     meta: { marginTop: 4, fontSize: 13, color: colors.muted },
     sideCol: { alignItems: 'flex-end' as const, gap: 8 },
-    restoreBtn: {
-      paddingVertical: 8,
-      paddingHorizontal: 12,
-      borderRadius: 10,
-      backgroundColor: colors.statusActive,
-    },
-    restoreLabel: { fontSize: 13, fontWeight: '700' as const, color: '#fff' },
   }));
 
   const { activeBranches } = useBranchScope();
@@ -168,14 +163,12 @@ function TrainerCard({
             </Text>
           </View>
           <View style={styles.sideCol}>
-            <Pressable
+            <RowActionLink
+              label={t('team.restoreTrainer')}
+              icon="arrow-undo-outline"
+              color={c.statusActive}
               onPress={onRestore}
-              style={styles.restoreBtn}
-              accessibilityRole="button"
-              accessibilityLabel={t('team.restoreTrainer')}
-            >
-              <Text style={styles.restoreLabel}>{t('team.restoreTrainer')}</Text>
-            </Pressable>
+            />
           </View>
         </View>
       </SoftSurface>

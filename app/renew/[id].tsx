@@ -17,6 +17,7 @@ import { LoadError } from '@/src/components/LoadError';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useTranslation } from 'react-i18next';
 import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
+import { useFlash } from '@/src/context/FlashContext';
 import { useLoadRetry } from '@/src/hooks/useLoadRetry';
 import { PAYMENT_METHODS } from '@/src/constants/payments';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
@@ -51,6 +52,7 @@ export default function RenewScreen() {
   const [error, setError] = useState('');
   const flashSaved = useSaveFlash();
   const flashOffline = useOfflineFlash();
+  const { showFlash } = useFlash();
   const { t } = useTranslation();
   const canRenew = Boolean(user && hasGymPortalAccess(user.role));
   const styles = useThemedStyles((colors) => ({
@@ -130,7 +132,16 @@ export default function RenewScreen() {
       queryClient.invalidateQueries({ queryKey: ['member', memberId] });
       queryClient.invalidateQueries({ queryKey: ['member-payments', memberId] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      flashSaved('flash.renewed');
+      if (data.sms_sent === false && Boolean(member?.phone?.trim())) {
+        showFlash({
+          title: t('flash.renewedSmsFailed.title'),
+          subtitle: t('flash.renewedSmsFailed.subtitle'),
+          icon: 'refresh-circle-outline',
+          variant: 'warning',
+        });
+      } else {
+        flashSaved('flash.renewed');
+      }
       router.replace(`/member/${memberId}`);
     },
     onError: (e: Error) => setError(e.message),

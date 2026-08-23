@@ -20,7 +20,7 @@ import { elevationStyle } from '@/src/theme/elevation';
 import { springs } from '@/src/theme/motion';
 import { radiusLg, radiusMd } from '@/src/theme/tokens';
 
-export type FlashVariant = 'success' | 'offline' | 'danger';
+export type FlashVariant = 'success' | 'offline' | 'danger' | 'warning';
 
 export type FlashToast = {
   title: string;
@@ -49,20 +49,23 @@ export const FLASH_PLAN_DELETED_MS = 4000;
 const EXIT_MS = 180;
 const MAX_VISIBLE_TOASTS = 5;
 
-/** Matches tab bar content height in `(tabs)/_layout` (tablet 58 / phone 52). */
+import { TAB_BAR_BODY_PHONE, TAB_BAR_BODY_TABLET } from '@/src/theme/tabBar';
+
+/** Matches tab bar content height in `(tabs)/_layout`. */
 function tabBarClearance(isTablet: boolean) {
-  return isTablet ? 58 : 52;
+  return isTablet ? TAB_BAR_BODY_TABLET : TAB_BAR_BODY_PHONE;
 }
 
 function toastIcon(variant: FlashVariant, icon?: FlashToast['icon']) {
   if (icon) return icon;
   if (variant === 'offline') return 'cloud-offline-outline';
   if (variant === 'danger') return 'close-circle-outline';
+  if (variant === 'warning') return 'warning-outline';
   return 'checkmark-circle-outline';
 }
 
 function toastAccent(variant: FlashVariant, colors: ReturnType<typeof useTheme>['colors']) {
-  if (variant === 'offline') return colors.warning;
+  if (variant === 'offline' || variant === 'warning') return colors.warning;
   if (variant === 'danger') return colors.error;
   return colors.success;
 }

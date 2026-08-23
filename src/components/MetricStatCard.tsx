@@ -9,7 +9,7 @@ type Props = {
   label: string;
   value: string | number;
   accent?: string;
-  /** attention = expired wash only; neutral = active / unpaid / due soon / total. */
+  /** attention = expired / unpaid wash when count > 0; neutral = active / due soon. */
   tone?: 'attention' | 'neutral';
   layoutStyle?: StyleProp<ViewStyle>;
   onPress?: () => void;
@@ -60,7 +60,9 @@ export function MetricStatCard({
           : null,
       ]}
     >
-      <Text style={[styles.value, { color: valueColor }]}>{value}</Text>
+      <Text display style={[styles.value, { color: valueColor }]}>
+        {value}
+      </Text>
       <Text
         style={[
           styles.label,

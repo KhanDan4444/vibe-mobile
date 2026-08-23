@@ -126,3 +126,15 @@ export function createCheckIn(
     body: JSON.stringify(payload),
   });
 }
+
+export type MemberVisitSummary = {
+  visits_this_week: number;
+  visits_limit: number | null;
+  week_starts_on?: 'monday' | 'sunday';
+  week_start?: string;
+  week_end?: string;
+};
+
+export function fetchMemberVisitSummary(token: string, memberId: number) {
+  return apiRequest<MemberVisitSummary>(`/check-ins/members/${memberId}/summary`, { token });
+}

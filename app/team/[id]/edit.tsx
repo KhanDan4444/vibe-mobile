@@ -10,6 +10,7 @@ import { fetchBranches } from '@/src/api/branches';
 import { BranchPicker } from '@/src/components/BranchPicker';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { PasswordRule } from '@/src/components/PasswordRule';
 import { PageSkeleton } from '@/src/components/Skeleton';
 import { LoadError } from '@/src/components/LoadError';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
@@ -35,9 +36,13 @@ export default function EditStaffScreen() {
   const [branchId, setBranchId] = useState<number | null>(null);
   const [resetPassword, setResetPassword] = useState('');
   const [resetConfirmPassword, setResetConfirmPassword] = useState('');
+  const [showLengthRule, setShowLengthRule] = useState(false);
+  const [showMatchRule, setShowMatchRule] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldErrorMap>({});
   const [resetErrors, setResetErrors] = useState<FieldErrorMap>({});
+  const lengthOk = resetPassword.length >= 8;
+  const matchOk = resetConfirmPassword.length > 0 && resetPassword === resetConfirmPassword;
   const [resetNotice, setResetNotice] = useState('');
   const canManageTeam = Boolean(user && isGymOwner(user.role));
   const styles = useThemedStyles((colors) => ({
@@ -233,21 +238,30 @@ export default function EditStaffScreen() {
           <Label required>{t('forgot.newPassword')}</Label>
           <Field
             value={resetPassword}
+            onFocus={() => setShowLengthRule(true)}
             onChangeText={(v) => {
               setResetPassword(v);
+              setShowLengthRule(true);
               if (resetErrors.password || resetErrors.confirmPassword) setResetErrors({});
             }}
             secureTextEntry
             autoCapitalize="none"
             error={Boolean(resetErrors.password)}
           />
+          <PasswordRule
+            show={showLengthRule || resetPassword.length > 0}
+            ok={lengthOk}
+            label={t('forms.passwordMin8')}
+          />
           <FieldError message={resetErrors.password ? t(resetErrors.password) : undefined} />
 
           <Label required>{t('forgot.confirmPassword')}</Label>
           <Field
             value={resetConfirmPassword}
+            onFocus={() => setShowMatchRule(true)}
             onChangeText={(v) => {
               setResetConfirmPassword(v);
+              setShowMatchRule(true);
               if (resetErrors.confirmPassword) {
                 setResetErrors((prev) => ({ ...prev, confirmPassword: undefined }));
               }
@@ -255,6 +269,11 @@ export default function EditStaffScreen() {
             secureTextEntry
             autoCapitalize="none"
             error={Boolean(resetErrors.confirmPassword)}
+          />
+          <PasswordRule
+            show={showMatchRule || resetConfirmPassword.length > 0}
+            ok={matchOk}
+            label={t('forms.passwordsMatch')}
           />
           <FieldError
             message={resetErrors.confirmPassword ? t(resetErrors.confirmPassword) : undefined}

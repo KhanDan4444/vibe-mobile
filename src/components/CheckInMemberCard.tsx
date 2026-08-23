@@ -1,7 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { View } from 'react-native';
 import Animated, {
-  FadeInDown,
+  FadeIn,
   useAnimatedStyle,
   useSharedValue,
   withSequence,
@@ -140,7 +140,7 @@ export function CheckInMemberCard({
     },
   }));
 
-  const enterDelay = Math.min(index, 6) * 45;
+  const enterDelay = Math.min(index, 4) * 30;
 
   let action: ReactNode;
   if (expired) {
@@ -162,7 +162,7 @@ export function CheckInMemberCard({
   }
 
   return (
-    <Animated.View entering={FadeInDown.delay(enterDelay).duration(320).springify().damping(18)}>
+    <Animated.View entering={FadeIn.delay(enterDelay).duration(timings.fadeMs)}>
       <SoftSurface
         variant="panel"
         style={[styles.wrap, styles.card, showError ? styles.cardError : null]}
@@ -187,7 +187,7 @@ export function CheckInMemberCard({
             }
           />
           <View style={styles.identity}>
-            <Text display style={styles.name} numberOfLines={1}>
+            <Text listRow style={styles.name} numberOfLines={1}>
               {member.name}
             </Text>
             <Text style={styles.phone} numberOfLines={1}>

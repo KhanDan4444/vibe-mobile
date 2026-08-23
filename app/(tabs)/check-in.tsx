@@ -8,9 +8,12 @@ import {
   View,
 } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { AppText as Text } from '@/src/components/AppText';
 import { BranchFilterBar } from '@/src/components/BranchFilterBar';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
@@ -42,6 +45,7 @@ import { useFlash } from '@/src/context/FlashContext';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
+import { useTabBarOverlayInset } from '@/src/theme/tabBar';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { formatDisplayDate } from '@/src/utils/date';
@@ -56,6 +60,70 @@ const CAP_OPTIONS: { value: number | null; labelKey: string }[] = [
 
 const TODAY_PAGE_SIZE = 40;
 const TODAY_MAX = 100;
+const TODAY_PREVIEW = 4;
+
+/** Match web desk hero — brand→raised (light) / brand→surface (dark). */
+function DeskHeroAtmosphere({ isLight }: { isLight: boolean }) {
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
+        <Defs>
+          {isLight ? (
+            <LinearGradient id="deskHeroFill" x1="0%" y1="0%" x2="100%" y2="100%">
+              <Stop offset="0%" stopColor="#D8E9E8" />
+              <Stop offset="42%" stopColor="#F3F8F8" />
+              <Stop offset="100%" stopColor="#FFFFFF" />
+            </LinearGradient>
+          ) : (
+            <LinearGradient id="deskHeroFill" x1="0%" y1="0%" x2="85%" y2="100%">
+              <Stop offset="0%" stopColor="#1B2C32" />
+              <Stop offset="55%" stopColor="#1A1E26" />
+              <Stop offset="100%" stopColor="#1A1E26" />
+            </LinearGradient>
+          )}
+        </Defs>
+        <Rect x="0" y="0" width="100%" height="100%" fill="url(#deskHeroFill)" />
+      </Svg>
+      <View
+        style={[
+          stylesAtmosphere.orbPrimary,
+          isLight ? stylesAtmosphere.orbPrimaryLight : stylesAtmosphere.orbPrimaryDark,
+        ]}
+      />
+      {isLight ? <View style={stylesAtmosphere.orbSecondaryLight} /> : null}
+    </View>
+  );
+}
+
+const stylesAtmosphere = StyleSheet.create({
+  orbPrimary: {
+    position: 'absolute',
+    borderRadius: 999,
+  },
+  orbPrimaryLight: {
+    top: -64,
+    right: -48,
+    width: 224,
+    height: 224,
+    backgroundColor: 'rgba(15,118,110,0.16)',
+  },
+  orbPrimaryDark: {
+    top: -80,
+    right: -64,
+    width: 192,
+    height: 192,
+    backgroundColor: 'rgba(45,212,191,0.05)',
+  },
+  orbSecondaryLight: {
+    position: 'absolute',
+    bottom: -40,
+    left: -40,
+    width: 144,
+    height: 144,
+    borderRadius: 999,
+    backgroundColor: 'rgba(15,118,110,0.07)',
+  },
+});
 
 type CardError = { code: string; message: string };
 type SearchCache = { members: CheckInMember[]; settings: AttendanceSettings };
@@ -78,13 +146,16 @@ export default function CheckInScreen() {
   const { readOnly } = useGymReadOnly();
   const { selectedBranchId, showBranchFilter } = useBranchScope();
   const { pagePadding, listColumns, listColumnItemStyle } = useResponsiveLayout();
+  const tabOverlayInset = useTabBarOverlayInset();
   const queryClient = useQueryClient();
   const owner = isGymOwner(user?.role);
+  const seedParams = useLocalSearchParams<{ q?: string; memberId?: string }>();
 
   const [query, setQuery] = useState('');
   const [debounced, setDebounced] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [todayLimit, setTodayLimit] = useState(TODAY_PAGE_SIZE);
+  const [todayExpanded, setTodayExpanded] = useState(false);
   const [cardErrors, setCardErrors] = useState<Record<number, CardError>>({});
   const [successIds, setSuccessIds] = useState<Record<number, boolean>>({});
   const [forceTarget, setForceTarget] = useState<{
@@ -95,10 +166,28 @@ export default function CheckInScreen() {
   } | null>(null);
   const [scanOpen, setScanOpen] = useState(false);
   const [scanBusy, setScanBusy] = useState(false);
+  const router = useRouter();
 
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
   const showBranchOnToday = showBranchFilter;
   const searchKey = ['check-ins-search', debounced, branchKey] as const;
+
+  // Re-apply whenever member detail pushes new q/memberId (tab stays mounted).
+  useEffect(() => {
+    const seedQ = typeof seedParams.q === 'string' ? seedParams.q.trim() : '';
+    const rawId = seedParams.memberId;
+    const seedMember = Array.isArray(rawId) ? rawId[0] : rawId;
+    const hasMember =
+      seedMember != null && String(seedMember).trim().length > 0;
+    if (!seedQ && !hasMember) return;
+
+    if (seedQ) {
+      setQuery(seedQ);
+      setDebounced(seedQ);
+    }
+    // Clear so the same member can seed again on a later visit.
+    router.setParams({ q: '', memberId: '' });
+  }, [seedParams.q, seedParams.memberId, router]);
 
   useEffect(() => {
     const id = setTimeout(() => setDebounced(query.trim()), 280);
@@ -112,6 +201,7 @@ export default function CheckInScreen() {
 
   useEffect(() => {
     setTodayLimit(TODAY_PAGE_SIZE);
+    setTodayExpanded(false);
   }, [branchKey]);
 
   const settingsQuery = useQuery({
@@ -139,6 +229,10 @@ export default function CheckInScreen() {
   const todayRows = todayQuery.data?.checkIns ?? [];
   const todayTotal = todayQuery.data?.total ?? 0;
   const todayDate = todayQuery.data?.date ?? '';
+  const visibleTodayRows = todayExpanded ? todayRows : todayRows.slice(0, TODAY_PREVIEW);
+  const todayHasMoreHidden = !todayExpanded && todayTotal > TODAY_PREVIEW;
+  const todayCanLoadMore =
+    todayExpanded && todayTotal > todayRows.length && todayRows.length < TODAY_MAX;
   const alreadyTodayIds = useMemo(
     () => new Set(todayRows.map((row) => row.member_id)),
     [todayRows]
@@ -366,32 +460,10 @@ export default function CheckInScreen() {
     scroll: { flex: 1, backgroundColor: theme.bg },
     content: { paddingBottom: 48, paddingHorizontal: pagePadding, gap: 16 },
     hero: {
-      padding: 18,
-      gap: 16,
+      padding: 16,
+      gap: 12,
       overflow: 'hidden' as const,
-      // Light only: teal-tinted panel so it isn’t a flat white slab
-      ...(isLight ? { backgroundColor: 'rgba(204, 251, 241, 0.72)' } : null),
-    },
-    heroWash: {
-      position: 'absolute' as const,
-      top: isLight ? -56 : -48,
-      right: isLight ? -40 : -36,
-      width: isLight ? 168 : 140,
-      height: isLight ? 168 : 140,
-      borderRadius: 999,
-      backgroundColor: isLight ? 'rgba(15,118,110,0.22)' : theme.accentSoft,
-      opacity: isLight ? 1 : 0.75,
-    },
-    heroWashSecondary: {
-      position: 'absolute' as const,
-      bottom: -28,
-      left: -32,
-      width: 120,
-      height: 120,
-      borderRadius: 999,
-      backgroundColor: 'rgba(15,118,110,0.1)',
-      // Light-only second orb (dark keeps the original single wash)
-      display: isLight ? ('flex' as const) : ('none' as const),
+      backgroundColor: 'transparent',
     },
     heroTop: {
       flexDirection: 'row' as const,
@@ -399,65 +471,62 @@ export default function CheckInScreen() {
       justifyContent: 'space-between' as const,
       gap: 12,
     },
-    deskRow: {
-      flexDirection: 'row' as const,
-      flexWrap: 'wrap' as const,
-      alignItems: 'center' as const,
-      gap: 8,
+    deskCol: {
+      flex: 1,
+      minWidth: 0,
+      gap: 4,
     },
     deskLabel: {
       fontSize: 22,
       fontWeight: '700' as const,
-      letterSpacing: 0.6,
+      letterSpacing: 0.8,
       textTransform: 'uppercase' as const,
       color: theme.text,
     },
-    capChip: {
-      borderRadius: 999,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.accentText,
-      backgroundColor: theme.accentSoft,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
+    capMeta: {
+      alignSelf: 'flex-start' as const,
+      paddingVertical: 2,
     },
-    capChipText: { fontSize: 10, fontWeight: '700' as const, color: theme.accentText },
-    todayStat: {
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
-      gap: 8,
+    capMetaText: {
+      fontSize: 12,
+      fontWeight: '500' as const,
+      letterSpacing: 0.2,
+      color: theme.dim,
+    },
+    capMetaAction: {
+      color: isLight ? '#115e59' : '#99f6e4',
+      fontWeight: '600' as const,
     },
     todayCount: {
-      fontSize: 56,
+      fontSize: 48,
       fontWeight: '700' as const,
       fontVariant: ['tabular-nums' as const],
       color: theme.text,
-      lineHeight: 56,
-      letterSpacing: -1.5,
+      lineHeight: 48,
+      letterSpacing: -1.6,
     },
-    todayLabelCol: {
+    deskTools: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 10,
+    },
+    deskSearch: {
+      flex: 1,
+      minWidth: 0,
+    },
+    scanIconBtn: {
+      width: 48,
+      height: 48,
+      borderRadius: 12,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
-    },
-    todayLabel: {
-      fontSize: 11,
-      fontWeight: '700' as const,
-      letterSpacing: 0.7,
-      textTransform: 'uppercase' as const,
-      color: theme.dim,
-      textAlign: 'center' as const,
-    },
-    todayUnder: {
-      marginTop: 2,
-      fontSize: 10,
-      fontWeight: '700' as const,
-      letterSpacing: 0.8,
-      textTransform: 'uppercase' as const,
-      color: theme.dim,
-      textAlign: 'center' as const,
+      backgroundColor: theme.inputBg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.border,
     },
     sectionTitle: {
       fontSize: 17,
-      fontWeight: '700' as const,
+      fontWeight: '600' as const,
       color: theme.text,
       letterSpacing: -0.2,
       marginBottom: 2,
@@ -471,23 +540,21 @@ export default function CheckInScreen() {
       marginTop: 4,
       marginBottom: 4,
     },
-    todayChip: {
-      borderRadius: 999,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.accentText,
-      backgroundColor: theme.accentSoft,
-      paddingHorizontal: 10,
-      paddingVertical: 5,
+    todayTimeLabel: {
+      fontSize: 13,
+      fontWeight: '700' as const,
+      letterSpacing: 0.4,
+      textTransform: 'uppercase' as const,
+      color: theme.text,
+      marginTop: 2,
     },
-    todayChipText: { fontSize: 11, fontWeight: '700' as const, color: theme.accentText },
-    todayPanel: { paddingVertical: 4, paddingHorizontal: 4, overflow: 'hidden' as const },
+    todayPanel: { paddingVertical: 2, paddingHorizontal: 4, overflow: 'hidden' as const },
     todayRow: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       gap: 12,
-      paddingVertical: 11,
+      paddingVertical: 12,
       paddingHorizontal: 10,
-      borderRadius: 14,
     },
     todayRowDivider: {
       borderTopWidth: StyleSheet.hairlineWidth,
@@ -496,20 +563,35 @@ export default function CheckInScreen() {
     },
     todayName: {
       fontSize: 15,
-      fontWeight: '700' as const,
+      fontWeight: '600' as const,
       color: theme.text,
-      letterSpacing: -0.15,
+      letterSpacing: -0.1,
     },
     todayBranch: { marginTop: 2, fontSize: 11, color: theme.dim },
     todayTime: {
-      fontSize: 15,
-      fontWeight: '700' as const,
+      fontSize: 14,
+      fontWeight: '600' as const,
       fontVariant: ['tabular-nums' as const],
-      letterSpacing: -0.15,
+      letterSpacing: -0.1,
       color: theme.text,
     },
-    showMoreWrap: { marginTop: 4, paddingHorizontal: 8, paddingBottom: 8, gap: 8 },
-    showMoreMeta: { fontSize: 11, textAlign: 'center' as const, color: theme.dim },
+    showMoreRow: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      gap: 4,
+      marginTop: 2,
+      paddingTop: 12,
+      paddingBottom: 8,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: theme.border,
+    },
+    showMoreLabel: {
+      fontSize: 14,
+      fontWeight: '600' as const,
+      letterSpacing: 0.1,
+      color: theme.accentText,
+    },
     resultsGrid: {
       flexDirection: 'row' as const,
       flexWrap: 'wrap' as const,
@@ -522,7 +604,7 @@ export default function CheckInScreen() {
     idleCopy: { alignItems: 'center' as const, gap: 6, paddingVertical: 20 },
     idleTitle: {
       fontSize: 14,
-      fontWeight: '700' as const,
+      fontWeight: '600' as const,
       color: theme.text,
       textAlign: 'center' as const,
       letterSpacing: -0.15,
@@ -567,21 +649,20 @@ export default function CheckInScreen() {
     <TabScreenFrame>
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: 48 + tabOverlayInset }]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.accent} />
         }
       >
-        <BranchFilterBar />
+        <BranchFilterBar horizontalPadding={0} />
 
         <Animated.View entering={FadeIn.duration(280)}>
-          <SoftSurface variant="panel" style={styles.hero}>
-            <View style={styles.heroWash} pointerEvents="none" />
-            <View style={styles.heroWashSecondary} pointerEvents="none" />
+          <SoftSurface variant="panel" flat style={styles.hero}>
+            <DeskHeroAtmosphere isLight={isLight} />
             <View style={styles.heroTop}>
-              <View style={styles.deskRow}>
+              <View style={styles.deskCol}>
                 <Text display style={styles.deskLabel}>
                   {t('checkIn.deskLabel')}
                 </Text>
@@ -589,35 +670,47 @@ export default function CheckInScreen() {
                   <Pressable
                     disabled={!canManage || readOnly}
                     onPress={() => canManage && setSettingsOpen(true)}
-                    style={styles.capChip}
+                    hitSlop={6}
+                    accessibilityRole={canManage && !readOnly ? 'button' : undefined}
+                    accessibilityLabel={
+                      canManage && !readOnly ? t('checkIn.visitRulesTitle') : capChipLabel
+                    }
+                    style={styles.capMeta}
                   >
-                    <Text style={styles.capChipText}>{capChipLabel}</Text>
+                    <Text
+                      style={[
+                        styles.capMetaText,
+                        canManage && !readOnly ? styles.capMetaAction : null,
+                      ]}
+                    >
+                      {capChipLabel}
+                    </Text>
                   </Pressable>
                 ) : null}
               </View>
-              <View style={styles.todayStat}>
-                <Text display style={styles.todayCount}>
-                  {todayQuery.isLoading ? '—' : todayTotal}
-                </Text>
-                <View style={styles.todayLabelCol}>
-                  <Text style={styles.todayLabel}>
-                    {t('checkIn.todayMembersShort', { count: todayTotal })}
-                  </Text>
-                  <Text style={styles.todayUnder}>{t('checkIn.todayCount')}</Text>
-                </View>
-              </View>
+              <Text display style={styles.todayCount}>
+                {todayQuery.isLoading ? '—' : todayTotal}
+              </Text>
             </View>
-            <SearchField
-              value={query}
-              onChangeText={setQuery}
-              placeholder={t('checkIn.searchPlaceholder')}
-            />
-            {!readOnly ? (
-              <SecondaryButton
-                label={t('checkIn.scanAction')}
-                onPress={() => setScanOpen(true)}
+            <View style={styles.deskTools}>
+              <SearchField
+                value={query}
+                onChangeText={setQuery}
+                placeholder={t('checkIn.searchPlaceholder')}
+                tone="inset"
+                style={styles.deskSearch}
               />
-            ) : null}
+              {!readOnly ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t('checkIn.scanAction')}
+                  onPress={() => setScanOpen(true)}
+                  style={({ pressed }) => [styles.scanIconBtn, { opacity: pressed ? 0.7 : 1 }]}
+                >
+                  <Ionicons name="qr-code-outline" size={22} color={c.accentText} />
+                </Pressable>
+              ) : null}
+            </View>
           </SoftSurface>
         </Animated.View>
 
@@ -682,24 +775,22 @@ export default function CheckInScreen() {
         <View>
           <View style={styles.todayHeader}>
             <View style={{ flex: 1, minWidth: 0 }}>
-              <Text style={styles.sectionTitle}>{t('checkIn.todayTitle')}</Text>
+              <Text display style={styles.sectionTitle}>{t('checkIn.todayTitle')}</Text>
               <Text style={styles.sectionMeta}>
                 {todayDate ? formatDisplayDate(todayDate) : '—'}
               </Text>
             </View>
             {todayTotal > 0 ? (
-              <View style={styles.todayChip}>
-                <Text style={styles.todayChipText}>
-                  {t('checkIn.todayMembers', { count: todayTotal })}
-                </Text>
-              </View>
+              <Text display style={styles.todayTimeLabel}>
+                {t('checkIn.todayTimeLabel')}
+              </Text>
             ) : null}
           </View>
 
           {todayRows.length === 0 ? (
             <SoftSurface variant="panel" style={styles.idleWrap}>
               <View style={styles.idleCopy}>
-                <Text display style={styles.idleTitle}>
+                <Text style={styles.idleTitle}>
                   {t('checkIn.todayEmptyTitle')}
                 </Text>
                 <Text style={styles.idleBody}>{t('checkIn.todayEmpty')}</Text>
@@ -715,7 +806,7 @@ export default function CheckInScreen() {
             </SoftSurface>
           ) : (
             <SoftSurface variant="panel" style={styles.todayPanel}>
-              {todayRows.map((row: CheckInRow, index: number) => (
+              {visibleTodayRows.map((row: CheckInRow, index: number) => (
                 <View key={row.id}>
                   {index > 0 ? <View style={styles.todayRowDivider} /> : null}
                   <View style={styles.todayRow}>
@@ -723,11 +814,11 @@ export default function CheckInScreen() {
                       memberId={row.member_id}
                       name={row.member_name || '?'}
                       token={token}
-                      size={42}
+                      size={40}
                       hasPhoto={Boolean(row.member_photo_url)}
                     />
                     <View style={{ flex: 1, minWidth: 0 }}>
-                      <Text display style={styles.todayName} numberOfLines={1}>
+                      <Text listRow style={styles.todayName} numberOfLines={1}>
                         {row.member_name || '—'}
                       </Text>
                       {showBranchOnToday && row.branch_name ? (
@@ -736,26 +827,29 @@ export default function CheckInScreen() {
                         </Text>
                       ) : null}
                     </View>
-                    <Text display style={styles.todayTime}>
+                    <Text style={styles.todayTime}>
                       {formatTime(row.checked_in_at)}
                     </Text>
                   </View>
                 </View>
               ))}
-              {todayTotal > todayRows.length ? (
-                <View style={styles.showMoreWrap}>
-                  <Text style={styles.showMoreMeta}>
-                    {t('checkIn.showingOf', { shown: todayRows.length, total: todayTotal })}
-                  </Text>
-                  {todayRows.length < TODAY_MAX ? (
-                    <SecondaryButton
-                      label={t('checkIn.showMore')}
-                      onPress={() =>
-                        setTodayLimit((n) => Math.min(TODAY_MAX, n + TODAY_PAGE_SIZE))
-                      }
-                    />
-                  ) : null}
-                </View>
+              {todayHasMoreHidden || todayCanLoadMore ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t('checkIn.showMore')}
+                  hitSlop={6}
+                  onPress={() => {
+                    if (todayHasMoreHidden) {
+                      setTodayExpanded(true);
+                      return;
+                    }
+                    setTodayLimit((n) => Math.min(TODAY_MAX, n + TODAY_PAGE_SIZE));
+                  }}
+                  style={({ pressed }) => [styles.showMoreRow, { opacity: pressed ? 0.65 : 1 }]}
+                >
+                  <Text style={styles.showMoreLabel}>{t('checkIn.showMore')}</Text>
+                  <Ionicons name="chevron-down" size={16} color={c.accentText} />
+                </Pressable>
               ) : null}
             </SoftSurface>
           )}

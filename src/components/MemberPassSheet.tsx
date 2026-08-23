@@ -19,8 +19,6 @@ import { useFlash } from '@/src/context/FlashContext';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
-import { formatDisplayDate } from '@/src/utils/date';
-import { formatPlanDisplayName } from '@/src/utils/formatPlanDisplayName';
 import { isGymOwner } from '@/src/utils/roles';
 import { radiusLg } from '@/src/theme/tokens';
 
@@ -53,70 +51,47 @@ export function MemberPassSheet({
       paddingHorizontal: 0,
       marginTop: 4,
     },
-    header: {
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
-      gap: 10,
+    brandBar: {
+      height: 6,
       backgroundColor: colors.accent,
-      paddingHorizontal: 14,
-      paddingVertical: 12,
     },
-    mark: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: '#fff',
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
-    },
-    markText: { fontSize: 13, fontWeight: '800' as const, color: colors.accent },
+    body: { paddingHorizontal: 16, paddingVertical: 18, alignItems: 'center' as const },
     gym: {
-      flex: 1,
       fontSize: 11,
       fontWeight: '700' as const,
-      letterSpacing: 1.1,
+      letterSpacing: 1.4,
       textTransform: 'uppercase' as const,
-      color: '#fff',
+      color: colors.accentText,
+      textAlign: 'center' as const,
+      marginBottom: 6,
     },
-    body: { paddingHorizontal: 16, paddingVertical: 16, alignItems: 'stretch' as const },
-    identity: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 12 },
-    photo: {
-      width: 56,
-      height: 56,
-      borderRadius: 16,
-      backgroundColor: colors.border,
+    passSubtitle: {
+      fontSize: 12,
+      fontWeight: '600' as const,
+      color: colors.muted,
+      textAlign: 'center' as const,
+      marginBottom: 10,
     },
-    identityCopy: { flex: 1, minWidth: 0 },
     name: {
       fontSize: 17,
       fontWeight: '600' as const,
       color: colors.text,
       letterSpacing: -0.2,
+      textAlign: 'center' as const,
     },
-    phone: { marginTop: 3, fontSize: 13, color: colors.muted, fontVariant: ['tabular-nums' as const] },
-    branch: { marginTop: 2, fontSize: 12, color: colors.dim },
-    meta: {
-      marginTop: 14,
-      paddingTop: 12,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-      fontSize: 12,
+    phone: {
+      marginTop: 4,
+      fontSize: 13,
       color: colors.muted,
+      fontVariant: ['tabular-nums' as const],
       textAlign: 'center' as const,
     },
     qr: {
-      width: 180,
-      height: 180,
+      width: 200,
+      height: 200,
       borderRadius: radiusLg,
       backgroundColor: '#fff',
       marginTop: 14,
-      alignSelf: 'center' as const,
-    },
-    footerLabel: {
-      marginTop: 10,
-      fontSize: 11,
-      color: colors.dim,
-      textAlign: 'center' as const,
     },
     error: { color: colors.error, fontSize: 14, textAlign: 'center' as const, marginTop: 12 },
     actions: { flexDirection: 'row' as const, gap: 10, marginTop: 12 },
@@ -199,52 +174,28 @@ export function MemberPassSheet({
     setPrinting(true);
     try {
       const gym = pass.gym_name || '';
-      const mark = (gym.match(/[A-Za-z\u1200-\u137F]/)?.[0] || memberName.trim()[0] || 'V').toUpperCase();
-      const plan = pass.member?.plan_name ? formatPlanDisplayName(pass.member.plan_name) : '';
-      const expiry = pass.member?.end_date ? formatDisplayDate(pass.member.end_date) : '';
-      const meta = [plan, expiry ? `${t('checkIn.passValidUntil')} ${expiry}` : '']
-        .filter(Boolean)
-        .join('  ·  ');
-      const photo = pass.member?.photo_data_url
-        ? `<img src="${pass.member.photo_data_url}" width="56" height="56" style="border-radius:14px;object-fit:cover;display:block;" />`
-        : `<div style="width:56px;height:56px;border-radius:14px;background:#ccfbf1;color:#0f766e;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;">${escapeHtml(
-            (memberName.trim().split(/\s+/).map((p) => p[0] || '').join('').slice(0, 2) || 'M').toUpperCase()
-          )}</div>`;
       const html = `<!DOCTYPE html><html><head><meta charset="utf-8" />
         <style>
           @page{margin:12mm}
           body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f1f5f9;margin:0;padding:24px}
-          .card{width:85mm;max-width:100%;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;box-sizing:border-box}
-          .header{display:flex;align-items:center;gap:10px;background:#0f766e;padding:12px 14px}
-          .mark{width:28px;height:28px;border-radius:999px;background:#fff;color:#0f766e;font-weight:800;font-size:12px;display:flex;align-items:center;justify-content:center}
-          .gym{flex:1;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#fff;font-weight:700;line-height:1.25}
-          .inner{padding:16px 14px 14px}
-          .id{display:flex;align-items:center;gap:12px;text-align:left}
-          .name{font-size:16px;font-weight:700;letter-spacing:-0.2px;color:#0f172a}
-          .phone{font-size:12px;color:#64748b;margin-top:3px}
-          .branch{font-size:11px;color:#94a3b8;margin-top:2px}
-          .meta{margin-top:14px;padding-top:12px;border-top:1px solid #e2e8f0;font-size:11px;color:#64748b;text-align:center}
-          .qr-wrap{margin:14px auto 0;width:160px;height:160px;padding:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;box-sizing:border-box}
+          .card{width:85mm;max-width:100%;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;box-sizing:border-box;padding:0 0 16px;text-align:center}
+          .bar{height:18px;background:#0f766e;border-radius:14px 14px 0 0}
+          .inner{padding:18px 16px 0}
+          .gym{font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:#0f766e;font-weight:700;line-height:1.25;margin:0 0 6px}
+          .sub{font-size:12px;color:#64748b;font-weight:600;margin:0 0 12px}
+          .name{font-size:20px;font-weight:700;letter-spacing:-0.2px;color:#0f172a;margin:0}
+          .phone{font-size:13px;color:#64748b;margin-top:6px}
+          .qr-wrap{margin:16px auto 0;width:180px;height:180px;padding:6px;background:#fff;box-sizing:border-box}
           .qr{width:100%;height:100%;display:block}
-          .foot{margin-top:10px;font-size:10px;color:#94a3b8;text-align:center}
         </style></head><body>
         <div class="card">
-          <div class="header">
-            <div class="mark">${escapeHtml(mark)}</div>
-            ${gym ? `<div class="gym">${escapeHtml(gym)}</div>` : ''}
-          </div>
+          <div class="bar"></div>
           <div class="inner">
-            <div class="id">
-              ${photo}
-              <div>
-                <div class="name">${escapeHtml(memberName)}</div>
-                ${memberPhone ? `<div class="phone">${escapeHtml(memberPhone)}</div>` : ''}
-                ${pass.member?.branch_name ? `<div class="branch">${escapeHtml(pass.member.branch_name)}</div>` : ''}
-              </div>
-            </div>
-            ${meta ? `<div class="meta">${escapeHtml(meta)}</div>` : ''}
+            ${gym ? `<div class="gym">${escapeHtml(gym)}</div>` : ''}
+            <div class="sub">${escapeHtml(t('checkIn.memberPassTitle'))}</div>
+            <div class="name">${escapeHtml(memberName)}</div>
+            ${memberPhone ? `<div class="phone">${escapeHtml(memberPhone)}</div>` : ''}
             <div class="qr-wrap"><img class="qr" src="${pass.qr_data_url}" /></div>
-            <div class="foot">${escapeHtml(t('checkIn.memberPassTitle'))}</div>
           </div>
         </div></body></html>`;
       const file = await Print.printToFileAsync({ html });
@@ -310,63 +261,22 @@ export function MemberPassSheet({
           {t('checkIn.memberPassBody', { name: memberName })}
         </Text>
         <SoftSurface variant="quiet" style={styles.card}>
-          <View style={styles.header}>
-            <View style={styles.mark}>
-              <Text style={styles.markText}>
-                {(pass?.gym_name || memberName || 'V').trim().charAt(0).toUpperCase()}
-              </Text>
-            </View>
-            {pass?.gym_name ? (
-              <Text style={styles.gym} numberOfLines={2}>
-                {pass.gym_name}
-              </Text>
-            ) : null}
-          </View>
+          <View style={styles.brandBar} />
           <View style={styles.body}>
             {loading ? (
               <ActivityIndicator color={c.accent} />
             ) : (
               <>
-                <View style={styles.identity}>
-                  {pass?.member?.photo_data_url ? (
-                    <Image source={{ uri: pass.member.photo_data_url }} style={styles.photo} />
-                  ) : (
-                    <View style={[styles.photo, { alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(13,148,136,0.15)' }]}>
-                      <Text style={{ color: c.accent, fontWeight: '700', fontSize: 16 }}>
-                        {memberName
-                          .trim()
-                          .split(/\s+/)
-                          .map((p) => p[0] || '')
-                          .join('')
-                          .slice(0, 2)
-                          .toUpperCase() || 'M'}
-                      </Text>
-                    </View>
-                  )}
-                  <View style={styles.identityCopy}>
-                    <Text display style={styles.name} numberOfLines={2}>
-                      {memberName}
-                    </Text>
-                    {memberPhone ? <Text style={styles.phone}>{memberPhone}</Text> : null}
-                    {pass?.member?.branch_name ? (
-                      <Text style={styles.branch}>{pass.member.branch_name}</Text>
-                    ) : null}
-                  </View>
-                </View>
-
-                {pass?.member?.plan_name || pass?.member?.end_date ? (
-                  <Text style={styles.meta}>
-                    {[
-                      pass.member.plan_name ? formatPlanDisplayName(pass.member.plan_name) : null,
-                      pass.member.end_date
-                        ? `${t('checkIn.passValidUntil')} ${formatDisplayDate(pass.member.end_date)}`
-                        : null,
-                    ]
-                      .filter(Boolean)
-                      .join('  ·  ')}
+                {pass?.gym_name ? (
+                  <Text style={styles.gym} numberOfLines={2}>
+                    {pass.gym_name}
                   </Text>
                 ) : null}
-
+                <Text style={styles.passSubtitle}>{t('checkIn.memberPassTitle')}</Text>
+                <Text display style={styles.name} numberOfLines={2}>
+                  {memberName}
+                </Text>
+                {memberPhone ? <Text style={styles.phone}>{memberPhone}</Text> : null}
                 {pass?.qr_data_url ? (
                   <Image
                     source={{ uri: pass.qr_data_url }}
@@ -378,7 +288,6 @@ export function MemberPassSheet({
                     <Text style={{ color: c.muted }}>—</Text>
                   </View>
                 )}
-                <Text style={styles.footerLabel}>{t('checkIn.memberPassTitle')}</Text>
               </>
             )}
             {error ? (

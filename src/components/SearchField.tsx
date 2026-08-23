@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppTextInput as TextInput } from '@/src/components/AppText';
 import { useTheme } from '@/src/context/PreferencesContext';
@@ -10,33 +10,55 @@ export function SearchField({
   onChangeText,
   placeholder,
   style,
+  /** inset = nested in a desk/hero panel — quieter fill & border, soft focus. */
+  tone = 'default',
 }: {
   value: string;
   onChangeText: (v: string) => void;
   placeholder: string;
   style?: StyleProp<ViewStyle>;
+  tone?: 'default' | 'inset';
 }) {
   const { colors: c } = useTheme();
   const [focused, setFocused] = useState(false);
+  const inset = tone === 'inset';
+
+  const ring = inset
+    ? {
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: focused ? c.accentText : c.border,
+      }
+    : fieldRingStyle(c, { focused });
 
   return (
     <View
       style={[
         fieldChrome.inputShell,
-        fieldRingStyle(c, { focused }),
+        ring,
         {
-          backgroundColor: c.card,
-          gap: 8,
-          paddingHorizontal: 12,
-          minHeight: 44,
+          backgroundColor: inset ? c.inputBg : c.card,
+          gap: inset ? 10 : 8,
+          paddingHorizontal: inset ? 14 : 12,
+          minHeight: inset ? 48 : 44,
         },
         style,
       ]}
     >
-      <Ionicons name="search" size={18} color={focused ? c.fieldFocus : c.dim} />
+      <Ionicons
+        name={inset ? 'search-outline' : 'search'}
+        size={inset ? 20 : 18}
+        color={focused ? c.accentText : c.dim}
+      />
       <TextInput
         latin
-        style={[fieldChrome.inputText, { color: c.text, minHeight: 40 }]}
+        style={[
+          fieldChrome.inputText,
+          {
+            color: c.text,
+            minHeight: inset ? 44 : 40,
+            fontSize: inset ? 16 : fieldChrome.inputText.fontSize,
+          },
+        ]}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}

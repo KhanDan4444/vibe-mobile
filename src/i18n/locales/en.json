@@ -69,7 +69,8 @@
     "unpaidShortcutBody": "Collect payment or follow up",
     "expires": "Expires {{date}}",
     "renew": "Renew",
-    "viewAll": "View all"
+    "viewAll": "View all",
+    "showMore": "Show more"
   },
   "members": {
     "search": "Search name or phone…",
@@ -86,6 +87,7 @@
     "empty": "No members match this filter.",
     "noPlan": "No plan",
     "unpaidBadge": "Unpaid",
+    "collect": "Collect",
     "emptyTitle": "No members yet",
     "emptyBody": "Enroll your first member to track terms and payments.",
     "emptyFiltered": "No members match this filter.",
@@ -342,6 +344,8 @@
   },
   "more": {
     "hint": "Manage gym tools and reports.",
+    "sectionGym": "Gym",
+    "sectionInsights": "Insights",
     "plans": "Plans",
     "plansSub": "Membership products and prices",
     "account": "Account",
@@ -360,7 +364,7 @@
   "checkIn": {
     "deskLabel": "Front desk",
     "heroHint": "Search a member to check them in. The ring shows visits used this week.",
-    "searchPlaceholder": "Search by name or phone…",
+    "searchPlaceholder": "Search members…",
     "resultsTitle": "Matches",
     "noMatchesTitle": "No members found",
     "noMatchesBody": "Try another name or phone number.",
@@ -371,6 +375,11 @@
     "weeklyLimitReached": "Weekly visit limit reached",
     "weeklyLimitShort": "Limit reached",
     "todayTitle": "Checked in today",
+    "todayTimeLabel": "Time",
+    "ringLabel": "This week",
+    "ringProgress": "{{count}} of {{limit}} visits",
+    "ringUnlimited": "{{count}} visits this week",
+    "openCheckInFor": "Check in {{name}}",
     "todayCount": "today",
     "todayEmptyTitle": "No check-ins yet",
     "todayEmpty": "Search or scan a member to record today's first visit.",
@@ -405,7 +414,7 @@
     "scanBody": "Point the camera at the member’s pass. We’ll check them in when it reads.",
     "scanCameraError": "Camera access is needed to scan member QR codes.",
     "scanAllowCamera": "Allow camera",
-    "memberPassTitle": "Member pass",
+    "memberPassTitle": "Member Check-in Pass",
     "memberPassBody": "Show at the desk to check in. Renew keeps this QR; enroll/renew SMS already include the link.",
     "memberPassQrAlt": "Check-in QR for {{name}}",
     "passVersion": "Pass v{{version}}",
@@ -420,11 +429,11 @@
     "passRegeneratedTitle": "QR regenerated",
     "passRegeneratedSub": "Old codes for {{name}} no longer work.",
     "passRegeneratedSmsSub": "Old codes for {{name}} no longer work. New pass link sent to {{phone}}.",
-    "printPass": "Print pass",
+    "printPass": "Download QR",
     "smsPass": "Resend pass link",
-    "passPrintedTitle": "Pass ready",
-    "passPrintedSub": "Share or print the PDF for {{name}}.",
-    "printPassFailed": "Could not print the pass",
+    "passPrintedTitle": "QR downloaded",
+    "passPrintedSub": "PDF saved for {{name}}.",
+    "printPassFailed": "Could not download the QR",
     "passSmsSentTitle": "Pass link resent",
     "passSmsSentSub": "SMS resent to {{name}} ({{phone}}).",
     "passSmsFailed": "Could not send pass SMS",
@@ -462,6 +471,7 @@
     "create": "Create",
     "cancel": "Cancel",
     "confirm": "Confirm",
+    "details": "Details",
     "ok": "OK",
     "done": "Done",
     "dismiss": "Dismiss",
@@ -536,6 +546,10 @@
     "renewed": {
       "title": "Membership renewed",
       "subtitle": "The new term dates are updated."
+    },
+    "renewedSmsFailed": {
+      "title": "Membership renewed",
+      "subtitle": "SMS message is not sent!"
     },
     "paymentRecorded": {
       "title": "Payment recorded",
@@ -638,6 +652,9 @@
     "successTitle": "Member enrolled",
     "successPaid": "Payment recorded. They're ready for the floor.",
     "successSkip": "Marked unpaid — collect payment when they're ready.",
+    "smsFailedTitle": "SMS message is not sent!",
+    "smsFailedBody": "The member is enrolled, but the phone message could not be delivered. You can resend the pass link from their profile.",
+    "smsFailedDetail": "The member is enrolled, but SMS failed: {{detail}}",
     "enrollAnother": "Enroll another",
     "viewMembers": "View members",
     "term": "Term",

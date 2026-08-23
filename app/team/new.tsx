@@ -9,6 +9,7 @@ import { createStaff } from '@/src/api/team';
 import { fetchBranches } from '@/src/api/branches';
 import { BranchPicker } from '@/src/components/BranchPicker';
 import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
+import { PasswordRule } from '@/src/components/PasswordRule';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { hasFieldErrors, validateStaffFields, type FieldErrorMap } from '@/src/utils/formValidation';
 import { isGymOwner, DEFAULT_STAFF_ROLE, STAFF_ROLE_OPTIONS } from '@/src/utils/roles';
@@ -25,11 +26,15 @@ export default function NewStaffScreen() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showLengthRule, setShowLengthRule] = useState(false);
+  const [showMatchRule, setShowMatchRule] = useState(false);
   const [staffRole, setStaffRole] = useState<string>(DEFAULT_STAFF_ROLE);
   const [branchId, setBranchId] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldErrorMap>({});
   const canManageTeam = Boolean(user && isGymOwner(user.role));
+  const lengthOk = password.length >= 8;
+  const matchOk = confirmPassword.length > 0 && password === confirmPassword;
   const styles = useThemedStyles((colors) => ({
     readOnly: { color: colors.muted, padding: 16, fontSize: 15 },
   }));
@@ -158,8 +163,10 @@ export default function NewStaffScreen() {
           <Label required>{t('forms.password')}</Label>
           <Field
             value={password}
+            onFocus={() => setShowLengthRule(true)}
             onChangeText={(v) => {
               setPassword(v);
+              setShowLengthRule(true);
               clearField('password');
               clearField('confirmPassword');
             }}
@@ -167,18 +174,30 @@ export default function NewStaffScreen() {
             autoCapitalize="none"
             error={Boolean(fieldErrors.password)}
           />
+          <PasswordRule
+            show={showLengthRule || password.length > 0}
+            ok={lengthOk}
+            label={t('forms.passwordMin8')}
+          />
           <FieldError message={fieldErrors.password ? t(fieldErrors.password) : undefined} />
 
           <Label required>{t('forgot.confirmPassword')}</Label>
           <Field
             value={confirmPassword}
+            onFocus={() => setShowMatchRule(true)}
             onChangeText={(v) => {
               setConfirmPassword(v);
+              setShowMatchRule(true);
               clearField('confirmPassword');
             }}
             secureTextEntry
             autoCapitalize="none"
             error={Boolean(fieldErrors.confirmPassword)}
+          />
+          <PasswordRule
+            show={showMatchRule || confirmPassword.length > 0}
+            ok={matchOk}
+            label={t('forms.passwordsMatch')}
           />
           <FieldError
             message={fieldErrors.confirmPassword ? t(fieldErrors.confirmPassword) : undefined}

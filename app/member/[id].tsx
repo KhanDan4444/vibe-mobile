@@ -9,10 +9,12 @@ import { LoadError } from '@/src/components/LoadError';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
 import { deleteMember, fetchMember, fetchMemberPayments, restoreMember } from '@/src/api/members';
+import { fetchMemberVisitSummary } from '@/src/api/checkIns';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { MemberPhoto } from '@/src/components/MemberPhoto';
 import { MemberActionsBar } from '@/src/components/MemberActionsBar';
 import { MemberPassSheet } from '@/src/components/MemberPassSheet';
+import { VisitRing } from '@/src/components/VisitRing';
 import { ResponsiveContent } from '@/src/components/ResponsiveContent';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
@@ -77,6 +79,19 @@ function buildMemberStyles(c: ThemeColors) {
     phone: { marginTop: 4, fontSize: 15, color: c.muted },
     status: { marginTop: 8, fontSize: 13, fontWeight: '700' as const, textTransform: 'capitalize' as const },
     unpaid: { marginTop: 6, fontSize: 12, fontWeight: '700' as const, color: c.statusUnpaid },
+    visitRow: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 14,
+    },
+    visitCopy: { flex: 1, minWidth: 0 },
+    visitTitle: {
+      fontSize: 15,
+      fontWeight: '600' as const,
+      letterSpacing: -0.15,
+      color: c.text,
+    },
+    visitMeta: { marginTop: 4, fontSize: 12, lineHeight: 17, color: c.muted },
     sectionTitle: { fontSize: 14, fontWeight: '600' as const, letterSpacing: -0.15, color: c.muted, marginBottom: 10 },
     row: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, justifyContent: 'space-between' as const, paddingVertical: 8, gap: 12 },
     rowLabel: { color: c.dim, fontSize: 14, flexShrink: 0 },
@@ -139,6 +154,12 @@ export default function MemberDetailScreen() {
     enabled: Boolean(token && canViewMember) && Number.isFinite(memberId),
   });
 
+  const visitQuery = useQuery({
+    queryKey: ['member-visit-summary', memberId],
+    queryFn: () => fetchMemberVisitSummary(token!, memberId),
+    enabled: Boolean(token && canViewMember) && Number.isFinite(memberId),
+  });
+
   const loadRetry = useLoadRetry(memberQuery);
 
   if (!canViewMember) {
@@ -179,8 +200,19 @@ export default function MemberDetailScreen() {
 
   const member = memberQuery.data;
   const payments = paymentsQuery.data ?? [];
+  const visitSummary = visitQuery.data ?? null;
   const owner = Boolean(user && isGymOwner(user.role));
   const isFormer = Boolean(member.deleted_at);
+
+  const openCheckInForMember = () => {
+    router.push({
+      pathname: '/(tabs)/check-in',
+      params: {
+        q: member.phone || member.name || '',
+        memberId: String(member.id),
+      },
+    });
+  };
 
   const confirmDeleteMember = () => setDeleteOpen(true);
 
@@ -260,6 +292,39 @@ export default function MemberDetailScreen() {
           </View>
         </View>
       </SoftSurface>
+
+      {!isFormer && visitSummary ? (
+        <SoftSurface variant="panel" style={[styles.card, isTablet && { flex: 1 }]}>
+          <Pressable
+            onPress={openCheckInForMember}
+            accessibilityRole="button"
+            accessibilityLabel={t('checkIn.openCheckInFor', { name: member.name })}
+            style={({ pressed }) => [styles.visitRow, { opacity: pressed ? 0.75 : 1 }]}
+          >
+            <VisitRing
+              visits={visitSummary.visits_this_week ?? 0}
+              limit={visitSummary.visits_limit}
+              size={72}
+              weekStartsOn={visitSummary.week_starts_on || 'monday'}
+              accessibilityLabel={t('checkIn.openCheckInFor', { name: member.name })}
+            />
+            <View style={styles.visitCopy}>
+              <Text display style={styles.visitTitle}>
+                {t('checkIn.ringLabel')}
+              </Text>
+              <Text style={styles.visitMeta}>
+                {visitSummary.visits_limit != null
+                  ? t('checkIn.ringProgress', {
+                      count: visitSummary.visits_this_week,
+                      limit: visitSummary.visits_limit,
+                    })
+                  : t('checkIn.ringUnlimited', { count: visitSummary.visits_this_week })}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={c.dim} />
+          </Pressable>
+        </SoftSurface>
+      ) : null}
 
       <SoftSurface variant="panel" style={[styles.card, isTablet && { flex: 1 }]}>
         <Text display style={styles.sectionTitle}>{t('member.membership')}</Text>

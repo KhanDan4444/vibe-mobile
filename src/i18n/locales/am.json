@@ -69,7 +69,8 @@
     "unpaidShortcutBody": "ክፍያ ይቀበሉ ወይም ይከታተሉ",
     "expires": "{{date}} ያበቃል",
     "renew": "ያድሱ",
-    "viewAll": "ሁሉን ይመልከቱ"
+    "viewAll": "ሁሉን ይመልከቱ",
+    "showMore": "ተጨማሪ አሳይ"
   },
   "members": {
     "search": "ስም ወይም ስልክ ይፈልጉ…",
@@ -86,6 +87,7 @@
     "empty": "ከዚህ ማጣሪያ ጋር የሚዛመድ አባል የለም።",
     "noPlan": "ዕቅድ የለም",
     "unpaidBadge": "ያልተከፈለ",
+    "collect": "ሰብስብ",
     "emptyTitle": "እስካሁን አባል የለም",
     "emptyBody": "ውሎችንና ክፍያዎችን ለመከታተል የመጀመሪያ አባልዎን ያስመዝግቡ።",
     "emptyFiltered": "ከዚህ ማጣሪያ ጋር የሚዛመድ አባል የለም።",
@@ -342,6 +344,8 @@
   },
   "more": {
     "hint": "የጂም መሳሪያዎችን እና ሪፖርቶችን ያስተዳድሩ።",
+    "sectionGym": "ጂም",
+    "sectionInsights": "መረጃ",
     "plans": "ዕቅዶች",
     "plansSub": "የአባልነት ምርቶች እና ዋጋዎች",
     "account": "መለያ",
@@ -360,7 +364,7 @@
   "checkIn": {
     "deskLabel": "የፊት ዴስክ",
     "heroHint": "አባል ፈልገው ዛሬ ጉብኝት ይመዝግቡ። ቀለበቱ የሳምንቱን ጉብኝቶች ያሳያል።",
-    "searchPlaceholder": "በስም ወይም ስልክ ፈልግ…",
+    "searchPlaceholder": "አባላትን ፈልግ…",
     "resultsTitle": "ውጤቶች",
     "noMatchesTitle": "አባል አልተገኘም",
     "noMatchesBody": "ሌላ ስም ወይም ስልክ ይሞክሩ።",
@@ -371,6 +375,11 @@
     "weeklyLimitReached": "ሳምንታዊ ገደብ ሞልቷል",
     "weeklyLimitShort": "ገደብ ሞልቷል",
     "todayTitle": "ዛሬ የገቡ",
+    "todayTimeLabel": "ሰዓት",
+    "ringLabel": "በዚህ ሳምንት",
+    "ringProgress": "{{count}} ከ {{limit}} ጉብኝቶች",
+    "ringUnlimited": "{{count}} ጉብኝቶች በዚህ ሳምንት",
+    "openCheckInFor": "{{name}}ን ያስገቡ",
     "todayCount": "ዛሬ",
     "todayEmptyTitle": "እስካሁን መግቢያ የለም",
     "todayEmpty": "የዛሬን የመጀመሪያ ጉብኝት ለመመዝገብ አባል ይፈልጉ ወይም QR ይቃኙ።",
@@ -405,7 +414,7 @@
     "scanBody": "ካሜራውን ወደ የአባሉ ፓስ አቅጣጫ ያድርጉ። ሲያነብ መግቢያ ይመዘገባል።",
     "scanCameraError": "የአባል QR ለመቃኘት የካሜራ ፈቃድ ያስፈልጋል።",
     "scanAllowCamera": "ካሜራ ፍቀድ",
-    "memberPassTitle": "የአባል ፓስ",
+    "memberPassTitle": "የአባል ቼክ-ኢን ፓስ",
     "memberPassBody": "ለመግቢያ ይህን QR በዴስክ አሳዩ። ማደስ ተመሳሳይ ኮድ ይጠብቃል። የፓስ አገናኝ በምዝገባና ማደስ SMS ይላካል — እንደገና ካስፈለገ Resend ይጠቀሙ።",
     "memberPassQrAlt": "የ{{name}} የመግቢያ QR",
     "passVersion": "ፓስ v{{version}}",
@@ -420,11 +429,11 @@
     "passRegeneratedTitle": "QR እንደገና ተፈጥሯል",
     "passRegeneratedSub": "የ{{name}} የድሮ ኮዶች አይሰሩም።",
     "passRegeneratedSmsSub": "የ{{name}} የድሮ ኮዶች አይሰሩም። አዲሱ አገናኝ ወደ {{phone}} ተልኳል።",
-    "printPass": "ፓስ አትም",
+    "printPass": "QR አውርድ",
     "smsPass": "የፓስ አገናኝ እንደገና ላክ",
-    "passPrintedTitle": "ፓስ ዝግጁ",
-    "passPrintedSub": "የ{{name}} PDF ያጋሩ ወይም ያትሙ።",
-    "printPassFailed": "ፓስ ማተም አልተቻለም",
+    "passPrintedTitle": "QR ወርዷል",
+    "passPrintedSub": "የ{{name}} PDF ተቀምጧል።",
+    "printPassFailed": "QR ማውረድ አልተቻለም",
     "passSmsSentTitle": "የፓስ አገናኝ እንደገና ተልኳል",
     "passSmsSentSub": "SMS ወደ {{name}} ({{phone}}) እንደገና ተልኳል።",
     "passSmsFailed": "የፓስ SMS መላክ አልተቻለም",
@@ -462,6 +471,7 @@
     "create": "መዝግብ",
     "cancel": "ሰርዝ",
     "confirm": "አረጋግጥ",
+    "details": "ዝርዝር",
     "ok": "እሺ",
     "done": "ተከናውኗል",
     "dismiss": "ዝጋ",
@@ -536,6 +546,10 @@
     "renewed": {
       "title": "አባልነት ተደሰቷል",
       "subtitle": "አዲሱ የጊዜ ገደብ ቀኖች ተዘምነዋል።"
+    },
+    "renewedSmsFailed": {
+      "title": "አባልነት ተደሰቷል",
+      "subtitle": "የSMS መልእክት አልተላከም!"
     },
     "paymentRecorded": {
       "title": "ክፍያ ተመዝግቧል",
@@ -637,6 +651,9 @@
     "successTitle": "አባል ተመዝግቧል",
     "successPaid": "ክፍያ ተመዝግቧል። ለአገልግሎት ዝግጁ ናቸው።",
     "successSkip": "እንዳልከፈሉ ምልክት ተደርጓል — ክፍያ ሲዘጋጁ ይቀበሉ።",
+    "smsFailedTitle": "የSMS መልእክት አልተላከም!",
+    "smsFailedBody": "አባሉ ተመዝግቧል፣ ነገር ግን መልእክቱ አልደረሰም። ከመገለጫቸው የፓስ አገናኝ እንደገና መላክ ይችላሉ።",
+    "smsFailedDetail": "አባሉ ተመዝግቧል፣ ነገር ግን SMS አልተሳካም፦ {{detail}}",
     "enrollAnother": "ሌላ አባል መዝግብ",
     "viewMembers": "አባላትን ይመልከቱ",
     "term": "የክፍያ ዘመን",

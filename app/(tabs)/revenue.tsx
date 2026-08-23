@@ -20,6 +20,7 @@ import { useBranchScope } from '@/src/context/BranchContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
+import { useTabBarOverlayInset } from '@/src/theme/tabBar';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { appTextStyle } from '@/src/theme/typography';
 import { formatDisplayDate } from '@/src/utils/date';
@@ -349,6 +350,7 @@ export default function RevenueScreen() {
   const owner = isGymOwner(user?.role);
   const { readOnly } = useGymReadOnly();
   const { pagePadding, isTablet, listColumnItemStyle } = useResponsiveLayout();
+  const tabOverlayInset = useTabBarOverlayInset();
   const listColumns = 1;
   const { selectedBranchId, showBranchFilter } = useBranchScope();
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
@@ -623,7 +625,10 @@ export default function RevenueScreen() {
               onEdit={() => openEdit(item)}
             />
           )}
-          contentContainerStyle={[styles.list, { paddingHorizontal: pagePadding }]}
+          contentContainerStyle={[
+            styles.list,
+            { paddingHorizontal: pagePadding, paddingBottom: 28 + tabOverlayInset },
+          ]}
           refreshControl={<RefreshControl refreshing={query.isRefetching} onRefresh={() => query.refetch()} tintColor={c.accentText} />}
           onEndReached={() => {
             if (query.hasNextPage && !query.isFetchingNextPage) query.fetchNextPage();
