@@ -19,14 +19,21 @@ export function SearchField({
   style?: StyleProp<ViewStyle>;
   tone?: 'default' | 'inset';
 }) {
-  const { colors: c } = useTheme();
+  const { colors: c, isDark } = useTheme();
   const [focused, setFocused] = useState(false);
   const inset = tone === 'inset';
+
+  const insetBg = isDark ? c.inputBg : 'rgba(255,255,255,0.62)';
+  const insetBorder = focused
+    ? c.accentText
+    : isDark
+      ? c.border
+      : 'rgba(15,118,110,0.14)';
 
   const ring = inset
     ? {
         borderWidth: StyleSheet.hairlineWidth,
-        borderColor: focused ? c.accentText : c.border,
+        borderColor: insetBorder,
       }
     : fieldRingStyle(c, { focused });
 
@@ -36,17 +43,18 @@ export function SearchField({
         fieldChrome.inputShell,
         ring,
         {
-          backgroundColor: inset ? c.inputBg : c.card,
+          backgroundColor: inset ? insetBg : c.card,
           gap: inset ? 10 : 8,
           paddingHorizontal: inset ? 14 : 12,
-          minHeight: inset ? 48 : 44,
+          minHeight: inset ? 46 : 44,
+          borderRadius: inset ? 14 : fieldChrome.inputShell.borderRadius,
         },
         style,
       ]}
     >
       <Ionicons
         name={inset ? 'search-outline' : 'search'}
-        size={inset ? 20 : 18}
+        size={inset ? 18 : 18}
         color={focused ? c.accentText : c.dim}
       />
       <TextInput
@@ -55,8 +63,8 @@ export function SearchField({
           fieldChrome.inputText,
           {
             color: c.text,
-            minHeight: inset ? 44 : 40,
-            fontSize: inset ? 16 : fieldChrome.inputText.fontSize,
+            minHeight: inset ? 42 : 40,
+            fontSize: inset ? 15 : fieldChrome.inputText.fontSize,
           },
         ]}
         value={value}

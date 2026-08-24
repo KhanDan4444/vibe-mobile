@@ -5,19 +5,22 @@ import { AppText as Text } from '@/src/components/AppText';
 
 type IonName = ComponentProps<typeof Ionicons>['name'];
 
-/** Quiet row CTA (Renew / Restore) — outline icon + label, easy 44px hit target. */
+/** Quiet row CTA (Renew / Restore) — icon + label, easy 44px hit target. */
 export function RowActionLink({
   label,
   icon,
   color,
   busy,
   onPress,
+  emphasized,
 }: {
   label: string;
   icon: IonName;
   color: string;
   busy?: boolean;
   onPress: () => void;
+  /** Slightly heavier type + icon (dashboard Renew). */
+  emphasized?: boolean;
 }) {
   return (
     <Pressable
@@ -44,7 +47,7 @@ export function RowActionLink({
         },
       ]}
     >
-      <Ionicons name={icon} size={18} color={color} />
+      <Ionicons name={icon} size={emphasized ? 19 : 18} color={color} />
       <Text
         style={{
           fontSize: 16,

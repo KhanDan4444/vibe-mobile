@@ -33,15 +33,6 @@ const METHOD_ICONS: Record<
   'Tele Birr': 'phone-portrait-outline',
 };
 
-/** Chart / badge colors — match web reportChartData. */
-export const PAYMENT_METHOD_COLORS: Record<string, string> = {
-  Cash: '#14b8a6',
-  'Bank Transfer': '#f59e0b',
-  'Tele Birr': '#38bdf8',
-  Card: '#8b5cf6',
-  Other: '#94a3b8',
-};
-
 type MethodTone = { bg: string; text: string; border: string };
 
 export function paymentMethodLabelKey(method: string) {
@@ -64,26 +55,7 @@ export function comparePaymentMethodOrder(a: string, b: string) {
   return aRank - bRank;
 }
 
-function hexToRgba(hex: string, alpha: number) {
-  const raw = hex.replace('#', '');
-  const full = raw.length === 3 ? raw.split('').map((c) => c + c).join('') : raw;
-  const n = Number.parseInt(full, 16);
-  if (!Number.isFinite(n)) return `rgba(148,163,184,${alpha})`;
-  const r = (n >> 16) & 255;
-  const g = (n >> 8) & 255;
-  const b = n & 255;
-  return `rgba(${r},${g},${b},${alpha})`;
-}
-
-/** Soft tinted chip — Tele Birr sky, Card violet (web parity). */
-export function paymentMethodBadgeStyle(method: string, c: ThemeColors): MethodTone {
-  const accent = PAYMENT_METHOD_COLORS[method];
-  if (!accent) {
-    return { bg: c.inputBg, text: c.text, border: c.border };
-  }
-  return {
-    bg: hexToRgba(accent, 0.14),
-    text: accent,
-    border: hexToRgba(accent, 0.35),
-  };
+/** Quiet chip — method identity via icon + label, not color coding. */
+export function paymentMethodBadgeStyle(_method: string, c: ThemeColors): MethodTone {
+  return { bg: c.inputBg, text: c.muted, border: c.border };
 }

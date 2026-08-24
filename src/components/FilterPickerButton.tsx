@@ -28,7 +28,7 @@ export function FilterPickerButton<T extends string>({
   const selected = options.find((o) => o.value === value);
   const styles = useThemedStyles((colors) => ({
     dot: { width: 8, height: 8, borderRadius: 4 },
-    label: { flex: 1, fontSize: 14, fontWeight: '600' as const, color: colors.text },
+    label: { flex: 1, fontSize: 14, fontWeight: '600' as const, color: colors.accentText },
   }));
 
   return (

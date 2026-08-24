@@ -6,7 +6,6 @@ import { View, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { AppBootSplash } from '@/src/components/AppBootSplash';
 import { AppHeaderRight } from '@/src/components/AppHeaderRight';
-import { AppTabBarBackground } from '@/src/components/AppTabBarBackground';
 import { AppTabBarIcon } from '@/src/components/AppTabBarIcon';
 import { AppText as Text } from '@/src/components/AppText';
 import { GymBootError } from '@/src/components/GymBootError';
@@ -58,19 +57,18 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const { tabIconSize, isTablet } = useResponsiveLayout();
   const pathname = usePathname();
-  const tabBarBottom = Math.max(insets.bottom, isTablet ? 10 : 8);
+  const tabBarBottom = Math.max(insets.bottom, isTablet ? 10 : 6);
   const tabIndex = activeTabIndex(pathname);
   const isAm = language === 'am';
 
-  const renderLabel = (title: string, desk = false) =>
+  const renderLabel = (title: string) =>
     function TabLabel({ focused, color }: { focused: boolean; color: string }) {
-      const deskFocused = desk && focused;
       return (
         <Text
           style={[
             {
-              color: deskFocused ? c.accentText : color,
-              marginTop: 3,
+              color,
+              marginTop: 2,
               letterSpacing: focused ? 0.15 : 0,
               fontSize: isTablet ? 12 : 11,
               lineHeight: lineHeightFor(isTablet ? 12 : 11),
@@ -116,19 +114,14 @@ export default function TabLayout() {
             tabBarInactiveTintColor: c.dim,
             tabBarHideOnKeyboard: true,
             tabBarButton: TabBarButton,
-            tabBarBackground: () => <AppTabBarBackground />,
             tabBarStyle: {
-              position: 'absolute',
-              backgroundColor: 'transparent',
-              borderTopWidth: 0,
+              backgroundColor: c.tabBarBg,
+              borderTopColor: c.tabBarBorder,
+              borderTopWidth: StyleSheet.hairlineWidth,
+              paddingBottom: tabBarBottom,
+              height: (isTablet ? 58 : 52) + tabBarBottom,
               elevation: 0,
               shadowOpacity: 0,
-              paddingTop: 8,
-              paddingBottom: tabBarBottom,
-              height: (isTablet ? 64 : 58) + tabBarBottom,
-            },
-            tabBarItemStyle: {
-              paddingTop: 0,
             },
             headerStyle: {
               backgroundColor: c.headerBg,
@@ -192,7 +185,7 @@ export default function TabLayout() {
             name="check-in"
             options={{
               title: t('tabs.checkIn'),
-              tabBarLabel: renderLabel(t('tabs.checkIn'), true),
+              tabBarLabel: renderLabel(t('tabs.checkIn')),
               tabBarIcon: ({ color, focused }) => (
                 <AppTabBarIcon
                   name="scan-outline"
@@ -200,7 +193,6 @@ export default function TabLayout() {
                   color={color}
                   size={tabIconSize}
                   focused={focused}
-                  emphasis="desk"
                 />
               ),
             }}

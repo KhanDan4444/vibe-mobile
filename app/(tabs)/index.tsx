@@ -35,7 +35,7 @@ import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
 import { formatPlanDisplayName } from '@/src/utils/planFormat';
 
-const ATTENTION_PREVIEW = 4;
+const ATTENTION_PREVIEW = 3;
 
 type StatFilter = 'due_soon' | 'expired' | 'unpaid';
 
@@ -52,12 +52,15 @@ function AlertMemberRow({
   token,
   onOpen,
   onAction,
+  actionColor,
 }: {
   member: DashboardAlertMember;
   colors: ReturnType<typeof useTheme>['colors'];
   token: string;
   onOpen: () => void;
   onAction?: () => void;
+  /** Dark: brand teal (ex-Details); light: keep status green. */
+  actionColor: string;
 }) {
   const { t } = useTranslation();
   return (
@@ -85,8 +88,9 @@ function AlertMemberRow({
         {onAction ? (
           <RowActionLink
             label={t('dashboard.renew')}
-            icon="refresh-outline"
-            color={colors.statusActive}
+            icon="refresh"
+            color={actionColor}
+            emphasized
             onPress={onAction}
           />
         ) : null}
@@ -99,8 +103,9 @@ export default function DashboardScreen() {
   const router = useRouter();
   const { token, user, gymName: cachedGymName } = useAuth();
   const { selectedBranchId } = useBranchScope();
-  const { colors: c } = useTheme();
+  const { colors: c, isDark } = useTheme();
   const { t } = useTranslation();
+  const linkColor = isDark ? c.accent : c.statusActive;
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
   const owner = isGymOwner(user?.role);
   const staffUser = isGymStaff(user?.role);
@@ -162,13 +167,6 @@ export default function DashboardScreen() {
     : allAlertMembers.slice(0, ATTENTION_PREVIEW);
   const unpaidCount = data?.unpaidCount ?? 0;
   const attentionHasContent = allAlertMembers.length > 0 || unpaidCount > 0;
-  const alertFilter = allAlertMembers.some((member) => member.status.toLowerCase() === 'expired')
-    ? 'expired'
-    : allAlertMembers.some((member) => member.status.toLowerCase() === 'due soon')
-      ? 'due_soon'
-      : unpaidCount > 0
-        ? 'unpaid'
-        : 'due_soon';
 
   const summaryBlock = data ? (
     <SoftSurface variant="panel" style={styles.summary}>
@@ -222,8 +220,8 @@ export default function DashboardScreen() {
       <SoftSurface variant="panel" style={styles.alertCard}>
         <View style={styles.sectionHeader}>
           <Text display style={[styles.sectionTitle, { color: c.text }]}>{t('dashboard.attentionTitle')}</Text>
-          <Pressable onPress={() => goMembers(alertFilter)}>
-            <Text style={[styles.viewAll, { color: c.statusActive }]}>{t('dashboard.viewAll')}</Text>
+          <Pressable onPress={() => goMembers('expired')}>
+            <Text style={[styles.viewAll, { color: linkColor }]}>{t('dashboard.viewAll')}</Text>
           </Pressable>
         </View>
         {alertMembers.length ? (
@@ -237,6 +235,7 @@ export default function DashboardScreen() {
                   member={member}
                   colors={c}
                   token={token!}
+                  actionColor={linkColor}
                   onOpen={() => goMembers(filterForMemberStatus(member.status))}
                   onAction={readOnly ? undefined : () => router.push(route as never)}
                 />
@@ -253,10 +252,10 @@ export default function DashboardScreen() {
                   { borderTopColor: c.border, opacity: pressed ? 0.65 : 1 },
                 ]}
               >
-                <Text style={[styles.showMoreLabel, { color: c.statusActive }]}>
+                <Text style={[styles.showMoreLabel, { color: linkColor }]}>
                   {t('dashboard.showMore')}
                 </Text>
-                <Ionicons name="chevron-down" size={16} color={c.statusActive} />
+                <Ionicons name="chevron-down" size={16} color={linkColor} />
               </Pressable>
             ) : null}
           </>
@@ -275,7 +274,7 @@ export default function DashboardScreen() {
                 {t('dashboard.unpaidShortcutBody')}
               </Text>
             </View>
-            <Text style={[styles.viewAll, { color: c.statusActive }]}>{t('dashboard.viewAll')}</Text>
+            <Text style={[styles.viewAll, { color: linkColor }]}>{t('dashboard.viewAll')}</Text>
           </SoftSurface>
         )}
       </SoftSurface>
@@ -298,7 +297,7 @@ export default function DashboardScreen() {
         <Text style={[styles.branchLabel, { color: c.muted }]}>{t('branch.staffAt', { name: staffBranchLabel })}</Text>
       ) : null}
 
-      <BranchFilterBar horizontalPadding={0} emphasis />
+      <BranchFilterBar horizontalPadding={0} />
 
       {isLoading ? (
         <PageSkeleton variant="dashboard" padded={false} />
@@ -321,14 +320,6 @@ export default function DashboardScreen() {
               onPress={() => goMembers()}
             />
             <MetricStatCard
-              label={t('dashboard.dueSoon')}
-              value={data.dueSoonMembers ?? 0}
-              accent={c.statusDueSoon}
-              tone="neutral"
-              layoutStyle={statCardLayoutStyle}
-              onPress={() => goMembers('due_soon')}
-            />
-            <MetricStatCard
               label={t('dashboard.expired')}
               value={data.expiredMembers ?? 0}
               accent={c.statusExpired}
@@ -337,10 +328,18 @@ export default function DashboardScreen() {
               onPress={() => goMembers('expired')}
             />
             <MetricStatCard
+              label={t('dashboard.dueSoon')}
+              value={data.dueSoonMembers ?? 0}
+              accent={c.statusDueSoon}
+              tone="neutral"
+              layoutStyle={statCardLayoutStyle}
+              onPress={() => goMembers('due_soon')}
+            />
+            <MetricStatCard
               label={t('dashboard.unpaid')}
               value={data.unpaidCount ?? 0}
               accent={c.statusUnpaid}
-              tone="attention"
+              tone="neutral"
               layoutStyle={statCardLayoutStyle}
               onPress={() => goMembers('unpaid')}
             />

@@ -1,4 +1,5 @@
-import { View } from 'react-native';
+import type { ReactNode } from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { AppText as Text } from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,6 +14,8 @@ type Props = {
   body?: string;
   actionLabel?: string;
   onAction?: () => void;
+  /** Custom CTA (e.g. secondary + icon) — preferred over actionLabel when set. */
+  action?: ReactNode;
   /** warm = default accent; quiet = muted desk empties; brand = teal wash */
   tone?: 'warm' | 'quiet' | 'brand';
   compact?: boolean;
@@ -25,13 +28,14 @@ export function EmptyState({
   body,
   actionLabel,
   onAction,
+  action,
   tone = 'warm',
   compact = false,
 }: Props) {
   const { colors: c } = useTheme();
   const quiet = tone === 'quiet';
   const brand = tone === 'brand';
-  const iconColor = quiet ? c.dim : brand ? c.accentText : c.warm;
+  const iconColor = quiet ? c.muted : brand ? c.accentText : c.warm;
   const iconBg = quiet ? c.inputBg : brand ? c.accentSoft : c.warmSoft;
 
   const styles = useThemedStyles((colors) => ({
@@ -45,8 +49,8 @@ export function EmptyState({
       width: '100%' as const,
     },
     iconWrap: {
-      width: compact || quiet ? 44 : 56,
-      height: compact || quiet ? 44 : 56,
+      width: compact ? 48 : quiet ? 48 : 56,
+      height: compact ? 48 : quiet ? 48 : 56,
       borderRadius: radiusLg,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
@@ -55,10 +59,10 @@ export function EmptyState({
       shadowOpacity: 0,
     },
     title: {
-      fontSize: quiet || compact ? 15 : 17,
+      fontSize: compact ? 15 : 17,
       fontWeight: '600' as const,
       letterSpacing: -0.2,
-      color: quiet ? colors.muted : colors.text,
+      color: colors.text,
       textAlign: 'center' as const,
     },
     body: {
@@ -69,6 +73,10 @@ export function EmptyState({
       textAlign: 'center' as const,
     },
     action: {
+      marginTop: 16,
+      alignSelf: 'center' as const,
+    },
+    actionStretch: {
       marginTop: 18,
       alignSelf: 'stretch' as const,
     },
@@ -76,15 +84,26 @@ export function EmptyState({
 
   return (
     <Animated.View entering={FadeIn.duration(280)} style={styles.wrap} accessibilityRole="summary">
-      <View style={[styles.iconWrap, { backgroundColor: iconBg }]}>
-        <Ionicons name={icon} size={compact || quiet ? 22 : 26} color={iconColor} />
+      <View
+        style={[
+          styles.iconWrap,
+          {
+            backgroundColor: iconBg,
+            borderWidth: quiet ? StyleSheet.hairlineWidth : 0,
+            borderColor: quiet ? c.border : 'transparent',
+          },
+        ]}
+      >
+        <Ionicons name={icon} size={compact || quiet ? 24 : 26} color={iconColor} />
       </View>
-      <Text display={!quiet} style={styles.title}>
+      <Text display style={styles.title}>
         {title}
       </Text>
       {body ? <Text style={styles.body}>{body}</Text> : null}
-      {actionLabel && onAction ? (
-        <PrimaryButton label={actionLabel} onPress={onAction} style={styles.action} />
+      {action ? (
+        <View style={styles.action}>{action}</View>
+      ) : actionLabel && onAction ? (
+        <PrimaryButton label={actionLabel} onPress={onAction} style={styles.actionStretch} />
       ) : null}
     </Animated.View>
   );

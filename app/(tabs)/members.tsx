@@ -131,7 +131,12 @@ function MemberRowItem({
   const showRenew = !readOnly && !isFormer && canRenewMember(member);
   const showCollect = !readOnly && !isFormer && canCollectPayment(member);
 
-  const actions = (
+  const hasActions =
+    (showRenew && Boolean(onRenew)) ||
+    (showCollect && Boolean(onCollect)) ||
+    (isFormer && Boolean(canRestore && onRestore));
+
+  const actions = hasActions ? (
     <View style={styles.rowActions}>
       {showRenew && onRenew ? (
         <RowActionLink
@@ -149,12 +154,6 @@ function MemberRowItem({
           onPress={onCollect}
         />
       ) : null}
-      <RowActionLink
-        label={t('common.details')}
-        icon="open-outline"
-        color={colors.accentText}
-        onPress={onPress}
-      />
       {isFormer && canRestore && onRestore ? (
         <RestoreAction
           label={t('members.restore')}
@@ -164,7 +163,7 @@ function MemberRowItem({
         />
       ) : null}
     </View>
-  );
+  ) : null;
 
   return (
     <SoftSurface

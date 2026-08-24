@@ -5,14 +5,11 @@ import Animated, {
   useAnimatedProps,
   useAnimatedStyle,
   useSharedValue,
-  withSequence,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTheme } from '@/src/context/PreferencesContext';
-import { springs, timings } from '@/src/theme/motion';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -87,7 +84,7 @@ export function VisitRing({
 
   /** Web `--color-brand` — light #0f766e, dark #2dd4bf (= accentText). */
   const brand = c.accentText;
-  /** Web `--color-accent-warm` — light #b45309, dark #fbbf24 (= warm). */
+  /** Web `--color-accent-warm` — light #d97706, dark #fbbf24 (= warm). */
   const ringAmber = c.warm;
   const fill = warnRed ? c.statusExpired : warnAmber ? ringAmber : brand;
   /** Celebrate tick: warm or brand only (web never paints the check red). */
@@ -100,7 +97,8 @@ export function VisitRing({
       ? 'rgba(15,23,42,0.08)'
       : 'rgba(148,163,184,0.18)';
   const countColor = warnRed ? c.statusExpired : c.text;
-  const discBg = theme === 'light' ? c.bg : '#0c0e12';
+  /** Dark disc: sit near card/input, not a near-black hole inside the ring. */
+  const discBg = theme === 'light' ? c.bg : c.inputBg;
 
   const progressSv = useSharedValue(progress);
   const tickScale = useSharedValue(0);
@@ -114,7 +112,7 @@ export function VisitRing({
       progressSv.value = progress;
       return;
     }
-    progressSv.value = withTiming(progress, { duration: timings.enterMs });
+    progressSv.value = withTiming(progress, { duration: 280 });
   }, [progress, progressSv]);
 
   useEffect(() => {
@@ -124,17 +122,15 @@ export function VisitRing({
       countOpacity.value = 1;
       return;
     }
-    countOpacity.value = withTiming(0, { duration: 120 });
-    tickOpacity.value = withTiming(1, { duration: 120 });
-    tickScale.value = withSequence(
-      withSpring(1.12, springs.press),
-      withSpring(1, springs.enter)
-    );
+    // Ring progress + tick + count swap land together (no spring overshoot).
+    countOpacity.value = withTiming(0, { duration: 140 });
+    tickOpacity.value = withTiming(1, { duration: 140 });
+    tickScale.value = withTiming(1, { duration: 180 });
     const clear = setTimeout(() => {
-      tickOpacity.value = withTiming(0, { duration: 220 });
-      countOpacity.value = withTiming(1, { duration: 220 });
-      tickScale.value = withTiming(0.85, { duration: 220 });
-    }, 720);
+      tickOpacity.value = withTiming(0, { duration: 180 });
+      countOpacity.value = withTiming(1, { duration: 180 });
+      tickScale.value = withTiming(0.92, { duration: 180 });
+    }, 560);
     return () => clearTimeout(clear);
   }, [celebrate, tickScale, tickOpacity, countOpacity]);
 

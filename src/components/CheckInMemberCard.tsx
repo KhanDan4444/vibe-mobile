@@ -1,21 +1,23 @@
-import { useEffect, type ReactNode } from 'react';
-import { View } from 'react-native';
+import { type ReactNode } from 'react';
+import { ActivityIndicator, Platform, Pressable, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import Animated, {
   FadeIn,
+  FadeInRight,
   useAnimatedStyle,
   useSharedValue,
-  withSequence,
-  withTiming,
+  withSpring,
 } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { AppText as Text } from '@/src/components/AppText';
 import { MemberPhoto } from '@/src/components/MemberPhoto';
 import StatusBadge from '@/src/components/StatusBadge';
 import { VisitRing } from '@/src/components/VisitRing';
-import { PrimaryButton } from '@/src/components/ui/Button';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import type { AttendanceSettings, CheckInMember } from '@/src/api/checkIns';
-import { timings } from '@/src/theme/motion';
+import { useTheme } from '@/src/context/PreferencesContext';
+import { springs, timings } from '@/src/theme/motion';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 
 type CardError = { code: string; message: string };
@@ -38,6 +40,79 @@ function isExpiredStatus(status: string) {
   return (status || '').toLowerCase() === 'expired';
 }
 
+/** Compact desk CTA — matches web renew-style check-in chip. */
+function CheckInPill({
+  label,
+  busy,
+  disabled,
+  onPress,
+}: {
+  label: string;
+  busy: boolean;
+  disabled: boolean;
+  onPress: () => void;
+}) {
+  const { colors: c } = useTheme();
+  const scale = useSharedValue(1);
+  const idle = disabled && !busy;
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Animated.View style={animStyle}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        disabled={disabled || busy}
+        onPress={() => {
+          if (Platform.OS !== 'web') {
+            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          }
+          onPress();
+        }}
+        onPressIn={() => {
+          if (!idle && !busy) scale.value = withSpring(0.97, springs.press);
+        }}
+        onPressOut={() => {
+          scale.value = withSpring(1, springs.press);
+        }}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 5,
+          minHeight: 34,
+          paddingHorizontal: 11,
+          paddingVertical: 7,
+          borderRadius: 8,
+          backgroundColor: idle ? c.border : c.accent,
+          opacity: idle ? 0.7 : 1,
+        }}
+      >
+        {busy ? (
+          <ActivityIndicator size="small" color="#ffffff" />
+        ) : (
+          <>
+            <Ionicons name="checkmark-circle" size={15} color="#ffffff" />
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: '700',
+                letterSpacing: 0.1,
+                color: '#ffffff',
+              }}
+            >
+              {label}
+            </Text>
+          </>
+        )}
+      </Pressable>
+    </Animated.View>
+  );
+}
+
 /** Search result card — ring + identity + right-side action (matches web). */
 export function CheckInMemberCard({
   member,
@@ -56,19 +131,6 @@ export function CheckInMemberCard({
   const checkedIn = alreadyToday || success || cardError?.code === 'ALREADY_TODAY';
   const showError =
     Boolean(cardError) && !checkedIn && cardError?.code !== 'ALREADY_TODAY';
-  const flash = useSharedValue(0);
-
-  useEffect(() => {
-    if (!success) return;
-    flash.value = withSequence(
-      withTiming(1, { duration: 160 }),
-      withTiming(0, { duration: timings.enterMs })
-    );
-  }, [success, flash]);
-
-  const flashStyle = useAnimatedStyle(() => ({
-    opacity: flash.value * 0.55,
-  }));
 
   const styles = useThemedStyles((theme) => ({
     wrap: {
@@ -77,28 +139,23 @@ export function CheckInMemberCard({
       flex: 1,
     },
     card: {
-      paddingVertical: 14,
-      paddingHorizontal: 14,
+      paddingVertical: 12,
+      paddingHorizontal: 12,
     },
     cardError: {
       borderWidth: 1,
       borderColor: theme.statusExpired,
       backgroundColor: 'rgba(225,29,72,0.05)',
     },
-    flash: {
-      ...({ position: 'absolute' as const, left: 0, right: 0, top: 0, bottom: 0 }),
-      backgroundColor: theme.accentCta,
-      borderRadius: 16,
-    },
     row: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       gap: 12,
     },
-    identity: { flex: 1, minWidth: 0, gap: 4 },
+    identity: { flex: 1, minWidth: 0, gap: 3 },
     name: {
-      fontSize: 16,
-      fontWeight: '700' as const,
+      fontSize: 15,
+      fontWeight: '600' as const,
       color: theme.text,
       letterSpacing: -0.2,
     },
@@ -119,8 +176,8 @@ export function CheckInMemberCard({
       color: theme.statusExpired,
     },
     actionCol: {
-      width: 118,
       flexShrink: 0,
+      maxWidth: 120,
       alignItems: 'flex-end' as const,
       justifyContent: 'center' as const,
     },
@@ -131,13 +188,6 @@ export function CheckInMemberCard({
       lineHeight: 16,
       color: theme.statusExpired,
     },
-    checkInBtn: {
-      paddingVertical: 8,
-      paddingHorizontal: 10,
-      minHeight: 40,
-      minWidth: 0,
-      alignSelf: 'stretch' as const,
-    },
   }));
 
   const enterDelay = Math.min(index, 4) * 30;
@@ -146,17 +196,20 @@ export function CheckInMemberCard({
   if (expired) {
     action = <Text style={styles.statusText}>{t('checkIn.blockedExpired')}</Text>;
   } else if (checkedIn) {
-    action = <Text style={styles.statusText}>{t('checkIn.alreadyTodayShort')}</Text>;
+    action = (
+      <Animated.View entering={FadeInRight.duration(180)}>
+        <Text style={styles.statusText}>{t('checkIn.alreadyTodayShort')}</Text>
+      </Animated.View>
+    );
   } else if (cardError?.code === 'WEEKLY_LIMIT') {
     action = <Text style={styles.statusText}>{t('checkIn.weeklyLimitShort')}</Text>;
   } else {
     action = (
-      <PrimaryButton
+      <CheckInPill
         label={busy ? t('common.loading') : t('checkIn.checkInAction')}
-        onPress={onCheckIn}
-        loading={busy}
+        busy={busy}
         disabled={readOnly || busy}
-        style={styles.checkInBtn}
+        onPress={onCheckIn}
       />
     );
   }
@@ -167,13 +220,12 @@ export function CheckInMemberCard({
         variant="panel"
         style={[styles.wrap, styles.card, showError ? styles.cardError : null]}
       >
-        <Animated.View pointerEvents="none" style={[styles.flash, flashStyle]} />
         <View style={styles.row}>
           <VisitRing
             visits={member.visits_this_week}
             limit={member.visits_limit}
-            size={92}
-            stroke={6.5}
+            size={88}
+            stroke={6}
             weekStartsOn={settings?.week_starts_on || member.week_starts_on || 'monday'}
             celebrate={success}
             badge={
@@ -181,13 +233,13 @@ export function CheckInMemberCard({
                 memberId={member.id}
                 name={member.name}
                 token={token}
-                size={28}
+                size={26}
                 hasPhoto={Boolean(member.photo_url)}
               />
             }
           />
           <View style={styles.identity}>
-            <Text listRow style={styles.name} numberOfLines={1}>
+            <Text display style={styles.name} numberOfLines={1}>
               {member.name}
             </Text>
             <Text style={styles.phone} numberOfLines={1}>

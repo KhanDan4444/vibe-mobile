@@ -98,17 +98,30 @@ export function searchCheckInMembers(
 
 export function listCheckIns(
   token: string,
-  params: { date?: string; limit?: number; branchId?: number | 'all' } = {}
+  params: {
+    date?: string;
+    from?: string;
+    to?: string;
+    memberId?: number;
+    limit?: number;
+    branchId?: number | 'all';
+  } = {}
 ) {
   const qs = new URLSearchParams();
   if (params.date) qs.set('date', params.date);
+  if (params.from) qs.set('from', params.from);
+  if (params.to) qs.set('to', params.to);
+  if (params.memberId) qs.set('member_id', String(params.memberId));
   if (params.limit) qs.set('limit', String(params.limit));
   withBranch(qs, params.branchId);
   const query = qs.toString();
-  return apiRequest<{ date: string; total: number; checkIns: CheckInRow[] }>(
-    `/check-ins${query ? `?${query}` : ''}`,
-    { token }
-  );
+  return apiRequest<{
+    date?: string;
+    from?: string;
+    to?: string;
+    total: number;
+    checkIns: CheckInRow[];
+  }>(`/check-ins${query ? `?${query}` : ''}`, { token });
 }
 
 export function createCheckIn(

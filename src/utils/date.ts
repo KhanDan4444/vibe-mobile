@@ -108,6 +108,70 @@ export function isDateRangeValid(min?: Date, max?: Date): boolean {
   return min.getTime() <= max.getTime();
 }
 
+/** Local start of attendance week (matches API week_starts_on). */
+export function startOfAttendanceWeek(
+  date = new Date(),
+  weekStartsOn: 'monday' | 'sunday' = 'monday'
+): Date {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  const day = d.getDay();
+  const startDow = weekStartsOn === 'sunday' ? 0 : 1;
+  const diff = (day - startDow + 7) % 7;
+  d.setDate(d.getDate() - diff);
+  return d;
+}
+
+/** Inclusive from/to ISO dates for this or last attendance week. */
+export function attendanceWeekRange(
+  which: 'this' | 'last',
+  weekStartsOn: 'monday' | 'sunday' = 'monday'
+): { from: string; to: string } {
+  let start = startOfAttendanceWeek(new Date(), weekStartsOn);
+  if (which === 'last') {
+    start = new Date(start);
+    start.setDate(start.getDate() - 7);
+  }
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+  return { from: dateToIso(start), to: dateToIso(end) };
+}
+
+/** Day header for attendance history: "Mon 18 Aug" */
+export function formatAttendanceDayLabel(
+  date: string | Date | null | undefined,
+  language = 'en'
+): string {
+  if (!date || date === '—') return '—';
+  const iso = typeof date === 'string' ? toDateString(date) : dateToIso(date);
+  const parsed = iso ? isoToLocalDate(iso) : null;
+  if (!parsed) return formatDisplayDate(typeof date === 'string' ? date : undefined);
+  const locale = language === 'am' ? 'am-ET' : language === 'om' ? 'om-ET' : 'en-GB';
+  try {
+    return parsed.toLocaleDateString(locale, {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+    });
+  } catch {
+    return formatDisplayDate(typeof date === 'string' ? date : undefined);
+  }
+}
+
+/** Group check-in rows by local calendar day (newest days first). */
+export function groupCheckInsByDay<T extends { checked_in_at?: string | null }>(
+  checkIns: T[] | null | undefined
+): [string, T[]][] {
+  const map = new Map<string, T[]>();
+  for (const row of checkIns || []) {
+    const day = toDateString(row.checked_in_at);
+    if (!day) continue;
+    if (!map.has(day)) map.set(day, []);
+    map.get(day)!.push(row);
+  }
+  return [...map.entries()].sort((a, b) => b[0].localeCompare(a[0]));
+}
+
 /** Keep an ISO date inside optional min/max (local calendar days). */
 export function clampIsoDate(iso: string, min?: Date, max?: Date): string {
   const normalized = toDateString(iso);

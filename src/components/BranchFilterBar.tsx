@@ -18,7 +18,8 @@ function branchOptionLabel(name: string, isDefault?: boolean, inactive?: boolean
 
 export function BranchFilterBar({
   horizontalPadding = 16,
-  emphasis = false,
+  /** @deprecated Kept for call-site compat — value text is always brand-tinted like web. */
+  emphasis: _emphasis = false,
   quiet = false,
 }: {
   horizontalPadding?: number;
@@ -27,6 +28,7 @@ export function BranchFilterBar({
   /** Minimal chrome — nest under a hero / desk card without looking like a second panel. */
   quiet?: boolean;
 }) {
+  void _emphasis;
   const { t } = useTranslation();
   const { colors: c } = useTheme();
   const [open, setOpen] = useState(false);
@@ -57,6 +59,7 @@ export function BranchFilterBar({
     setOpen(false);
   };
 
+  // Web toolbar-picker: quiet shell, brand-tinted value text (not a filled chip).
   const triggerStyle = quiet
     ? {
         backgroundColor: 'transparent',
@@ -68,12 +71,7 @@ export function BranchFilterBar({
         elevation: 0,
         shadowOpacity: 0,
       }
-    : emphasis
-      ? {
-          borderColor: c.accentText,
-          backgroundColor: c.accentSoft,
-        }
-      : undefined;
+    : undefined;
 
   return (
     <View
@@ -93,13 +91,13 @@ export function BranchFilterBar({
         <Ionicons
           name="location-outline"
           size={quiet ? 16 : 18}
-          color={quiet ? c.dim : emphasis ? c.accentText : c.muted}
+          color={quiet ? c.dim : c.muted}
         />
         <Text
           style={[
             styles.label,
             quiet && styles.labelQuiet,
-            { color: quiet ? c.muted : emphasis ? c.accentText : c.text },
+            { color: quiet ? c.muted : c.accentText },
           ]}
           numberOfLines={1}
         >

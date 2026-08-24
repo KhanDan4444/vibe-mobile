@@ -85,8 +85,9 @@ function MenuRow({
   showDivider: boolean;
   onPress: () => void;
 }) {
-  const { colors: c } = useTheme();
+  const { colors: c, theme } = useTheme();
   const { t } = useTranslation();
+  const isLight = theme === 'light';
 
   return (
     <View>
@@ -97,8 +98,8 @@ function MenuRow({
         accessibilityLabel={t(MENU_KEYS[item.labelKey])}
         style={({ pressed }) => [styles.row, pressed && { opacity: 0.72 }]}
       >
-        <View style={[styles.iconWell, { backgroundColor: c.accentSoft }]}>
-          <Ionicons name={item.icon} size={20} color={c.accentText} />
+        <View style={[styles.iconWell, { backgroundColor: isLight ? c.accentSoft : c.inputBg }]}>
+          <Ionicons name={item.icon} size={20} color={isLight ? c.accentText : c.muted} />
         </View>
         <View style={styles.rowText}>
           <Text style={[styles.rowLabel, { color: c.text }]}>{t(MENU_KEYS[item.labelKey])}</Text>

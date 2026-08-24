@@ -1,6 +1,6 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,7 +9,7 @@ import { LoadError } from '@/src/components/LoadError';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
 import { deleteMember, fetchMember, fetchMemberPayments, restoreMember } from '@/src/api/members';
-import { fetchMemberVisitSummary } from '@/src/api/checkIns';
+import { fetchMemberVisitSummary, listCheckIns } from '@/src/api/checkIns';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { MemberPhoto } from '@/src/components/MemberPhoto';
 import { MemberActionsBar } from '@/src/components/MemberActionsBar';
@@ -30,7 +30,11 @@ import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import type { ThemeColors } from '@/src/theme/tokens';
 import { appTextStyle } from '@/src/theme/typography';
-import { formatDisplayDate } from '@/src/utils/date';
+import {
+  formatAttendanceDayLabel,
+  formatDisplayDate,
+  groupCheckInsByDay,
+} from '@/src/utils/date';
 import { paymentMethodBadgeStyle, paymentMethodIcon, paymentMethodLabelKey } from '@/src/constants/payments';
 import { paymentSourceKey } from '@/src/utils/termPayments';
 import { statusLabelKey } from '@/src/utils/statusLabels';
@@ -92,6 +96,57 @@ function buildMemberStyles(c: ThemeColors) {
       color: c.text,
     },
     visitMeta: { marginTop: 4, fontSize: 12, lineHeight: 17, color: c.muted },
+    recentVisits: {
+      marginTop: 14,
+      paddingTop: 12,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: c.border,
+      gap: 12,
+    },
+    recentTitle: {
+      fontSize: 13,
+      fontWeight: '600' as const,
+      letterSpacing: -0.1,
+      color: c.text,
+      marginBottom: 2,
+    },
+    recentDayBlock: { gap: 4 },
+    recentDayHeader: {
+      flexDirection: 'row' as const,
+      alignItems: 'baseline' as const,
+      justifyContent: 'space-between' as const,
+      gap: 8,
+      marginBottom: 2,
+    },
+    recentDayLabel: {
+      fontSize: 12,
+      fontWeight: '600' as const,
+      letterSpacing: -0.1,
+      color: c.text,
+    },
+    recentDayCount: { fontSize: 11, fontWeight: '500' as const, color: c.muted },
+    recentRow: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      justifyContent: 'space-between' as const,
+      gap: 12,
+      paddingVertical: 2,
+    },
+    recentDate: { fontSize: 12, color: c.muted },
+    recentTime: {
+      fontSize: 12,
+      fontWeight: '700' as const,
+      fontVariant: ['tabular-nums' as const],
+      color: c.text,
+    },
+    recentEmpty: {
+      marginTop: 12,
+      paddingTop: 12,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: c.border,
+      fontSize: 12,
+      color: c.dim,
+    },
     sectionTitle: { fontSize: 14, fontWeight: '600' as const, letterSpacing: -0.15, color: c.muted, marginBottom: 10 },
     row: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, justifyContent: 'space-between' as const, paddingVertical: 8, gap: 12 },
     rowLabel: { color: c.dim, fontSize: 14, flexShrink: 0 },
@@ -160,6 +215,12 @@ export default function MemberDetailScreen() {
     enabled: Boolean(token && canViewMember) && Number.isFinite(memberId),
   });
 
+  const recentVisitsQuery = useQuery({
+    queryKey: ['member-recent-visits', memberId],
+    queryFn: () => listCheckIns(token!, { memberId, limit: 8 }),
+    enabled: Boolean(token && canViewMember) && Number.isFinite(memberId),
+  });
+
   const loadRetry = useLoadRetry(memberQuery);
 
   if (!canViewMember) {
@@ -201,6 +262,8 @@ export default function MemberDetailScreen() {
   const member = memberQuery.data;
   const payments = paymentsQuery.data ?? [];
   const visitSummary = visitQuery.data ?? null;
+  const recentVisits = recentVisitsQuery.data?.checkIns ?? [];
+  const recentByDay = useMemo(() => groupCheckInsByDay(recentVisits), [recentVisits]);
   const owner = Boolean(user && isGymOwner(user.role));
   const isFormer = Boolean(member.deleted_at);
 
@@ -323,6 +386,39 @@ export default function MemberDetailScreen() {
             </View>
             <Ionicons name="chevron-forward" size={18} color={c.dim} />
           </Pressable>
+          {recentVisits.length > 0 ? (
+            <View style={styles.recentVisits}>
+              <Text display style={styles.recentTitle}>
+                {t('checkIn.recentVisits')}
+              </Text>
+              {recentByDay.map(([day, rows]) => (
+                <View key={day} style={styles.recentDayBlock}>
+                  <View style={styles.recentDayHeader}>
+                    <Text style={styles.recentDayLabel}>
+                      {formatAttendanceDayLabel(day, language)}
+                    </Text>
+                    <Text style={styles.recentDayCount}>
+                      {t('checkIn.dayVisitCount', { count: rows.length })}
+                    </Text>
+                  </View>
+                  {rows.map((row) => (
+                    <View key={row.id} style={styles.recentRow}>
+                      <Text style={styles.recentDate}>{formatDisplayDate(row.checked_in_at)}</Text>
+                      <Text style={styles.recentTime}>
+                        {new Date(row.checked_in_at).toLocaleTimeString([], {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true,
+                        })}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.recentEmpty}>{t('checkIn.recentVisitsEmpty')}</Text>
+          )}
         </SoftSurface>
       ) : null}
 
