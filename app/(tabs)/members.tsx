@@ -36,7 +36,7 @@ import { isGymOwner } from '@/src/utils/roles';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
 import { formatDisplayDate } from '@/src/utils/date';
-import { canCollectPayment, canRenewMember } from '@/src/utils/memberRenew';
+import { canRenewMember } from '@/src/utils/memberRenew';
 import type { MemberRow } from '@/src/types/api';
 
 type MemberFilter = 'all' | 'active' | 'due_soon' | 'expired' | 'unpaid' | 'former';
@@ -109,7 +109,6 @@ function MemberRowItem({
   onRestore,
   readOnly,
   onRenew,
-  onCollect,
 }: {
   member: MemberRow;
   onPress: () => void;
@@ -124,16 +123,13 @@ function MemberRowItem({
   onRestore?: () => void;
   readOnly?: boolean;
   onRenew?: () => void;
-  onCollect?: () => void;
 }) {
   const { t } = useTranslation();
   const isFormer = Boolean(member.deleted_at);
   const showRenew = !readOnly && !isFormer && canRenewMember(member);
-  const showCollect = !readOnly && !isFormer && canCollectPayment(member);
 
   const hasActions =
     (showRenew && Boolean(onRenew)) ||
-    (showCollect && Boolean(onCollect)) ||
     (isFormer && Boolean(canRestore && onRestore));
 
   const actions = hasActions ? (
@@ -141,17 +137,10 @@ function MemberRowItem({
       {showRenew && onRenew ? (
         <RowActionLink
           label={t('dashboard.renew')}
-          icon="refresh-outline"
-          color={colors.statusActive}
+          icon="refresh"
+          color={colors.accentCta}
+          emphasized
           onPress={onRenew}
-        />
-      ) : null}
-      {showCollect && onCollect ? (
-        <RowActionLink
-          label={t('members.collect')}
-          icon="cash-outline"
-          color={colors.statusUnpaid}
-          onPress={onCollect}
         />
       ) : null}
       {isFormer && canRestore && onRestore ? (
@@ -525,11 +514,6 @@ export default function MembersScreen() {
               onRenew={
                 !readOnly && canRenewMember(item)
                   ? () => router.push(`/renew/${item.id}`)
-                  : undefined
-              }
-              onCollect={
-                !readOnly && canCollectPayment(item)
-                  ? () => router.push(`/payment/${item.id}`)
                   : undefined
               }
               onPress={() => router.push(`/member/${item.id}`)}

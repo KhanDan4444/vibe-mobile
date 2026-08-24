@@ -222,6 +222,8 @@ export default function MemberDetailScreen() {
   });
 
   const loadRetry = useLoadRetry(memberQuery);
+  const recentVisits = recentVisitsQuery.data?.checkIns ?? [];
+  const recentByDay = useMemo(() => groupCheckInsByDay(recentVisits), [recentVisits]);
 
   if (!canViewMember) {
     return <Redirect href="/login" />;
@@ -262,8 +264,6 @@ export default function MemberDetailScreen() {
   const member = memberQuery.data;
   const payments = paymentsQuery.data ?? [];
   const visitSummary = visitQuery.data ?? null;
-  const recentVisits = recentVisitsQuery.data?.checkIns ?? [];
-  const recentByDay = useMemo(() => groupCheckInsByDay(recentVisits), [recentVisits]);
   const owner = Boolean(user && isGymOwner(user.role));
   const isFormer = Boolean(member.deleted_at);
 

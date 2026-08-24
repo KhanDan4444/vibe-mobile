@@ -85,7 +85,7 @@ function FlashToastItem({
   const durationMs =
     toast.durationMs ??
     (toast.variant === 'danger' && !toast.action ? FLASH_COMMITTED_MS : FLASH_DISMISS_MS);
-  const translateY = useSharedValue(18);
+  const translateY = useSharedValue(6);
   const translateX = useSharedValue(0);
   const opacity = useSharedValue(0);
   const progress = useSharedValue(1);
@@ -165,8 +165,11 @@ function FlashToastItem({
       translateY.value = 0;
       opacity.value = 1;
     } else {
-      translateY.value = withSpring(0, springs.enter);
-      opacity.value = withTiming(1, { duration: 200 });
+      // Near-instant with ring celebrate — don’t trail the check-in tick.
+      translateY.value = 6;
+      opacity.value = 0;
+      translateY.value = withTiming(0, { duration: 90, easing: Easing.out(Easing.cubic) });
+      opacity.value = withTiming(1, { duration: 80 });
     }
     startProgress();
     dismissTimerRef.current = setTimeout(() => dismiss(false), durationMs);

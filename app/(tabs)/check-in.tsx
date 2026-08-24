@@ -5,6 +5,7 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
+  unstable_batchedUpdates,
   View,
 } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -22,6 +23,7 @@ import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { EmptyState } from '@/src/components/EmptyState';
 import { LoadError } from '@/src/components/LoadError';
 import { MemberPhoto } from '@/src/components/MemberPhoto';
+import { ScanQrDockButton } from '@/src/components/ScanQrDockButton';
 import { ScanMemberQrSheet } from '@/src/components/ScanMemberQrSheet';
 import { SearchField } from '@/src/components/SearchField';
 import { CheckInSearchSkeleton, PageSkeleton } from '@/src/components/Skeleton';
@@ -294,13 +296,37 @@ export default function CheckInScreen() {
   const checkInMutation = useMutation({
     mutationFn: (payload: { member: CheckInMember; force?: boolean }) =>
       createCheckIn(token!, { member_id: payload.member.id, force: payload.force }),
-    onSuccess: async (data, vars) => {
-      // One beat: status + celebrate + visit count (no optimistic ring jump first).
-      setCardErrors((prev) => ({
-        ...prev,
-        [vars.member.id]: { code: 'ALREADY_TODAY', message: t('checkIn.alreadyToday') },
-      }));
-      setSuccessIds((prev) => ({ ...prev, [vars.member.id]: true }));
+    onSuccess: (data, vars) => {
+      // One paint: toast + ring tick + visit count (refetch stays background).
+      unstable_batchedUpdates(() => {
+        showFlash({
+          title: t('checkIn.checkedInTitle'),
+          subtitle: t('checkIn.checkedInSub', {
+            name: vars.member.name,
+            progress:
+              data.visits_limit != null
+                ? `${data.visits_this_week}/${data.visits_limit}`
+                : String(data.visits_this_week),
+          }),
+          variant: 'success',
+        });
+        setCardErrors((prev) => ({
+          ...prev,
+          [vars.member.id]: { code: 'ALREADY_TODAY', message: t('checkIn.alreadyToday') },
+        }));
+        setSuccessIds((prev) => ({ ...prev, [vars.member.id]: true }));
+        queryClient.setQueryData<SearchCache>([...searchKey], (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            members: old.members.map((m) =>
+              m.id === vars.member.id
+                ? { ...m, visits_this_week: data.visits_this_week, visits_limit: data.visits_limit }
+                : m
+            ),
+          };
+        });
+      });
       setTimeout(() => {
         setSuccessIds((prev) => {
           const next = { ...prev };
@@ -308,30 +334,7 @@ export default function CheckInScreen() {
           return next;
         });
       }, 700);
-      queryClient.setQueryData<SearchCache>([...searchKey], (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          members: old.members.map((m) =>
-            m.id === vars.member.id
-              ? { ...m, visits_this_week: data.visits_this_week, visits_limit: data.visits_limit }
-              : m
-          ),
-        };
-      });
-      await invalidateCheckIns();
-      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      showFlash({
-        title: t('checkIn.checkedInTitle'),
-        subtitle: t('checkIn.checkedInSub', {
-          name: vars.member.name,
-          progress:
-            data.visits_limit != null
-              ? `${data.visits_this_week}/${data.visits_limit}`
-              : String(data.visits_this_week),
-        }),
-        variant: 'success',
-      });
+      void invalidateCheckIns();
     },
     onError: (err, vars) => {
       const apiErr = err instanceof ApiError ? err : null;
@@ -405,12 +408,28 @@ export default function CheckInScreen() {
     try {
       const data = await createCheckIn(token, { member_pass_token: passToken, force });
       const memberId = data.member?.id ?? data.checkIn?.member_id;
+      unstable_batchedUpdates(() => {
+        showFlash({
+          title: t('checkIn.checkedInTitle'),
+          subtitle: t('checkIn.checkedInSub', {
+            name: data.member?.name || '—',
+            progress:
+              data.visits_limit != null
+                ? `${data.visits_this_week}/${data.visits_limit}`
+                : String(data.visits_this_week),
+          }),
+          variant: 'success',
+        });
+        setScanOpen(false);
+        if (memberId != null) {
+          setCardErrors((prev) => ({
+            ...prev,
+            [memberId]: { code: 'ALREADY_TODAY', message: t('checkIn.alreadyToday') },
+          }));
+          setSuccessIds((prev) => ({ ...prev, [memberId]: true }));
+        }
+      });
       if (memberId != null) {
-        setCardErrors((prev) => ({
-          ...prev,
-          [memberId]: { code: 'ALREADY_TODAY', message: t('checkIn.alreadyToday') },
-        }));
-        setSuccessIds((prev) => ({ ...prev, [memberId]: true }));
         setTimeout(() => {
           setSuccessIds((prev) => {
             const next = { ...prev };
@@ -419,20 +438,7 @@ export default function CheckInScreen() {
           });
         }, 900);
       }
-      await invalidateCheckIns();
-      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      showFlash({
-        title: t('checkIn.checkedInTitle'),
-        subtitle: t('checkIn.checkedInSub', {
-          name: data.member?.name || '—',
-          progress:
-            data.visits_limit != null
-              ? `${data.visits_this_week}/${data.visits_limit}`
-              : String(data.visits_this_week),
-        }),
-        variant: 'success',
-      });
-      setScanOpen(false);
+      void invalidateCheckIns();
     } catch (err) {
       const apiErr = err instanceof ApiError ? err : null;
       const code = apiErr?.code || '';
@@ -459,6 +465,35 @@ export default function CheckInScreen() {
           limit: details.visits_limit == null ? null : Number(details.visits_limit),
           passToken,
         });
+        setScanOpen(false);
+        return;
+      }
+      if (code === 'ALREADY_TODAY') {
+        const memberId = Number(details.member_id);
+        const memberName = String(details.member_name || '').trim();
+        if (Number.isFinite(memberId) && memberId > 0) {
+          setCardErrors((prev) => ({
+            ...prev,
+            [memberId]: { code: 'ALREADY_TODAY', message: t('checkIn.alreadyToday') },
+          }));
+        }
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+        showFlash({
+          title: t('checkIn.alreadyToday'),
+          subtitle: memberName || undefined,
+          variant: 'warning',
+        });
+        setScanOpen(false);
+        return;
+      }
+      if (code === 'WEEKLY_LIMIT') {
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        showFlash({
+          title: t('checkIn.weeklyLimitReached'),
+          subtitle: details.member_name ? String(details.member_name) : undefined,
+          variant: 'warning',
+        });
+        setScanOpen(false);
         return;
       }
       showFlash({
@@ -555,16 +590,6 @@ export default function CheckInScreen() {
     deskSearch: {
       flex: 1,
       minWidth: 0,
-    },
-    scanIconBtn: {
-      width: 46,
-      height: 46,
-      borderRadius: 14,
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
-      backgroundColor: isLight ? 'rgba(255,255,255,0.62)' : theme.inputBg,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: isLight ? 'rgba(15,118,110,0.14)' : theme.border,
     },
     sectionTitle: {
       fontSize: 17,
@@ -681,22 +706,6 @@ export default function CheckInScreen() {
       marginBottom: 0,
     },
     idleWrap: { paddingHorizontal: 8, paddingTop: 4, paddingBottom: 12 },
-    idleScanBtn: {
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
-      gap: 8,
-      minHeight: 36,
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-      borderRadius: 8,
-      borderWidth: StyleSheet.hairlineWidth,
-    },
-    idleScanLabel: {
-      fontSize: 14,
-      fontWeight: '600' as const,
-      letterSpacing: -0.1,
-    },
     sheetBody: { fontSize: 13, lineHeight: 19, color: theme.muted, marginBottom: 10 },
   }));
 
@@ -725,7 +734,7 @@ export default function CheckInScreen() {
     <TabScreenFrame>
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.content, { paddingBottom: 48 + tabOverlayInset }]}
+        contentContainerStyle={[styles.content, { paddingBottom: 96 + tabOverlayInset }]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         refreshControl={
@@ -787,16 +796,6 @@ export default function CheckInScreen() {
                 tone="inset"
                 style={styles.deskSearch}
               />
-              {!readOnly ? (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={t('checkIn.scanAction')}
-                  onPress={() => setScanOpen(true)}
-                  style={({ pressed }) => [styles.scanIconBtn, { opacity: pressed ? 0.7 : 1 }]}
-                >
-                  <Ionicons name="scan-outline" size={20} color={isLight ? c.accent : c.accentText} />
-                </Pressable>
-              ) : null}
             </View>
           </SoftSurface>
         </Animated.View>
@@ -929,28 +928,7 @@ export default function CheckInScreen() {
                 body={
                   weekScope === 'last' ? t('checkIn.historyEmptyLast') : t('checkIn.todayEmpty')
                 }
-                action={
-                  readOnly || weekScope === 'last' ? null : (
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel={t('checkIn.scanAction')}
-                      onPress={() => setScanOpen(true)}
-                      style={({ pressed }) => [
-                        styles.idleScanBtn,
-                        {
-                          backgroundColor: c.inputBg,
-                          borderColor: c.border,
-                          opacity: pressed ? 0.75 : 1,
-                        },
-                      ]}
-                    >
-                      <Ionicons name="scan-outline" size={16} color={c.text} />
-                      <Text style={[styles.idleScanLabel, { color: c.text }]}>
-                        {t('checkIn.scanAction')}
-                      </Text>
-                    </Pressable>
-                  )
-                }
+                action={null}
               />
             </SoftSurface>
           ) : (
@@ -1076,6 +1054,14 @@ export default function CheckInScreen() {
         }}
         onScan={(token) => runCheckInFromPass(token)}
       />
+
+      {!readOnly ? (
+        <ScanQrDockButton
+          label={t('checkIn.scanAction')}
+          bottom={20 + tabOverlayInset}
+          onPress={() => setScanOpen(true)}
+        />
+      ) : null}
     </TabScreenFrame>
   );
 }

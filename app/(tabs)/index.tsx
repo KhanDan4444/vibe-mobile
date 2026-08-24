@@ -103,9 +103,9 @@ export default function DashboardScreen() {
   const router = useRouter();
   const { token, user, gymName: cachedGymName } = useAuth();
   const { selectedBranchId } = useBranchScope();
-  const { colors: c, isDark } = useTheme();
+  const { colors: c } = useTheme();
   const { t } = useTranslation();
-  const linkColor = isDark ? c.accent : c.statusActive;
+  const linkColor = c.accentCta;
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
   const owner = isGymOwner(user?.role);
   const staffUser = isGymStaff(user?.role);

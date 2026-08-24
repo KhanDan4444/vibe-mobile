@@ -122,15 +122,15 @@ export function VisitRing({
       countOpacity.value = 1;
       return;
     }
-    // Ring progress + tick + count swap land together (no spring overshoot).
-    countOpacity.value = withTiming(0, { duration: 140 });
-    tickOpacity.value = withTiming(1, { duration: 140 });
-    tickScale.value = withTiming(1, { duration: 180 });
+    // Ring progress + tick + count swap land with the success toast (~80–100ms).
+    countOpacity.value = withTiming(0, { duration: 90 });
+    tickOpacity.value = withTiming(1, { duration: 90 });
+    tickScale.value = withTiming(1, { duration: 110 });
     const clear = setTimeout(() => {
-      tickOpacity.value = withTiming(0, { duration: 180 });
-      countOpacity.value = withTiming(1, { duration: 180 });
-      tickScale.value = withTiming(0.92, { duration: 180 });
-    }, 560);
+      tickOpacity.value = withTiming(0, { duration: 160 });
+      countOpacity.value = withTiming(1, { duration: 160 });
+      tickScale.value = withTiming(0.92, { duration: 160 });
+    }, 520);
     return () => clearTimeout(clear);
   }, [celebrate, tickScale, tickOpacity, countOpacity]);
 
