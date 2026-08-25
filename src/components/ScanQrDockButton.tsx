@@ -6,16 +6,16 @@ import { fabElevation } from '@/src/theme/elevation';
 import { useTheme } from '@/src/context/PreferencesContext';
 
 const FRAME = '#ffffff';
-const CORNER = 15;
-const STROKE = 2.4;
-const DOT = 3.2;
-const DOT_INSET = 3.2;
+const CORNER = 12;
+const STROKE = 2.2;
+const DOT = 2.6;
+const DOT_INSET = 2.6;
 
 /**
  * Curved viewfinder corner + inner square — CBE-style QR chrome, tightened.
  */
 function QrCorner({ placement }: { placement: 'tl' | 'tr' | 'bl' | 'br' }) {
-  const r = 4.5;
+  const r = 3.5;
   const s = STROKE / 2;
   const path =
     placement === 'tl'
@@ -59,6 +59,7 @@ export const SCAN_QR_DOCK_BOTTOM = 20;
 
 /**
  * Centered Scan QR pill above the tab bar — curved QR-frame CTA.
+ * Corners hug a tight frame around the label (not the outer pill edge).
  */
 export function ScanQrDockButton({
   label,
@@ -94,11 +95,13 @@ export function ScanQrDockButton({
           },
         ]}
       >
-        <QrCorner placement="tl" />
-        <QrCorner placement="tr" />
-        <QrCorner placement="bl" />
-        <QrCorner placement="br" />
-        <Text style={styles.label}>{label}</Text>
+        <View style={styles.frame}>
+          <QrCorner placement="tl" />
+          <QrCorner placement="tr" />
+          <QrCorner placement="bl" />
+          <QrCorner placement="br" />
+          <Text style={styles.label}>{label}</Text>
+        </View>
       </Pressable>
     </View>
   );
@@ -113,10 +116,16 @@ const styles = StyleSheet.create({
     zIndex: 20,
   },
   pill: {
-    minWidth: 152,
     height: 46,
-    paddingHorizontal: 30,
+    paddingHorizontal: 14,
     borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  /** Corners sit on this box so they track the label, not the pill ends. */
+  frame: {
+    paddingHorizontal: 14,
+    paddingVertical: 5,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -131,9 +140,8 @@ const styles = StyleSheet.create({
     width: CORNER,
     height: CORNER,
   },
-  // Hug the label — tighter inset than the outer pill edge.
-  tl: { top: 6, left: 10 },
-  tr: { top: 6, right: 10 },
-  bl: { bottom: 6, left: 10 },
-  br: { bottom: 6, right: 10 },
+  tl: { top: 0, left: 0 },
+  tr: { top: 0, right: 0 },
+  bl: { bottom: 0, left: 0 },
+  br: { bottom: 0, right: 0 },
 });

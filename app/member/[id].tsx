@@ -87,6 +87,8 @@ function buildMemberStyles(c: ThemeColors) {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       gap: 14,
+      flex: 1,
+      minWidth: 0,
     },
     visitCopy: { flex: 1, minWidth: 0 },
     visitTitle: {
@@ -96,28 +98,31 @@ function buildMemberStyles(c: ThemeColors) {
       color: c.text,
     },
     visitMeta: { marginTop: 4, fontSize: 12, lineHeight: 17, color: c.muted },
+    visitRow: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 10,
+    },
     passChip: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       gap: 5,
-      paddingHorizontal: 11,
-      paddingVertical: 8,
+      minHeight: 36,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
       borderRadius: 8,
-      borderWidth: 1.5,
+      borderWidth: 1,
       borderColor: c.accentText,
-    },
-    passChipInCard: {
-      alignSelf: 'flex-start' as const,
-      marginTop: 12,
+      flexShrink: 0,
     },
     passChipLabel: {
-      fontSize: 12,
-      fontWeight: '700' as const,
-      letterSpacing: 0.1,
+      fontSize: 13,
+      fontWeight: '500' as const,
+      letterSpacing: -0.1,
       color: c.accentText,
     },
     passChipSolo: {
-      alignSelf: 'flex-start' as const,
+      alignSelf: 'flex-end' as const,
       marginBottom: 14,
     },
     recentVisits: {
@@ -386,47 +391,44 @@ export default function MemberDetailScreen() {
 
       {!isFormer && visitSummary ? (
         <SoftSurface variant="panel" style={[styles.card, isTablet && { flex: 1 }]}>
-          <Pressable
-            onPress={openCheckInForMember}
-            accessibilityRole="button"
-            accessibilityLabel={t('checkIn.openCheckInFor', { name: member.name })}
-            style={({ pressed }) => [styles.visitMain, { opacity: pressed ? 0.75 : 1 }]}
-          >
-            <VisitRing
-              visits={visitSummary.visits_this_week ?? 0}
-              limit={visitSummary.visits_limit}
-              size={72}
-              weekStartsOn={visitSummary.week_starts_on || 'monday'}
+          <View style={styles.visitRow}>
+            <Pressable
+              onPress={openCheckInForMember}
+              accessibilityRole="button"
               accessibilityLabel={t('checkIn.openCheckInFor', { name: member.name })}
-            />
-            <View style={styles.visitCopy}>
-              <Text display style={styles.visitTitle}>
-                {t('checkIn.ringLabel')}
-              </Text>
-              <Text style={styles.visitMeta}>
-                {visitSummary.visits_limit != null
-                  ? t('checkIn.ringProgress', {
-                      count: visitSummary.visits_this_week,
-                      limit: visitSummary.visits_limit,
-                    })
-                  : t('checkIn.ringUnlimited', { count: visitSummary.visits_this_week })}
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color={c.dim} />
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('checkIn.showPass')}
-            onPress={() => setPassOpen(true)}
-            style={({ pressed }) => [
-              styles.passChip,
-              styles.passChipInCard,
-              { opacity: pressed ? 0.72 : 1 },
-            ]}
-          >
-            <Ionicons name="qr-code-outline" size={15} color={c.accentText} />
-            <Text style={styles.passChipLabel}>{t('checkIn.showPass')}</Text>
-          </Pressable>
+              style={({ pressed }) => [styles.visitMain, { opacity: pressed ? 0.75 : 1 }]}
+            >
+              <VisitRing
+                visits={visitSummary.visits_this_week ?? 0}
+                limit={visitSummary.visits_limit}
+                size={72}
+                weekStartsOn={visitSummary.week_starts_on || 'monday'}
+                accessibilityLabel={t('checkIn.openCheckInFor', { name: member.name })}
+              />
+              <View style={styles.visitCopy}>
+                <Text display style={styles.visitTitle}>
+                  {t('checkIn.ringLabel')}
+                </Text>
+                <Text style={styles.visitMeta}>
+                  {visitSummary.visits_limit != null
+                    ? t('checkIn.ringProgress', {
+                        count: visitSummary.visits_this_week,
+                        limit: visitSummary.visits_limit,
+                      })
+                    : t('checkIn.ringUnlimited', { count: visitSummary.visits_this_week })}
+                </Text>
+              </View>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('checkIn.showPass')}
+              onPress={() => setPassOpen(true)}
+              style={({ pressed }) => [styles.passChip, { opacity: pressed ? 0.72 : 1 }]}
+            >
+              <Ionicons name="qr-code-outline" size={14} color={c.accentText} />
+              <Text style={styles.passChipLabel}>{t('checkIn.showPass')}</Text>
+            </Pressable>
+          </View>
           {recentPreview.length > 0 ? (
             <View style={styles.recentVisits}>
               <Pressable
@@ -498,7 +500,7 @@ export default function MemberDetailScreen() {
             { opacity: pressed ? 0.72 : 1 },
           ]}
         >
-          <Ionicons name="qr-code-outline" size={15} color={c.accentText} />
+          <Ionicons name="qr-code-outline" size={14} color={c.accentText} />
           <Text style={styles.passChipLabel}>{t('checkIn.showPass')}</Text>
         </Pressable>
       ) : null}

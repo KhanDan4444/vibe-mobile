@@ -19,7 +19,7 @@ import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { isGymOwner } from '@/src/utils/roles';
-import { radiusMd, radiusLg } from '@/src/theme/tokens';
+import { radiusLg } from '@/src/theme/tokens';
 
 function escapeHtml(s: string) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -44,23 +44,22 @@ function PassActionButton({
       disabled={disabled || loading}
       onPress={onPress}
       style={({ pressed }) => ({
-        flex: 1,
-        minHeight: 36,
-        borderRadius: radiusMd,
+        minHeight: 32,
+        borderRadius: 8,
         borderWidth: 1,
         borderColor: c.border,
         backgroundColor: pressed && !idle ? c.inputBg : c.card,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
         opacity: idle ? 0.5 : 1,
       })}
     >
       {loading ? (
         <ActivityIndicator color={c.muted} size="small" />
       ) : (
-        <Text style={{ fontSize: 14, fontWeight: '500', color: c.text }} numberOfLines={1}>
+        <Text style={{ fontSize: 13, fontWeight: '500', color: c.text }} numberOfLines={1}>
           {label}
         </Text>
       )}
@@ -138,13 +137,6 @@ export function MemberPassSheet({
     error: { color: colors.error, fontSize: 14, textAlign: 'center' as const, marginTop: 12 },
     actions: { flexDirection: 'row' as const, gap: 8, marginTop: 12 },
     actionCol: { flex: 1, minWidth: 0 },
-    smsHint: {
-      marginTop: 6,
-      fontSize: 11,
-      lineHeight: 15,
-      color: colors.dim,
-      textAlign: 'center' as const,
-    },
     regenLink: {
       alignSelf: 'center' as const,
       paddingVertical: 10,
@@ -367,7 +359,6 @@ export function MemberPassSheet({
               disabled={busy || !memberPhone}
               loading={smsSending}
             />
-            <Text style={styles.smsHint}>{t('checkIn.smsPassHint')}</Text>
           </View>
         </View>
 
