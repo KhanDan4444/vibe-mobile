@@ -1,60 +1,77 @@
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import Svg, { Path, Rect } from 'react-native-svg';
 import { AppText as Text } from '@/src/components/AppText';
 import { fabElevation } from '@/src/theme/elevation';
 import { useTheme } from '@/src/context/PreferencesContext';
 
-/** Deep teal fill — desk Scan QR dock (matches brand accent, not bright CTA teal). */
-const DEEP_TEAL = '#0f766e';
+const FRAME = '#ffffff';
+const CORNER = 15;
+const STROKE = 2.4;
+const DOT = 3.2;
+const DOT_INSET = 3.2;
 
-function Corner({
-  top,
-  left,
-  right,
-  bottom,
-}: {
-  top?: number;
-  left?: number;
-  right?: number;
-  bottom?: number;
-}) {
+/**
+ * Curved viewfinder corner + inner square — CBE-style QR chrome, tightened.
+ */
+function QrCorner({ placement }: { placement: 'tl' | 'tr' | 'bl' | 'br' }) {
+  const r = 4.5;
+  const s = STROKE / 2;
+  const path =
+    placement === 'tl'
+      ? `M ${s} ${CORNER - 0.5} V ${r + s} Q ${s} ${s} ${r + s} ${s} H ${CORNER - 0.5}`
+      : placement === 'tr'
+        ? `M 0.5 ${s} H ${CORNER - r - s} Q ${CORNER - s} ${s} ${CORNER - s} ${r + s} V ${CORNER - 0.5}`
+        : placement === 'bl'
+          ? `M ${s} 0.5 V ${CORNER - r - s} Q ${s} ${CORNER - s} ${r + s} ${CORNER - s} H ${CORNER - 0.5}`
+          : `M 0.5 ${CORNER - s} H ${CORNER - r - s} Q ${CORNER - s} ${CORNER - s} ${CORNER - s} ${CORNER - r - s} V 0.5`;
+
+  const dot =
+    placement === 'tl'
+      ? { x: DOT_INSET, y: DOT_INSET }
+      : placement === 'tr'
+        ? { x: CORNER - DOT_INSET - DOT, y: DOT_INSET }
+        : placement === 'bl'
+          ? { x: DOT_INSET, y: CORNER - DOT_INSET - DOT }
+          : { x: CORNER - DOT_INSET - DOT, y: CORNER - DOT_INSET - DOT };
+
+  const pos =
+    placement === 'tl'
+      ? styles.tl
+      : placement === 'tr'
+        ? styles.tr
+        : placement === 'bl'
+          ? styles.bl
+          : styles.br;
+
   return (
-    <View
-      pointerEvents="none"
-      style={[
-        styles.corner,
-        top != null ? { top } : null,
-        left != null ? { left } : null,
-        right != null ? { right } : null,
-        bottom != null ? { bottom } : null,
-        top != null && left != null ? { borderTopWidth: 2, borderLeftWidth: 2, borderTopLeftRadius: 3 } : null,
-        top != null && right != null
-          ? { borderTopWidth: 2, borderRightWidth: 2, borderTopRightRadius: 3 }
-          : null,
-        bottom != null && left != null
-          ? { borderBottomWidth: 2, borderLeftWidth: 2, borderBottomLeftRadius: 3 }
-          : null,
-        bottom != null && right != null
-          ? { borderBottomWidth: 2, borderRightWidth: 2, borderBottomRightRadius: 3 }
-          : null,
-      ]}
-    />
+    <View pointerEvents="none" style={[styles.cornerWrap, pos]}>
+      <Svg width={CORNER} height={CORNER}>
+        <Path d={path} stroke={FRAME} strokeWidth={STROKE} fill="none" strokeLinecap="round" />
+        <Rect x={dot.x} y={dot.y} width={DOT} height={DOT} rx={0.5} fill={FRAME} />
+      </Svg>
+    </View>
   );
 }
 
+/** Default gap above the in-flow tab bar. */
+export const SCAN_QR_DOCK_BOTTOM = 20;
+
 /**
- * Centered Scan QR pill above the tab bar — CBE-style dock CTA for Check in.
+ * Centered Scan QR pill above the tab bar — curved QR-frame CTA.
  */
 export function ScanQrDockButton({
   label,
   onPress,
-  bottom = 20,
+  bottom = SCAN_QR_DOCK_BOTTOM,
 }: {
   label: string;
   onPress: () => void;
   bottom?: number;
 }) {
-  const { theme } = useTheme();
+  const { theme, colors: c } = useTheme();
+  // One step brighter than deep brand teal — more punch without leaving brand.
+  const fill = c.accentCta;
 
   return (
     <View pointerEvents="box-none" style={[styles.dock, { bottom }]}>
@@ -70,13 +87,17 @@ export function ScanQrDockButton({
         style={({ pressed }) => [
           styles.pill,
           fabElevation(theme),
-          { opacity: pressed ? 0.88 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] },
+          {
+            backgroundColor: fill,
+            opacity: pressed ? 0.9 : 1,
+            transform: [{ scale: pressed ? 0.985 : 1 }],
+          },
         ]}
       >
-        <Corner top={8} left={12} />
-        <Corner top={8} right={12} />
-        <Corner bottom={8} left={12} />
-        <Corner bottom={8} right={12} />
+        <QrCorner placement="tl" />
+        <QrCorner placement="tr" />
+        <QrCorner placement="bl" />
+        <QrCorner placement="br" />
         <Text style={styles.label}>{label}</Text>
       </Pressable>
     </View>
@@ -92,25 +113,27 @@ const styles = StyleSheet.create({
     zIndex: 20,
   },
   pill: {
-    minWidth: 148,
-    minHeight: 48,
-    paddingHorizontal: 28,
-    paddingVertical: 12,
+    minWidth: 152,
+    height: 46,
+    paddingHorizontal: 30,
     borderRadius: 999,
-    backgroundColor: DEEP_TEAL,
     alignItems: 'center',
     justifyContent: 'center',
   },
   label: {
     color: '#ffffff',
-    fontSize: 15,
+    fontSize: 14.5,
     fontWeight: '700',
-    letterSpacing: -0.2,
+    letterSpacing: 0.1,
   },
-  corner: {
+  cornerWrap: {
     position: 'absolute',
-    width: 12,
-    height: 12,
-    borderColor: 'rgba(255,255,255,0.95)',
+    width: CORNER,
+    height: CORNER,
   },
+  // Hug the label — tighter inset than the outer pill edge.
+  tl: { top: 6, left: 10 },
+  tr: { top: 6, right: 10 },
+  bl: { bottom: 6, left: 10 },
+  br: { bottom: 6, right: 10 },
 });

@@ -622,7 +622,7 @@ export default function RevenueScreen() {
       {query.isLoading && !query.data ? (
         <View style={{ flex: 1, paddingHorizontal: pagePadding }}>
           {listHeader}
-          <PageSkeleton variant="list-rows" padded={false} />
+          <PageSkeleton variant="payments" padded={false} />
         </View>
       ) : query.isError ? (
         <View style={{ flex: 1, paddingHorizontal: pagePadding }}>

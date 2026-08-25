@@ -508,7 +508,7 @@ export default function TeamScreen() {
       <BranchFilterBar horizontalPadding={pagePadding} />
       <View style={{ paddingTop: 4 }}>{toolbar}</View>
       {loading ? (
-        <PageSkeleton variant="list-cards" />
+        <PageSkeleton variant="team" />
       ) : loadError ? (
         <LoadError message={errMsg} onRetry={() => void retry()} />
       ) : tab === 'staff' ? (

@@ -18,7 +18,6 @@ import { VisitRing } from '@/src/components/VisitRing';
 import { ResponsiveContent } from '@/src/components/ResponsiveContent';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
-import { SecondaryButton } from '@/src/components/ui/Button';
 import { formatPlanDisplayName } from '@/src/utils/formatPlanDisplayName';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import type { AppLanguage } from '@/src/i18n';
@@ -31,10 +30,11 @@ import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import type { ThemeColors } from '@/src/theme/tokens';
 import { appTextStyle } from '@/src/theme/typography';
 import {
+  attendanceDayRelative,
   formatAttendanceDayLabel,
   formatDisplayDate,
-  groupCheckInsByDay,
 } from '@/src/utils/date';
+import { MemberVisitHistorySheet } from '@/src/components/MemberVisitHistorySheet';
 import { paymentMethodBadgeStyle, paymentMethodIcon, paymentMethodLabelKey } from '@/src/constants/payments';
 import { paymentSourceKey } from '@/src/utils/termPayments';
 import { statusLabelKey } from '@/src/utils/statusLabels';
@@ -83,7 +83,7 @@ function buildMemberStyles(c: ThemeColors) {
     phone: { marginTop: 4, fontSize: 15, color: c.muted },
     status: { marginTop: 8, fontSize: 13, fontWeight: '700' as const, textTransform: 'capitalize' as const },
     unpaid: { marginTop: 6, fontSize: 12, fontWeight: '700' as const, color: c.statusUnpaid },
-    visitRow: {
+    visitMain: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       gap: 14,
@@ -96,46 +96,69 @@ function buildMemberStyles(c: ThemeColors) {
       color: c.text,
     },
     visitMeta: { marginTop: 4, fontSize: 12, lineHeight: 17, color: c.muted },
+    passChip: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 5,
+      paddingHorizontal: 11,
+      paddingVertical: 8,
+      borderRadius: 8,
+      borderWidth: 1.5,
+      borderColor: c.accentText,
+    },
+    passChipInCard: {
+      alignSelf: 'flex-start' as const,
+      marginTop: 12,
+    },
+    passChipLabel: {
+      fontSize: 12,
+      fontWeight: '700' as const,
+      letterSpacing: 0.1,
+      color: c.accentText,
+    },
+    passChipSolo: {
+      alignSelf: 'flex-start' as const,
+      marginBottom: 14,
+    },
     recentVisits: {
       marginTop: 14,
       paddingTop: 12,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: c.border,
-      gap: 12,
+      gap: 8,
+    },
+    recentToggle: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 8,
+      paddingVertical: 4,
     },
     recentTitle: {
+      flex: 1,
       fontSize: 13,
       fontWeight: '600' as const,
       letterSpacing: -0.1,
       color: c.text,
-      marginBottom: 2,
     },
-    recentDayBlock: { gap: 4 },
-    recentDayHeader: {
-      flexDirection: 'row' as const,
-      alignItems: 'baseline' as const,
-      justifyContent: 'space-between' as const,
-      gap: 8,
-      marginBottom: 2,
+    recentList: {
+      gap: 2,
+      paddingTop: 4,
     },
-    recentDayLabel: {
-      fontSize: 12,
+    recentSeeAll: {
+      fontSize: 13,
       fontWeight: '600' as const,
-      letterSpacing: -0.1,
-      color: c.text,
+      color: c.accentText,
+      paddingVertical: 6,
     },
-    recentDayCount: { fontSize: 11, fontWeight: '500' as const, color: c.muted },
     recentRow: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
-      justifyContent: 'space-between' as const,
-      gap: 12,
-      paddingVertical: 2,
+      paddingVertical: 5,
     },
-    recentDate: { fontSize: 12, color: c.muted },
-    recentTime: {
-      fontSize: 12,
-      fontWeight: '700' as const,
+    recentLine: {
+      fontSize: 13,
+      fontWeight: '600' as const,
+      letterSpacing: -0.1,
       fontVariant: ['tabular-nums' as const],
       color: c.text,
     },
@@ -195,6 +218,8 @@ export default function MemberDetailScreen() {
   const canViewMember = Boolean(user && hasGymPortalAccess(user.role));
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [passOpen, setPassOpen] = useState(false);
+  const [visitHistoryOpen, setVisitHistoryOpen] = useState(false);
+  const [recentVisitsOpen, setRecentVisitsOpen] = useState(false);
   const [errorNotice, setErrorNotice] = useState('');
 
   const memberQuery = useQuery({
@@ -217,13 +242,16 @@ export default function MemberDetailScreen() {
 
   const recentVisitsQuery = useQuery({
     queryKey: ['member-recent-visits', memberId],
-    queryFn: () => listCheckIns(token!, { memberId, limit: 8 }),
+    queryFn: () => listCheckIns(token!, { memberId, limit: 4 }),
     enabled: Boolean(token && canViewMember) && Number.isFinite(memberId),
   });
 
   const loadRetry = useLoadRetry(memberQuery);
   const recentVisits = recentVisitsQuery.data?.checkIns ?? [];
-  const recentByDay = useMemo(() => groupCheckInsByDay(recentVisits), [recentVisits]);
+  const recentPreview = useMemo(() => recentVisits.slice(0, 3), [recentVisits]);
+  const recentHasMore =
+    recentVisits.length > 3 ||
+    (recentVisitsQuery.data?.total != null && recentVisitsQuery.data.total > 3);
 
   if (!canViewMember) {
     return <Redirect href="/login" />;
@@ -362,7 +390,7 @@ export default function MemberDetailScreen() {
             onPress={openCheckInForMember}
             accessibilityRole="button"
             accessibilityLabel={t('checkIn.openCheckInFor', { name: member.name })}
-            style={({ pressed }) => [styles.visitRow, { opacity: pressed ? 0.75 : 1 }]}
+            style={({ pressed }) => [styles.visitMain, { opacity: pressed ? 0.75 : 1 }]}
           >
             <VisitRing
               visits={visitSummary.visits_this_week ?? 0}
@@ -386,40 +414,93 @@ export default function MemberDetailScreen() {
             </View>
             <Ionicons name="chevron-forward" size={18} color={c.dim} />
           </Pressable>
-          {recentVisits.length > 0 ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('checkIn.showPass')}
+            onPress={() => setPassOpen(true)}
+            style={({ pressed }) => [
+              styles.passChip,
+              styles.passChipInCard,
+              { opacity: pressed ? 0.72 : 1 },
+            ]}
+          >
+            <Ionicons name="qr-code-outline" size={15} color={c.accentText} />
+            <Text style={styles.passChipLabel}>{t('checkIn.showPass')}</Text>
+          </Pressable>
+          {recentPreview.length > 0 ? (
             <View style={styles.recentVisits}>
-              <Text display style={styles.recentTitle}>
-                {t('checkIn.recentVisits')}
-              </Text>
-              {recentByDay.map(([day, rows]) => (
-                <View key={day} style={styles.recentDayBlock}>
-                  <View style={styles.recentDayHeader}>
-                    <Text style={styles.recentDayLabel}>
-                      {formatAttendanceDayLabel(day, language)}
-                    </Text>
-                    <Text style={styles.recentDayCount}>
-                      {t('checkIn.dayVisitCount', { count: rows.length })}
-                    </Text>
-                  </View>
-                  {rows.map((row) => (
-                    <View key={row.id} style={styles.recentRow}>
-                      <Text style={styles.recentDate}>{formatDisplayDate(row.checked_in_at)}</Text>
-                      <Text style={styles.recentTime}>
-                        {new Date(row.checked_in_at).toLocaleTimeString([], {
-                          hour: 'numeric',
-                          minute: '2-digit',
-                          hour12: true,
-                        })}
-                      </Text>
-                    </View>
-                  ))}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ expanded: recentVisitsOpen }}
+                accessibilityLabel={t('checkIn.recentVisits')}
+                onPress={() => setRecentVisitsOpen((open) => !open)}
+                style={({ pressed }) => [styles.recentToggle, { opacity: pressed ? 0.7 : 1 }]}
+              >
+                <Ionicons name="time-outline" size={16} color={c.muted} />
+                <Text display style={styles.recentTitle}>
+                  {t('checkIn.recentVisits')}
+                </Text>
+                <Ionicons
+                  name={recentVisitsOpen ? 'chevron-up' : 'chevron-down'}
+                  size={16}
+                  color={c.dim}
+                />
+              </Pressable>
+              {recentVisitsOpen ? (
+                <View style={styles.recentList}>
+                  {recentPreview.map((row) => {
+                    const rel = attendanceDayRelative(row.checked_in_at);
+                    const day =
+                      rel === 'today'
+                        ? t('checkIn.dayToday')
+                        : rel === 'yesterday'
+                          ? t('checkIn.dayYesterday')
+                          : formatAttendanceDayLabel(row.checked_in_at, language);
+                    const time = new Date(row.checked_in_at).toLocaleTimeString([], {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true,
+                    });
+                    return (
+                      <View key={row.id} style={styles.recentRow}>
+                        <Text style={styles.recentLine} numberOfLines={1}>
+                          {day} · {time}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                  {recentHasMore ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={t('checkIn.recentVisitsSeeAll')}
+                      onPress={() => setVisitHistoryOpen(true)}
+                      hitSlop={6}
+                      style={({ pressed }) => [{ opacity: pressed ? 0.65 : 1 }]}
+                    >
+                      <Text style={styles.recentSeeAll}>{t('checkIn.recentVisitsSeeAll')}</Text>
+                    </Pressable>
+                  ) : null}
                 </View>
-              ))}
+              ) : null}
             </View>
           ) : (
             <Text style={styles.recentEmpty}>{t('checkIn.recentVisitsEmpty')}</Text>
           )}
         </SoftSurface>
+      ) : !isFormer ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('checkIn.showPass')}
+          onPress={() => setPassOpen(true)}
+          style={({ pressed }) => [
+            styles.passChip,
+            styles.passChipSolo,
+            { opacity: pressed ? 0.72 : 1 },
+          ]}
+        >
+          <Ionicons name="qr-code-outline" size={15} color={c.accentText} />
+          <Text style={styles.passChipLabel}>{t('checkIn.showPass')}</Text>
+        </Pressable>
       ) : null}
 
       <SoftSurface variant="panel" style={[styles.card, isTablet && { flex: 1 }]}>
@@ -453,13 +534,6 @@ export default function MemberDetailScreen() {
         ) : null}
       </SoftSurface>
 
-      {!isFormer ? (
-        <SecondaryButton
-          label={t('checkIn.showPass')}
-          onPress={() => setPassOpen(true)}
-          style={{ marginBottom: 14 }}
-        />
-      ) : null}
       </View>
 
       <MemberActionsBar
@@ -478,7 +552,7 @@ export default function MemberDetailScreen() {
       <SoftSurface variant="panel" style={styles.card}>
         <Text display style={styles.sectionTitle}>{t('member.paymentHistory')}</Text>
         {paymentsQuery.isLoading ? (
-          <PageSkeleton variant="list-rows" count={3} padded={false} style={{ marginTop: 8 }} />
+          <PageSkeleton variant="amount-rows" count={3} padded={false} style={{ marginTop: 8 }} />
         ) : payments.length === 0 ? (
           <Text style={appTextStyle(language, styles.muted)}>{t('member.noPayments')}</Text>
         ) : (
@@ -534,6 +608,15 @@ export default function MemberDetailScreen() {
       memberPhone={member.phone}
       onClose={() => setPassOpen(false)}
     />
+    {token ? (
+      <MemberVisitHistorySheet
+        visible={visitHistoryOpen}
+        onClose={() => setVisitHistoryOpen(false)}
+        token={token}
+        memberId={member.id}
+        memberName={member.name}
+      />
+    ) : null}
     </TabScreenFrame>
   );
 }

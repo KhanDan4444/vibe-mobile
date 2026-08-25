@@ -479,7 +479,7 @@ export default function MembersScreen() {
       </View>
 
       {query.isLoading ? (
-        <PageSkeleton variant="list-rows" />
+        <PageSkeleton variant="members" />
       ) : query.isError ? (
         <View style={styles.errorWrap}>
           <Text style={styles.errorText}>

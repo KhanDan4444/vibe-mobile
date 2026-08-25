@@ -162,7 +162,7 @@ export default function ActivityScreen() {
       </View>
 
       {query.isLoading ? (
-        <PageSkeleton variant="list-cards" />
+        <PageSkeleton variant="activity" />
       ) : query.isError ? (
         <LoadError
           message={query.error instanceof Error ? query.error.message : undefined}

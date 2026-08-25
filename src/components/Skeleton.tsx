@@ -93,7 +93,211 @@ function StatSkeleton() {
   );
 }
 
-type Variant = 'list-rows' | 'list-cards' | 'dashboard' | 'form' | 'detail' | 'reports';
+/** Desk hero + today rows (matches Check-in screen). */
+function CheckInPageSkeleton() {
+  return (
+    <View style={{ gap: 16 }}>
+      <SoftSurface variant="panel" style={styles.checkInHero}>
+        <View style={styles.checkInHeroTop}>
+          <View style={{ flex: 1, gap: 8 }}>
+            <SkeletonBone width={88} height={12} />
+            <SkeletonBone width={96} height={24} radius={999} />
+          </View>
+          <SkeletonBone width={48} height={40} radius={8} />
+        </View>
+        <SkeletonBone width="100%" height={44} radius={12} style={{ marginTop: 14 }} />
+      </SoftSurface>
+      <View style={styles.checkInSectionHead}>
+        <SkeletonBone width="46%" height={17} />
+        <SkeletonBone width={64} height={14} />
+      </View>
+      {Array.from({ length: 4 }, (_, i) => (
+        <CheckInTodayRowSkeleton key={i} />
+      ))}
+    </View>
+  );
+}
+
+export function CheckInTodayRowSkeleton() {
+  return (
+    <View style={styles.todayRow}>
+      <SkeletonBone width={34} height={34} radius={17} />
+      <View style={{ flex: 1, gap: 6, minWidth: 0 }}>
+        <SkeletonBone width="58%" height={14} />
+        <SkeletonBone width="32%" height={10} />
+      </View>
+      <SkeletonBone width={52} height={13} />
+    </View>
+  );
+}
+
+function PlanCardSkeleton() {
+  return (
+    <SoftSurface variant="panel" style={styles.planCard}>
+      <View style={styles.planPriceRow}>
+        <View style={{ flex: 1, gap: 6 }}>
+          <SkeletonBone width="42%" height={22} />
+          <SkeletonBone width="28%" height={11} />
+        </View>
+        <SkeletonBone width={28} height={28} radius={8} />
+      </View>
+      <SkeletonBone width="55%" height={15} style={{ marginTop: 14 }} />
+      <SkeletonBone width="70%" height={12} style={{ marginTop: 8 }} />
+      <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
+        <SkeletonBone width={64} height={22} radius={8} />
+        <SkeletonBone width={88} height={12} style={{ alignSelf: 'center' }} />
+      </View>
+    </SoftSurface>
+  );
+}
+
+function PaymentRowSkeleton() {
+  return (
+    <SoftSurface style={styles.paymentRow}>
+      <SkeletonBone width={40} height={40} radius={20} />
+      <View style={{ flex: 1, minWidth: 0, gap: 5 }}>
+        <SkeletonBone width="55%" height={14} />
+        <SkeletonBone width="40%" height={11} />
+        <SkeletonBone width={72} height={18} radius={8} style={{ marginTop: 2 }} />
+      </View>
+      <View style={{ alignItems: 'flex-end', gap: 4 }}>
+        <SkeletonBone width={64} height={15} />
+        <SkeletonBone width={28} height={10} />
+      </View>
+    </SoftSurface>
+  );
+}
+
+function MessageRowSkeleton() {
+  return (
+    <SoftSurface style={styles.messageRow}>
+      <SkeletonBone width={40} height={40} radius={20} />
+      <View style={{ flex: 1, minWidth: 0, gap: 6 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <SkeletonBone width="42%" height={14} />
+          <SkeletonBone width={56} height={18} radius={999} />
+        </View>
+        <SkeletonBone width="78%" height={12} />
+        <SkeletonBone width="36%" height={11} />
+      </View>
+      <SkeletonBone width={14} height={14} radius={4} style={{ marginTop: 4 }} />
+    </SoftSurface>
+  );
+}
+
+function TeamRowSkeleton() {
+  return (
+    <SoftSurface style={styles.teamRow}>
+      <SkeletonBone width={40} height={40} radius={20} />
+      <View style={{ flex: 1, gap: 6, minWidth: 0 }}>
+        <SkeletonBone width="50%" height={14} />
+        <SkeletonBone width={64} height={18} radius={999} />
+      </View>
+      <SkeletonBone width={28} height={28} radius={8} />
+    </SoftSurface>
+  );
+}
+
+function MemberRowSkeleton() {
+  return (
+    <SoftSurface style={styles.memberRow}>
+      <SkeletonBone width={44} height={44} radius={22} />
+      <View style={{ flex: 1, gap: 6, minWidth: 0 }}>
+        <SkeletonBone width="58%" height={14} />
+        <SkeletonBone width="40%" height={11} />
+      </View>
+      <View style={{ alignItems: 'flex-end', gap: 6 }}>
+        <SkeletonBone width={56} height={18} radius={999} />
+        <SkeletonBone width={64} height={28} radius={8} />
+      </View>
+    </SoftSurface>
+  );
+}
+
+/** Amount + method rows (member payment history — no avatar). */
+function AmountMethodRowSkeleton() {
+  return (
+    <SoftSurface style={styles.amountRow}>
+      <View style={{ flex: 1, gap: 6 }}>
+        <SkeletonBone width="36%" height={15} />
+        <SkeletonBone width="28%" height={11} />
+      </View>
+      <SkeletonBone width={72} height={22} radius={8} />
+    </SoftSurface>
+  );
+}
+
+/** Activity log card: action|time + entity + actor/badge (no avatar). */
+function ActivityCardSkeleton() {
+  return (
+    <SoftSurface style={styles.activityCard}>
+      <View style={styles.activityHeader}>
+        <SkeletonBone width="48%" height={15} />
+        <SkeletonBone width={72} height={11} />
+      </View>
+      <SkeletonBone width="62%" height={13} style={{ marginTop: 8 }} />
+      <SkeletonBone width="78%" height={12} style={{ marginTop: 6 }} />
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 }}>
+        <SkeletonBone width="28%" height={12} />
+        <SkeletonBone width={52} height={18} radius={999} />
+      </View>
+    </SoftSurface>
+  );
+}
+
+/** Branch card: name + pills + meta + overflow (no avatar). */
+function BranchCardSkeleton() {
+  return (
+    <SoftSurface variant="panel" style={styles.branchCard}>
+      <View style={styles.branchHeader}>
+        <View style={{ flex: 1, gap: 8, minWidth: 0 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <SkeletonBone width="46%" height={16} />
+            <SkeletonBone width={56} height={20} radius={6} />
+          </View>
+          <SkeletonBone width="70%" height={12} />
+          <SkeletonBone width="55%" height={11} style={{ marginTop: 4 }} />
+        </View>
+        <SkeletonBone width={28} height={28} radius={8} />
+      </View>
+    </SoftSurface>
+  );
+}
+
+/** Attendance history day rows. */
+export function AttendanceDaySkeleton({ count = 4 }: { count?: number }) {
+  return (
+    <View style={{ gap: 8 }} accessibilityRole="progressbar">
+      {Array.from({ length: count }, (_, i) => (
+        <View key={i} style={styles.historyDayRow}>
+          <View style={styles.historyDayAccent} />
+          <View style={{ flex: 1, gap: 6 }}>
+            <SkeletonBone width="42%" height={14} />
+            <SkeletonBone width="24%" height={11} />
+          </View>
+          <SkeletonBone width={16} height={16} radius={4} />
+        </View>
+      ))}
+    </View>
+  );
+}
+
+type Variant =
+  | 'list-rows'
+  | 'list-cards'
+  | 'dashboard'
+  | 'form'
+  | 'detail'
+  | 'reports'
+  | 'check-in'
+  | 'plans'
+  | 'payments'
+  | 'messages'
+  | 'team'
+  | 'members'
+  | 'amount-rows'
+  | 'activity'
+  | 'branches';
 
 type PageSkeletonProps = {
   variant?: Variant;
@@ -130,11 +334,38 @@ export function PageSkeleton({ variant = 'list-rows', count, padded = true, styl
     case 'reports':
       body = (
         <View style={styles.statGrid}>
-          {Array.from({ length: 5 }, (_, i) => (
+          {Array.from({ length: 6 }, (_, i) => (
             <StatSkeleton key={i} />
           ))}
         </View>
       );
+      break;
+    case 'check-in':
+      body = <CheckInPageSkeleton />;
+      break;
+    case 'plans':
+      body = Array.from({ length: n }, (_, i) => <PlanCardSkeleton key={i} />);
+      break;
+    case 'payments':
+      body = Array.from({ length: n }, (_, i) => <PaymentRowSkeleton key={i} />);
+      break;
+    case 'messages':
+      body = Array.from({ length: n }, (_, i) => <MessageRowSkeleton key={i} />);
+      break;
+    case 'team':
+      body = Array.from({ length: n }, (_, i) => <TeamRowSkeleton key={i} />);
+      break;
+    case 'members':
+      body = Array.from({ length: n }, (_, i) => <MemberRowSkeleton key={i} />);
+      break;
+    case 'amount-rows':
+      body = Array.from({ length: n }, (_, i) => <AmountMethodRowSkeleton key={i} />);
+      break;
+    case 'activity':
+      body = Array.from({ length: n }, (_, i) => <ActivityCardSkeleton key={i} />);
+      break;
+    case 'branches':
+      body = Array.from({ length: n }, (_, i) => <BranchCardSkeleton key={i} />);
       break;
     case 'form':
       body = (
@@ -197,7 +428,7 @@ export function ListFooterSkeleton() {
   );
 }
 
-/** Check-in search results — ring + identity + CTA bones. */
+/** Check-in search results — ring + identity + right CTA (matches CheckInMemberCard). */
 export function CheckInSearchSkeleton({
   count = 2,
   columns = 1,
@@ -218,15 +449,15 @@ export function CheckInSearchSkeleton({
           variant="panel"
           style={[styles.checkInCard, multi ? styles.checkInCardHalf : null]}
         >
-          <View style={styles.checkInTop}>
-            <SkeletonBone width={84} height={84} radius={42} />
-            <View style={{ flex: 1, gap: 8 }}>
-              <SkeletonBone width="70%" height={15} />
-              <SkeletonBone width="45%" height={12} />
-              <SkeletonBone width="32%" height={18} radius={999} />
+          <View style={styles.checkInRow}>
+            <SkeletonBone width={88} height={88} radius={44} />
+            <View style={{ flex: 1, gap: 6, minWidth: 0 }}>
+              <SkeletonBone width="72%" height={15} />
+              <SkeletonBone width="48%" height={12} />
+              <SkeletonBone width={72} height={18} radius={999} style={{ marginTop: 2 }} />
             </View>
+            <SkeletonBone width={92} height={34} radius={8} />
           </View>
-          <SkeletonBone width="100%" height={44} radius={12} style={{ marginTop: 12 }} />
         </SoftSurface>
       ))}
     </View>
@@ -238,8 +469,16 @@ function defaultCount(variant: Variant) {
     case 'form':
       return 5;
     case 'list-cards':
-      return 5;
+    case 'plans':
+      return 4;
     case 'list-rows':
+    case 'payments':
+    case 'messages':
+    case 'team':
+    case 'members':
+    case 'amount-rows':
+    case 'activity':
+    case 'branches':
       return 6;
     default:
       return 4;
@@ -266,8 +505,123 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 10,
   },
-  checkInCard: {
+  checkInHero: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 14,
+  },
+  checkInHeroTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  checkInSectionHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  todayRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  planCard: {
+    padding: 16,
+    marginBottom: 10,
+  },
+  planPriceRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  paymentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    marginBottom: 10,
+  },
+  messageRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    marginBottom: 10,
+  },
+  teamRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    marginBottom: 10,
+  },
+  memberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    marginBottom: 10,
+  },
+  amountRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    marginBottom: 10,
+  },
+  activityCard: {
     padding: 14,
+    marginBottom: 12,
+  },
+  activityHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 8,
+  },
+  branchCard: {
+    padding: 16,
+    marginBottom: 12,
+  },
+  branchHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  historyDayRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    paddingLeft: 14,
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(148,163,184,0.25)',
+    overflow: 'hidden',
+  },
+  historyDayAccent: {
+    position: 'absolute',
+    left: 0,
+    top: 10,
+    bottom: 10,
+    width: 3,
+    borderRadius: 2,
+    backgroundColor: 'rgba(15,118,110,0.35)',
+  },
+  checkInCard: {
+    paddingVertical: 12,
+    paddingHorizontal: 12,
     marginBottom: 10,
   },
   checkInGrid: {
@@ -281,10 +635,10 @@ const styles = StyleSheet.create({
     maxWidth: '48.5%',
     marginBottom: 0,
   },
-  checkInTop: {
+  checkInRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    gap: 12,
   },
   statGrid: {
     flexDirection: 'row',

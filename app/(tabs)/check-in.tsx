@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  FlatList,
   Pressable,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   unstable_batchedUpdates,
   View,
@@ -16,6 +16,7 @@ import * as Haptics from 'expo-haptics';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { AppText as Text } from '@/src/components/AppText';
+import { AttendanceHistorySheet } from '@/src/components/AttendanceHistorySheet';
 import { BranchFilterBar } from '@/src/components/BranchFilterBar';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
 import { CheckInMemberCard } from '@/src/components/CheckInMemberCard';
@@ -23,7 +24,7 @@ import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { EmptyState } from '@/src/components/EmptyState';
 import { LoadError } from '@/src/components/LoadError';
 import { MemberPhoto } from '@/src/components/MemberPhoto';
-import { ScanQrDockButton } from '@/src/components/ScanQrDockButton';
+import { ScanQrDockButton, SCAN_QR_DOCK_BOTTOM } from '@/src/components/ScanQrDockButton';
 import { ScanMemberQrSheet } from '@/src/components/ScanMemberQrSheet';
 import { SearchField } from '@/src/components/SearchField';
 import { CheckInSearchSkeleton, PageSkeleton } from '@/src/components/Skeleton';
@@ -43,19 +44,13 @@ import {
 import { ApiError } from '@/src/api/client';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useFlash } from '@/src/context/FlashContext';
-import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
+import { useTheme } from '@/src/context/PreferencesContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useTabBarOverlayInset } from '@/src/theme/tabBar';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
-import {
-  attendanceWeekRange,
-  formatAttendanceDayLabel,
-  formatDisplayDate,
-  groupCheckInsByDay,
-  todayString,
-} from '@/src/utils/date';
+import { todayString } from '@/src/utils/date';
 import { isGymOwner } from '@/src/utils/roles';
 
 const CAP_OPTIONS: { value: number | null; labelKey: string }[] = [
@@ -65,9 +60,7 @@ const CAP_OPTIONS: { value: number | null; labelKey: string }[] = [
   { value: 6, labelKey: 'checkIn.capDays' },
 ];
 
-const HISTORY_PAGE_SIZE = 80;
-const HISTORY_MAX = 200;
-const HISTORY_PREVIEW_DAYS = 3;
+const TODAY_LIST_LIMIT = 200;
 
 /** Match web desk hero — brand→raised (light) / brand→surface (dark). */
 function DeskHeroAtmosphere({ isLight }: { isLight: boolean }) {
@@ -149,10 +142,9 @@ function formatTime(value: string | null | undefined) {
 }
 
 export default function CheckInScreen() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { token, user } = useAuth();
   const { colors: c, theme } = useTheme();
-  const { language } = usePreferences();
   const isLight = theme === 'light';
   const { showFlash } = useFlash();
   const { readOnly } = useGymReadOnly();
@@ -166,9 +158,9 @@ export default function CheckInScreen() {
   const [query, setQuery] = useState('');
   const [debounced, setDebounced] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [weekScope, setWeekScope] = useState<'this' | 'last'>('this');
-  const [historyLimit, setHistoryLimit] = useState(HISTORY_PAGE_SIZE);
-  const [historyExpanded, setHistoryExpanded] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [todayPulse, setTodayPulse] = useState(false);
+  const todayPulseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [cardErrors, setCardErrors] = useState<Record<number, CardError>>({});
   const [successIds, setSuccessIds] = useState<Record<number, boolean>>({});
   const [forceTarget, setForceTarget] = useState<{
@@ -182,7 +174,7 @@ export default function CheckInScreen() {
   const router = useRouter();
 
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
-  const showBranchOnToday = showBranchFilter;
+  const showBranchOnToday = showBranchFilter && selectedBranchId === 'all';
   const searchKey = ['check-ins-search', debounced, branchKey] as const;
 
   // Re-apply whenever member detail pushes new q/memberId (tab stays mounted).
@@ -213,9 +205,17 @@ export default function CheckInScreen() {
   }, [debounced, branchKey]);
 
   useEffect(() => {
-    setHistoryLimit(HISTORY_PAGE_SIZE);
-    setHistoryExpanded(false);
-  }, [branchKey, weekScope]);
+    return () => {
+      if (todayPulseTimer.current) clearTimeout(todayPulseTimer.current);
+    };
+  }, []);
+
+  const pulseTodaySection = useCallback(() => {
+    void Haptics.selectionAsync().catch(() => undefined);
+    setTodayPulse(true);
+    if (todayPulseTimer.current) clearTimeout(todayPulseTimer.current);
+    todayPulseTimer.current = setTimeout(() => setTodayPulse(false), 780);
+  }, []);
 
   const settingsQuery = useQuery({
     queryKey: ['check-in-settings'],
@@ -224,29 +224,13 @@ export default function CheckInScreen() {
   });
 
   const weekStartsOn = settingsQuery.data?.settings?.week_starts_on || 'monday';
-  const weekRange = useMemo(
-    () => attendanceWeekRange(weekScope, weekStartsOn),
-    [weekScope, weekStartsOn]
-  );
-
-  const historyQuery = useQuery({
-    queryKey: ['check-ins', 'history', branchKey, weekScope, weekRange.from, weekRange.to, historyLimit],
-    queryFn: () =>
-      listCheckIns(token!, {
-        from: weekRange.from,
-        to: weekRange.to,
-        limit: historyLimit,
-        branchId: selectedBranchId,
-      }),
-    enabled: Boolean(token),
-  });
 
   const todaySnapQuery = useQuery({
     queryKey: ['check-ins', 'today-snap', branchKey],
     queryFn: () =>
       listCheckIns(token!, {
         date: todayString(),
-        limit: 100,
+        limit: TODAY_LIST_LIMIT,
         branchId: selectedBranchId,
       }),
     enabled: Boolean(token),
@@ -262,21 +246,11 @@ export default function CheckInScreen() {
   const settings = settingsQuery.data?.settings ?? searchQuery.data?.settings ?? null;
   const canManage = Boolean(settingsQuery.data?.canManage && owner);
   const members = searchQuery.data?.members ?? [];
-  const historyRows = historyQuery.data?.checkIns ?? [];
-  const historyTotal = historyQuery.data?.total ?? 0;
-  const historyFrom = historyQuery.data?.from ?? weekRange.from;
-  const historyTo = historyQuery.data?.to ?? weekRange.to;
-  const historyByDay = useMemo(() => groupCheckInsByDay(historyRows), [historyRows]);
-  const visibleDayGroups = historyExpanded
-    ? historyByDay
-    : historyByDay.slice(0, HISTORY_PREVIEW_DAYS);
-  const historyHasMoreDays = !historyExpanded && historyByDay.length > HISTORY_PREVIEW_DAYS;
-  const historyCanLoadMore =
-    historyExpanded && historyTotal > historyRows.length && historyRows.length < HISTORY_MAX;
+  const todayRows = todaySnapQuery.data?.checkIns ?? [];
   const todayTotal = todaySnapQuery.data?.total ?? 0;
   const alreadyTodayIds = useMemo(
-    () => new Set((todaySnapQuery.data?.checkIns ?? []).map((row) => row.member_id)),
-    [todaySnapQuery.data?.checkIns]
+    () => new Set(todayRows.map((row) => row.member_id)),
+    [todayRows]
   );
 
   const capChipLabel = useMemo(() => {
@@ -505,10 +479,8 @@ export default function CheckInScreen() {
     }
   };
 
-  const refreshing =
-    historyQuery.isRefetching || todaySnapQuery.isRefetching || settingsQuery.isRefetching;
+  const refreshing = todaySnapQuery.isRefetching || settingsQuery.isRefetching;
   const onRefresh = () => {
-    void historyQuery.refetch();
     void todaySnapQuery.refetch();
     void settingsQuery.refetch();
     if (debounced) void searchQuery.refetch();
@@ -598,104 +570,60 @@ export default function CheckInScreen() {
       letterSpacing: -0.2,
       marginBottom: 2,
     },
-    sectionMeta: { fontSize: 12, color: theme.dim, marginBottom: 10 },
     todayHeader: {
       flexDirection: 'row' as const,
-      alignItems: 'flex-start' as const,
+      alignItems: 'center' as const,
       justifyContent: 'space-between' as const,
       gap: 10,
       marginTop: 4,
-      marginBottom: 4,
+      marginBottom: 8,
+      paddingVertical: 4,
+      paddingHorizontal: 6,
+      marginHorizontal: -6,
+      borderRadius: 12,
     },
-    weekChipRow: {
+    todayHeaderPulse: {
+      backgroundColor: isLight ? 'rgba(15,118,110,0.08)' : 'rgba(45,212,191,0.12)',
+    },
+    historyBtn: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
-      gap: 8,
-      marginBottom: 10,
+      gap: 5,
+      paddingVertical: 6,
+      paddingHorizontal: 4,
     },
-    weekChip: {
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-      borderRadius: 999,
-      borderWidth: 1,
-    },
-    weekChipLabel: {
+    historyBtnLabel: {
       fontSize: 13,
-      letterSpacing: -0.1,
-    },
-    daySectionGap: {
-      height: 10,
-    },
-    dayHeader: {
-      flexDirection: 'row' as const,
-      alignItems: 'baseline' as const,
-      justifyContent: 'space-between' as const,
-      paddingHorizontal: 10,
-      paddingTop: 8,
-      paddingBottom: 4,
-    },
-    dayHeaderLabel: {
-      fontSize: 14,
       fontWeight: '600' as const,
-      color: theme.text,
-      letterSpacing: -0.15,
-    },
-    dayHeaderCount: {
-      fontSize: 11,
-      fontWeight: '500' as const,
-      color: theme.dim,
-    },
-    todayTimeLabel: {
-      fontSize: 13,
-      fontWeight: '700' as const,
-      letterSpacing: 0.4,
-      textTransform: 'uppercase' as const,
-      color: theme.text,
-      marginTop: 2,
+      letterSpacing: -0.1,
+      color: theme.muted,
     },
     todayPanel: { paddingVertical: 2, paddingHorizontal: 4, overflow: 'hidden' as const },
     todayRow: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
-      gap: 12,
-      paddingVertical: 12,
-      paddingHorizontal: 10,
+      gap: 10,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
     },
     todayRowDivider: {
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: theme.border,
-      marginHorizontal: 8,
+      marginHorizontal: 12,
     },
     todayName: {
-      fontSize: 15,
+      fontSize: 14,
       fontWeight: '600' as const,
       color: theme.text,
       letterSpacing: -0.1,
     },
-    todayBranch: { marginTop: 2, fontSize: 11, color: theme.dim },
+    todayBranch: { marginTop: 1, fontSize: 11, color: theme.dim },
     todayTime: {
-      fontSize: 15,
+      fontSize: 13,
       fontWeight: '700' as const,
       fontVariant: ['tabular-nums' as const],
       letterSpacing: -0.1,
       color: theme.text,
-    },
-    showMoreRow: {
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
-      gap: 4,
-      marginTop: 2,
-      paddingTop: 12,
-      paddingBottom: 8,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: theme.border,
-    },
-    showMoreLabel: {
-      fontSize: 14,
-      fontWeight: '600' as const,
-      letterSpacing: 0.1,
-      color: theme.accentText,
     },
     resultsGrid: {
       flexDirection: 'row' as const,
@@ -711,20 +639,24 @@ export default function CheckInScreen() {
 
   if (!token) return null;
 
-  if (historyQuery.isLoading && settingsQuery.isLoading) {
+  if (todaySnapQuery.isLoading && settingsQuery.isLoading) {
     return (
       <TabScreenFrame>
-        <PageSkeleton />
+        <PageSkeleton variant="check-in" />
       </TabScreenFrame>
     );
   }
 
-  if (historyQuery.isError && !historyQuery.data) {
+  if (todaySnapQuery.isError && !todaySnapQuery.data) {
     return (
       <TabScreenFrame>
         <LoadError
-          message={userFacingApiMessage(historyQuery.error, t('checkIn.loadFailed'), t('checkIn.loadFailed'))}
-          onRetry={() => void historyQuery.refetch()}
+          message={userFacingApiMessage(
+            todaySnapQuery.error,
+            t('checkIn.loadFailed'),
+            t('checkIn.loadFailed')
+          )}
+          onRetry={() => void todaySnapQuery.refetch()}
         />
       </TabScreenFrame>
     );
@@ -732,268 +664,217 @@ export default function CheckInScreen() {
 
   return (
     <TabScreenFrame>
-      <ScrollView
+      <FlatList
         style={styles.scroll}
-        contentContainerStyle={[styles.content, { paddingBottom: 96 + tabOverlayInset }]}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: SCAN_QR_DOCK_BOTTOM + 46 + 36 + tabOverlayInset },
+        ]}
+        data={todayRows}
+        keyExtractor={(item) => String(item.id)}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.accent} />
         }
-      >
-        <BranchFilterBar horizontalPadding={0} />
+        ListHeaderComponent={
+          <View style={{ gap: 16 }}>
+            <BranchFilterBar horizontalPadding={0} />
 
-        <Animated.View entering={FadeIn.duration(280)}>
-          <SoftSurface variant="panel" flat style={styles.hero}>
-            <DeskHeroAtmosphere isLight={isLight} />
-            <View style={styles.heroTop}>
-              <View style={styles.deskCol}>
-                <Text style={styles.deskLabel}>
-                  {t('checkIn.deskLabel')}
-                </Text>
-                {capChipLabel ? (
-                  <Pressable
-                    disabled={!canManage || readOnly}
-                    onPress={() => canManage && setSettingsOpen(true)}
-                    hitSlop={6}
-                    accessibilityRole={canManage && !readOnly ? 'button' : undefined}
-                    accessibilityLabel={
-                      canManage && !readOnly ? t('checkIn.visitRulesTitle') : capChipLabel
-                    }
-                    style={({ pressed }) => [
-                      styles.capChip,
-                      canManage && !readOnly ? styles.capChipAction : styles.capChipIdle,
-                      pressed && canManage && !readOnly ? { opacity: 0.75 } : null,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.capChipText,
-                        canManage && !readOnly ? styles.capChipTextAction : null,
-                      ]}
-                    >
-                      {capChipLabel}
-                    </Text>
-                    {canManage && !readOnly ? (
-                      <Ionicons
-                        name="chevron-down"
-                        size={12}
-                        color={isLight ? '#0f766e' : '#99f6e4'}
-                      />
+            <Animated.View entering={FadeIn.duration(280)}>
+              <SoftSurface variant="panel" flat style={styles.hero}>
+                <DeskHeroAtmosphere isLight={isLight} />
+                <View style={styles.heroTop}>
+                  <View style={styles.deskCol}>
+                    <Text style={styles.deskLabel}>{t('checkIn.deskLabel')}</Text>
+                    {capChipLabel ? (
+                      <Pressable
+                        disabled={!canManage || readOnly}
+                        onPress={() => canManage && setSettingsOpen(true)}
+                        hitSlop={6}
+                        accessibilityRole={canManage && !readOnly ? 'button' : undefined}
+                        accessibilityLabel={
+                          canManage && !readOnly ? t('checkIn.visitRulesTitle') : capChipLabel
+                        }
+                        style={({ pressed }) => [
+                          styles.capChip,
+                          canManage && !readOnly ? styles.capChipAction : styles.capChipIdle,
+                          pressed && canManage && !readOnly ? { opacity: 0.75 } : null,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.capChipText,
+                            canManage && !readOnly ? styles.capChipTextAction : null,
+                          ]}
+                        >
+                          {capChipLabel}
+                        </Text>
+                        {canManage && !readOnly ? (
+                          <Ionicons
+                            name="chevron-down"
+                            size={12}
+                            color={isLight ? '#0f766e' : '#99f6e4'}
+                          />
+                        ) : null}
+                      </Pressable>
                     ) : null}
-                  </Pressable>
+                  </View>
+                  <Text display style={styles.todayCount}>
+                    {todaySnapQuery.isLoading ? '—' : todayTotal}
+                  </Text>
+                </View>
+                <View style={styles.deskTools}>
+                  <SearchField
+                    value={query}
+                    onChangeText={setQuery}
+                    placeholder={t('checkIn.searchPlaceholder')}
+                    tone="inset"
+                    style={styles.deskSearch}
+                  />
+                </View>
+              </SoftSurface>
+            </Animated.View>
+
+            {debounced ? (
+              <View>
+                <Text style={styles.sectionTitle}>{t('checkIn.resultsTitle')}</Text>
+                {searchQuery.isLoading ? (
+                  <CheckInSearchSkeleton count={listColumns > 1 ? 4 : 2} columns={listColumns} />
+                ) : searchQuery.isError ? (
+                  <LoadError
+                    message={userFacingApiMessage(
+                      searchQuery.error,
+                      t('checkIn.searchFailed'),
+                      t('checkIn.searchFailed')
+                    )}
+                    onRetry={() => void searchQuery.refetch()}
+                  />
+                ) : members.length === 0 ? (
+                  <EmptyState
+                    tone="quiet"
+                    compact
+                    icon="search-outline"
+                    title={t('checkIn.noMatchesTitle')}
+                    body={t('checkIn.noMatchesBody')}
+                  />
+                ) : (
+                  <View style={listColumns > 1 ? styles.resultsGrid : undefined}>
+                    {members.map((member, index) => (
+                      <View
+                        key={member.id}
+                        style={[
+                          listColumns > 1 ? listColumnItemStyle : null,
+                          listColumns === 1 ? { marginBottom: 10 } : styles.resultItem,
+                        ]}
+                      >
+                        <CheckInMemberCard
+                          member={member}
+                          token={token}
+                          settings={settings}
+                          cardError={cardErrors[member.id]}
+                          busy={
+                            checkInMutation.isPending &&
+                            checkInMutation.variables?.member.id === member.id
+                          }
+                          success={Boolean(successIds[member.id])}
+                          alreadyToday={
+                            alreadyTodayIds.has(member.id) ||
+                            Boolean(successIds[member.id]) ||
+                            cardErrors[member.id]?.code === 'ALREADY_TODAY'
+                          }
+                          readOnly={readOnly}
+                          index={index}
+                          onCheckIn={() => runCheckIn(member)}
+                        />
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+            ) : null}
+
+            <View style={[styles.todayHeader, todayPulse ? styles.todayHeaderPulse : null]}>
+              <Text display style={[styles.sectionTitle, { marginBottom: 0, flex: 1 }]}>
+                {t('checkIn.checkedInTodayTitle')}
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('checkIn.historyTitle')}
+                onPress={() => {
+                  void Haptics.selectionAsync().catch(() => undefined);
+                  setHistoryOpen(true);
+                }}
+                hitSlop={8}
+                style={({ pressed }) => [styles.historyBtn, { opacity: pressed ? 0.65 : 1 }]}
+              >
+                <Ionicons name="time-outline" size={16} color={c.muted} />
+                <Text style={styles.historyBtnLabel}>{t('checkIn.historyTitle')}</Text>
+              </Pressable>
+            </View>
+
+            {todayRows.length === 0 && !todaySnapQuery.isLoading ? (
+              <SoftSurface variant="panel" style={styles.idleWrap}>
+                <EmptyState
+                  tone="quiet"
+                  compact
+                  icon="scan-outline"
+                  title={t('checkIn.todayEmptyTitle')}
+                  body={t('checkIn.todayEmpty')}
+                  action={null}
+                />
+              </SoftSurface>
+            ) : null}
+          </View>
+        }
+        renderItem={({ item: row, index }) => (
+          <View
+            style={{
+              backgroundColor: c.card,
+              borderTopLeftRadius: index === 0 ? 16 : 0,
+              borderTopRightRadius: index === 0 ? 16 : 0,
+              borderBottomLeftRadius: index === todayRows.length - 1 ? 16 : 0,
+              borderBottomRightRadius: index === todayRows.length - 1 ? 16 : 0,
+              overflow: 'hidden',
+            }}
+          >
+            {index > 0 ? <View style={styles.todayRowDivider} /> : null}
+            <View style={styles.todayRow}>
+              <MemberPhoto
+                memberId={row.member_id}
+                name={row.member_name || '?'}
+                token={token}
+                size={34}
+                hasPhoto={Boolean(row.member_photo_url)}
+              />
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text listRow style={styles.todayName} numberOfLines={1}>
+                  {row.member_name || '—'}
+                </Text>
+                {showBranchOnToday && row.branch_name ? (
+                  <Text style={styles.todayBranch} numberOfLines={1}>
+                    {row.branch_name}
+                  </Text>
                 ) : null}
               </View>
-              <Text display style={styles.todayCount}>
-                {todaySnapQuery.isLoading ? '—' : todayTotal}
-              </Text>
-            </View>
-            <View style={styles.deskTools}>
-              <SearchField
-                value={query}
-                onChangeText={setQuery}
-                placeholder={t('checkIn.searchPlaceholder')}
-                tone="inset"
-                style={styles.deskSearch}
-              />
-            </View>
-          </SoftSurface>
-        </Animated.View>
-
-        {debounced ? (
-          <View>
-            <Text style={styles.sectionTitle}>{t('checkIn.resultsTitle')}</Text>
-            {searchQuery.isLoading ? (
-              <CheckInSearchSkeleton count={listColumns > 1 ? 4 : 2} columns={listColumns} />
-            ) : searchQuery.isError ? (
-              <LoadError
-                message={userFacingApiMessage(
-                  searchQuery.error,
-                  t('checkIn.searchFailed'),
-                  t('checkIn.searchFailed')
-                )}
-                onRetry={() => void searchQuery.refetch()}
-              />
-            ) : members.length === 0 ? (
-              <EmptyState
-                tone="quiet"
-                compact
-                icon="search-outline"
-                title={t('checkIn.noMatchesTitle')}
-                body={t('checkIn.noMatchesBody')}
-              />
-            ) : (
-              <View style={listColumns > 1 ? styles.resultsGrid : undefined}>
-                {members.map((member, index) => (
-                  <View
-                    key={member.id}
-                    style={[
-                      listColumns > 1 ? listColumnItemStyle : null,
-                      listColumns === 1 ? { marginBottom: 10 } : styles.resultItem,
-                    ]}
-                  >
-                    <CheckInMemberCard
-                      member={member}
-                      token={token}
-                      settings={settings}
-                      cardError={cardErrors[member.id]}
-                      busy={
-                        checkInMutation.isPending &&
-                        checkInMutation.variables?.member.id === member.id
-                      }
-                      success={Boolean(successIds[member.id])}
-                      alreadyToday={
-                        alreadyTodayIds.has(member.id) ||
-                        Boolean(successIds[member.id]) ||
-                        cardErrors[member.id]?.code === 'ALREADY_TODAY'
-                      }
-                      readOnly={readOnly}
-                      index={index}
-                      onCheckIn={() => runCheckIn(member)}
-                    />
-                  </View>
-                ))}
-              </View>
-            )}
-          </View>
-        ) : null}
-
-        <View>
-          <View style={styles.todayHeader}>
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <Text display style={styles.sectionTitle}>
-                {t('checkIn.attendanceTitle')}
-              </Text>
-              <Text style={styles.sectionMeta}>
-                {historyFrom && historyTo
-                  ? t('checkIn.weekRangeSubtitle', {
-                      from: formatDisplayDate(historyFrom),
-                      to: formatDisplayDate(historyTo),
-                    })
-                  : '—'}
-              </Text>
+              <Text style={styles.todayTime}>{formatTime(row.checked_in_at)}</Text>
             </View>
           </View>
+        )}
+        ListFooterComponent={todayRows.length > 0 ? <View style={{ height: 6 }} /> : null}
+      />
 
-          <View style={styles.weekChipRow}>
-            {(['this', 'last'] as const).map((scope) => {
-              const active = weekScope === scope;
-              return (
-                <Pressable
-                  key={scope}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: active }}
-                  onPress={() => setWeekScope(scope)}
-                  style={({ pressed }) => [
-                    styles.weekChip,
-                    {
-                      backgroundColor: active
-                        ? isLight
-                          ? 'rgba(15,118,110,0.1)'
-                          : 'rgba(45,212,191,0.14)'
-                        : 'transparent',
-                      borderColor: active ? (isLight ? '#0f766e' : c.accentText) : c.border,
-                      opacity: pressed ? 0.78 : 1,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.weekChipLabel,
-                      {
-                        color: active ? (isLight ? '#0f766e' : c.accentText) : c.muted,
-                        fontWeight: active ? '700' : '600',
-                      },
-                    ]}
-                  >
-                    {scope === 'this' ? t('checkIn.weekThis') : t('checkIn.weekLast')}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          <Animated.View key={weekScope} entering={FadeIn.duration(200)}>
-          {historyRows.length === 0 ? (
-            <SoftSurface variant="panel" style={styles.idleWrap}>
-              <EmptyState
-                tone="quiet"
-                compact
-                icon="scan-outline"
-                title={
-                  weekScope === 'last'
-                    ? t('checkIn.historyEmptyLastTitle')
-                    : t('checkIn.todayEmptyTitle')
-                }
-                body={
-                  weekScope === 'last' ? t('checkIn.historyEmptyLast') : t('checkIn.todayEmpty')
-                }
-                action={null}
-              />
-            </SoftSurface>
-          ) : (
-            <SoftSurface variant="panel" style={styles.todayPanel}>
-              {visibleDayGroups.map(([day, rows], dayIndex) => (
-                <View key={day}>
-                  {dayIndex > 0 ? <View style={styles.daySectionGap} /> : null}
-                  <View style={styles.dayHeader}>
-                    <Text display style={styles.dayHeaderLabel}>
-                      {formatAttendanceDayLabel(day, language || i18n.language)}
-                    </Text>
-                    <Text style={styles.dayHeaderCount}>
-                      {t('checkIn.dayVisitCount', { count: rows.length })}
-                    </Text>
-                  </View>
-                  {rows.map((row: CheckInRow, index: number) => (
-                    <View key={row.id}>
-                      {index > 0 ? <View style={styles.todayRowDivider} /> : null}
-                      <View style={styles.todayRow}>
-                        <MemberPhoto
-                          memberId={row.member_id}
-                          name={row.member_name || '?'}
-                          token={token}
-                          size={40}
-                          hasPhoto={Boolean(row.member_photo_url)}
-                        />
-                        <View style={{ flex: 1, minWidth: 0 }}>
-                          <Text listRow style={styles.todayName} numberOfLines={1}>
-                            {row.member_name || '—'}
-                          </Text>
-                          {showBranchOnToday && row.branch_name ? (
-                            <Text style={styles.todayBranch} numberOfLines={1}>
-                              {row.branch_name}
-                            </Text>
-                          ) : null}
-                        </View>
-                        <Text style={styles.todayTime}>{formatTime(row.checked_in_at)}</Text>
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              ))}
-              {historyHasMoreDays || historyCanLoadMore ? (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={t('checkIn.showMore')}
-                  hitSlop={6}
-                  onPress={() => {
-                    if (historyHasMoreDays) {
-                      setHistoryExpanded(true);
-                      return;
-                    }
-                    setHistoryLimit((n) => Math.min(HISTORY_MAX, n + HISTORY_PAGE_SIZE));
-                  }}
-                  style={({ pressed }) => [styles.showMoreRow, { opacity: pressed ? 0.65 : 1 }]}
-                >
-                  <Text style={styles.showMoreLabel}>{t('checkIn.showMore')}</Text>
-                  <Ionicons name="chevron-down" size={16} color={c.accentText} />
-                </Pressable>
-              ) : null}
-            </SoftSurface>
-          )}
-          </Animated.View>
-        </View>
-      </ScrollView>
+      <AttendanceHistorySheet
+        visible={historyOpen}
+        onClose={() => {
+          setHistoryOpen(false);
+          pulseTodaySection();
+        }}
+        token={token}
+        branchId={selectedBranchId}
+        weekStartsOn={weekStartsOn === 'sunday' ? 'sunday' : 'monday'}
+        showBranch={showBranchOnToday}
+      />
 
       <BottomSheet
         visible={settingsOpen && canManage}
@@ -1058,7 +939,7 @@ export default function CheckInScreen() {
       {!readOnly ? (
         <ScanQrDockButton
           label={t('checkIn.scanAction')}
-          bottom={20 + tabOverlayInset}
+          bottom={SCAN_QR_DOCK_BOTTOM + tabOverlayInset}
           onPress={() => setScanOpen(true)}
         />
       ) : null}

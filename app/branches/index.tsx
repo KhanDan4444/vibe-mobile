@@ -196,7 +196,7 @@ export default function BranchesScreen() {
     <TabScreenFrame>
       <View style={styles.container}>
         {query.isLoading ? (
-          <PageSkeleton variant="list-cards" />
+          <PageSkeleton variant="branches" />
         ) : query.isError ? (
           <LoadError
             message={query.error instanceof Error ? query.error.message : undefined}

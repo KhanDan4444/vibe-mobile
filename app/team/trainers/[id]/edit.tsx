@@ -114,7 +114,7 @@ export default function EditTrainerScreen() {
   if (trainersQuery.isLoading) {
     return (
       <Screen>
-        <PageSkeleton variant="list-rows" />
+        <PageSkeleton variant="form" />
       </Screen>
     );
   }

@@ -200,7 +200,7 @@ export default function MessagesScreen() {
         </View>
 
         {query.isLoading ? (
-          <PageSkeleton variant="list-cards" />
+          <PageSkeleton variant="messages" />
         ) : query.isError ? (
           <LoadError
             message={query.error instanceof Error ? query.error.message : undefined}

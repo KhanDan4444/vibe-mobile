@@ -357,7 +357,7 @@ export default function PlansScreen() {
     <TabScreenFrame>
       <View style={styles.container}>
         {query.isLoading ? (
-          <PageSkeleton variant="list-cards" />
+          <PageSkeleton variant="plans" />
         ) : query.isError ? (
           <View style={styles.errorWrap}>
             <Text style={styles.errorText}>

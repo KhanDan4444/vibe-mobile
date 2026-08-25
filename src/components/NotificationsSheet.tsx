@@ -31,6 +31,8 @@ import {
   type NotificationStack,
 } from '@/src/utils/notificationText';
 
+const ACTIVITY_PREVIEW = 3;
+
 function iconForKind(kind: NotificationKind, type: string): keyof typeof Ionicons.glyphMap {
   if (kind === 'unpaid') return 'wallet-outline';
   if (kind === 'due_soon') return 'time-outline';
@@ -84,8 +86,21 @@ function NotificationRow({
   const actionColor = action === 'payment' ? c.statusUnpaid : c.accentText;
 
   return (
-    <View style={[styles.row, nested && styles.rowNested, { backgroundColor: c.card }]}>
-      {!isRead ? <View style={[styles.unreadBar, { backgroundColor: c.accentText }]} /> : null}
+    <View
+      style={[
+        styles.row,
+        nested && styles.rowNested,
+        { backgroundColor: c.card, paddingVertical: nested ? 8 : 13 },
+      ]}
+    >
+      {!isRead ? (
+        <View
+          style={[
+            styles.unreadBar,
+            { backgroundColor: c.accentText, top: nested ? 8 : 14, bottom: nested ? 8 : 14 },
+          ]}
+        />
+      ) : null}
 
       {nested ? null : (
         <View style={[styles.iconWrap, { backgroundColor: palette.bg }]}>
@@ -98,12 +113,22 @@ function NotificationRow({
           {nested || !localized.eyebrow ? null : (
             <Text style={[styles.eyebrow, { color: c.muted }]}>{localized.eyebrow}</Text>
           )}
-          <Text
-            style={[styles.rowTitle, { color: c.text }, !isRead && styles.rowTitleUnread]}
-            numberOfLines={1}
-          >
-            {localized.title}
-          </Text>
+          <View style={styles.titleLine}>
+            <Text
+              style={[
+                styles.rowTitle,
+                nested && styles.rowTitleNested,
+                { color: c.text },
+                !isRead && styles.rowTitleUnread,
+              ]}
+              numberOfLines={1}
+            >
+              {localized.title}
+            </Text>
+            {nested && localized.date ? (
+              <Text style={[styles.dateInline, { color: c.dim }]}>{localized.date}</Text>
+            ) : null}
+          </View>
           {showBranchBadge && branch ? (
             <View
               style={[
@@ -114,22 +139,28 @@ function NotificationRow({
               <Text style={[styles.branchBadgeText, { color: c.accentText }]}>{branch}</Text>
             </View>
           ) : null}
-          <Text style={[styles.rowMessage, { color: c.muted }]} numberOfLines={2}>
-            {localized.message}
-          </Text>
+          {nested ? null : (
+            <Text style={[styles.rowMessage, { color: c.muted }]} numberOfLines={2}>
+              {localized.message}
+            </Text>
+          )}
         </Pressable>
         {action ? (
-          <Pressable style={styles.actionBtn} onPress={onAction} hitSlop={6}>
-            <Text style={[styles.actionText, { color: actionColor }]}>
+          <Pressable
+            style={[styles.actionBtn, nested && styles.actionBtnNested]}
+            onPress={onAction}
+            hitSlop={6}
+          >
+            <Text style={[styles.actionText, nested && styles.actionTextNested, { color: actionColor }]}>
               {notificationActionLabel(action)}
             </Text>
-            <Ionicons name="chevron-forward" size={14} color={actionColor} />
+            <Ionicons name="chevron-forward" size={nested ? 12 : 14} color={actionColor} />
           </Pressable>
         ) : null}
       </View>
 
       <View style={styles.metaCol}>
-        {localized.date ? (
+        {!nested && localized.date ? (
           <Text style={[styles.dateText, { color: c.dim }]}>{localized.date}</Text>
         ) : null}
         {!action ? <Ionicons name="chevron-forward" size={16} color={c.dim} /> : null}
@@ -192,16 +223,16 @@ function KindStack({
         label={dismissLabel}
         onDismiss={() => group.items.forEach((item) => onDismiss(item.id))}
       >
-        <Pressable
-          onPress={onToggle}
-          style={[styles.row, { backgroundColor: c.card }]}
-        >
+        <Pressable onPress={onToggle} style={[styles.row, { backgroundColor: c.card }]}>
           {anyUnread ? <View style={[styles.unreadBar, { backgroundColor: c.accentText }]} /> : null}
           <View style={[styles.iconWrap, { backgroundColor: palette.bg }]}>
             <Ionicons name={iconForKind(group.kind, group.items[0].type)} size={18} color={palette.icon} />
           </View>
           <View style={styles.rowBody}>
-            <Text style={[styles.rowTitle, { color: c.text }, anyUnread && styles.rowTitleUnread]} numberOfLines={1}>
+            <Text
+              style={[styles.rowTitle, { color: c.text }, anyUnread && styles.rowTitleUnread]}
+              numberOfLines={1}
+            >
               {stackTitle(group.kind, group.items.length, t)}
             </Text>
             <Text style={[styles.rowMessage, { color: c.muted }]} numberOfLines={1}>
@@ -223,15 +254,35 @@ export function NotificationsSheet({ visible, onClose }: { visible: boolean; onC
   const { colors: c } = useTheme();
   const { t } = useTranslation();
   const { notifications, unread, isRead, markRead, markAllRead, dismiss, loading } = useNotificationInbox();
-  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
+  const [activityExpanded, setActivityExpanded] = useState(false);
   const uniqueBranches = new Set(notifications.map((item) => branchLabel(item)).filter(Boolean));
   const showBranchBadge = selectedBranchId === 'all' && uniqueBranches.size > 1;
   const { attention, activity } = groupNotifications(notifications);
+  const attentionGroups = stackNotificationGroups(attention);
+  const activityGroups = stackNotificationGroups(activity);
+  const activityVisible = activityExpanded
+    ? activityGroups
+    : activityGroups.slice(0, ACTIVITY_PREVIEW);
+  const activityHasMore = activityGroups.length > ACTIVITY_PREVIEW;
   const sections = [
-    { key: 'attention' as const, label: t('notifications.section.attention'), items: attention },
-    { key: 'activity' as const, label: t('notifications.section.activity'), items: activity },
-  ].filter((section) => section.items.length > 0);
+    { key: 'attention' as const, label: t('notifications.section.attention'), groups: attentionGroups },
+    {
+      key: 'activity' as const,
+      label: t('notifications.section.activity'),
+      groups: activityVisible,
+      totalCount: activityGroups.length,
+    },
+  ].filter((section) =>
+    section.key === 'activity' ? activityGroups.length > 0 : section.groups.length > 0
+  );
   const showHeaders = sections.length > 1;
+  const subtitle =
+    attention.length > 0
+      ? t('notifications.openAttention', { count: attention.length })
+      : unread > 0
+        ? t('notifications.unread', { count: unread })
+        : t('notifications.caughtUp');
 
   const openMember = (item: DashboardNotification) => {
     markRead(item.id);
@@ -248,20 +299,13 @@ export function NotificationsSheet({ visible, onClose }: { visible: boolean; onC
   };
 
   const toggle = (key: string) => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
+    setExpandedKey((prev) => (prev === key ? null : key));
   };
 
   return (
     <BottomSheet visible={visible} title={t('notifications.title')} onClose={onClose} showCloseButton>
       <View style={styles.metaRow}>
-        <Text style={[styles.subtitle, { color: c.muted }]}>
-          {unread > 0 ? t('notifications.unread', { count: unread }) : t('notifications.caughtUp')}
-        </Text>
+        <Text style={[styles.subtitle, { color: c.muted }]}>{subtitle}</Text>
         {unread > 0 ? (
           <Pressable onPress={markAllRead} hitSlop={8}>
             <Text style={[styles.markAll, { color: c.accentText }]}>{t('notifications.markAllRead')}</Text>
@@ -282,16 +326,27 @@ export function NotificationsSheet({ visible, onClose }: { visible: boolean; onC
           {sections.map((section, sectionIndex) => (
             <View
               key={section.key}
-              style={sectionIndex > 0 ? { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.border } : undefined}
+              style={
+                sectionIndex > 0
+                  ? { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.border }
+                  : undefined
+              }
             >
               {showHeaders ? (
-                <Text style={[styles.sectionLabel, { color: c.muted }]}>{section.label}</Text>
+                <View style={styles.sectionHeader}>
+                  <Text style={[styles.sectionLabel, { color: c.muted }]}>{section.label}</Text>
+                  {section.key === 'activity' && section.totalCount > 0 ? (
+                    <Text style={[styles.sectionMeta, { color: c.dim }]}>
+                      {t('notifications.activityRecent', { count: section.totalCount })}
+                    </Text>
+                  ) : null}
+                </View>
               ) : null}
-              {stackNotificationGroups(section.items).map((group) => (
+              {section.groups.map((group) => (
                 <KindStack
                   key={group.key}
                   group={group}
-                  expanded={expanded.has(group.key)}
+                  expanded={expandedKey === group.key}
                   onToggle={() => toggle(group.key)}
                   isRead={isRead}
                   readOnly={readOnly}
@@ -303,6 +358,19 @@ export function NotificationsSheet({ visible, onClose }: { visible: boolean; onC
                   onDismiss={dismiss}
                 />
               ))}
+              {section.key === 'activity' && activityHasMore ? (
+                <Pressable
+                  onPress={() => setActivityExpanded((v) => !v)}
+                  style={styles.showAllBtn}
+                  hitSlop={6}
+                >
+                  <Text style={[styles.showAllText, { color: c.accentText }]}>
+                    {activityExpanded
+                      ? t('notifications.activityShowLess')
+                      : t('notifications.activityShowAll')}
+                  </Text>
+                </Pressable>
+              ) : null}
             </View>
           ))}
         </SoftSurface>
@@ -326,15 +394,27 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
     paddingHorizontal: 0,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
   sectionLabel: {
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.6,
     textTransform: 'uppercase',
-    paddingHorizontal: 14,
-    paddingTop: 12,
-    paddingBottom: 4,
   },
+  sectionMeta: { fontSize: 11 },
+  showAllBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  showAllText: { fontSize: 13, fontWeight: '600' },
   row: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -344,6 +424,7 @@ const styles = StyleSheet.create({
   },
   rowNested: {
     paddingLeft: 56,
+    gap: 10,
   },
   unreadBar: {
     position: 'absolute',
@@ -369,8 +450,15 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     marginBottom: 2,
   },
+  titleLine: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 6,
+  },
   rowTitle: { fontSize: 15, fontWeight: '600', flexShrink: 1 },
+  rowTitleNested: { fontSize: 14 },
   rowTitleUnread: { fontWeight: '700' },
+  dateInline: { fontSize: 11, flexShrink: 0 },
   branchBadge: {
     alignSelf: 'flex-start',
     marginTop: 6,
@@ -389,7 +477,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 2,
   },
+  actionBtnNested: {
+    marginTop: 2,
+    minHeight: 28,
+  },
   actionText: { fontSize: 13, fontWeight: '600' },
+  actionTextNested: { fontSize: 12 },
   metaCol: { alignItems: 'flex-end', gap: 6, paddingTop: 1 },
   dateText: { fontSize: 11 },
   emptyWrap: { alignItems: 'center', gap: 8, paddingVertical: 40 },

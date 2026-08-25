@@ -6,7 +6,6 @@ import * as Sharing from 'expo-sharing';
 import { AppText as Text } from '@/src/components/AppText';
 import { BottomSheet } from '@/src/components/BottomSheet';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
-import { SecondaryButton } from '@/src/components/ui/Button';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import {
   fetchMemberPass,
@@ -20,10 +19,53 @@ import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { isGymOwner } from '@/src/utils/roles';
-import { radiusLg } from '@/src/theme/tokens';
+import { radiusMd, radiusLg } from '@/src/theme/tokens';
 
 function escapeHtml(s: string) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function PassActionButton({
+  label,
+  onPress,
+  disabled,
+  loading,
+}: {
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+  loading?: boolean;
+}) {
+  const { colors: c } = useTheme();
+  const idle = Boolean(disabled && !loading);
+  return (
+    <Pressable
+      accessibilityRole="button"
+      disabled={disabled || loading}
+      onPress={onPress}
+      style={({ pressed }) => ({
+        flex: 1,
+        minHeight: 36,
+        borderRadius: radiusMd,
+        borderWidth: 1,
+        borderColor: c.border,
+        backgroundColor: pressed && !idle ? c.inputBg : c.card,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        opacity: idle ? 0.5 : 1,
+      })}
+    >
+      {loading ? (
+        <ActivityIndicator color={c.muted} size="small" />
+      ) : (
+        <Text style={{ fontSize: 14, fontWeight: '500', color: c.text }} numberOfLines={1}>
+          {label}
+        </Text>
+      )}
+    </Pressable>
+  );
 }
 
 export function MemberPassSheet({
@@ -94,8 +136,15 @@ export function MemberPassSheet({
       marginTop: 14,
     },
     error: { color: colors.error, fontSize: 14, textAlign: 'center' as const, marginTop: 12 },
-    actions: { flexDirection: 'row' as const, gap: 10, marginTop: 12 },
-    actionHalf: { flex: 1 },
+    actions: { flexDirection: 'row' as const, gap: 8, marginTop: 12 },
+    actionCol: { flex: 1, minWidth: 0 },
+    smsHint: {
+      marginTop: 6,
+      fontSize: 11,
+      lineHeight: 15,
+      color: colors.dim,
+      textAlign: 'center' as const,
+    },
     regenLink: {
       alignSelf: 'center' as const,
       paddingVertical: 10,
@@ -159,7 +208,8 @@ export function MemberPassSheet({
           subtitle: t('checkIn.passRegeneratedSub', { name: memberName }),
           variant: 'success',
         });
-      }    } catch (err) {
+      }
+    } catch (err) {
       showFlash({
         title: userFacingApiMessage(err, t('checkIn.regeneratePassFailed')),
         variant: 'danger',
@@ -302,21 +352,22 @@ export function MemberPassSheet({
         </SoftSurface>
 
         <View style={styles.actions}>
-          <View style={styles.actionHalf}>
-            <SecondaryButton
+          <View style={styles.actionCol}>
+            <PassActionButton
               label={printing ? t('common.processing') : t('checkIn.printPass')}
               onPress={() => void onPrint()}
               disabled={busy || !pass?.qr_data_url}
               loading={printing}
             />
           </View>
-          <View style={styles.actionHalf}>
-            <SecondaryButton
+          <View style={styles.actionCol}>
+            <PassActionButton
               label={smsSending ? t('common.processing') : t('checkIn.smsPass')}
               onPress={() => void onSms()}
               disabled={busy || !memberPhone}
               loading={smsSending}
             />
+            <Text style={styles.smsHint}>{t('checkIn.smsPassHint')}</Text>
           </View>
         </View>
 

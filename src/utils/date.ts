@@ -137,7 +137,22 @@ export function attendanceWeekRange(
   return { from: dateToIso(start), to: dateToIso(end) };
 }
 
-/** Day header for attendance history: "Mon 18 Aug" */
+/** Local calendar day relative to today: 'today' | 'yesterday' | null. */
+export function attendanceDayRelative(
+  date: string | Date | null | undefined
+): 'today' | 'yesterday' | null {
+  const iso = typeof date === 'string' ? toDateString(date) : date ? dateToIso(date) : '';
+  if (!iso) return null;
+  const today = todayString();
+  if (iso === today) return 'today';
+  const y = new Date();
+  y.setHours(0, 0, 0, 0);
+  y.setDate(y.getDate() - 1);
+  if (iso === dateToIso(y)) return 'yesterday';
+  return null;
+}
+
+/** Day header for attendance history: "Mon 18 Aug". */
 export function formatAttendanceDayLabel(
   date: string | Date | null | undefined,
   language = 'en'
