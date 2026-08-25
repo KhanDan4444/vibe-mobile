@@ -23,7 +23,6 @@ import { fetchMemberPhotoDataUri } from '@/src/utils/memberPhoto';
 import { bumpMemberPhotoCache } from '@/src/utils/memberPhotoCache';
 import { dismissKeyboard } from '@/src/utils/dismissKeyboard';
 import { runInBackground } from '@/src/utils/runInBackground';
-import { branchDisplayName } from '@/src/utils/branchDisplayName';
 import { todayString } from '@/src/utils/date';
 import { validateRequiredEthiopianPhone } from '@/src/utils/phone';
 import { PAYMENT_METHODS } from '@/src/constants/payments';
@@ -250,15 +249,6 @@ export default function EditMemberScreen() {
 
           {showBranchPicker ? (
             <BranchPicker branches={branches} value={branchId} onChange={setBranchId} />
-          ) : member?.branch_name ? (
-            <View style={styles.branchReadOnly}>
-              <Label>{t('member.branch')}</Label>
-              <SoftSurface variant="quiet" style={styles.branchValue}>
-                <Text style={{ color: c.text, fontSize: 15 }}>
-                  {branchDisplayName(member.branch_name)}
-                </Text>
-              </SoftSurface>
-            </View>
           ) : null}
 
           <SoftSurface variant="quiet" style={styles.trainerPanel}>
@@ -310,11 +300,5 @@ export default function EditMemberScreen() {
 
 const styles = StyleSheet.create({
   hint: { fontSize: 13, marginTop: 16, lineHeight: 20 },
-  branchReadOnly: { marginTop: 8 },
-  branchValue: {
-    marginTop: 4,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-  },
   trainerPanel: { padding: 14, gap: 10, marginTop: 8 },
 });

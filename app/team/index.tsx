@@ -74,6 +74,7 @@ function StaffCard({
 
   const login = member.username || member.email || '—';
   const { activeBranches } = useBranchScope();
+  const multiBranch = activeBranches.length > 1;
   const defaultBranch =
     activeBranches.find((b) => b.is_default)?.name || activeBranches[0]?.name || 'Main';
   const branch = branchDisplayName(member.branch_name || defaultBranch);
@@ -103,7 +104,7 @@ function StaffCard({
             </Text>
           </View>
           <Text style={styles.meta} numberOfLines={1}>
-            {`${login} · ${branch}`}
+            {multiBranch ? `${login} · ${branch}` : login}
           </Text>
         </View>
         <ActionOverflowMenu title={member.name} items={menuItems} />
@@ -137,12 +138,13 @@ function TrainerCard({
   }));
 
   const { activeBranches } = useBranchScope();
+  const multiBranch = activeBranches.length > 1;
   const defaultBranch =
     activeBranches.find((b) => b.is_default)?.name || activeBranches[0]?.name || 'Main';
   const detailParts = [
     trainer.specialty || null,
     t('team.assignedMembers', { count: trainer.member_count ?? 0 }),
-    branchDisplayName(trainer.branch_name || defaultBranch),
+    multiBranch ? branchDisplayName(trainer.branch_name || defaultBranch) : null,
   ].filter(Boolean);
   const detailLine = detailParts.join(' · ');
 

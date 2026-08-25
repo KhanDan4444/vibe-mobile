@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { settleMinBusy } from '@/src/utils/minBusy';
 
 type RetryableQuery = {
   isLoading: boolean;
@@ -7,8 +8,6 @@ type RetryableQuery = {
   data: unknown;
   refetch: () => Promise<unknown>;
 };
-
-const MIN_BUSY_MS = 5000;
 
 /**
  * Keeps the LoadError UI mounted while a retry is in flight so the screen
@@ -27,11 +26,12 @@ export function useLoadRetry(query: RetryableQuery) {
     if (retrying) return Promise.resolve();
     setRetrying(true);
     const started = Date.now();
-    return Promise.resolve(query.refetch()).finally(async () => {
-      const wait = MIN_BUSY_MS - (Date.now() - started);
-      if (wait > 0) await new Promise((r) => setTimeout(r, wait));
-      setRetrying(false);
-    });
+    return Promise.resolve(query.refetch())
+      .catch(() => undefined)
+      .finally(async () => {
+        await settleMinBusy(started);
+        setRetrying(false);
+      });
   }, [query.refetch, retrying]);
 
   return { showLoading, showError, loading, onRetry };

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchDashboard } from '@/src/api/dashboard';
 import { ApiError } from '@/src/api/client';
+import { settleMinBusy } from '@/src/utils/minBusy';
 
 interface GymBootContextValue {
   booting: boolean;
@@ -62,14 +63,11 @@ export function GymBootProvider({ children }: { children: React.ReactNode }) {
     if (retrying) return;
     setRetrying(true);
     const started = Date.now();
-    const MIN_BUSY_MS = 5000;
     void bootQuery
       .refetch()
+      .catch(() => undefined)
       .finally(async () => {
-        const wait = MIN_BUSY_MS - (Date.now() - started);
-        if (wait > 0) {
-          await new Promise((r) => setTimeout(r, wait));
-        }
+        await settleMinBusy(started);
         setRetrying(false);
       });
   }, [retrying, bootQuery]);

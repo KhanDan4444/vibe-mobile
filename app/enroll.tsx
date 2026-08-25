@@ -576,10 +576,12 @@ export default function EnrollScreen() {
         bumpMemberPhotoCache(queryClient, data.member.id);
       }
       const selectedBranch = branches.find((b) => b.id === branchId);
-      const branchLabel = data.member.branch_name
-        || (selectedBranch
-          ? `${selectedBranch.name}${selectedBranch.is_default ? ` ${t('branch.defaultSuffix')}` : ''}`
-          : '');
+      const branchLabel = showBranchPicker
+        ? (data.member.branch_name
+          || (selectedBranch
+            ? `${selectedBranch.name}${selectedBranch.is_default ? ` ${t('branch.defaultSuffix')}` : ''}`
+            : ''))
+        : '';
       setEnrollDone({
         name: data.member.name || name.trim(),
         phone: data.member.phone || phone.trim(),

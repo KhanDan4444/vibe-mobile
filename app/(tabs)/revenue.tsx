@@ -16,6 +16,7 @@ import { BranchFilterBar } from '@/src/components/BranchFilterBar';
 import { RevenueFiltersSheet } from '@/src/components/RevenueFiltersSheet';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { EmptyState } from '@/src/components/EmptyState';
+import { LoadError } from '@/src/components/LoadError';
 import { PAYMENT_METHODS, paymentMethodBadgeStyle, paymentMethodIcon, paymentMethodLabelKey, paymentMethodShortLabelKey } from '@/src/constants/payments';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useFlash } from '@/src/context/FlashContext';
@@ -32,12 +33,10 @@ import { paymentSourceKey } from '@/src/utils/termPayments';
 import { statusLabelKey } from '@/src/utils/statusLabels';
 import { isGymOwner } from '@/src/utils/roles';
 import { scheduleDeleteWithUndo } from '@/src/utils/scheduleWithUndo';
-import { SecondaryButton } from '@/src/components/ui/Button';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { FilterChip } from '@/src/components/FilterChip';
 import { SearchField } from '@/src/components/SearchField';
 import { fieldRingStyle } from '@/src/theme/fieldChrome';
-import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import {
   formatTrendForDisplay,
   trendCaptionKeyForPreset,
@@ -353,8 +352,6 @@ export default function RevenueScreen() {
     list: { paddingBottom: 28 },
     emptyWrap: { alignItems: 'center' as const, paddingTop: 48, gap: 12, alignSelf: 'center' as const, maxWidth: 360 },
     empty: { textAlign: 'center' as const, color: colors.dim, fontSize: 15 },
-    errorWrap: { alignItems: 'center' as const, paddingTop: 48, gap: 12, paddingHorizontal: 24 },
-    errorText: { textAlign: 'center' as const, color: colors.error, fontSize: 15 },
   }));
   const owner = isGymOwner(user?.role);
   const { readOnly } = useGymReadOnly();
@@ -627,12 +624,7 @@ export default function RevenueScreen() {
       ) : query.isError ? (
         <View style={{ flex: 1, paddingHorizontal: pagePadding }}>
           {listHeader}
-          <View style={styles.errorWrap}>
-            <Text style={appTextStyle(language, styles.errorText)}>
-              {userFacingApiMessage(query.error, t('gymBoot.errorBody'), t('gymBoot.errorBody'))}
-            </Text>
-            <SecondaryButton label={t('gymBoot.retry')} onPress={() => void query.refetch()} />
-          </View>
+          <LoadError error={query.error} onRetry={() => void query.refetch()} />
         </View>
       ) : (
         <FlatList

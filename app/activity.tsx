@@ -35,10 +35,12 @@ function ActivityItem({
   entry,
   multiColumn,
   columnStyle,
+  showBranch,
 }: {
   entry: ActivityLogRow;
   multiColumn?: boolean;
   columnStyle?: object;
+  showBranch?: boolean;
 }) {
   const { t } = useTranslation();
   const isOwner = entry.actor_role === 'Gym Owner';
@@ -98,7 +100,7 @@ function ActivityItem({
             {formatActorRole(entry.actor_role, t)}
           </Text>
         </View>
-        {entry.branch_name ? (
+        {showBranch && entry.branch_name ? (
           <Text style={styles.branch}>· {branchDisplayName(entry.branch_name)}</Text>
         ) : null}
       </View>
@@ -108,7 +110,7 @@ function ActivityItem({
 
 export default function ActivityScreen() {
   const { token, user } = useAuth();
-  const { selectedBranchId } = useBranchScope();
+  const { selectedBranchId, showBranchFilter } = useBranchScope();
   const { colors: c } = useTheme();
   const { t } = useTranslation();
   const { pagePadding, listColumnItemStyle } = useResponsiveLayout();
@@ -122,6 +124,7 @@ export default function ActivityScreen() {
   }));
 
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
+  const showBranchOnRows = showBranchFilter && selectedBranchId === 'all';
   const [actorFilter, setActorFilter] = useState<ActorFilter>('all');
   const canViewActivity = Boolean(user && isGymOwner(user.role));
 
@@ -176,7 +179,12 @@ export default function ActivityScreen() {
           columnWrapperStyle={listColumns > 1 ? styles.columnWrap : undefined}
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => (
-            <ActivityItem entry={item} multiColumn={listColumns > 1} columnStyle={listColumnItemStyle} />
+            <ActivityItem
+              entry={item}
+              multiColumn={listColumns > 1}
+              columnStyle={listColumnItemStyle}
+              showBranch={showBranchOnRows}
+            />
           )}
           contentContainerStyle={[styles.list, { paddingHorizontal: pagePadding }]}
           refreshControl={

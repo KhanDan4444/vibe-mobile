@@ -173,6 +173,38 @@ export function formatAttendanceDayLabel(
   }
 }
 
+/** Week range for History: "17–23 Aug" or "28 Jul – 3 Aug". */
+export function formatAttendanceWeekRangeLabel(
+  from: string | Date | null | undefined,
+  to: string | Date | null | undefined,
+  language = 'en'
+): string {
+  const fromIso = typeof from === 'string' ? toDateString(from) : from ? dateToIso(from) : '';
+  const toIso = typeof to === 'string' ? toDateString(to) : to ? dateToIso(to) : '';
+  const a = fromIso ? isoToLocalDate(fromIso) : null;
+  const b = toIso ? isoToLocalDate(toIso) : null;
+  if (!a || !b) {
+    const left = formatDisplayDate(typeof from === 'string' ? from : fromIso || undefined);
+    const right = formatDisplayDate(typeof to === 'string' ? to : toIso || undefined);
+    if (left === '—' && right === '—') return '—';
+    return `${left} – ${right}`;
+  }
+  const locale = language === 'am' ? 'am-ET' : language === 'om' ? 'om-ET' : 'en-GB';
+  try {
+    const sameMonth =
+      a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear();
+    if (sameMonth) {
+      const end = b.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+      return `${a.getDate()}–${end}`;
+    }
+    const left = a.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+    const right = b.toLocaleDateString(locale, { day: 'numeric', month: 'short' });
+    return `${left} – ${right}`;
+  } catch {
+    return `${formatDisplayDate(fromIso)} – ${formatDisplayDate(toIso)}`;
+  }
+}
+
 /** Group check-in rows by local calendar day (newest days first). */
 export function groupCheckInsByDay<T extends { checked_in_at?: string | null }>(
   checkIns: T[] | null | undefined

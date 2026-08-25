@@ -28,10 +28,9 @@ import StatusBadge from '@/src/components/StatusBadge';
 import { RowActionLink } from '@/src/components/RowActionLink';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { MetricStatCard } from '@/src/components/MetricStatCard';
-import { SecondaryButton } from '@/src/components/ui/Button';
+import { LoadError } from '@/src/components/LoadError';
 import { space } from '@/src/theme/tokens';
 import { timings } from '@/src/theme/motion';
-import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
 import { formatPlanDisplayName } from '@/src/utils/planFormat';
 
@@ -302,12 +301,7 @@ export default function DashboardScreen() {
       {isLoading ? (
         <PageSkeleton variant="dashboard" padded={false} />
       ) : isError ? (
-        <View style={styles.errorWrap}>
-          <Text style={[styles.errorText, { color: c.error }]}>
-            {userFacingApiMessage(error, t('gymBoot.errorBody'), t('gymBoot.errorBody'))}
-          </Text>
-          <SecondaryButton label={t('gymBoot.retry')} onPress={() => void refetch()} />
-        </View>
+        <LoadError error={error} onRetry={() => void refetch()} />
       ) : data ? (
         <Animated.View entering={FadeIn.duration(timings.fadeMs)}>
           <View style={styles.grid}>
@@ -438,8 +432,6 @@ const styles = StyleSheet.create({
   income: { marginTop: 6, fontSize: 32, fontWeight: '700', letterSpacing: -0.8 },
   trend: { marginTop: 6, fontSize: 13, fontWeight: '600' },
   muted: { marginTop: 6, fontSize: 13 },
-  errorWrap: { alignItems: 'center', paddingTop: 32, gap: 12 },
-  errorText: { textAlign: 'center', fontSize: 15 },
   alertCard: {
     marginTop: space.lg,
     padding: space.lg,

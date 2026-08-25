@@ -9,7 +9,7 @@ const FRAME = '#ffffff';
 const CORNER = 12;
 const STROKE = 2.2;
 const DOT = 2.6;
-const DOT_INSET = 2.6;
+const DOT_INSET = 3.5;
 
 /**
  * Curved viewfinder corner + inner square — CBE-style QR chrome, tightened.

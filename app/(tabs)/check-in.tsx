@@ -50,7 +50,7 @@ import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useTabBarOverlayInset } from '@/src/theme/tabBar';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
-import { todayString } from '@/src/utils/date';
+import { todayString, formatDisplayDate } from '@/src/utils/date';
 import { isGymOwner } from '@/src/utils/roles';
 
 const CAP_OPTIONS: { value: number | null; labelKey: string }[] = [
@@ -61,6 +61,8 @@ const CAP_OPTIONS: { value: number | null; labelKey: string }[] = [
 ];
 
 const TODAY_LIST_LIMIT = 200;
+const TODAY_PREVIEW = 10;
+const EMPTY_LIST: never[] = [];
 
 /** Match web desk hero — brand→raised (light) / brand→surface (dark). */
 function DeskHeroAtmosphere({ isLight }: { isLight: boolean }) {
@@ -132,9 +134,11 @@ function isExpiredStatus(status: string) {
   return (status || '').toLowerCase() === 'expired';
 }
 
-function formatTime(value: string | null | undefined) {
+function formatTodayDeskTime(value: string | null | undefined) {
   if (!value) return '—';
-  return new Date(value).toLocaleTimeString([], {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleTimeString([], {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
@@ -159,6 +163,7 @@ export default function CheckInScreen() {
   const [debounced, setDebounced] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [todayExpanded, setTodayExpanded] = useState(false);
   const [todayPulse, setTodayPulse] = useState(false);
   const todayPulseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [cardErrors, setCardErrors] = useState<Record<number, CardError>>({});
@@ -205,6 +210,10 @@ export default function CheckInScreen() {
   }, [debounced, branchKey]);
 
   useEffect(() => {
+    setTodayExpanded(false);
+  }, [branchKey]);
+
+  useEffect(() => {
     return () => {
       if (todayPulseTimer.current) clearTimeout(todayPulseTimer.current);
     };
@@ -248,6 +257,9 @@ export default function CheckInScreen() {
   const members = searchQuery.data?.members ?? [];
   const todayRows = todaySnapQuery.data?.checkIns ?? [];
   const todayTotal = todaySnapQuery.data?.total ?? 0;
+  const todayHasMore = todayRows.length > TODAY_PREVIEW;
+  const visibleTodayRows =
+    todayExpanded || !todayHasMore ? todayRows : todayRows.slice(0, TODAY_PREVIEW);
   const alreadyTodayIds = useMemo(
     () => new Set(todayRows.map((row) => row.member_id)),
     [todayRows]
@@ -544,12 +556,12 @@ export default function CheckInScreen() {
       color: isLight ? '#0f766e' : '#99f6e4',
     },
     todayCount: {
-      fontSize: 44,
-      fontWeight: '700' as const,
+      fontSize: 56,
+      fontWeight: '600' as const,
       fontVariant: ['tabular-nums' as const],
-      color: theme.text,
-      lineHeight: 44,
-      letterSpacing: -1.4,
+      color: isLight ? '#0f172a' : '#e4e7ee',
+      lineHeight: 56,
+      letterSpacing: -1.6,
     },
     deskTools: {
       flexDirection: 'row' as const,
@@ -571,19 +583,46 @@ export default function CheckInScreen() {
       marginBottom: 2,
     },
     todayHeader: {
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
-      justifyContent: 'space-between' as const,
-      gap: 10,
       marginTop: 4,
       marginBottom: 8,
       paddingVertical: 4,
       paddingHorizontal: 6,
       marginHorizontal: -6,
       borderRadius: 12,
+      gap: 2,
     },
     todayHeaderPulse: {
       backgroundColor: isLight ? 'rgba(15,118,110,0.08)' : 'rgba(45,212,191,0.12)',
+    },
+    todayHeaderTop: {
+      flexDirection: 'row' as const,
+      alignItems: 'flex-start' as const,
+      justifyContent: 'space-between' as const,
+      gap: 10,
+    },
+    todayHeaderCopy: { flex: 1, minWidth: 0 },
+    todayDate: {
+      marginTop: 2,
+      fontSize: 12,
+      fontWeight: '500' as const,
+      fontVariant: ['tabular-nums' as const],
+      color: theme.dim,
+      letterSpacing: -0.1,
+    },
+    todayMetaRow: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      justifyContent: 'flex-end' as const,
+      paddingHorizontal: 4,
+      marginTop: 2,
+      marginBottom: 2,
+    },
+    todayTimeLabel: {
+      fontSize: 11,
+      fontWeight: '700' as const,
+      letterSpacing: 0.8,
+      textTransform: 'uppercase' as const,
+      color: theme.dim,
     },
     historyBtn: {
       flexDirection: 'row' as const,
@@ -591,6 +630,7 @@ export default function CheckInScreen() {
       gap: 5,
       paddingVertical: 6,
       paddingHorizontal: 4,
+      marginTop: 1,
     },
     historyBtnLabel: {
       fontSize: 13,
@@ -599,31 +639,68 @@ export default function CheckInScreen() {
       color: theme.muted,
     },
     todayPanel: { paddingVertical: 2, paddingHorizontal: 4, overflow: 'hidden' as const },
+    todayCard: {
+      paddingVertical: 0,
+      paddingHorizontal: 0,
+      overflow: 'hidden' as const,
+    },
     todayRow: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
-      gap: 10,
-      paddingVertical: 8,
-      paddingHorizontal: 12,
+      gap: 12,
+      paddingVertical: 10,
+      paddingHorizontal: 14,
     },
     todayRowDivider: {
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: theme.border,
-      marginHorizontal: 12,
+      marginHorizontal: 14,
     },
     todayName: {
-      fontSize: 14,
+      fontSize: 15,
       fontWeight: '600' as const,
       color: theme.text,
-      letterSpacing: -0.1,
+      letterSpacing: -0.15,
     },
-    todayBranch: { marginTop: 1, fontSize: 11, color: theme.dim },
+    todayBranch: { marginTop: 2, fontSize: 12, color: theme.dim },
     todayTime: {
-      fontSize: 13,
+      fontSize: 14,
       fontWeight: '700' as const,
       fontVariant: ['tabular-nums' as const],
-      letterSpacing: -0.1,
       color: theme.text,
+      letterSpacing: -0.2,
+    },
+    showMoreWrap: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: theme.border,
+      paddingHorizontal: 12,
+      paddingTop: 10,
+      paddingBottom: 12,
+    },
+    showMoreBtn: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      gap: 6,
+      minHeight: 42,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: isLight ? 'rgba(15,118,110,0.22)' : 'rgba(45,212,191,0.28)',
+      backgroundColor: isLight ? 'rgba(15,118,110,0.08)' : 'rgba(45,212,191,0.1)',
+      paddingHorizontal: 14,
+    },
+    showMoreLabel: {
+      fontSize: 14,
+      fontWeight: '600' as const,
+      letterSpacing: -0.1,
+      color: isLight ? '#0f766e' : theme.accentText,
+    },
+    showMoreMeta: {
+      marginTop: 6,
+      textAlign: 'center' as const,
+      fontSize: 11,
+      fontWeight: '500' as const,
+      color: theme.dim,
     },
     resultsGrid: {
       flexDirection: 'row' as const,
@@ -670,8 +747,9 @@ export default function CheckInScreen() {
           styles.content,
           { paddingBottom: SCAN_QR_DOCK_BOTTOM + 46 + 36 + tabOverlayInset },
         ]}
-        data={todayRows}
-        keyExtractor={(item) => String(item.id)}
+        data={EMPTY_LIST}
+        keyExtractor={() => 'check-in-shell'}
+        renderItem={() => null}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         refreshControl={
@@ -795,22 +873,32 @@ export default function CheckInScreen() {
             ) : null}
 
             <View style={[styles.todayHeader, todayPulse ? styles.todayHeaderPulse : null]}>
-              <Text display style={[styles.sectionTitle, { marginBottom: 0, flex: 1 }]}>
-                {t('checkIn.checkedInTodayTitle')}
-              </Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={t('checkIn.historyTitle')}
-                onPress={() => {
-                  void Haptics.selectionAsync().catch(() => undefined);
-                  setHistoryOpen(true);
-                }}
-                hitSlop={8}
-                style={({ pressed }) => [styles.historyBtn, { opacity: pressed ? 0.65 : 1 }]}
-              >
-                <Ionicons name="time-outline" size={16} color={c.muted} />
-                <Text style={styles.historyBtnLabel}>{t('checkIn.historyTitle')}</Text>
-              </Pressable>
+              <View style={styles.todayHeaderTop}>
+                <View style={styles.todayHeaderCopy}>
+                  <Text display style={[styles.sectionTitle, { marginBottom: 0 }]}>
+                    {t('checkIn.checkedInTodayTitle')}
+                  </Text>
+                  <Text style={styles.todayDate}>{formatDisplayDate(todayString())}</Text>
+                </View>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t('checkIn.historyTitle')}
+                  onPress={() => {
+                    void Haptics.selectionAsync().catch(() => undefined);
+                    setHistoryOpen(true);
+                  }}
+                  hitSlop={8}
+                  style={({ pressed }) => [styles.historyBtn, { opacity: pressed ? 0.65 : 1 }]}
+                >
+                  <Ionicons name="time-outline" size={16} color={c.muted} />
+                  <Text style={styles.historyBtnLabel}>{t('checkIn.historyTitle')}</Text>
+                </Pressable>
+              </View>
+              {todayRows.length > 0 ? (
+                <View style={styles.todayMetaRow}>
+                  <Text style={styles.todayTimeLabel}>{t('checkIn.todayTimeLabel')}</Text>
+                </View>
+              ) : null}
             </View>
 
             {todayRows.length === 0 && !todaySnapQuery.isLoading ? (
@@ -825,43 +913,68 @@ export default function CheckInScreen() {
                 />
               </SoftSurface>
             ) : null}
+
+            {todayRows.length > 0 ? (
+              <SoftSurface variant="panel" style={styles.todayCard}>
+                {visibleTodayRows.map((row, index) => (
+                  <View key={row.id}>
+                    {index > 0 ? <View style={styles.todayRowDivider} /> : null}
+                    <View style={styles.todayRow}>
+                      <MemberPhoto
+                        memberId={row.member_id}
+                        name={row.member_name || '?'}
+                        token={token}
+                        size={36}
+                        hasPhoto={Boolean(row.member_photo_url)}
+                      />
+                      <View style={{ flex: 1, minWidth: 0 }}>
+                        <Text listRow style={styles.todayName} numberOfLines={1}>
+                          {row.member_name || '—'}
+                        </Text>
+                        {showBranchOnToday && row.branch_name ? (
+                          <Text style={styles.todayBranch} numberOfLines={1}>
+                            {row.branch_name}
+                          </Text>
+                        ) : null}
+                      </View>
+                      <Text style={styles.todayTime}>{formatTodayDeskTime(row.checked_in_at)}</Text>
+                    </View>
+                  </View>
+                ))}
+                {todayHasMore ? (
+                  <View style={styles.showMoreWrap}>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        todayExpanded ? t('checkIn.showLess') : t('checkIn.showMore')
+                      }
+                      onPress={() => {
+                        void Haptics.selectionAsync().catch(() => undefined);
+                        setTodayExpanded((v) => !v);
+                      }}
+                      style={({ pressed }) => [styles.showMoreBtn, { opacity: pressed ? 0.82 : 1 }]}
+                    >
+                      <Text style={styles.showMoreLabel}>
+                        {todayExpanded ? t('checkIn.showLess') : t('checkIn.showMore')}
+                      </Text>
+                      <Ionicons
+                        name={todayExpanded ? 'chevron-up' : 'chevron-down'}
+                        size={16}
+                        color={isLight ? '#0f766e' : c.accentText}
+                      />
+                    </Pressable>
+                    <Text style={styles.showMoreMeta}>
+                      {t('checkIn.showingOf', {
+                        shown: visibleTodayRows.length,
+                        total: todayRows.length,
+                      })}
+                    </Text>
+                  </View>
+                ) : null}
+              </SoftSurface>
+            ) : null}
           </View>
         }
-        renderItem={({ item: row, index }) => (
-          <View
-            style={{
-              backgroundColor: c.card,
-              borderTopLeftRadius: index === 0 ? 16 : 0,
-              borderTopRightRadius: index === 0 ? 16 : 0,
-              borderBottomLeftRadius: index === todayRows.length - 1 ? 16 : 0,
-              borderBottomRightRadius: index === todayRows.length - 1 ? 16 : 0,
-              overflow: 'hidden',
-            }}
-          >
-            {index > 0 ? <View style={styles.todayRowDivider} /> : null}
-            <View style={styles.todayRow}>
-              <MemberPhoto
-                memberId={row.member_id}
-                name={row.member_name || '?'}
-                token={token}
-                size={34}
-                hasPhoto={Boolean(row.member_photo_url)}
-              />
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text listRow style={styles.todayName} numberOfLines={1}>
-                  {row.member_name || '—'}
-                </Text>
-                {showBranchOnToday && row.branch_name ? (
-                  <Text style={styles.todayBranch} numberOfLines={1}>
-                    {row.branch_name}
-                  </Text>
-                ) : null}
-              </View>
-              <Text style={styles.todayTime}>{formatTime(row.checked_in_at)}</Text>
-            </View>
-          </View>
-        )}
-        ListFooterComponent={todayRows.length > 0 ? <View style={{ height: 6 }} /> : null}
       />
 
       <AttendanceHistorySheet

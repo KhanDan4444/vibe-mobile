@@ -226,7 +226,7 @@ export default function MessagesScreen() {
                 token={token!}
                 multiColumn={listColumns > 1}
                 columnStyle={listColumnItemStyle}
-                showBranch={showBranchFilter}
+                showBranch={showBranchFilter && selectedBranchId === 'all'}
                 typeFiltered={typeFiltered}
                 onPress={() => router.push(`/member/${item.member_id}`)}
               />

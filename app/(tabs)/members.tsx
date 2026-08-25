@@ -14,6 +14,7 @@ import { BranchFilterBar } from '@/src/components/BranchFilterBar';
 import { SortPicker } from '@/src/components/SortPicker';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { EmptyState } from '@/src/components/EmptyState';
+import { LoadError } from '@/src/components/LoadError';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
@@ -25,7 +26,6 @@ import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useTabBarOverlayInset } from '@/src/theme/tabBar';
 import StatusBadge from '@/src/components/StatusBadge';
 import { RowActionLink } from '@/src/components/RowActionLink';
-import { SecondaryButton } from '@/src/components/ui/Button';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { FilterChip } from '@/src/components/FilterChip';
 import { SearchField } from '@/src/components/SearchField';
@@ -33,7 +33,6 @@ import { type ThemeColors } from '@/src/theme/tokens';
 import { fabElevation } from '@/src/theme/elevation';
 import { DEFAULT_MEMBER_SORT, MEMBER_SORT_OPTIONS, type MemberSortId } from '@/src/utils/listSort';
 import { isGymOwner } from '@/src/utils/roles';
-import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
 import { formatDisplayDate } from '@/src/utils/date';
 import { canRenewMember } from '@/src/utils/memberRenew';
@@ -218,12 +217,12 @@ export default function MembersScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ filter?: string; focus?: string }>();
   const { token, user } = useAuth();
-  const { selectedBranchId } = useBranchScope();
+  const { selectedBranchId, showBranchFilter } = useBranchScope();
   const { readOnly } = useGymReadOnly();
   const { showFlash } = useFlash();
   const queryClient = useQueryClient();
   const owner = isGymOwner(user?.role);
-  const showBranchColumn = owner && selectedBranchId === 'all';
+  const showBranchColumn = owner && showBranchFilter && selectedBranchId === 'all';
   const { colors: c, theme } = useTheme();
   const { t } = useTranslation();
   const styles = useThemedStyles(createStyles);
@@ -481,12 +480,7 @@ export default function MembersScreen() {
       {query.isLoading ? (
         <PageSkeleton variant="members" />
       ) : query.isError ? (
-        <View style={styles.errorWrap}>
-          <Text style={styles.errorText}>
-            {userFacingApiMessage(query.error, t('gymBoot.errorBody'), t('gymBoot.errorBody'))}
-          </Text>
-          <SecondaryButton label={t('gymBoot.retry')} onPress={() => void query.refetch()} />
-        </View>
+        <LoadError error={query.error} onRetry={() => void query.refetch()} />
       ) : (
         <FlatList
           key={`members-cols-${listColumns}`}
@@ -647,8 +641,6 @@ function createStyles(c: ThemeColors) {
     unpaid: { marginTop: 4, fontSize: 11, fontWeight: '700' as const, color: c.statusUnpaid },
     removed: { marginTop: 2, fontSize: 12, color: c.dim },
     empty: { textAlign: 'center' as const, color: c.dim, marginTop: 40, fontSize: 15, alignSelf: 'center' as const, maxWidth: 360 },
-    errorWrap: { alignItems: 'center' as const, paddingTop: 48, gap: 12, paddingHorizontal: 24 },
-    errorText: { textAlign: 'center' as const, color: c.error, fontSize: 15 },
     fab: {
       position: 'absolute' as const,
       bottom: 24,

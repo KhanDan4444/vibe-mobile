@@ -20,6 +20,7 @@ export function BottomSheet({
   footer,
   showCloseButton = false,
   compact = false,
+  aboveTitle,
 }: {
   visible: boolean;
   title: string;
@@ -31,6 +32,8 @@ export function BottomSheet({
   showCloseButton?: boolean;
   /** Tighter padding for short action menus (Manage, overflow). */
   compact?: boolean;
+  /** Optional row above the title (e.g. back link in drill-down sheets). */
+  aboveTitle?: React.ReactNode;
 }) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -66,6 +69,9 @@ export function BottomSheet({
       backgroundColor: colors.border,
       marginTop: compact ? 8 : 12,
       marginBottom: compact ? 8 : 14,
+    },
+    aboveTitle: {
+      marginBottom: 6,
     },
     titleRow: {
       flexDirection: 'row' as const,
@@ -104,6 +110,7 @@ export function BottomSheet({
         />
         <View style={[styles.sheet, elevationStyle('sheet', theme)]}>
           <View style={styles.handle} />
+          {aboveTitle ? <View style={styles.aboveTitle}>{aboveTitle}</View> : null}
           <View style={styles.titleRow}>
             <Text style={displayTextStyle(language, styles.title)} numberOfLines={1}>
               {title}

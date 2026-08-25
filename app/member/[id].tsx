@@ -24,6 +24,7 @@ import type { AppLanguage } from '@/src/i18n';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useLoadRetry } from '@/src/hooks/useLoadRetry';
 import { useFlash } from '@/src/context/FlashContext';
+import { useBranchScope } from '@/src/context/BranchContext';
 import { scheduleDeleteWithUndo, restoreWithUndoFlash } from '@/src/utils/scheduleWithUndo';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
@@ -214,6 +215,8 @@ export default function MemberDetailScreen() {
   const queryClient = useQueryClient();
   const { token, user } = useAuth();
   const { readOnly } = useGymReadOnly();
+  const { activeBranches } = useBranchScope();
+  const showMemberBranch = activeBranches.length > 1;
   const { colors: c } = useTheme();
   const { language } = usePreferences();
   const { t } = useTranslation();
@@ -518,7 +521,7 @@ export default function MemberDetailScreen() {
         ) : null}
         <Row label={t('member.start')} value={formatDisplayDate(member.start_date)} styles={styles} language={language} />
         <Row label={t('member.end')} value={formatDisplayDate(member.end_date)} styles={styles} language={language} />
-        {member.branch_name ? (
+        {showMemberBranch && member.branch_name ? (
           <Row
             label={t('member.branch')}
             value={branchDisplayName(member.branch_name)}

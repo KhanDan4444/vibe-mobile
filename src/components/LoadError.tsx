@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
@@ -7,6 +7,7 @@ import { useTheme } from '@/src/context/PreferencesContext';
 import { space } from '@/src/theme/tokens';
 import { useTranslation } from 'react-i18next';
 import { isNetworkApiError, isNetworkErrorMessage } from '@/src/utils/apiErrorMessage';
+import { settleMinBusy } from '@/src/utils/minBusy';
 
 type Props = {
   message?: string;
@@ -21,7 +22,15 @@ export function LoadError({ message, error, onRetry, loading = false }: Props) {
   const { colors: c } = useTheme();
   const { t } = useTranslation();
   const [localRetrying, setLocalRetrying] = useState(false);
+  const mounted = useRef(true);
   const busy = loading || localRetrying;
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   const display =
     isNetworkApiError(error) || isNetworkErrorMessage(message) || !message?.trim()
@@ -40,9 +49,13 @@ export function LoadError({ message, error, onRetry, loading = false }: Props) {
             onPress={() => {
               if (busy) return;
               setLocalRetrying(true);
-              void Promise.resolve(onRetry()).finally(() => {
-                setLocalRetrying(false);
-              });
+              const started = Date.now();
+              void Promise.resolve(onRetry())
+                .catch(() => undefined)
+                .finally(async () => {
+                  await settleMinBusy(started);
+                  if (mounted.current) setLocalRetrying(false);
+                });
             }}
           />
         </View>

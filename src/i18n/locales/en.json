@@ -439,6 +439,7 @@
     "settingsSaved": "Visit rules saved",
     "settingsFailed": "Could not save visit rules",
     "showMore": "Show more",
+    "showLess": "Show less",
     "showingOf": "{{shown}} of {{total}}",
     "scanAction": "Scan QR",
     "scanTitle": "Scan member QR",

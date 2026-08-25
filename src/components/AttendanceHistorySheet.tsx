@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   Pressable,
-  ScrollView,
   StyleSheet,
   TextInput,
   View,
@@ -22,7 +21,7 @@ import {
   attendanceDayRelative,
   attendanceWeekRange,
   formatAttendanceDayLabel,
-  formatDisplayDate,
+  formatAttendanceWeekRangeLabel,
   groupCheckInsByDay,
 } from '@/src/utils/date';
 import { radiusMd } from '@/src/theme/tokens';
@@ -116,10 +115,7 @@ export function AttendanceHistorySheet({
 
   const lang = language || i18n.language;
   const title = selectedDay ? dayLabel(selectedDay, lang, t) : t('checkIn.historyTitle');
-  const weekSubtitle = t('checkIn.weekRangeSubtitle', {
-    from: formatDisplayDate(weekRange.from),
-    to: formatDisplayDate(weekRange.to),
-  });
+  const weekRangeLabel = formatAttendanceWeekRangeLabel(weekRange.from, weekRange.to, lang);
 
   const openDay = (day: string) => {
     void Haptics.selectionAsync().catch(() => undefined);
@@ -140,23 +136,32 @@ export function AttendanceHistorySheet({
   };
 
   return (
-    <BottomSheet visible={visible} title={title} onClose={handleClose} showCloseButton>
-      {selectedDay ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('checkIn.historyTitle')}
-          onPress={backToDays}
-          style={({ pressed }) => [styles.backRow, { opacity: pressed ? 0.7 : 1 }]}
-          hitSlop={6}
-        >
-          <Ionicons name="chevron-back" size={18} color={c.accentText} />
-          <Text style={[styles.backLabel, { color: c.accentText }]}>
-            {t('checkIn.historyTitle')}
-          </Text>
-        </Pressable>
-      ) : (
+    <BottomSheet
+      visible={visible}
+      title={title}
+      onClose={handleClose}
+      showCloseButton
+      aboveTitle={
+        selectedDay ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('checkIn.historyTitle')}
+            onPress={backToDays}
+            style={({ pressed }) => [styles.backRow, { opacity: pressed ? 0.7 : 1 }]}
+            hitSlop={6}
+          >
+            <Ionicons name="chevron-back" size={18} color={c.accentText} />
+            <Text style={[styles.backLabel, { color: c.accentText }]}>
+              {t('checkIn.historyTitle')}
+            </Text>
+          </Pressable>
+        ) : undefined
+      }
+    >
+      {!selectedDay ? (
         <View style={styles.weekHeader}>
-          <Text style={[styles.weekSubtitle, { color: c.dim }]}>{weekSubtitle}</Text>
+          <Text style={[styles.weekBody, { color: c.muted }]}>{t('checkIn.historyBody')}</Text>
+          <Text style={[styles.weekSubtitle, { color: c.muted }]}>{weekRangeLabel}</Text>
           <View style={styles.weekChipRow}>
             {(['this', 'last'] as const).map((scope) => {
               const active = weekScope === scope;
@@ -187,7 +192,7 @@ export function AttendanceHistorySheet({
                   <Text
                     style={{
                       fontSize: 13,
-                      fontWeight: active ? '700' : '600',
+                      fontWeight: active ? '600' : '500',
                       color: active ? (isLight ? '#0f766e' : c.accentText) : c.muted,
                     }}
                   >
@@ -198,7 +203,7 @@ export function AttendanceHistorySheet({
             })}
           </View>
         </View>
-      )}
+      ) : null}
 
       {historyQuery.isLoading ? (
         selectedDay ? (
@@ -239,7 +244,7 @@ export function AttendanceHistorySheet({
               clearButtonMode="while-editing"
             />
           </View>
-          <ScrollView style={{ maxHeight: 400 }} keyboardShouldPersistTaps="handled">
+          <View>
             {filteredRows.length === 0 ? (
               <EmptyState
                 tone="quiet"
@@ -266,7 +271,7 @@ export function AttendanceHistorySheet({
                       memberId={row.member_id}
                       name={row.member_name || '?'}
                       token={token}
-                      size={34}
+                      size={32}
                       hasPhoto={Boolean(row.member_photo_url)}
                     />
                     <View style={{ flex: 1, minWidth: 0 }}>
@@ -279,14 +284,14 @@ export function AttendanceHistorySheet({
                         </Text>
                       ) : null}
                     </View>
-                    <Text style={[styles.memberTime, { color: c.text }]}>
+                    <Text style={[styles.memberTime, { color: c.dim }]}>
                       {formatTime(row.checked_in_at)}
                     </Text>
                   </View>
                 </Animated.View>
               ))
             )}
-          </ScrollView>
+          </View>
         </Animated.View>
       ) : byDay.length === 0 ? (
         <Animated.View entering={FadeIn.duration(220)}>
@@ -305,56 +310,52 @@ export function AttendanceHistorySheet({
           />
         </Animated.View>
       ) : (
-        <Animated.View key={`days-${weekScope}`} entering={FadeIn.duration(200)}>
-          <ScrollView style={{ maxHeight: 440 }} keyboardShouldPersistTaps="handled">
-            {byDay.map(([day, rows], index) => (
-              <Animated.View
-                key={day}
-                entering={FadeInDown.delay(Math.min(index, 6) * 30).duration(200)}
+        <Animated.View key={`days-${weekScope}`} entering={FadeIn.duration(200)} style={{ gap: 6 }}>
+          {byDay.map(([day, rows], index) => (
+            <Animated.View
+              key={day}
+              entering={FadeInDown.delay(Math.min(index, 6) * 30).duration(200)}
+            >
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${dayLabel(day, lang, t)}, ${t('checkIn.dayVisitCount', {
+                  count: rows.length,
+                })}`}
+                onPress={() => openDay(day)}
+                style={({ pressed }) => [
+                  styles.dayRow,
+                  {
+                    backgroundColor: pressed
+                      ? isLight
+                        ? 'rgba(15,118,110,0.06)'
+                        : c.accentSoft
+                      : isLight
+                        ? 'rgba(255,255,255,0.55)'
+                        : c.inputBg,
+                    borderColor: isLight ? 'rgba(15,118,110,0.12)' : c.border,
+                  },
+                ]}
               >
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={`${dayLabel(day, lang, t)}, ${t('checkIn.dayVisitCount', {
-                    count: rows.length,
-                  })}`}
-                  onPress={() => openDay(day)}
-                  style={({ pressed }) => [
-                    styles.dayRow,
+                <View
+                  style={[
+                    styles.dayAccent,
                     {
-                      backgroundColor: pressed
-                        ? isLight
-                          ? 'rgba(15,118,110,0.06)'
-                          : c.accentSoft
-                        : isLight
-                          ? 'rgba(255,255,255,0.55)'
-                          : c.inputBg,
-                      borderColor: isLight ? 'rgba(15,118,110,0.12)' : c.border,
+                      backgroundColor: isLight
+                        ? 'rgba(15,118,110,0.55)'
+                        : 'rgba(45,212,191,0.55)',
                     },
                   ]}
-                >
-                  <View
-                    style={[
-                      styles.dayAccent,
-                      {
-                        backgroundColor: isLight
-                          ? 'rgba(15,118,110,0.55)'
-                          : 'rgba(45,212,191,0.55)',
-                      },
-                    ]}
-                  />
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <Text style={[styles.dayName, { color: c.text }]}>
-                      {dayLabel(day, lang, t)}
-                    </Text>
-                    <Text style={{ fontSize: 12, color: c.dim, marginTop: 2 }}>
-                      {t('checkIn.dayVisitCount', { count: rows.length })}
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={c.dim} />
-                </Pressable>
-              </Animated.View>
-            ))}
-          </ScrollView>
+                />
+                <Text style={[styles.dayName, { color: c.text }]} numberOfLines={1}>
+                  {dayLabel(day, lang, t)}
+                </Text>
+                <Text style={[styles.dayCount, { color: c.dim }]}>
+                  {t('checkIn.dayVisitCount', { count: rows.length })}
+                </Text>
+                <Ionicons name="chevron-forward" size={16} color={c.dim} />
+              </Pressable>
+            </Animated.View>
+          ))}
         </Animated.View>
       )}
     </BottomSheet>
@@ -366,33 +367,39 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
-    marginBottom: 12,
     alignSelf: 'flex-start',
   },
-  backLabel: { fontSize: 14, fontWeight: '600' },
+  backLabel: { fontSize: 13, fontWeight: '600' },
   weekHeader: {
-    marginBottom: 12,
-    gap: 10,
+    marginBottom: 14,
+    gap: 6,
+  },
+  weekBody: {
+    fontSize: 14,
+    fontWeight: '400',
+    lineHeight: 20,
   },
   weekSubtitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '500',
-    letterSpacing: 0.1,
+    letterSpacing: -0.15,
   },
   weekChipRow: {
     flexDirection: 'row',
     gap: 8,
+    marginTop: 6,
   },
   weekChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    minHeight: 32,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 999,
     borderWidth: 1,
+    justifyContent: 'center',
   },
   dayMeta: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '500',
-    marginBottom: 2,
   },
   searchShell: {
     flexDirection: 'row',
@@ -401,23 +408,22 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: radiusMd,
     paddingHorizontal: 12,
-    minHeight: 42,
+    minHeight: 40,
   },
   searchInput: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 14,
     paddingVertical: 8,
   },
   dayRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingVertical: 14,
+    gap: 10,
+    paddingVertical: 12,
     paddingHorizontal: 12,
     paddingLeft: 14,
     borderRadius: radiusMd,
     borderWidth: StyleSheet.hairlineWidth,
-    marginBottom: 8,
     overflow: 'hidden',
   },
   dayAccent: {
@@ -425,28 +431,35 @@ const styles = StyleSheet.create({
     left: 0,
     top: 10,
     bottom: 10,
-    width: 3,
-    borderRadius: 2,
+    width: 2,
+    borderRadius: 1,
   },
   dayName: {
-    fontSize: 15,
+    flex: 1,
+    minWidth: 0,
+    fontSize: 14,
     fontWeight: '600',
     letterSpacing: -0.15,
+  },
+  dayCount: {
+    fontSize: 12,
+    fontWeight: '500',
+    flexShrink: 0,
   },
   memberRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    paddingVertical: 9,
+    paddingVertical: 7,
   },
   memberName: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     letterSpacing: -0.1,
   },
   memberTime: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '500',
     fontVariant: ['tabular-nums'],
   },
   divider: {

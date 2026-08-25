@@ -12,6 +12,7 @@ import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { SortPicker } from '@/src/components/SortPicker';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { EmptyState } from '@/src/components/EmptyState';
+import { LoadError } from '@/src/components/LoadError';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useDeleteFlash } from '@/src/hooks/useSaveFlash';
 import { FLASH_PLAN_DELETED_MS } from '@/src/components/FlashBanner';
@@ -22,10 +23,8 @@ import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
 import { runInBackground } from '@/src/utils/runInBackground';
 import { formatPlanDuration, formatPlanDisplayName } from '@/src/utils/planFormat';
 import { formatEtb } from '@/src/utils/formatMoney';
-import { SecondaryButton } from '@/src/components/ui/Button';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import type { PlanRow } from '@/src/types/api';
-import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { fabElevation } from '@/src/theme/elevation';
 import { statusWashOpaque } from '@/src/utils/statusWash';
 
@@ -239,8 +238,6 @@ export default function PlansScreen() {
     listHeader: { marginBottom: 10, gap: 10 },
     statusLine: { fontSize: 13, color: colors.dim, lineHeight: 18 },
     sortRow: { alignItems: 'flex-start' as const },
-    errorWrap: { alignItems: 'center' as const, paddingTop: 48, gap: 12, paddingHorizontal: 24 },
-    errorText: { textAlign: 'center' as const, color: colors.error, fontSize: 15 },
     fab: {
       position: 'absolute' as const,
       bottom: 24,
@@ -359,12 +356,7 @@ export default function PlansScreen() {
         {query.isLoading ? (
           <PageSkeleton variant="plans" />
         ) : query.isError ? (
-          <View style={styles.errorWrap}>
-            <Text style={styles.errorText}>
-              {userFacingApiMessage(query.error, t('gymBoot.errorBody'), t('gymBoot.errorBody'))}
-            </Text>
-            <SecondaryButton label={t('gymBoot.retry')} onPress={() => void query.refetch()} />
-          </View>
+          <LoadError error={query.error} onRetry={() => void query.refetch()} />
         ) : (
           <FlatList
             key={`plans-cols-${listColumns}`}

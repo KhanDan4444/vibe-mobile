@@ -439,6 +439,7 @@
     "settingsSaved": "የጉብኝት ህጎች ተቀምጠዋል",
     "settingsFailed": "የጉብኝት ህጎች ማስቀመጥ አልተቻለም",
     "showMore": "ተጨማሪ አሳይ",
+    "showLess": "ያነሰ አሳይ",
     "showingOf": "{{shown}} ከ {{total}}",
     "scanAction": "QR ስካን",
     "scanTitle": "የአባል QR ስካን",
