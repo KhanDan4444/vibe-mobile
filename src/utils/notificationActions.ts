@@ -1,15 +1,20 @@
 import i18n from '@/src/i18n';
 import type { DashboardNotification } from '@/src/types/api';
+import { todayString } from '@/src/utils/date';
 
 export type NotificationAction = 'renew' | 'payment' | 'view';
 
 export function notificationAction(item: DashboardNotification): NotificationAction | null {
   if (!item.memberId) return null;
-  if (item.suggestedAction === 'renew' || item.suggestedAction === 'payment') {
+  if (item.suggestedAction === 'renew' || item.suggestedAction === 'payment' || item.suggestedAction === 'view') {
     return item.suggestedAction;
   }
   if (item.kind === 'unpaid') return 'payment';
-  if (item.kind === 'due_soon' || item.kind === 'expired') return 'renew';
+  if (item.kind === 'expired') return 'renew';
+  if (item.kind === 'due_soon') {
+    const end = String(item.endDate || '').split('T')[0];
+    return end && end <= todayString() ? 'renew' : 'view';
+  }
   // Payment recorded / info alerts — same as web "View member"
   if (item.type === 'info' || item.kind === 'payment_recorded') return 'view';
   return null;

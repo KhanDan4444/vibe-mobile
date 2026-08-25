@@ -23,7 +23,7 @@ import { PAYMENT_METHODS } from '@/src/constants/payments';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { isOfflineQueued } from '@/src/offline/types';
 import { formatDisplayDate, isDateRangeValid, todayString } from '@/src/utils/date';
-import { defaultRenewStartDate } from '@/src/utils/memberRenew';
+import { defaultRenewStartDate, canRenewMember } from '@/src/utils/memberRenew';
 import {
   boundsForPaymentOnTerm,
   boundsForRenewStart,
@@ -180,6 +180,10 @@ export default function RenewScreen() {
         />
       </Screen>
     );
+  }
+
+  if (member && !canRenewMember(member)) {
+    return <Redirect href={`/member/${memberId}`} />;
   }
 
   return (

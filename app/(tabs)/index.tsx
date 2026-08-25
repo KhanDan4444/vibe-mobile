@@ -32,6 +32,7 @@ import { LoadError } from '@/src/components/LoadError';
 import { space } from '@/src/theme/tokens';
 import { timings } from '@/src/theme/motion';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
+import { canRenewMember } from '@/src/utils/memberRenew';
 import { formatPlanDisplayName } from '@/src/utils/planFormat';
 
 const ATTENTION_PREVIEW = 3;
@@ -226,8 +227,8 @@ export default function DashboardScreen() {
         {alertMembers.length ? (
           <>
             {alertMembers.map((member) => {
-              const status = member.status.toLowerCase();
-              const route = status === 'expired' || status === 'due soon' ? `/renew/${member.id}` : `/member/${member.id}`;
+              const renewable = canRenewMember(member);
+              const route = renewable ? `/renew/${member.id}` : `/member/${member.id}`;
               return (
                 <AlertMemberRow
                   key={member.id}
@@ -236,7 +237,7 @@ export default function DashboardScreen() {
                   token={token!}
                   actionColor={linkColor}
                   onOpen={() => goMembers(filterForMemberStatus(member.status))}
-                  onAction={readOnly ? undefined : () => router.push(route as never)}
+                  onAction={readOnly ? undefined : renewable ? () => router.push(route as never) : undefined}
                 />
               );
             })}
