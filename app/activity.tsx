@@ -1,6 +1,14 @@
-import { Redirect } from 'expo-router';
-import { useState } from 'react';
-import { FlatList, RefreshControl, View } from 'react-native';
+import { Redirect, useRouter } from 'expo-router';
+import { useMemo, useState } from 'react';
+import {
+  FlatList,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  View,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { AppText as Text } from '@/src/components/AppText';
 import { ListFooterSkeleton, PageSkeleton } from '@/src/components/Skeleton';
 import { LoadError } from '@/src/components/LoadError';
@@ -13,11 +21,17 @@ import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { EmptyState } from '@/src/components/EmptyState';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useBranchScope } from '@/src/context/BranchContext';
-import { useTheme } from '@/src/context/PreferencesContext';
+import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
-import { formatDisplayDateTime } from '@/src/utils/date';
-import { formatAuditAction, formatAuditDetails, formatActorRole } from '@/src/utils/activityLabels';
+import { timings } from '@/src/theme/motion';
+import { formatLogTimestamp } from '@/src/utils/date';
+import {
+  activityActionIcon,
+  formatAuditAction,
+  formatAuditDetails,
+  formatActorRole,
+} from '@/src/utils/activityLabels';
 import { useTranslation } from 'react-i18next';
 import { isGymOwner } from '@/src/utils/roles';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
@@ -31,38 +45,108 @@ const ACTOR_OPTION_KEYS: { value: ActorFilter; labelKey: string }[] = [
   { value: 'owner', labelKey: 'activity.ownerOnly' },
 ];
 
+function isRowClickable(entry: ActivityLogRow) {
+  if (entry.entity_type === 'member' && entry.entity_id) return true;
+  if (entry.entity_type === 'payment') return true;
+  if (entry.entity_type === 'plan') return true;
+  if (entry.entity_type === 'staff') return true;
+  return false;
+}
+
+function openActivityTarget(entry: ActivityLogRow, router: ReturnType<typeof useRouter>) {
+  const type = entry.entity_type;
+  if (type === 'member' && entry.entity_id) {
+    router.push(`/member/${entry.entity_id}` as never);
+    return;
+  }
+  if (type === 'payment') {
+    const memberId = entry.details?.member_id;
+    if (memberId) {
+      router.push(`/member/${memberId}` as never);
+      return;
+    }
+    router.push('/(tabs)/revenue' as never);
+    return;
+  }
+  if (type === 'plan') {
+    router.push('/plans' as never);
+    return;
+  }
+  if (type === 'staff') {
+    router.push('/team' as never);
+  }
+}
+
 function ActivityItem({
   entry,
-  multiColumn,
-  columnStyle,
   showBranch,
+  isFirst,
+  isLight,
+  language,
+  onPress,
 }: {
   entry: ActivityLogRow;
-  multiColumn?: boolean;
-  columnStyle?: object;
   showBranch?: boolean;
+  isFirst?: boolean;
+  isLight: boolean;
+  language: string;
+  onPress?: () => void;
 }) {
   const { t } = useTranslation();
   const isOwner = entry.actor_role === 'Gym Owner';
   const styles = useThemedStyles((theme) => ({
-    card: {
-      padding: 14,
-      marginBottom: 12,
+    row: {
+      flexDirection: 'row' as const,
+      alignItems: 'flex-start' as const,
+      gap: 12,
+      paddingVertical: 11,
+      paddingHorizontal: 14,
     },
-    cardColumn: { marginBottom: 0 },
-    cardHeader: { flexDirection: 'row' as const, justifyContent: 'space-between' as const, gap: 8 },
-    action: { flex: 1, fontSize: 15, fontWeight: '600' as const, color: theme.text },
-    time: { fontSize: 11, color: theme.dim },
-    entity: { marginTop: 6, fontSize: 14, color: theme.muted },
-    details: { marginTop: 4, fontSize: 13, color: theme.text },
+    divider: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: isLight ? 'rgba(15,23,42,0.06)' : 'rgba(228,231,238,0.08)',
+      marginHorizontal: 14,
+    },
+    iconWrap: {
+      width: 34,
+      height: 34,
+      borderRadius: 10,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      backgroundColor: isLight ? 'rgba(15,118,110,0.08)' : 'rgba(45,212,191,0.1)',
+      marginTop: 1,
+    },
+    body: { flex: 1, minWidth: 0 },
+    headerRow: {
+      flexDirection: 'row' as const,
+      alignItems: 'flex-start' as const,
+      justifyContent: 'space-between' as const,
+      gap: 10,
+    },
+    action: {
+      flex: 1,
+      fontSize: 15,
+      fontWeight: '600' as const,
+      color: theme.text,
+      letterSpacing: -0.2,
+    },
+    time: {
+      fontSize: 12,
+      fontWeight: '500' as const,
+      color: theme.dim,
+      fontVariant: ['tabular-nums' as const],
+      letterSpacing: -0.1,
+    },
+    entity: { marginTop: 4, fontSize: 14, color: theme.muted },
+    details: { marginTop: 3, fontSize: 13, color: theme.text, lineHeight: 18 },
     actorRow: {
-      marginTop: 8,
+      marginTop: 7,
       flexDirection: 'row' as const,
       flexWrap: 'wrap' as const,
       alignItems: 'center' as const,
       gap: 6,
     },
-    actorName: { fontSize: 12, fontWeight: '600' as const, color: theme.muted },
+    actorName: { fontSize: 12, fontWeight: '600' as const, color: theme.dim },
     roleBadge: {
       borderRadius: 999,
       borderWidth: 1,
@@ -70,12 +154,12 @@ function ActivityItem({
       paddingVertical: 2,
     },
     roleBadgeOwner: {
-      backgroundColor: 'rgba(100, 116, 139, 0.18)',
-      borderColor: 'rgba(100, 116, 139, 0.35)',
+      backgroundColor: 'rgba(100, 116, 139, 0.14)',
+      borderColor: 'rgba(100, 116, 139, 0.28)',
     },
     roleBadgeStaff: {
-      backgroundColor: 'rgba(249, 115, 22, 0.12)',
-      borderColor: 'rgba(249, 115, 22, 0.28)',
+      backgroundColor: 'rgba(249, 115, 22, 0.1)',
+      borderColor: 'rgba(249, 115, 22, 0.24)',
     },
     roleBadgeText: { fontSize: 10, fontWeight: '700' as const },
     roleBadgeTextOwner: { color: theme.statusNeutral },
@@ -84,49 +168,96 @@ function ActivityItem({
   }));
 
   const details = formatAuditDetails(entry, t);
+  const iconName = activityActionIcon(entry.action);
+
+  const content = (
+    <View style={styles.row}>
+      <View style={styles.iconWrap}>
+        <Ionicons name={iconName} size={17} color={isLight ? '#0F766E' : '#5EEAD4'} />
+      </View>
+      <View style={styles.body}>
+        <View style={styles.headerRow}>
+          <Text style={styles.action} numberOfLines={2}>
+            {formatAuditAction(entry.action, t)}
+          </Text>
+          <Text style={styles.time}>{formatLogTimestamp(entry.created_at, t, language)}</Text>
+        </View>
+        {entry.entity_label ? (
+          <Text style={styles.entity} numberOfLines={1}>
+            {entry.entity_label}
+          </Text>
+        ) : null}
+        {details ? (
+          <Text style={styles.details} numberOfLines={2}>
+            {details}
+          </Text>
+        ) : null}
+        <View style={styles.actorRow}>
+          <Text style={styles.actorName} numberOfLines={1}>
+            {entry.actor_name || entry.actor_email}
+          </Text>
+          <View style={[styles.roleBadge, isOwner ? styles.roleBadgeOwner : styles.roleBadgeStaff]}>
+            <Text style={[styles.roleBadgeText, isOwner ? styles.roleBadgeTextOwner : styles.roleBadgeTextStaff]}>
+              {formatActorRole(entry.actor_role, t)}
+            </Text>
+          </View>
+          {showBranch && entry.branch_name ? (
+            <Text style={styles.branch}>· {branchDisplayName(entry.branch_name)}</Text>
+          ) : null}
+        </View>
+      </View>
+    </View>
+  );
 
   return (
-    <SoftSurface style={[styles.card, multiColumn && styles.cardColumn, multiColumn && columnStyle]}>
-      <View style={styles.cardHeader}>
-        <Text style={styles.action}>{formatAuditAction(entry.action, t)}</Text>
-        <Text style={styles.time}>{formatDisplayDateTime(entry.created_at)}</Text>
-      </View>
-      {entry.entity_label ? <Text style={styles.entity}>{entry.entity_label}</Text> : null}
-      {details ? <Text style={styles.details}>{details}</Text> : null}
-      <View style={styles.actorRow}>
-        <Text style={styles.actorName}>{entry.actor_name || entry.actor_email}</Text>
-        <View style={[styles.roleBadge, isOwner ? styles.roleBadgeOwner : styles.roleBadgeStaff]}>
-          <Text style={[styles.roleBadgeText, isOwner ? styles.roleBadgeTextOwner : styles.roleBadgeTextStaff]}>
-            {formatActorRole(entry.actor_role, t)}
-          </Text>
-        </View>
-        {showBranch && entry.branch_name ? (
-          <Text style={styles.branch}>· {branchDisplayName(entry.branch_name)}</Text>
-        ) : null}
-      </View>
-    </SoftSurface>
+    <View>
+      {!isFirst ? <View style={styles.divider} /> : null}
+      {onPress ? (
+        <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.72 : 1 })}>
+          {content}
+        </Pressable>
+      ) : (
+        content
+      )}
+    </View>
   );
 }
 
 export default function ActivityScreen() {
   const { token, user } = useAuth();
   const { selectedBranchId, showBranchFilter } = useBranchScope();
-  const { colors: c } = useTheme();
+  const { colors: c, theme } = useTheme();
+  const { language } = usePreferences();
+  const isLight = theme === 'light';
   const { t } = useTranslation();
-  const { pagePadding, listColumnItemStyle } = useResponsiveLayout();
-  const listColumns = 1;
+  const router = useRouter();
+  const { pagePadding } = useResponsiveLayout();
   const styles = useThemedStyles((colors) => ({
     container: { flex: 1, backgroundColor: colors.bg },
-    filters: { paddingTop: 12, paddingBottom: 14 },
-    list: { paddingTop: 4, paddingBottom: 24 },
-    columnWrap: { gap: 10 },
-    empty: { textAlign: 'center' as const, color: colors.dim, marginTop: 40, fontSize: 15 },
+    filters: { paddingTop: 12, paddingBottom: 10 },
+    listWrap: { flex: 1 },
+    statusMeta: {
+      fontSize: 13,
+      fontWeight: '500' as const,
+      color: colors.dim,
+      marginBottom: 10,
+      letterSpacing: -0.1,
+    },
+    listCard: {
+      flex: 1,
+      paddingVertical: 4,
+      paddingHorizontal: 0,
+      overflow: 'hidden' as const,
+    },
+    listContent: { paddingBottom: 24, flexGrow: 1 },
+    emptyWrap: { paddingVertical: 8 },
   }));
 
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
   const showBranchOnRows = showBranchFilter && selectedBranchId === 'all';
   const [actorFilter, setActorFilter] = useState<ActorFilter>('all');
   const canViewActivity = Boolean(user && isGymOwner(user.role));
+  const lang = language || 'en';
 
   const query = useInfiniteQuery({
     queryKey: ['activity', actorFilter, branchKey],
@@ -143,8 +274,19 @@ export default function ActivityScreen() {
   });
 
   const actorOptions = ACTOR_OPTION_KEYS.map((o) => ({ ...o, label: t(o.labelKey) }));
-
   const items = query.data?.pages.flatMap((p) => p.items) ?? [];
+  const total = query.data?.pages[0]?.total ?? 0;
+
+  const filterLabel = useMemo(() => {
+    if (actorFilter === 'all') return t('activity.everyone');
+    if (actorFilter === 'staff') return t('activity.staffOnly');
+    return t('activity.ownerOnly');
+  }, [actorFilter, t]);
+
+  const statusLine =
+    total > 0
+      ? t('activity.statusLine', { count: total, filter: filterLabel })
+      : t('activity.statusLineEmpty');
 
   if (!canViewActivity) {
     return <Redirect href="/(tabs)/more" />;
@@ -152,61 +294,75 @@ export default function ActivityScreen() {
 
   return (
     <TabScreenFrame>
-    <View style={styles.container}>
-      <BranchFilterBar horizontalPadding={pagePadding} />
-      <View style={[styles.filters, { paddingHorizontal: pagePadding }]}>
-        <FilterPickerButton
-          label={t('activity.filterLabel')}
-          sheetTitle={t('activity.filterLabel')}
-          value={actorFilter}
-          onChange={setActorFilter}
-          options={actorOptions.map((o) => ({ value: o.value, label: o.label }))}
-        />
-      </View>
+      <View style={styles.container}>
+        <BranchFilterBar horizontalPadding={pagePadding} />
+        <View style={[styles.filters, { paddingHorizontal: pagePadding }]}>
+          <FilterPickerButton
+            label={t('activity.filterLabel')}
+            sheetTitle={t('activity.filterLabel')}
+            value={actorFilter}
+            onChange={setActorFilter}
+            options={actorOptions.map((o) => ({ value: o.value, label: o.label }))}
+          />
+        </View>
 
-      {query.isLoading ? (
-        <PageSkeleton variant="activity" />
-      ) : query.isError ? (
-        <LoadError
-          message={query.error instanceof Error ? query.error.message : undefined}
-          onRetry={() => void query.refetch()}
-        />
-      ) : (
-        <FlatList
-          key={`activity-cols-${listColumns}`}
-          data={items}
-          numColumns={listColumns}
-          columnWrapperStyle={listColumns > 1 ? styles.columnWrap : undefined}
-          keyExtractor={(item) => String(item.id)}
-          renderItem={({ item }) => (
-            <ActivityItem
-              entry={item}
-              multiColumn={listColumns > 1}
-              columnStyle={listColumnItemStyle}
-              showBranch={showBranchOnRows}
-            />
-          )}
-          contentContainerStyle={[styles.list, { paddingHorizontal: pagePadding }]}
-          refreshControl={
-            <RefreshControl refreshing={query.isRefetching} onRefresh={() => query.refetch()} tintColor={c.accentText} />
-          }
-          onEndReached={() => {
-            if (query.hasNextPage && !query.isFetchingNextPage) query.fetchNextPage();
-          }}
-          onEndReachedThreshold={0.4}
-          ListEmptyComponent={
-            <EmptyState
-              icon="time-outline"
-              title={t('activity.emptyTitle')}
-              body={t('activity.emptyBody')}
-            />
-          }
-          ListFooterComponent={
-            query.isFetchingNextPage ? <ListFooterSkeleton /> : null
-          }
-        />
-      )}
-    </View>
+        {query.isLoading ? (
+          <PageSkeleton variant="activity" />
+        ) : query.isError ? (
+          <LoadError
+            message={query.error instanceof Error ? query.error.message : undefined}
+            onRetry={() => void query.refetch()}
+          />
+        ) : (
+          <View style={[styles.listWrap, { paddingHorizontal: pagePadding }]}>
+            {items.length > 0 ? <Text style={styles.statusMeta}>{statusLine}</Text> : null}
+            <SoftSurface variant="panel" style={styles.listCard}>
+              <FlatList
+                data={items}
+                keyExtractor={(item) => String(item.id)}
+                renderItem={({ item, index }) => (
+                  <Animated.View entering={index < 8 ? FadeInDown.duration(timings.enterMs).springify().damping(22) : undefined}>
+                    <ActivityItem
+                      entry={item}
+                      showBranch={showBranchOnRows}
+                      isFirst={index === 0}
+                      isLight={isLight}
+                      language={lang}
+                      onPress={
+                        isRowClickable(item)
+                          ? () => openActivityTarget(item, router)
+                          : undefined
+                      }
+                    />
+                  </Animated.View>
+                )}
+                contentContainerStyle={styles.listContent}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={query.isRefetching}
+                    onRefresh={() => query.refetch()}
+                    tintColor={c.accentText}
+                  />
+                }
+                onEndReached={() => {
+                  if (query.hasNextPage && !query.isFetchingNextPage) query.fetchNextPage();
+                }}
+                onEndReachedThreshold={0.4}
+                ListEmptyComponent={
+                  <View style={styles.emptyWrap}>
+                    <EmptyState
+                      icon="time-outline"
+                      title={t('activity.emptyTitle')}
+                      body={t('activity.emptyBody')}
+                    />
+                  </View>
+                }
+                ListFooterComponent={query.isFetchingNextPage ? <ListFooterSkeleton /> : null}
+              />
+            </SoftSurface>
+          </View>
+        )}
+      </View>
     </TabScreenFrame>
   );
 }

@@ -1,7 +1,14 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import {
+  FlatList,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { AppText as Text } from '@/src/components/AppText';
 import { ListFooterSkeleton, PageSkeleton } from '@/src/components/Skeleton';
 import { LoadError } from '@/src/components/LoadError';
@@ -10,20 +17,21 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { fetchMemberSms } from '@/src/api/memberSms';
 import { BranchFilterBar } from '@/src/components/BranchFilterBar';
 import { FilterPickerButton } from '@/src/components/FilterPickerButton';
-import { MemberPhoto } from '@/src/components/MemberPhoto';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { EmptyState } from '@/src/components/EmptyState';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useBranchScope } from '@/src/context/BranchContext';
-import { useTheme } from '@/src/context/PreferencesContext';
+import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
-import { formatDisplayDateTime } from '@/src/utils/date';
+import { timings } from '@/src/theme/motion';
+import { formatLogTimestamp } from '@/src/utils/date';
 import {
   SMS_TYPE_FILTER_KEYS,
   formatSmsPreview,
   formatSmsType,
   smsTypeAccent,
+  smsTypeIcon,
 } from '@/src/utils/smsLabels';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
 import { statusWashOpaque } from '@/src/utils/statusWash';
@@ -35,18 +43,18 @@ type SmsFilter = (typeof SMS_TYPE_FILTER_KEYS)[number]['value'];
 
 function SmsItem({
   row,
-  token,
-  multiColumn,
-  columnStyle,
   showBranch,
+  isFirst,
+  isLight,
+  language,
   typeFiltered,
   onPress,
 }: {
   row: MemberSmsRow;
-  token: string;
-  multiColumn?: boolean;
-  columnStyle?: object;
   showBranch?: boolean;
+  isFirst?: boolean;
+  isLight: boolean;
+  language: string;
   typeFiltered?: boolean;
   onPress: () => void;
 }) {
@@ -56,38 +64,71 @@ function SmsItem({
   const preview = typeFiltered ? '' : formatSmsPreview(row.message_type, t);
   const phone = row.recipient_phone || row.member_phone || '—';
   const branch = row.branch_name ? branchDisplayName(row.branch_name) : null;
+  const iconName = smsTypeIcon(row.message_type);
 
-  const styles = useThemedStyles((colors) => ({
-    card: {
-      paddingVertical: 13,
+  const styles = useThemedStyles((theme) => ({
+    row: {
+      flexDirection: 'row' as const,
+      alignItems: 'flex-start' as const,
+      gap: 12,
+      paddingVertical: 11,
       paddingHorizontal: 14,
-      marginBottom: 10,
     },
-    cardColumn: { marginBottom: 0 },
-    row: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 12 },
+    divider: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: isLight ? 'rgba(15,23,42,0.06)' : 'rgba(228,231,238,0.08)',
+      marginHorizontal: 14,
+    },
+    iconWrap: {
+      width: 34,
+      height: 34,
+      borderRadius: 10,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      marginTop: 1,
+      borderWidth: StyleSheet.hairlineWidth,
+      backgroundColor: statusWashOpaque(accent, theme.card, 0.14),
+      borderColor: statusWashOpaque(accent, theme.cardEdge, 0.35),
+    },
     body: { flex: 1, minWidth: 0 },
-    header: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 8 },
-    member: { flex: 1, fontSize: 15, fontWeight: '600' as const, color: colors.text },
-    time: { fontSize: 11, color: colors.dim, marginTop: 2 },
+    headerRow: {
+      flexDirection: 'row' as const,
+      alignItems: 'flex-start' as const,
+      justifyContent: 'space-between' as const,
+      gap: 10,
+    },
+    member: {
+      flex: 1,
+      fontSize: 15,
+      fontWeight: '600' as const,
+      color: theme.text,
+      letterSpacing: -0.2,
+    },
+    time: {
+      fontSize: 12,
+      fontWeight: '500' as const,
+      color: theme.dim,
+      fontVariant: ['tabular-nums' as const],
+      letterSpacing: -0.1,
+    },
     badge: {
       alignSelf: 'flex-start' as const,
-      marginTop: 7,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
+      marginTop: 5,
+      paddingHorizontal: 9,
+      paddingVertical: 3,
       borderRadius: 999,
       borderWidth: StyleSheet.hairlineWidth,
-      backgroundColor: statusWashOpaque(accent, colors.card, 0.14),
-      borderColor: statusWashOpaque(accent, colors.cardEdge, 0.4),
+      backgroundColor: statusWashOpaque(accent, theme.card, 0.12),
+      borderColor: statusWashOpaque(accent, theme.cardEdge, 0.32),
     },
-    badgeText: { fontSize: 12, fontWeight: '600' as const, color: accent },
-    preview: { marginTop: 6, fontSize: 12, lineHeight: 16, color: colors.muted },
+    badgeText: { fontSize: 11, fontWeight: '600' as const, color: accent },
+    preview: { marginTop: 4, fontSize: 12, lineHeight: 16, color: theme.muted },
     meta: {
-      marginTop: 8,
+      marginTop: 6,
       fontSize: 12,
       lineHeight: 16,
-      color: colors.dim,
+      color: theme.dim,
     },
-    chevron: { marginTop: 10 },
   }));
 
   const metaParts = [phone];
@@ -95,41 +136,38 @@ function SmsItem({
   const metaLine = metaParts.join(' · ');
 
   return (
-    <SoftSurface
-      onPress={onPress}
-      style={[styles.card, multiColumn && styles.cardColumn, multiColumn && columnStyle]}
-      accessibilityRole="button"
-      accessibilityLabel={`${row.member_name}, ${formatSmsType(row.message_type, t)}`}
-    >
-      <View style={styles.row}>
-        <MemberPhoto
-          memberId={row.member_id}
-          name={row.member_name || '?'}
-          token={token}
-          size={40}
-          hasPhoto={Boolean(row.member_photo_url)}
-        />
+    <View>
+      {!isFirst ? <View style={styles.divider} /> : null}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${row.member_name}, ${formatSmsType(row.message_type, t)}`}
+        onPress={onPress}
+        style={({ pressed }) => [styles.row, { opacity: pressed ? 0.72 : 1 }]}
+      >
+        <View style={styles.iconWrap}>
+          <Ionicons name={iconName} size={17} color={accent} />
+        </View>
         <View style={styles.body}>
-          <View style={styles.header}>
-            <Text listRow style={styles.member} numberOfLines={1}>
+          <View style={styles.headerRow}>
+            <Text style={styles.member} numberOfLines={1}>
               {row.member_name}
             </Text>
-            <Text style={styles.time}>{formatDisplayDateTime(row.sent_at)}</Text>
+            <Text style={styles.time}>{formatLogTimestamp(row.sent_at, t, language)}</Text>
           </View>
-
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{formatSmsType(row.message_type, t)}</Text>
           </View>
-
-          {preview ? <Text style={styles.preview}>{preview}</Text> : null}
-
+          {preview ? (
+            <Text style={styles.preview} numberOfLines={2}>
+              {preview}
+            </Text>
+          ) : null}
           <Text latin style={styles.meta} numberOfLines={1}>
             {metaLine}
           </Text>
         </View>
-        <Ionicons name="chevron-forward" size={16} color={c.dim} style={styles.chevron} />
-      </View>
-    </SoftSurface>
+      </Pressable>
+    </View>
   );
 }
 
@@ -137,22 +175,37 @@ export default function MessagesScreen() {
   const router = useRouter();
   const { token, user } = useAuth();
   const { selectedBranchId, showBranchFilter } = useBranchScope();
-  const { colors: c } = useTheme();
+  const { colors: c, theme } = useTheme();
+  const { language } = usePreferences();
+  const isLight = theme === 'light';
   const { t } = useTranslation();
-  const { pagePadding, listColumnItemStyle } = useResponsiveLayout();
-  const listColumns = 1;
+  const { pagePadding } = useResponsiveLayout();
   const styles = useThemedStyles((colors) => ({
     container: { flex: 1, backgroundColor: colors.bg },
-    filters: { paddingTop: 10, paddingBottom: 6, gap: 8 },
-    list: { paddingBottom: 24, paddingTop: 6 },
-    columnWrap: { gap: 10 },
-    statusLine: { fontSize: 13, color: colors.dim, marginBottom: 8 },
+    filters: { paddingTop: 10, paddingBottom: 10 },
+    listWrap: { flex: 1 },
+    statusMeta: {
+      fontSize: 13,
+      fontWeight: '500' as const,
+      color: colors.dim,
+      marginBottom: 10,
+      letterSpacing: -0.1,
+    },
+    listCard: {
+      flex: 1,
+      paddingVertical: 4,
+      paddingHorizontal: 0,
+      overflow: 'hidden' as const,
+    },
+    listContent: { paddingBottom: 24, flexGrow: 1 },
+    emptyWrap: { paddingVertical: 8 },
   }));
 
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
   const [typeFilter, setTypeFilter] = useState<SmsFilter>('all');
   const canViewMessages = Boolean(user && isGymOwner(user.role));
   const typeFiltered = typeFilter !== 'all';
+  const lang = language || 'en';
 
   const query = useInfiniteQuery({
     queryKey: ['member-sms', typeFilter, branchKey],
@@ -178,8 +231,18 @@ export default function MessagesScreen() {
     [t, c],
   );
 
+  const filterLabel = useMemo(() => {
+    const match = SMS_TYPE_FILTER_KEYS.find((f) => f.value === typeFilter);
+    return match ? t(match.labelKey) : t('messages.filterAll');
+  }, [typeFilter, t]);
+
   const items = query.data?.pages.flatMap((p) => p.items) ?? [];
-  const total = query.data?.pages[0]?.total;
+  const total = query.data?.pages[0]?.total ?? 0;
+
+  const statusLine =
+    total > 0
+      ? t('messages.statusLine', { count: total, filter: filterLabel })
+      : t('messages.statusLineEmpty');
 
   if (!canViewMessages) {
     return <Redirect href="/(tabs)/more" />;
@@ -207,51 +270,52 @@ export default function MessagesScreen() {
             onRetry={() => void query.refetch()}
           />
         ) : (
-          <FlatList
-            key={`sms-cols-${listColumns}`}
-            data={items}
-            numColumns={listColumns}
-            columnWrapperStyle={listColumns > 1 ? styles.columnWrap : undefined}
-            keyExtractor={(item) => String(item.id)}
-            ListHeaderComponent={
-              items.length > 0 && total != null ? (
-                <Text style={styles.statusLine}>
-                  {t('messages.statusLine', { count: total })}
-                </Text>
-              ) : null
-            }
-            renderItem={({ item }) => (
-              <SmsItem
-                row={item}
-                token={token!}
-                multiColumn={listColumns > 1}
-                columnStyle={listColumnItemStyle}
-                showBranch={showBranchFilter && selectedBranchId === 'all'}
-                typeFiltered={typeFiltered}
-                onPress={() => router.push(`/member/${item.member_id}`)}
+          <View style={[styles.listWrap, { paddingHorizontal: pagePadding }]}>
+            {items.length > 0 ? <Text style={styles.statusMeta}>{statusLine}</Text> : null}
+            <SoftSurface variant="panel" style={styles.listCard}>
+              <FlatList
+                data={items}
+                keyExtractor={(item) => String(item.id)}
+                renderItem={({ item, index }) => (
+                  <Animated.View
+                    entering={index < 8 ? FadeInDown.duration(timings.enterMs).springify().damping(22) : undefined}
+                  >
+                    <SmsItem
+                      row={item}
+                      showBranch={showBranchFilter && selectedBranchId === 'all'}
+                      isFirst={index === 0}
+                      isLight={isLight}
+                      language={lang}
+                      typeFiltered={typeFiltered}
+                      onPress={() => router.push(`/member/${item.member_id}`)}
+                    />
+                  </Animated.View>
+                )}
+                contentContainerStyle={styles.listContent}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={query.isRefetching}
+                    onRefresh={() => query.refetch()}
+                    tintColor={c.accentText}
+                  />
+                }
+                onEndReached={() => {
+                  if (query.hasNextPage && !query.isFetchingNextPage) query.fetchNextPage();
+                }}
+                onEndReachedThreshold={0.4}
+                ListEmptyComponent={
+                  <View style={styles.emptyWrap}>
+                    <EmptyState
+                      icon="chatbubble-ellipses-outline"
+                      title={t('messages.emptyTitle')}
+                      body={t('messages.emptyBody')}
+                    />
+                  </View>
+                }
+                ListFooterComponent={query.isFetchingNextPage ? <ListFooterSkeleton /> : null}
               />
-            )}
-            contentContainerStyle={[styles.list, { paddingHorizontal: pagePadding }]}
-            refreshControl={
-              <RefreshControl
-                refreshing={query.isRefetching}
-                onRefresh={() => query.refetch()}
-                tintColor={c.accentText}
-              />
-            }
-            onEndReached={() => {
-              if (query.hasNextPage && !query.isFetchingNextPage) query.fetchNextPage();
-            }}
-            onEndReachedThreshold={0.4}
-            ListEmptyComponent={
-              <EmptyState
-                icon="chatbubble-ellipses-outline"
-                title={t('messages.emptyTitle')}
-                body={t('messages.emptyBody')}
-              />
-            }
-            ListFooterComponent={query.isFetchingNextPage ? <ListFooterSkeleton /> : null}
-          />
+            </SoftSurface>
+          </View>
         )}
       </View>
     </TabScreenFrame>

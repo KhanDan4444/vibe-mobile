@@ -66,18 +66,62 @@ export function formatRelativeDay(
   return formatFriendlyDate(date, language);
 }
 
-export function formatDisplayDateTime(date: string | Date | null | undefined): string {
+/** User-facing time: "11:34 am" (12-hour, lowercase meridiem). */
+export function formatDisplayTime(
+  value: string | Date | null | undefined,
+  language = 'en',
+): string {
+  if (!value) return '—';
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  const locale = language === 'am' ? 'am-ET' : language === 'om' ? 'om-ET' : 'en-US';
+  try {
+    const raw = date.toLocaleTimeString(locale, {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+    return raw.replace(/\s?(AM|PM)\s*$/i, (_, meridiem: string) => ` ${meridiem.toLowerCase()}`);
+  } catch {
+    const h = date.getHours();
+    const m = String(date.getMinutes()).padStart(2, '0');
+    const ap = h >= 12 ? 'pm' : 'am';
+    const h12 = h % 12 || 12;
+    return `${h12}:${m} ${ap}`;
+  }
+}
+
+/** User-facing date-time: dd-mm-yy 11:34 am */
+export function formatDisplayDateTime(
+  date: string | Date | null | undefined,
+  language = 'en',
+): string {
   if (!date) return '—';
   const parsed = date instanceof Date ? date : new Date(date);
   if (Number.isNaN(parsed.getTime())) {
     return typeof date === 'string' ? formatDisplayDate(date) : '—';
   }
-  const day = String(parsed.getDate()).padStart(2, '0');
-  const month = String(parsed.getMonth() + 1).padStart(2, '0');
-  const year = String(parsed.getFullYear()).slice(-2);
-  const hours = String(parsed.getHours()).padStart(2, '0');
-  const minutes = String(parsed.getMinutes()).padStart(2, '0');
-  return `${day}-${month}-${year} ${hours}:${minutes}`;
+  const iso = dateToIso(parsed);
+  return `${formatDisplayDate(iso)} ${formatDisplayTime(parsed, language)}`;
+}
+
+/** Activity/log timestamps: "Today · 11:34 am" or "04-07-26 · 11:34 am". */
+export function formatLogTimestamp(
+  value: string | Date | null | undefined,
+  t?: (key: string, options?: object) => string,
+  language = 'en',
+): string {
+  if (!value) return '—';
+  const time = formatDisplayTime(value, language);
+  if (typeof t === 'function') {
+    const rel = formatRelativeDay(value, t, language);
+    if (rel) return `${rel} · ${time}`;
+  }
+  const parsed = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return typeof value === 'string' ? formatDisplayDate(value) : '—';
+  }
+  return `${formatDisplayDate(dateToIso(parsed))} · ${time}`;
 }
 
 function parseLocalDate(dateStr: string): Date | null {

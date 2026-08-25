@@ -9,6 +9,7 @@ import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import {
   attendanceDayRelative,
   formatAttendanceDayLabel,
+  formatDisplayTime,
 } from '@/src/utils/date';
 
 const HISTORY_LIMIT = 50;
@@ -25,11 +26,7 @@ function formatVisitLine(
       : rel === 'yesterday'
         ? t('checkIn.dayYesterday')
         : formatAttendanceDayLabel(checkedInAt, language);
-  const time = new Date(checkedInAt).toLocaleTimeString([], {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
+  const time = formatDisplayTime(checkedInAt, language);
   return `${day} · ${time}`;
 }
 

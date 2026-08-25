@@ -70,7 +70,9 @@
     "expires": "{{date}} ያበቃል",
     "renew": "ያድሱ",
     "viewAll": "ሁሉን ይመልከቱ",
-    "showMore": "ተጨማሪ አሳይ"
+    "showMore": "ተጨማሪ አሳይ",
+    "showLess": "ያነሱ",
+    "showingOf": "{{shown}} ከ {{total}}"
   },
   "members": {
     "search": "ስም ወይም ስልክ ይፈልጉ…",
@@ -384,6 +386,7 @@
     "todayTitle": "ዛሬ የገቡ",
     "attendanceTitle": "መገኘት",
     "checkedInTodayTitle": "ዛሬ የገቡ",
+    "todayMeta": "{{date}} · {{count}}",
     "historyTitle": "ታሪክ",
     "historyBody": "ጉብኝቶችን በቀን ይመልከቱ።",
     "historyBackDays": "ሁሉም ቀናት",
@@ -943,6 +946,8 @@
     "filterLabel": "እንቅስቃሴ ከ",
     "emptyTitle": "እስካሁን እንቅስቃሴ የለም",
     "emptyBody": "ሲመዘግቡ፣ ሲያድሱ እና ክፍያ ሲሰበስቡ ክስተቶች እዚህ ይታያሉ።",
+    "statusLine": "{{count}} ክስተቶች · {{filter}}",
+    "statusLineEmpty": "በዚህ እይታ ክስተት የለም",
     "actions": {
       "member_created": "አባል ተፈጥሯል",
       "member_enrolled": "አባል ተመዝግቧል",
@@ -984,7 +989,8 @@
     "filterRenewed": "የታደሰ",
     "emptyTitle": "እስካሁን SMS የለም",
     "emptyBody": "የመጀመሪያውን መልእክት ከላኩ በኋላ የአባል SMS ታሪክ ይታያል።",
-    "statusLine": "{{count}} መልዕክቶች",
+    "statusLine": "{{count}} መልዕክቶች · {{filter}}",
+    "statusLineEmpty": "በዚህ እይታ መልእክት የለም",
     "typeEnrolled": "ምዝገባ ተረጋግጧል",
     "typeDueSoon": "በቅርቡ የሚያልቅ ማስታወሻ",
     "typeExpiresToday": "ዛሬ ያልቃል",

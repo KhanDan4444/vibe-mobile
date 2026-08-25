@@ -22,18 +22,10 @@ import {
   attendanceWeekRange,
   formatAttendanceDayLabel,
   formatAttendanceWeekRangeLabel,
+  formatDisplayTime,
   groupCheckInsByDay,
 } from '@/src/utils/date';
 import { radiusMd } from '@/src/theme/tokens';
-
-function formatTime(value?: string | null) {
-  if (!value) return '—';
-  return new Date(value).toLocaleTimeString([], {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
-}
 
 function dayLabel(day: string, language: string, t: (k: string) => string) {
   const rel = attendanceDayRelative(day);
@@ -285,7 +277,7 @@ export function AttendanceHistorySheet({
                       ) : null}
                     </View>
                     <Text style={[styles.memberTime, { color: c.dim }]}>
-                      {formatTime(row.checked_in_at)}
+                      {formatDisplayTime(row.checked_in_at, lang)}
                     </Text>
                   </View>
                 </Animated.View>

@@ -34,6 +34,7 @@ import {
   attendanceDayRelative,
   formatAttendanceDayLabel,
   formatDisplayDate,
+  formatDisplayTime,
 } from '@/src/utils/date';
 import { MemberVisitHistorySheet } from '@/src/components/MemberVisitHistorySheet';
 import { paymentMethodBadgeStyle, paymentMethodIcon, paymentMethodLabelKey } from '@/src/constants/payments';
@@ -461,11 +462,7 @@ export default function MemberDetailScreen() {
                         : rel === 'yesterday'
                           ? t('checkIn.dayYesterday')
                           : formatAttendanceDayLabel(row.checked_in_at, language);
-                    const time = new Date(row.checked_in_at).toLocaleTimeString([], {
-                      hour: 'numeric',
-                      minute: '2-digit',
-                      hour12: true,
-                    });
+                    const time = formatDisplayTime(row.checked_in_at, language);
                     return (
                       <View key={row.id} style={styles.recentRow}>
                         <Text style={styles.recentLine} numberOfLines={1}>

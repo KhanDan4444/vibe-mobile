@@ -70,7 +70,9 @@
     "expires": "Guyyaa {{date}} dhumata",
     "renew": "Haaromsi",
     "viewAll": "Hunda ilaali",
-    "showMore": "Dabalataan agarsiisi"
+    "showMore": "Dabalataan agarsiisi",
+    "showLess": "Xiqqeessi",
+    "showingOf": "{{shown}} kan {{total}}"
   },
   "members": {
     "search": "Maqaa ykn bilbila barbaadi…",
@@ -384,6 +386,7 @@
     "todayTitle": "Har'a galan",
     "attendanceTitle": "Argamuu",
     "checkedInTodayTitle": "Har'a galchan",
+    "todayMeta": "{{date}} · {{count}}",
     "historyTitle": "Seenaa",
     "historyBody": "Daawwannoo guyyaadhaan ilaali.",
     "historyBackDays": "Guyyoota hunda",
@@ -943,6 +946,8 @@
     "filterLabel": "Sochii kan agarsiisu",
     "emptyTitle": "Socho'iinsi hin jiru",
     "emptyBody": "Gochooti miseensotaa fi kaffaltii yeroo hojjettu asitti mul'atu.",
+    "statusLine": "Gochawwan {{count}} · {{filter}}",
+    "statusLineEmpty": "Ilaalcha kana keessatti gochi hin jiru",
     "actions": {
       "member_created": "Miseensi uumameera",
       "member_enrolled": "Miseensi galmaa'eera",
@@ -984,7 +989,8 @@
     "filterRenewed": "Kan haaromfame",
     "emptyTitle": "SMSn hin jiru",
     "emptyBody": "Seenaan SMS miseensaa ergaa jalqabaa ergteen booda mul'ata.",
-    "statusLine": "Ergaawwan {{count}}",
+    "statusLine": "Ergaalee {{count}} · {{filter}}",
+    "statusLineEmpty": "Ilaalcha kana keessatti ergaan hin jiru",
     "typeEnrolled": "Galmeessi mirkanaa'e",
     "typeDueSoon": "Yaadachiisa dhuminsa dhihoo",
     "typeExpiresToday": "Har'a dhumata",

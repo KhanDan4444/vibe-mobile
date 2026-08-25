@@ -103,7 +103,8 @@ export default function DashboardScreen() {
   const router = useRouter();
   const { token, user, gymName: cachedGymName } = useAuth();
   const { selectedBranchId } = useBranchScope();
-  const { colors: c } = useTheme();
+  const { colors: c, theme } = useTheme();
+  const isLight = theme === 'light';
   const { t } = useTranslation();
   const linkColor = c.accentCta;
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
@@ -165,6 +166,7 @@ export default function DashboardScreen() {
   const alertMembers = attentionExpanded
     ? allAlertMembers
     : allAlertMembers.slice(0, ATTENTION_PREVIEW);
+  const attentionHasMore = allAlertMembers.length > ATTENTION_PREVIEW;
   const unpaidCount = data?.unpaidCount ?? 0;
   const attentionHasContent = allAlertMembers.length > 0 || unpaidCount > 0;
 
@@ -241,22 +243,45 @@ export default function DashboardScreen() {
                 />
               );
             })}
-            {allAlertMembers.length > ATTENTION_PREVIEW && !attentionExpanded ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={t('dashboard.showMore')}
-                hitSlop={6}
-                onPress={() => setAttentionExpanded(true)}
-                style={({ pressed }) => [
-                  styles.showMoreRow,
-                  { borderTopColor: c.border, opacity: pressed ? 0.65 : 1 },
+            {attentionHasMore ? (
+              <View
+                style={[
+                  styles.showMoreWrap,
+                  {
+                    borderTopColor: isLight ? 'rgba(15,23,42,0.06)' : 'rgba(228,231,238,0.08)',
+                  },
                 ]}
               >
-                <Text style={[styles.showMoreLabel, { color: linkColor }]}>
-                  {t('dashboard.showMore')}
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    attentionExpanded ? t('dashboard.showLess') : t('dashboard.showMore')
+                  }
+                  onPress={() => setAttentionExpanded((v) => !v)}
+                  style={({ pressed }) => [
+                    styles.showMoreBtn,
+                    {
+                      backgroundColor: isLight ? 'rgba(15,23,42,0.04)' : 'rgba(228,231,238,0.06)',
+                      opacity: pressed ? 0.82 : 1,
+                    },
+                  ]}
+                >
+                  <Text style={[styles.showMoreLabel, { color: c.muted }]}>
+                    {attentionExpanded ? t('dashboard.showLess') : t('dashboard.showMore')}
+                  </Text>
+                  <Ionicons
+                    name={attentionExpanded ? 'chevron-up' : 'chevron-down'}
+                    size={16}
+                    color={c.muted}
+                  />
+                </Pressable>
+                <Text style={[styles.showMoreMeta, { color: c.dim }]}>
+                  {t('dashboard.showingOf', {
+                    shown: alertMembers.length,
+                    total: allAlertMembers.length,
+                  })}
                 </Text>
-                <Ionicons name="chevron-down" size={16} color={linkColor} />
-              </Pressable>
+              </View>
             ) : null}
           </>
         ) : (
@@ -354,7 +379,7 @@ export default function DashboardScreen() {
                 <Ionicons
                   name="checkbox-outline"
                   size={18}
-                  color={c.accentText}
+                  color={linkColor}
                   accessibilityElementsHidden
                   importantForAccessibility="no"
                 />
@@ -443,15 +468,15 @@ const styles = StyleSheet.create({
   alertRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingVertical: 16,
+    gap: 10,
+    paddingVertical: 11,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
-  alertBody: { flex: 1, minWidth: 0, marginRight: 8 },
+  alertBody: { flex: 1, minWidth: 0, marginRight: 6 },
   alertName: { fontSize: 14, fontWeight: '600' },
-  alertMeta: { marginTop: 3, fontSize: 12 },
-  alertExpires: { marginTop: 2, fontSize: 12 },
-  alertRight: { alignItems: 'flex-end', gap: 10 },
+  alertMeta: { marginTop: 2, fontSize: 12, lineHeight: 16 },
+  alertExpires: { marginTop: 1, fontSize: 12, lineHeight: 16 },
+  alertRight: { alignItems: 'flex-end', gap: 6 },
   attentionShortcut: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -463,17 +488,29 @@ const styles = StyleSheet.create({
   attentionShortcutBody: { flex: 1, minWidth: 0 },
   attentionShortcutTitle: { fontSize: 14, fontWeight: '600' },
   attentionShortcutMeta: { marginTop: 3, fontSize: 12, lineHeight: 16 },
-  showMoreRow: {
+  showMoreWrap: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 4,
+    paddingTop: 10,
+    paddingBottom: 4,
+    marginTop: 4,
+  },
+  showMoreBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    marginTop: 4,
-    paddingTop: 14,
-    paddingBottom: 4,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    gap: 6,
+    minHeight: 42,
+    borderRadius: 12,
+    paddingHorizontal: 14,
   },
-  showMoreLabel: { fontSize: 14, fontWeight: '600', letterSpacing: 0.1 },
+  showMoreLabel: { fontSize: 14, fontWeight: '600', letterSpacing: -0.1 },
+  showMoreMeta: {
+    marginTop: 6,
+    textAlign: 'center',
+    fontSize: 11,
+    fontWeight: '500',
+  },
   banner: {
     marginTop: 20,
     backgroundColor: 'rgba(251,191,36,0.12)',

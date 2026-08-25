@@ -1,6 +1,6 @@
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import Svg, { Path, Rect } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 import { AppText as Text } from '@/src/components/AppText';
 import { fabElevation } from '@/src/theme/elevation';
 import { useTheme } from '@/src/context/PreferencesContext';
@@ -8,12 +8,8 @@ import { useTheme } from '@/src/context/PreferencesContext';
 const FRAME = '#ffffff';
 const CORNER = 12;
 const STROKE = 2.2;
-const DOT = 2.6;
-const DOT_INSET = 3.5;
 
-/**
- * Curved viewfinder corner + inner square — CBE-style QR chrome, tightened.
- */
+/** Curved viewfinder corner — frame chrome around the Scan QR label. */
 function QrCorner({ placement }: { placement: 'tl' | 'tr' | 'bl' | 'br' }) {
   const r = 3.5;
   const s = STROKE / 2;
@@ -25,15 +21,6 @@ function QrCorner({ placement }: { placement: 'tl' | 'tr' | 'bl' | 'br' }) {
         : placement === 'bl'
           ? `M ${s} 0.5 V ${CORNER - r - s} Q ${s} ${CORNER - s} ${r + s} ${CORNER - s} H ${CORNER - 0.5}`
           : `M 0.5 ${CORNER - s} H ${CORNER - r - s} Q ${CORNER - s} ${CORNER - s} ${CORNER - s} ${CORNER - r - s} V 0.5`;
-
-  const dot =
-    placement === 'tl'
-      ? { x: DOT_INSET, y: DOT_INSET }
-      : placement === 'tr'
-        ? { x: CORNER - DOT_INSET - DOT, y: DOT_INSET }
-        : placement === 'bl'
-          ? { x: DOT_INSET, y: CORNER - DOT_INSET - DOT }
-          : { x: CORNER - DOT_INSET - DOT, y: CORNER - DOT_INSET - DOT };
 
   const pos =
     placement === 'tl'
@@ -48,7 +35,6 @@ function QrCorner({ placement }: { placement: 'tl' | 'tr' | 'bl' | 'br' }) {
     <View pointerEvents="none" style={[styles.cornerWrap, pos]}>
       <Svg width={CORNER} height={CORNER}>
         <Path d={path} stroke={FRAME} strokeWidth={STROKE} fill="none" strokeLinecap="round" />
-        <Rect x={dot.x} y={dot.y} width={DOT} height={DOT} rx={0.5} fill={FRAME} />
       </Svg>
     </View>
   );

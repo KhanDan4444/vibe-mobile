@@ -13,7 +13,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { AppText as Text } from '@/src/components/AppText';
 import { AttendanceHistorySheet } from '@/src/components/AttendanceHistorySheet';
@@ -48,9 +48,10 @@ import { useTheme } from '@/src/context/PreferencesContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useTabBarOverlayInset } from '@/src/theme/tabBar';
+import { timings } from '@/src/theme/motion';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
-import { todayString, formatDisplayDate } from '@/src/utils/date';
+import { todayString, formatDisplayDate, formatDisplayTime } from '@/src/utils/date';
 import { isGymOwner } from '@/src/utils/roles';
 
 const CAP_OPTIONS: { value: number | null; labelKey: string }[] = [
@@ -134,19 +135,8 @@ function isExpiredStatus(status: string) {
   return (status || '').toLowerCase() === 'expired';
 }
 
-function formatTodayDeskTime(value: string | null | undefined) {
-  if (!value) return '—';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleTimeString([], {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
-}
-
 export default function CheckInScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { token, user } = useAuth();
   const { colors: c, theme } = useTheme();
   const isLight = theme === 'light';
@@ -579,58 +569,45 @@ export default function CheckInScreen() {
       fontSize: 17,
       fontWeight: '600' as const,
       color: theme.text,
-      letterSpacing: -0.2,
+      letterSpacing: -0.25,
       marginBottom: 2,
     },
     todayHeader: {
-      marginTop: 4,
-      marginBottom: 8,
-      paddingVertical: 4,
-      paddingHorizontal: 6,
-      marginHorizontal: -6,
+      marginTop: 2,
+      marginBottom: 6,
+      paddingVertical: 2,
+      paddingHorizontal: 2,
+      marginHorizontal: -2,
       borderRadius: 12,
-      gap: 2,
     },
     todayHeaderPulse: {
       backgroundColor: isLight ? 'rgba(15,118,110,0.08)' : 'rgba(45,212,191,0.12)',
     },
     todayHeaderTop: {
       flexDirection: 'row' as const,
-      alignItems: 'flex-start' as const,
+      alignItems: 'center' as const,
       justifyContent: 'space-between' as const,
       gap: 10,
     },
     todayHeaderCopy: { flex: 1, minWidth: 0 },
     todayDate: {
-      marginTop: 2,
-      fontSize: 12,
+      marginTop: 3,
+      fontSize: 12.5,
       fontWeight: '500' as const,
       fontVariant: ['tabular-nums' as const],
       color: theme.dim,
       letterSpacing: -0.1,
     },
-    todayMetaRow: {
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
-      justifyContent: 'flex-end' as const,
-      paddingHorizontal: 4,
-      marginTop: 2,
-      marginBottom: 2,
-    },
-    todayTimeLabel: {
-      fontSize: 11,
-      fontWeight: '700' as const,
-      letterSpacing: 0.8,
-      textTransform: 'uppercase' as const,
-      color: theme.dim,
-    },
     historyBtn: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       gap: 5,
-      paddingVertical: 6,
-      paddingHorizontal: 4,
-      marginTop: 1,
+      paddingVertical: 7,
+      paddingHorizontal: 11,
+      borderRadius: 999,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: isLight ? 'rgba(15,23,42,0.08)' : 'rgba(228,231,238,0.12)',
+      backgroundColor: isLight ? 'rgba(15,23,42,0.04)' : 'rgba(228,231,238,0.06)',
     },
     historyBtnLabel: {
       fontSize: 13,
@@ -640,7 +617,7 @@ export default function CheckInScreen() {
     },
     todayPanel: { paddingVertical: 2, paddingHorizontal: 4, overflow: 'hidden' as const },
     todayCard: {
-      paddingVertical: 0,
+      paddingVertical: 4,
       paddingHorizontal: 0,
       overflow: 'hidden' as const,
     },
@@ -648,34 +625,39 @@ export default function CheckInScreen() {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       gap: 12,
-      paddingVertical: 10,
+      paddingVertical: 11,
       paddingHorizontal: 14,
     },
     todayRowDivider: {
       borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: theme.border,
+      borderTopColor: isLight ? 'rgba(15,23,42,0.06)' : 'rgba(228,231,238,0.08)',
       marginHorizontal: 14,
     },
     todayName: {
       fontSize: 15,
       fontWeight: '600' as const,
       color: theme.text,
-      letterSpacing: -0.15,
+      letterSpacing: -0.2,
     },
     todayBranch: { marginTop: 2, fontSize: 12, color: theme.dim },
     todayTime: {
-      fontSize: 14,
-      fontWeight: '700' as const,
+      fontSize: 13,
+      fontWeight: '600' as const,
       fontVariant: ['tabular-nums' as const],
-      color: theme.text,
-      letterSpacing: -0.2,
+      color: theme.muted,
+      letterSpacing: -0.15,
+    },
+    todayTimeLatest: {
+      color: isLight ? '#0f766e' : theme.accentText,
+      fontWeight: '700' as const,
     },
     showMoreWrap: {
       borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: theme.border,
+      borderTopColor: isLight ? 'rgba(15,23,42,0.06)' : 'rgba(228,231,238,0.08)',
       paddingHorizontal: 12,
       paddingTop: 10,
       paddingBottom: 12,
+      marginTop: 2,
     },
     showMoreBtn: {
       flexDirection: 'row' as const,
@@ -684,16 +666,14 @@ export default function CheckInScreen() {
       gap: 6,
       minHeight: 42,
       borderRadius: 12,
-      borderWidth: 1,
-      borderColor: isLight ? 'rgba(15,118,110,0.22)' : 'rgba(45,212,191,0.28)',
-      backgroundColor: isLight ? 'rgba(15,118,110,0.08)' : 'rgba(45,212,191,0.1)',
+      backgroundColor: isLight ? 'rgba(15,23,42,0.04)' : 'rgba(228,231,238,0.06)',
       paddingHorizontal: 14,
     },
     showMoreLabel: {
       fontSize: 14,
       fontWeight: '600' as const,
       letterSpacing: -0.1,
-      color: isLight ? '#0f766e' : theme.accentText,
+      color: theme.muted,
     },
     showMoreMeta: {
       marginTop: 6,
@@ -878,7 +858,14 @@ export default function CheckInScreen() {
                   <Text display style={[styles.sectionTitle, { marginBottom: 0 }]}>
                     {t('checkIn.checkedInTodayTitle')}
                   </Text>
-                  <Text style={styles.todayDate}>{formatDisplayDate(todayString())}</Text>
+                  <Text style={styles.todayDate}>
+                    {todayRows.length > 0
+                      ? t('checkIn.todayMeta', {
+                          date: formatDisplayDate(todayString()),
+                          count: todayRows.length,
+                        })
+                      : formatDisplayDate(todayString())}
+                  </Text>
                 </View>
                 <Pressable
                   accessibilityRole="button"
@@ -887,18 +874,13 @@ export default function CheckInScreen() {
                     void Haptics.selectionAsync().catch(() => undefined);
                     setHistoryOpen(true);
                   }}
-                  hitSlop={8}
-                  style={({ pressed }) => [styles.historyBtn, { opacity: pressed ? 0.65 : 1 }]}
+                  hitSlop={6}
+                  style={({ pressed }) => [styles.historyBtn, { opacity: pressed ? 0.72 : 1 }]}
                 >
-                  <Ionicons name="time-outline" size={16} color={c.muted} />
+                  <Ionicons name="time-outline" size={15} color={c.muted} />
                   <Text style={styles.historyBtnLabel}>{t('checkIn.historyTitle')}</Text>
                 </Pressable>
               </View>
-              {todayRows.length > 0 ? (
-                <View style={styles.todayMetaRow}>
-                  <Text style={styles.todayTimeLabel}>{t('checkIn.todayTimeLabel')}</Text>
-                </View>
-              ) : null}
             </View>
 
             {todayRows.length === 0 && !todaySnapQuery.isLoading ? (
@@ -915,63 +897,77 @@ export default function CheckInScreen() {
             ) : null}
 
             {todayRows.length > 0 ? (
-              <SoftSurface variant="panel" style={styles.todayCard}>
-                {visibleTodayRows.map((row, index) => (
-                  <View key={row.id}>
-                    {index > 0 ? <View style={styles.todayRowDivider} /> : null}
-                    <View style={styles.todayRow}>
-                      <MemberPhoto
-                        memberId={row.member_id}
-                        name={row.member_name || '?'}
-                        token={token}
-                        size={36}
-                        hasPhoto={Boolean(row.member_photo_url)}
-                      />
-                      <View style={{ flex: 1, minWidth: 0 }}>
-                        <Text listRow style={styles.todayName} numberOfLines={1}>
-                          {row.member_name || '—'}
-                        </Text>
-                        {showBranchOnToday && row.branch_name ? (
-                          <Text style={styles.todayBranch} numberOfLines={1}>
-                            {row.branch_name}
+              <Animated.View entering={FadeInDown.duration(timings.enterMs).springify().damping(22)}>
+                <SoftSurface variant="panel" style={styles.todayCard}>
+                  {visibleTodayRows.map((row, index) => (
+                    <View key={row.id}>
+                      {index > 0 ? <View style={styles.todayRowDivider} /> : null}
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={row.member_name || undefined}
+                        onPress={() => {
+                          void Haptics.selectionAsync().catch(() => undefined);
+                          router.push(`/member/${row.member_id}` as never);
+                        }}
+                        style={({ pressed }) => [styles.todayRow, { opacity: pressed ? 0.72 : 1 }]}
+                      >
+                        <MemberPhoto
+                          memberId={row.member_id}
+                          name={row.member_name || '?'}
+                          token={token}
+                          size={36}
+                          hasPhoto={Boolean(row.member_photo_url)}
+                        />
+                        <View style={{ flex: 1, minWidth: 0 }}>
+                          <Text listRow style={styles.todayName} numberOfLines={1}>
+                            {row.member_name || '—'}
                           </Text>
-                        ) : null}
-                      </View>
-                      <Text style={styles.todayTime}>{formatTodayDeskTime(row.checked_in_at)}</Text>
+                          {showBranchOnToday && row.branch_name ? (
+                            <Text style={styles.todayBranch} numberOfLines={1}>
+                              {row.branch_name}
+                            </Text>
+                          ) : null}
+                        </View>
+                        <Text
+                          style={[styles.todayTime, index === 0 ? styles.todayTimeLatest : null]}
+                        >
+                          {formatDisplayTime(row.checked_in_at, i18n.language)}
+                        </Text>
+                      </Pressable>
                     </View>
-                  </View>
-                ))}
-                {todayHasMore ? (
-                  <View style={styles.showMoreWrap}>
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel={
-                        todayExpanded ? t('checkIn.showLess') : t('checkIn.showMore')
-                      }
-                      onPress={() => {
-                        void Haptics.selectionAsync().catch(() => undefined);
-                        setTodayExpanded((v) => !v);
-                      }}
-                      style={({ pressed }) => [styles.showMoreBtn, { opacity: pressed ? 0.82 : 1 }]}
-                    >
-                      <Text style={styles.showMoreLabel}>
-                        {todayExpanded ? t('checkIn.showLess') : t('checkIn.showMore')}
+                  ))}
+                  {todayHasMore ? (
+                    <View style={styles.showMoreWrap}>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={
+                          todayExpanded ? t('checkIn.showLess') : t('checkIn.showMore')
+                        }
+                        onPress={() => {
+                          void Haptics.selectionAsync().catch(() => undefined);
+                          setTodayExpanded((v) => !v);
+                        }}
+                        style={({ pressed }) => [styles.showMoreBtn, { opacity: pressed ? 0.82 : 1 }]}
+                      >
+                        <Text style={styles.showMoreLabel}>
+                          {todayExpanded ? t('checkIn.showLess') : t('checkIn.showMore')}
+                        </Text>
+                        <Ionicons
+                          name={todayExpanded ? 'chevron-up' : 'chevron-down'}
+                          size={16}
+                          color={c.muted}
+                        />
+                      </Pressable>
+                      <Text style={styles.showMoreMeta}>
+                        {t('checkIn.showingOf', {
+                          shown: visibleTodayRows.length,
+                          total: todayRows.length,
+                        })}
                       </Text>
-                      <Ionicons
-                        name={todayExpanded ? 'chevron-up' : 'chevron-down'}
-                        size={16}
-                        color={isLight ? '#0f766e' : c.accentText}
-                      />
-                    </Pressable>
-                    <Text style={styles.showMoreMeta}>
-                      {t('checkIn.showingOf', {
-                        shown: visibleTodayRows.length,
-                        total: todayRows.length,
-                      })}
-                    </Text>
-                  </View>
-                ) : null}
-              </SoftSurface>
+                    </View>
+                  ) : null}
+                </SoftSurface>
+              </Animated.View>
             ) : null}
           </View>
         }

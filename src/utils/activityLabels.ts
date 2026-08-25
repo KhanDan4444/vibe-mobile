@@ -1,4 +1,6 @@
+import type { ComponentProps } from 'react';
 import type { TFunction } from 'i18next';
+import { Ionicons } from '@expo/vector-icons';
 import type { ActivityLogRow } from '@/src/types/api';
 import { paymentMethodLabelKey } from '@/src/constants/payments';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
@@ -25,6 +27,26 @@ const ACTION_KEYS: Record<string, string> = {
   'trainer.deleted': 'activity.actions.trainer_deleted',
   'trainer.restored': 'activity.actions.trainer_restored',
 };
+
+type IoniconName = ComponentProps<typeof Ionicons>['name'];
+
+export function activityActionIcon(action: string): IoniconName {
+  const prefix = action.split('.')[0];
+  switch (prefix) {
+    case 'member':
+      return 'person-outline';
+    case 'payment':
+      return 'cash-outline';
+    case 'plan':
+      return 'document-text-outline';
+    case 'staff':
+      return 'people-outline';
+    case 'trainer':
+      return 'fitness-outline';
+    default:
+      return 'ellipse-outline';
+  }
+}
 
 export function formatAuditAction(action: string, t: TFunction) {
   const key = ACTION_KEYS[action];

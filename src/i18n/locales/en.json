@@ -70,7 +70,9 @@
     "expires": "Expires {{date}}",
     "renew": "Renew",
     "viewAll": "View all",
-    "showMore": "Show more"
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "showingOf": "{{shown}} of {{total}}"
   },
   "members": {
     "search": "Search name or phone…",
@@ -384,6 +386,7 @@
     "todayTitle": "Checked in today",
     "attendanceTitle": "Attendance",
     "checkedInTodayTitle": "Checked in today",
+    "todayMeta": "{{date}} · {{count}}",
     "historyTitle": "History",
     "historyBody": "Browse visits by day.",
     "historyBackDays": "All days",
@@ -947,6 +950,8 @@
     "filterLabel": "Show activity from",
     "emptyTitle": "No activity yet",
     "emptyBody": "Events appear here as you enroll, renew, and collect payments.",
+    "statusLine": "{{count}} events · {{filter}}",
+    "statusLineEmpty": "No events in this view",
     "actions": {
       "member_created": "Member created",
       "member_enrolled": "Member enrolled",
@@ -992,7 +997,8 @@
     "filterRenewed": "Renewed",
     "emptyTitle": "No SMS yet",
     "emptyBody": "Member SMS history shows up after you send the first message.",
-    "statusLine": "{{count}} messages",
+    "statusLine": "{{count}} messages · {{filter}}",
+    "statusLineEmpty": "No messages in this view",
     "typeEnrolled": "Enrollment confirmed",
     "typeDueSoon": "Due soon reminder",
     "typeExpiresToday": "Expires today",
