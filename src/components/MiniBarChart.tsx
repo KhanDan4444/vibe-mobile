@@ -748,8 +748,6 @@ function useChartStyles() {
     pieLegendDate: { fontSize: 12, fontWeight: '600' as const, color: c.text },
     pieLegendDateSelected: { color: c.accentText },
     pieLegendAmount: { marginTop: 2, fontSize: 11, color: c.dim },
-    chartNote: { marginTop: 6, fontSize: 11, color: c.dim, textAlign: 'center' as const },
-    chartScopeHint: { marginTop: 6, fontSize: 11, color: c.dim, textAlign: 'center' as const },
   }));
 }
 
@@ -764,18 +762,12 @@ export function MiniBarChart({
   const styles = useChartStyles();
   const lineBarBundle = useMemo(() => aggregateChartByWeek(data), [data]);
 
-  const chartNote = lineBarBundle.grouped
-    ? t('dashboard.chartWeekGrouped', { count: lineBarBundle.sourceDays })
-    : null;
-
   if (!data.length) {
     return <Text style={styles.empty}>{t('dashboard.noRevenueData')}</Text>;
   }
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.chartScopeHint}>{t('dashboard.chartScopeHint')}</Text>
-      {chartNote ? <Text style={styles.chartNote}>{chartNote}</Text> : null}
       <LineChartView data={lineBarBundle.points} height={height} styles={styles} />
     </View>
   );

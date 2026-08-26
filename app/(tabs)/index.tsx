@@ -16,7 +16,7 @@ import { PageSkeleton } from '@/src/components/Skeleton';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useTheme } from '@/src/context/PreferencesContext';
 import type { DashboardAlertMember } from '@/src/types/api';
-import { formatDisplayDate } from '@/src/utils/date';
+import { daysUntilDate, formatDisplayDate } from '@/src/utils/date';
 import { formatEtb } from '@/src/utils/formatMoney';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
@@ -63,6 +63,17 @@ function AlertMemberRow({
   actionColor: string;
 }) {
   const { t } = useTranslation();
+  const statusLower = String(member.status || '').toLowerCase();
+  const endLabel = (() => {
+    if (statusLower === 'expired') {
+      return t('dashboard.expiredOn', { date: formatDisplayDate(member.end_date) });
+    }
+    const days = daysUntilDate(member.end_date);
+    if (days == null) return formatDisplayDate(member.end_date);
+    if (days <= 0) return t('dashboard.expiresToday');
+    return t('dashboard.daysLeft', { count: days });
+  })();
+
   return (
     <Pressable style={[styles.alertRow, { borderColor: colors.border }]} onPress={onOpen}>
       <MemberPhoto
@@ -80,7 +91,7 @@ function AlertMemberRow({
           {formatPlanDisplayName(member.plan_name) || t('members.noPlan')}
         </Text>
         <Text style={[styles.alertExpires, { color: colors.dim }]} numberOfLines={1}>
-          {t('dashboard.expires', { date: formatDisplayDate(member.end_date) })}
+          {endLabel}
         </Text>
       </View>
       <View style={styles.alertRight}>

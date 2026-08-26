@@ -1,7 +1,8 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { AppText as Text } from '@/src/components/AppText';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -10,10 +11,13 @@ import { fetchPlans } from '@/src/api/plans';
 import { DateField } from '@/src/components/DateField';
 import { PlanPickerField } from '@/src/components/PlanPickerField';
 import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
+import { MemberPhoto } from '@/src/components/MemberPhoto';
+import StatusBadge from '@/src/components/StatusBadge';
 import { ErrorBanner, FormScroll, Label, MoneyAmountField, PrimaryButton, Screen } from '@/src/components/Form';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { PageSkeleton } from '@/src/components/Skeleton';
 import { LoadError } from '@/src/components/LoadError';
+import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { useTranslation } from 'react-i18next';
 import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
@@ -22,19 +26,33 @@ import { useLoadRetry } from '@/src/hooks/useLoadRetry';
 import { PAYMENT_METHODS } from '@/src/constants/payments';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { isOfflineQueued } from '@/src/offline/types';
-import { formatDisplayDate, isDateRangeValid, todayString } from '@/src/utils/date';
+import { daysUntilDate, formatDisplayDate, isDateRangeValid, todayString } from '@/src/utils/date';
+import { formatPlanDisplayName } from '@/src/utils/formatPlanDisplayName';
 import { defaultRenewStartDate, canRenewMember } from '@/src/utils/memberRenew';
 import {
-  boundsForPaymentOnTerm,
+  boundsForRenewPaymentOnTerm,
   boundsForRenewStart,
-  clampPaymentToTerm,
+  clampRenewPaymentToTerm,
+  paymentDateForRenewTermStart,
   type DateBounds,
 } from '@/src/utils/datePickerBounds';
 import { hasGymPortalAccess } from '@/src/utils/roles';
-import type { PlanRow, RenewPayload } from '@/src/types/api';
+import type { MemberRow, PlanRow, RenewPayload } from '@/src/types/api';
+import type { TFunction } from 'i18next';
 
 function planPrice(plan: PlanRow): number {
   return Number(plan.price) || 0;
+}
+
+function renewMemberEndLabel(member: MemberRow, t: TFunction): string {
+  const statusLower = String(member.status || '').toLowerCase();
+  if (statusLower === 'expired') {
+    return t('dashboard.expiredOn', { date: formatDisplayDate(member.end_date) });
+  }
+  const days = daysUntilDate(member.end_date);
+  if (days == null) return formatDisplayDate(member.end_date);
+  if (days <= 0) return t('dashboard.expiresToday');
+  return t('dashboard.daysLeft', { count: days });
 }
 
 export default function RenewScreen() {
@@ -43,6 +61,7 @@ export default function RenewScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { token, user } = useAuth();
+  const { colors: c } = useTheme();
 
   const [planId, setPlanId] = useState<number | null>(null);
   const [startDate, setStartDate] = useState(todayString());
@@ -57,9 +76,34 @@ export default function RenewScreen() {
   const canRenew = Boolean(user && hasGymPortalAccess(user.role));
   const styles = useThemedStyles((colors) => ({
     center: { flex: 1, alignItems: 'center' as const, justifyContent: 'center' as const },
-    memberChip: { paddingHorizontal: 14, paddingVertical: 12, marginBottom: 14 },
-    memberName: { color: colors.text, fontSize: 16, fontWeight: '600' as const },
-    hint: { color: colors.dim, fontSize: 14 },
+    memberChip: {
+      paddingHorizontal: 12,
+      paddingVertical: 12,
+      marginBottom: 14,
+    },
+    memberRow: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 12,
+    },
+    memberBody: { flex: 1, minWidth: 0 },
+    memberName: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600' as const,
+      letterSpacing: -0.2,
+    },
+    memberMeta: {
+      marginTop: 3,
+      color: colors.dim,
+      fontSize: 13,
+      lineHeight: 17,
+    },
+    memberRight: {
+      alignItems: 'flex-end' as const,
+      gap: 8,
+    },
+    hint: { color: colors.dim, fontSize: 14, marginTop: 6 },
     useTodayBtn: {
       alignSelf: 'flex-start' as const,
       marginTop: 8,
@@ -88,15 +132,18 @@ export default function RenewScreen() {
   const member = memberQuery.data;
   const plans = plansQuery.data ?? [];
   const renewStartBounds: DateBounds = member ? boundsForRenewStart(member) : {};
-  const paymentBounds = boundsForPaymentOnTerm(startDate);
+  const paymentBounds = boundsForRenewPaymentOnTerm(startDate);
   const paymentRangeValid = isDateRangeValid(paymentBounds.minimumDate, paymentBounds.maximumDate);
   const today = todayString();
+  const prepaidRenew = Boolean(startDate && startDate > today);
   const minStartIso = member ? defaultRenewStartDate(member) : today;
   const canSetStartToToday = !paymentRangeValid && today >= minStartIso;
 
   useEffect(() => {
     if (member) {
-      setStartDate(defaultRenewStartDate(member));
+      const nextStart = defaultRenewStartDate(member);
+      setStartDate(nextStart);
+      setPaymentDate(paymentDateForRenewTermStart(nextStart));
       if (member.plan_id) setPlanId(member.plan_id);
     }
   }, [member]);
@@ -106,6 +153,12 @@ export default function RenewScreen() {
   useEffect(() => {
     if (selectedPlan) setAmount(String(planPrice(selectedPlan)));
   }, [selectedPlan]);
+
+  const memberMeta = useMemo(() => {
+    if (!member) return '';
+    const plan = formatPlanDisplayName(member.plan_name) || t('members.noPlan');
+    return `${plan} · ${renewMemberEndLabel(member, t)}`;
+  }, [member, t]);
 
   const buildPayload = (): RenewPayload => {
     if (!planId) throw new Error('Select a plan.');
@@ -191,8 +244,34 @@ export default function RenewScreen() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <FormScroll>
           {member ? (
-            <SoftSurface variant="quiet" style={styles.memberChip}>
-              <Text style={styles.memberName}>{t('forms.renewFor', { name: member.name })}</Text>
+            <SoftSurface
+              variant="quiet"
+              onPress={() => router.push(`/member/${member.id}` as never)}
+              style={styles.memberChip}
+              accessibilityRole="button"
+              accessibilityLabel={t('forms.openMember', { name: member.name })}
+            >
+              <View style={styles.memberRow}>
+                <MemberPhoto
+                  memberId={member.id}
+                  name={member.name || '?'}
+                  token={token!}
+                  size={44}
+                  hasPhoto={Boolean(member.photo_url)}
+                />
+                <View style={styles.memberBody}>
+                  <Text style={styles.memberName} numberOfLines={1}>
+                    {member.name}
+                  </Text>
+                  <Text style={styles.memberMeta} numberOfLines={2}>
+                    {memberMeta}
+                  </Text>
+                </View>
+                <View style={styles.memberRight}>
+                  <StatusBadge status={member.status} />
+                  <Ionicons name="chevron-forward" size={16} color={c.dim} />
+                </View>
+              </View>
             </SoftSurface>
           ) : null}
           <ErrorBanner message={error} />
@@ -208,7 +287,7 @@ export default function RenewScreen() {
             value={startDate}
             onChange={(v) => {
               setStartDate(v);
-              setPaymentDate(clampPaymentToTerm(v, paymentDate));
+              setPaymentDate(clampRenewPaymentToTerm(v, paymentDate));
             }}
             minimumDate={renewStartBounds.minimumDate}
           />
@@ -226,13 +305,16 @@ export default function RenewScreen() {
               date: formatDisplayDate(startDate),
             })}
           />
+          {prepaidRenew ? (
+            <Text style={styles.hint}>{t('forms.renewPrepaidHint', { date: formatDisplayDate(startDate) })}</Text>
+          ) : null}
           {canSetStartToToday ? (
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t('forms.useTodayAsStart')}
               onPress={() => {
                 setStartDate(today);
-                setPaymentDate(clampPaymentToTerm(today, paymentDate));
+                setPaymentDate(clampRenewPaymentToTerm(today, paymentDate));
               }}
               style={({ pressed }) => [styles.useTodayBtn, { opacity: pressed ? 0.7 : 1 }]}
             >

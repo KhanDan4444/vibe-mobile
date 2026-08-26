@@ -8,7 +8,6 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import { AppText as Text } from '@/src/components/AppText';
 import { ListFooterSkeleton, PageSkeleton } from '@/src/components/Skeleton';
 import { LoadError } from '@/src/components/LoadError';
@@ -24,7 +23,6 @@ import { useBranchScope } from '@/src/context/BranchContext';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
-import { timings } from '@/src/theme/motion';
 import { formatLogTimestamp } from '@/src/utils/date';
 import {
   SMS_TYPE_FILTER_KEYS,
@@ -86,9 +84,10 @@ function SmsItem({
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
       marginTop: 1,
-      borderWidth: StyleSheet.hairlineWidth,
-      backgroundColor: statusWashOpaque(accent, theme.card, 0.14),
-      borderColor: statusWashOpaque(accent, theme.cardEdge, 0.35),
+      // Light keeps a soft accent well; dark stays flat (no glow wash).
+      borderWidth: isLight ? StyleSheet.hairlineWidth : 0,
+      backgroundColor: isLight ? statusWashOpaque(accent, theme.card, 0.14) : 'transparent',
+      borderColor: isLight ? statusWashOpaque(accent, theme.cardEdge, 0.35) : 'transparent',
     },
     body: { flex: 1, minWidth: 0 },
     headerRow: {
@@ -145,7 +144,7 @@ function SmsItem({
         style={({ pressed }) => [styles.row, { opacity: pressed ? 0.72 : 1 }]}
       >
         <View style={styles.iconWrap}>
-          <Ionicons name={iconName} size={17} color={accent} />
+          <Ionicons name={iconName} size={17} color={isLight ? accent : theme.muted} />
         </View>
         <View style={styles.body}>
           <View style={styles.headerRow}>
@@ -272,24 +271,20 @@ export default function MessagesScreen() {
         ) : (
           <View style={[styles.listWrap, { paddingHorizontal: pagePadding }]}>
             {items.length > 0 ? <Text style={styles.statusMeta}>{statusLine}</Text> : null}
-            <SoftSurface variant="panel" style={styles.listCard}>
+            <SoftSurface variant="panel" flat style={styles.listCard}>
               <FlatList
                 data={items}
                 keyExtractor={(item) => String(item.id)}
                 renderItem={({ item, index }) => (
-                  <Animated.View
-                    entering={index < 8 ? FadeInDown.duration(timings.enterMs).springify().damping(22) : undefined}
-                  >
-                    <SmsItem
-                      row={item}
-                      showBranch={showBranchFilter && selectedBranchId === 'all'}
-                      isFirst={index === 0}
-                      isLight={isLight}
-                      language={lang}
-                      typeFiltered={typeFiltered}
-                      onPress={() => router.push(`/member/${item.member_id}`)}
-                    />
-                  </Animated.View>
+                  <SmsItem
+                    row={item}
+                    showBranch={showBranchFilter && selectedBranchId === 'all'}
+                    isFirst={index === 0}
+                    isLight={isLight}
+                    language={lang}
+                    typeFiltered={typeFiltered}
+                    onPress={() => router.push(`/member/${item.member_id}`)}
+                  />
                 )}
                 contentContainerStyle={styles.listContent}
                 refreshControl={

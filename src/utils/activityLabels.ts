@@ -42,7 +42,7 @@ export function activityActionIcon(action: string): IoniconName {
     case 'staff':
       return 'people-outline';
     case 'trainer':
-      return 'fitness-outline';
+      return 'body-outline';
     default:
       return 'ellipse-outline';
   }

@@ -8,7 +8,6 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import { AppText as Text } from '@/src/components/AppText';
 import { ListFooterSkeleton, PageSkeleton } from '@/src/components/Skeleton';
 import { LoadError } from '@/src/components/LoadError';
@@ -24,7 +23,6 @@ import { useBranchScope } from '@/src/context/BranchContext';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
-import { timings } from '@/src/theme/motion';
 import { formatLogTimestamp } from '@/src/utils/date';
 import {
   activityActionIcon,
@@ -113,7 +111,8 @@ function ActivityItem({
       borderRadius: 10,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
-      backgroundColor: isLight ? 'rgba(15,118,110,0.08)' : 'rgba(45,212,191,0.1)',
+      // Light keeps a soft teal well; dark stays flat (no glow wash).
+      backgroundColor: isLight ? 'rgba(15,118,110,0.08)' : 'transparent',
       marginTop: 1,
     },
     body: { flex: 1, minWidth: 0 },
@@ -173,7 +172,7 @@ function ActivityItem({
   const content = (
     <View style={styles.row}>
       <View style={styles.iconWrap}>
-        <Ionicons name={iconName} size={17} color={isLight ? '#0F766E' : '#5EEAD4'} />
+        <Ionicons name={iconName} size={17} color={isLight ? '#0F766E' : theme.muted} />
       </View>
       <View style={styles.body}>
         <View style={styles.headerRow}>
@@ -316,25 +315,23 @@ export default function ActivityScreen() {
         ) : (
           <View style={[styles.listWrap, { paddingHorizontal: pagePadding }]}>
             {items.length > 0 ? <Text style={styles.statusMeta}>{statusLine}</Text> : null}
-            <SoftSurface variant="panel" style={styles.listCard}>
+            <SoftSurface variant="panel" flat style={styles.listCard}>
               <FlatList
                 data={items}
                 keyExtractor={(item) => String(item.id)}
                 renderItem={({ item, index }) => (
-                  <Animated.View entering={index < 8 ? FadeInDown.duration(timings.enterMs).springify().damping(22) : undefined}>
-                    <ActivityItem
-                      entry={item}
-                      showBranch={showBranchOnRows}
-                      isFirst={index === 0}
-                      isLight={isLight}
-                      language={lang}
-                      onPress={
-                        isRowClickable(item)
-                          ? () => openActivityTarget(item, router)
-                          : undefined
-                      }
-                    />
-                  </Animated.View>
+                  <ActivityItem
+                    entry={item}
+                    showBranch={showBranchOnRows}
+                    isFirst={index === 0}
+                    isLight={isLight}
+                    language={lang}
+                    onPress={
+                      isRowClickable(item)
+                        ? () => openActivityTarget(item, router)
+                        : undefined
+                    }
+                  />
                 )}
                 contentContainerStyle={styles.listContent}
                 refreshControl={

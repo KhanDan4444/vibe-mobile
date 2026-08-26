@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -154,8 +154,6 @@ export default function CheckInScreen() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [todayExpanded, setTodayExpanded] = useState(false);
-  const [todayPulse, setTodayPulse] = useState(false);
-  const todayPulseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [cardErrors, setCardErrors] = useState<Record<number, CardError>>({});
   const [successIds, setSuccessIds] = useState<Record<number, boolean>>({});
   const [forceTarget, setForceTarget] = useState<{
@@ -202,19 +200,6 @@ export default function CheckInScreen() {
   useEffect(() => {
     setTodayExpanded(false);
   }, [branchKey]);
-
-  useEffect(() => {
-    return () => {
-      if (todayPulseTimer.current) clearTimeout(todayPulseTimer.current);
-    };
-  }, []);
-
-  const pulseTodaySection = useCallback(() => {
-    void Haptics.selectionAsync().catch(() => undefined);
-    setTodayPulse(true);
-    if (todayPulseTimer.current) clearTimeout(todayPulseTimer.current);
-    todayPulseTimer.current = setTimeout(() => setTodayPulse(false), 780);
-  }, []);
 
   const settingsQuery = useQuery({
     queryKey: ['check-in-settings'],
@@ -580,9 +565,6 @@ export default function CheckInScreen() {
       marginHorizontal: -2,
       borderRadius: 12,
     },
-    todayHeaderPulse: {
-      backgroundColor: isLight ? 'rgba(15,118,110,0.08)' : 'rgba(45,212,191,0.12)',
-    },
     todayHeaderTop: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
@@ -852,7 +834,7 @@ export default function CheckInScreen() {
               </View>
             ) : null}
 
-            <View style={[styles.todayHeader, todayPulse ? styles.todayHeaderPulse : null]}>
+            <View style={styles.todayHeader}>
               <View style={styles.todayHeaderTop}>
                 <View style={styles.todayHeaderCopy}>
                   <Text display style={[styles.sectionTitle, { marginBottom: 0 }]}>
@@ -975,10 +957,7 @@ export default function CheckInScreen() {
 
       <AttendanceHistorySheet
         visible={historyOpen}
-        onClose={() => {
-          setHistoryOpen(false);
-          pulseTodaySection();
-        }}
+        onClose={() => setHistoryOpen(false)}
         token={token}
         branchId={selectedBranchId}
         weekStartsOn={weekStartsOn === 'sunday' ? 'sunday' : 'monday'}

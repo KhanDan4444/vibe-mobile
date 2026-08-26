@@ -11,6 +11,17 @@ export function todayString(): string {
   return dateToIso(new Date());
 }
 
+/** Whole calendar days from today to a date (local). Positive = future, 0 = today, negative = past. */
+export function daysUntilDate(date: string | Date | null | undefined): number | null {
+  const iso = typeof date === 'string' ? toDateString(date) : date ? dateToIso(date) : '';
+  if (!iso) return null;
+  const target = parseLocalDate(iso);
+  if (!target) return null;
+  const today = parseLocalDate(todayString());
+  if (!today) return null;
+  return Math.round((target.getTime() - today.getTime()) / 86400000);
+}
+
 export function dateToIso(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');

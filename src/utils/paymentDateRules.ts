@@ -43,6 +43,33 @@ export function validatePaymentDate(
   return { ok: true };
 }
 
+/** Renew may be prepaid when the new term start is still in the future. */
+export function validateRenewPaymentDate(
+  paymentDateStr: string,
+  termStartDateStr: string | null | undefined,
+  today: string = todayIso()
+): PaymentDateValidation {
+  const paymentDate = normalizeIso(paymentDateStr);
+  const termStart = normalizeIso(termStartDateStr);
+  const todayNorm = normalizeIso(today) || todayIso();
+  if (!paymentDate) {
+    return { ok: false, error: 'Invalid payment date.' };
+  }
+  if (paymentDate > todayNorm) {
+    return { ok: false, error: 'Payment date cannot be in the future.' };
+  }
+  if (termStart && termStart > todayNorm) {
+    return { ok: true };
+  }
+  if (termStart && paymentDate < termStart) {
+    return {
+      ok: false,
+      error: `Payment date must be on or after the term start (${termStart}) or it will not count toward this term.`,
+    };
+  }
+  return { ok: true };
+}
+
 export type IsoDateBounds = { min?: string; max?: string };
 
 export function boundsForPaymentOnTerm(termStartIso: string | null | undefined, today: string = todayIso()): IsoDateBounds {
@@ -51,6 +78,19 @@ export function boundsForPaymentOnTerm(termStartIso: string | null | undefined, 
     ...(term ? { min: term } : {}),
     max: normalizeIso(today) || todayIso(),
   };
+}
+
+/** When renew start is in the future, allow payment through today (prepaid). */
+export function boundsForRenewPaymentOnTerm(
+  termStartIso: string | null | undefined,
+  today: string = todayIso()
+): IsoDateBounds {
+  const term = normalizeIso(termStartIso);
+  const todayNorm = normalizeIso(today) || todayIso();
+  if (term && term > todayNorm) {
+    return { max: todayNorm };
+  }
+  return boundsForPaymentOnTerm(termStartIso, today);
 }
 
 export function boundsForTermStartWithPayment(today: string = todayIso()): IsoDateBounds {
@@ -92,6 +132,22 @@ export function clampPaymentToTerm(termStartIso: string, paymentIso: string, tod
   return clampIsoDate(paymentIso, bounds.min, bounds.max);
 }
 
+export function clampRenewPaymentToTerm(
+  termStartIso: string,
+  paymentIso: string,
+  today: string = todayIso()
+): string {
+  const bounds = boundsForRenewPaymentOnTerm(termStartIso, today);
+  return clampIsoDate(paymentIso, bounds.min, bounds.max);
+}
+
 export function paymentDateForTermStart(termStartIso: string, today: string = todayIso()): string {
   return clampPaymentToTerm(termStartIso, termStartIso, today);
+}
+
+export function paymentDateForRenewTermStart(termStartIso: string, today: string = todayIso()): string {
+  const term = normalizeIso(termStartIso);
+  const todayNorm = normalizeIso(today) || todayIso();
+  if (term && term > todayNorm) return todayNorm;
+  return paymentDateForTermStart(termStartIso, today);
 }

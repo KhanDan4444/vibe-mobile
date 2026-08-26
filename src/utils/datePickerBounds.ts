@@ -6,9 +6,12 @@ import {
   boundsForCustomRangeTo as coreTo,
   boundsForEnrollStart as coreEnroll,
   boundsForPaymentOnTerm as corePayment,
+  boundsForRenewPaymentOnTerm as coreRenewPayment,
   boundsForTermStartWithPayment as coreTermStart,
   clampPaymentToTerm as coreClamp,
+  clampRenewPaymentToTerm as coreRenewClamp,
   paymentDateForTermStart as corePaymentForTerm,
+  paymentDateForRenewTermStart as coreRenewPaymentForTerm,
 } from '@/src/utils/paymentDateRules';
 
 export type DateBounds = {
@@ -33,6 +36,11 @@ function endOfLocalDay(iso: string): Date {
 /** Payment collected on/after term start, never in the future. */
 export function boundsForPaymentOnTerm(termStartIso: string | null | undefined): DateBounds {
   return toDateBounds(corePayment(termStartIso));
+}
+
+/** Renew: allow prepaid payment when start is still in the future. */
+export function boundsForRenewPaymentOnTerm(termStartIso: string | null | undefined): DateBounds {
+  return toDateBounds(coreRenewPayment(termStartIso));
 }
 
 export function boundsForTermStartWithPayment(): DateBounds {
@@ -60,8 +68,16 @@ export function clampPaymentToTerm(termStartIso: string, paymentIso: string): st
   return coreClamp(termStartIso, paymentIso);
 }
 
+export function clampRenewPaymentToTerm(termStartIso: string, paymentIso: string): string {
+  return coreRenewClamp(termStartIso, paymentIso);
+}
+
 export function paymentDateForTermStart(termStartIso: string): string {
   return corePaymentForTerm(termStartIso);
+}
+
+export function paymentDateForRenewTermStart(termStartIso: string): string {
+  return coreRenewPaymentForTerm(termStartIso);
 }
 
 export { toDateString };
