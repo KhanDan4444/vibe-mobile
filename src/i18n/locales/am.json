@@ -971,7 +971,11 @@
       "plan_updated": "ዕቅድ ተዘምኗል",
       "plan_deleted": "ዕቅድ ተሰርዟል",
       "staff_created": "ሰራተኛ ታክሏል",
-      "staff_updated": "ሰራተኛ ተዘምኗል"
+      "staff_updated": "ሰራተኛ ተዘምኗል",
+      "check_in_recorded": "መግቢያ ተመዝግቧል",
+      "attendance_settings_updated": "የመገኘት ቅንብሮች ተዘምነዋል",
+      "member_pass_regenerated": "ፓስ እንደገና ተፈጥሯል",
+      "member_pass_sms_sent": "የፓስ ሊንክ ተልኳል"
     },
     "roles": {
       "owner": "ባለቤት",

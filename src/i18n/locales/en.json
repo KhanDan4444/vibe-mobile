@@ -979,7 +979,11 @@
       "trainer_created": "Trainer added",
       "trainer_updated": "Trainer updated",
       "trainer_deleted": "Trainer moved to Former",
-      "trainer_restored": "Trainer restored"
+      "trainer_restored": "Trainer restored",
+      "check_in_recorded": "Check-in recorded",
+      "attendance_settings_updated": "Attendance settings updated",
+      "member_pass_regenerated": "Pass regenerated",
+      "member_pass_sms_sent": "Pass link sent"
     },
     "roles": {
       "owner": "Owner",

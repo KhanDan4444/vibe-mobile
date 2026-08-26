@@ -103,6 +103,11 @@ function SmsItem({
       color: theme.text,
       letterSpacing: -0.2,
     },
+    timeCol: {
+      alignItems: 'flex-end' as const,
+      gap: 4,
+      flexShrink: 0,
+    },
     time: {
       fontSize: 12,
       fontWeight: '500' as const,
@@ -112,6 +117,7 @@ function SmsItem({
     },
     badge: {
       alignSelf: 'flex-start' as const,
+      marginTop: 5,
       paddingHorizontal: 9,
       paddingVertical: 3,
       borderRadius: 999,
@@ -120,33 +126,17 @@ function SmsItem({
       borderColor: statusWashOpaque(accent, theme.cardEdge, 0.32),
     },
     badgeText: { fontSize: 11, fontWeight: '600' as const, color: accent },
-    badgeRow: {
-      marginTop: 5,
-      flexDirection: 'row' as const,
-      flexWrap: 'wrap' as const,
-      alignItems: 'center' as const,
-      gap: 6,
-    },
-    sentBadge: {
+    sentRow: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
-      gap: 5,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 999,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(5,150,105,0.4)',
-      backgroundColor: 'rgba(5,150,105,0.12)',
+      gap: 4,
     },
-    sentIcon: {
-      width: 16,
-      height: 16,
-      borderRadius: 8,
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
-      backgroundColor: 'rgba(5,150,105,0.18)',
+    sentBadgeText: {
+      fontSize: 11,
+      fontWeight: '700' as const,
+      letterSpacing: 0.1,
+      textTransform: 'lowercase' as const,
     },
-    sentBadgeText: { fontSize: 11, fontWeight: '700' as const },
     preview: { marginTop: 4, fontSize: 12, lineHeight: 16, color: theme.muted },
     meta: {
       marginTop: 6,
@@ -177,18 +167,18 @@ function SmsItem({
             <Text style={styles.member} numberOfLines={1}>
               {row.member_name}
             </Text>
-            <Text style={styles.time}>{formatLogTimestamp(row.sent_at, t, language)}</Text>
-          </View>
-          <View style={styles.badgeRow}>
-            <View style={styles.sentBadge}>
-              <View style={styles.sentIcon}>
-                <Ionicons name="checkmark" size={11} color={c.success} />
+            <View style={styles.timeCol}>
+              <Text style={styles.time}>{formatLogTimestamp(row.sent_at, t, language)}</Text>
+              <View style={styles.sentRow}>
+                <Ionicons name="checkmark-circle" size={15} color={c.success} />
+                <Text style={[styles.sentBadgeText, { color: c.success }]}>
+                  {t('messages.sentBadge')}
+                </Text>
               </View>
-              <Text style={[styles.sentBadgeText, { color: c.success }]}>{t('messages.sentBadge')}</Text>
             </View>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{formatSmsType(row.message_type, t)}</Text>
-            </View>
+          </View>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{formatSmsType(row.message_type, t)}</Text>
           </View>
           {preview ? (
             <Text style={styles.preview} numberOfLines={2}>

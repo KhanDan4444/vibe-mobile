@@ -26,11 +26,17 @@ const ACTION_KEYS: Record<string, string> = {
   'trainer.updated': 'activity.actions.trainer_updated',
   'trainer.deleted': 'activity.actions.trainer_deleted',
   'trainer.restored': 'activity.actions.trainer_restored',
+  'check_in.recorded': 'activity.actions.check_in_recorded',
+  'attendance.settings_updated': 'activity.actions.attendance_settings_updated',
+  'member.pass_regenerated': 'activity.actions.member_pass_regenerated',
+  'member.pass_sms_sent': 'activity.actions.member_pass_sms_sent',
 };
 
 type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
 export function activityActionIcon(action: string): IoniconName {
+  if (action === 'member.pass_sms_sent') return 'chatbubble-ellipses-outline';
+  if (action === 'member.pass_regenerated') return 'qr-code-outline';
   const prefix = action.split('.')[0];
   switch (prefix) {
     case 'member':
@@ -43,6 +49,10 @@ export function activityActionIcon(action: string): IoniconName {
       return 'people-outline';
     case 'trainer':
       return 'body-outline';
+    case 'check_in':
+      return 'scan-outline';
+    case 'attendance':
+      return 'settings-outline';
     default:
       return 'ellipse-outline';
   }
