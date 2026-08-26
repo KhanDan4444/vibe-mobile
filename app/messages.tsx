@@ -112,7 +112,6 @@ function SmsItem({
     },
     badge: {
       alignSelf: 'flex-start' as const,
-      marginTop: 5,
       paddingHorizontal: 9,
       paddingVertical: 3,
       borderRadius: 999,
@@ -121,6 +120,33 @@ function SmsItem({
       borderColor: statusWashOpaque(accent, theme.cardEdge, 0.32),
     },
     badgeText: { fontSize: 11, fontWeight: '600' as const, color: accent },
+    badgeRow: {
+      marginTop: 5,
+      flexDirection: 'row' as const,
+      flexWrap: 'wrap' as const,
+      alignItems: 'center' as const,
+      gap: 6,
+    },
+    sentBadge: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 5,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 999,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: 'rgba(5,150,105,0.4)',
+      backgroundColor: 'rgba(5,150,105,0.12)',
+    },
+    sentIcon: {
+      width: 16,
+      height: 16,
+      borderRadius: 8,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      backgroundColor: 'rgba(5,150,105,0.18)',
+    },
+    sentBadgeText: { fontSize: 11, fontWeight: '700' as const },
     preview: { marginTop: 4, fontSize: 12, lineHeight: 16, color: theme.muted },
     meta: {
       marginTop: 6,
@@ -144,7 +170,7 @@ function SmsItem({
         style={({ pressed }) => [styles.row, { opacity: pressed ? 0.72 : 1 }]}
       >
         <View style={styles.iconWrap}>
-          <Ionicons name={iconName} size={17} color={isLight ? accent : theme.muted} />
+          <Ionicons name={iconName} size={17} color={isLight ? accent : c.muted} />
         </View>
         <View style={styles.body}>
           <View style={styles.headerRow}>
@@ -153,8 +179,16 @@ function SmsItem({
             </Text>
             <Text style={styles.time}>{formatLogTimestamp(row.sent_at, t, language)}</Text>
           </View>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{formatSmsType(row.message_type, t)}</Text>
+          <View style={styles.badgeRow}>
+            <View style={styles.sentBadge}>
+              <View style={styles.sentIcon}>
+                <Ionicons name="checkmark" size={11} color={c.success} />
+              </View>
+              <Text style={[styles.sentBadgeText, { color: c.success }]}>{t('messages.sentBadge')}</Text>
+            </View>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{formatSmsType(row.message_type, t)}</Text>
+            </View>
           </View>
           {preview ? (
             <Text style={styles.preview} numberOfLines={2}>

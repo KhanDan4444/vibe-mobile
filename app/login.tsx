@@ -132,12 +132,18 @@ export default function LoginScreen() {
                 ) : null}
 
                 <View style={[s.inputShell, authFieldRing({ focused: focused === 'identifier' })]}>
+                  <Ionicons
+                    name="person"
+                    size={isTablet ? 24 : 22}
+                    color="#5eead4"
+                    style={s.fieldIcon}
+                  />
                   <TextInput
                     latin={identifierLatin}
                     autoCapitalize="none"
                     autoCorrect={false}
                     autoComplete="username"
-                    keyboardType="email-address"
+                    keyboardType="default"
                     returnKeyType="next"
                     value={identifier}
                     onChangeText={setIdentifier}
@@ -160,6 +166,12 @@ export default function LoginScreen() {
                     authFieldRing({ focused: focused === 'password' }),
                   ]}
                 >
+                  <Ionicons
+                    name="lock-closed"
+                    size={isTablet ? 24 : 22}
+                    color="#5eead4"
+                    style={s.fieldIcon}
+                  />
                   <TextInput
                     latin={passwordLatin}
                     ref={passwordRef}
@@ -297,6 +309,9 @@ const phoneStyles = StyleSheet.create({
   inputShellTight: {
     marginBottom: 10,
   },
+  fieldIcon: {
+    marginRight: 10,
+  },
   inputField: {
     flex: 1,
     paddingVertical: 0,
@@ -380,6 +395,9 @@ const tabletStyles = StyleSheet.create({
   },
   inputShellTight: {
     marginBottom: 12,
+  },
+  fieldIcon: {
+    marginRight: 12,
   },
   inputField: {
     flex: 1,

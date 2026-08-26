@@ -6,6 +6,7 @@ import { ListFooterSkeleton, PageSkeleton } from '@/src/components/Skeleton';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchDashboard } from '@/src/api/dashboard';
 import { fetchArchivedMembers, fetchMembers, restoreMember, deleteMember, type MemberListParams } from '@/src/api/members';
@@ -34,7 +35,7 @@ import { fabElevation } from '@/src/theme/elevation';
 import { DEFAULT_MEMBER_SORT, MEMBER_SORT_OPTIONS, type MemberSortId } from '@/src/utils/listSort';
 import { isGymOwner } from '@/src/utils/roles';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
-import { formatDisplayDate } from '@/src/utils/date';
+import { formatDisplayDate, daysUntilDate } from '@/src/utils/date';
 import { canRenewMember } from '@/src/utils/memberRenew';
 import type { MemberRow } from '@/src/types/api';
 
@@ -42,6 +43,27 @@ type MemberFilter = 'all' | 'active' | 'due_soon' | 'expired' | 'unpaid' | 'form
 
 const FILTER_OPTIONS: MemberFilter[] = ['all', 'active', 'unpaid', 'due_soon', 'expired', 'former'];
 const MEMBER_FILTER_STORAGE_KEY = 'vibe.members.statusFilter';
+
+function dueSoonMeta(
+  member: Pick<MemberRow, 'status' | 'end_date'>,
+  t: TFunction,
+  showRenew: boolean,
+): { underPhone: string | null; underBadge: string | null } {
+  if (String(member.status || '').toLowerCase() !== 'due soon') {
+    return { underPhone: null, underBadge: null };
+  }
+  const days = daysUntilDate(member.end_date);
+  if (days == null) return { underPhone: null, underBadge: null };
+  if (days <= 0) {
+    const label = t('dashboard.expiresToday');
+    // Renew takes the badge slot; Expires today moves under the phone.
+    return showRenew
+      ? { underPhone: label, underBadge: null }
+      : { underPhone: null, underBadge: label };
+  }
+  // Days remaining always sit under the status badge.
+  return { underPhone: null, underBadge: t('dashboard.daysLeft', { count: days }) };
+}
 
 const FILTER_LABEL_KEYS: Record<MemberFilter, string> = {
   all: 'members.filterAll',
@@ -126,32 +148,32 @@ function MemberRowItem({
   const { t } = useTranslation();
   const isFormer = Boolean(member.deleted_at);
   const showRenew = !readOnly && !isFormer && canRenewMember(member);
+  const { underPhone, underBadge } = !isFormer
+    ? dueSoonMeta(member, t, showRenew)
+    : { underPhone: null, underBadge: null };
 
-  const hasActions =
-    (showRenew && Boolean(onRenew)) ||
-    (isFormer && Boolean(canRestore && onRestore));
+  const renewAction =
+    showRenew && onRenew ? (
+      <RowActionLink
+        label={t('dashboard.renew')}
+        icon="refresh"
+        color={colors.accentCta}
+        emphasized
+        onPress={onRenew}
+      />
+    ) : null;
 
-  const actions = hasActions ? (
-    <View style={styles.rowActions}>
-      {showRenew && onRenew ? (
-        <RowActionLink
-          label={t('dashboard.renew')}
-          icon="refresh"
-          color={colors.accentCta}
-          emphasized
-          onPress={onRenew}
-        />
-      ) : null}
-      {isFormer && canRestore && onRestore ? (
-        <RestoreAction
-          label={t('members.restore')}
-          colors={colors}
-          busy={restoreBusy}
-          onPress={onRestore}
-        />
-      ) : null}
-    </View>
-  ) : null;
+  const restoreAction =
+    isFormer && canRestore && onRestore ? (
+      <RestoreAction
+        label={t('members.restore')}
+        colors={colors}
+        busy={restoreBusy}
+        onPress={onRestore}
+      />
+    ) : null;
+
+  const rightAction = renewAction || restoreAction;
 
   return (
     <SoftSurface
@@ -166,31 +188,42 @@ function MemberRowItem({
           size={multiColumn ? 40 : 44}
           hasPhoto={Boolean(member.photo_url)}
         />
-        <View style={styles.rowMain}>
-          <Text listRow style={styles.name} numberOfLines={1}>
-            {member.name}
-          </Text>
-          <Text style={styles.phone} numberOfLines={1}>
-            {member.phone || '—'}
-          </Text>
-          {isFormer ? (
-            <Text style={styles.removed} numberOfLines={1}>
-              {t('members.removedOnDate', { date: formatDisplayDate(member.deleted_at) })}
-            </Text>
-          ) : null}
-          {showBranch && member.branch_name ? (
-            <Text style={styles.branch} numberOfLines={1}>
-              {branchDisplayName(member.branch_name)}
-            </Text>
-          ) : null}
-        </View>
-        {!multiColumn ? (
-          <View style={styles.rowMeta}>
-            <StatusBadge status={isFormer ? 'Former' : member.status} style={styles.metaBadge} />
-            {member.is_unpaid && !isFormer ? <Text style={styles.unpaid}>{t('members.unpaidBadge')}</Text> : null}
-            {actions}
+        <View style={styles.rowBody}>
+          <View style={styles.rowPrimary}>
+            <View style={styles.rowMain}>
+              <Text listRow style={styles.name} numberOfLines={1}>
+                {member.name}
+              </Text>
+              <Text style={styles.phone} numberOfLines={1}>
+                {member.phone || '—'}
+              </Text>
+              {underPhone ? <Text style={styles.daysLeftUnderPhone}>{underPhone}</Text> : null}
+              {isFormer ? (
+                <Text style={styles.removed} numberOfLines={1}>
+                  {t('members.removedOnDate', { date: formatDisplayDate(member.deleted_at) })}
+                </Text>
+              ) : null}
+              {showBranch && member.branch_name ? (
+                <Text style={styles.branch} numberOfLines={1}>
+                  {branchDisplayName(member.branch_name)}
+                </Text>
+              ) : null}
+            </View>
+            {!multiColumn ? (
+              <View style={styles.rowMeta}>
+                <StatusBadge status={isFormer ? 'Former' : member.status} style={styles.metaBadge} />
+                {member.is_unpaid && !isFormer ? (
+                  <Text style={styles.unpaid}>{t('members.unpaidBadge')}</Text>
+                ) : null}
+                {rightAction ? (
+                  <View style={styles.rowActions}>{rightAction}</View>
+                ) : underBadge ? (
+                  <Text style={styles.daysLeftUnderBadge}>{underBadge}</Text>
+                ) : null}
+              </View>
+            ) : null}
           </View>
-        ) : null}
+        </View>
       </View>
       {multiColumn ? (
         <View style={styles.rowMetaStacked}>
@@ -199,8 +232,12 @@ function MemberRowItem({
             {member.plan_name || t('members.noPlan')}
             {member.trainer_name ? ` · ${member.trainer_name}` : ''}
           </Text>
+          {underPhone ? <Text style={styles.daysLeftUnderPhone}>{underPhone}</Text> : null}
+          {underBadge && !rightAction ? (
+            <Text style={styles.daysLeftUnderBadge}>{underBadge}</Text>
+          ) : null}
           {member.is_unpaid && !isFormer ? <Text style={styles.unpaid}>{t('members.unpaidBadge')}</Text> : null}
-          {actions}
+          {rightAction}
         </View>
       ) : null}
     </SoftSurface>
@@ -619,12 +656,31 @@ function createStyles(c: ThemeColors) {
       alignItems: 'flex-start' as const,
       gap: 12,
     },
-    rowMain: { flex: 1, marginRight: 8, minWidth: 0 },
+    rowBody: { flex: 1, minWidth: 0 },
+    rowPrimary: {
+      flexDirection: 'row' as const,
+      alignItems: 'flex-start' as const,
+      gap: 8,
+    },
+    rowMain: { flex: 1, minWidth: 0 },
     name: { fontSize: 16, fontWeight: '600' as const, color: c.text },
     phone: { marginTop: 4, fontSize: 13, color: c.muted },
     branch: { marginTop: 2, fontSize: 12, color: c.dim },
-    rowMeta: { alignItems: 'flex-end' as const, gap: 8 },
-    rowActions: { alignItems: 'flex-end' as const, gap: 2, marginTop: 4 },
+    rowMeta: { alignItems: 'flex-end' as const, gap: 6 },
+    rowActions: { alignItems: 'flex-end' as const, marginTop: 2 },
+    daysLeftUnderPhone: {
+      marginTop: 4,
+      fontSize: 12,
+      fontWeight: '600' as const,
+      color: c.statusDueSoon,
+    },
+    daysLeftUnderBadge: {
+      marginTop: 2,
+      fontSize: 12,
+      fontWeight: '600' as const,
+      color: c.statusDueSoon,
+      textAlign: 'right' as const,
+    },
     metaBadge: { alignSelf: 'flex-end' as const },
     rowMetaStacked: {
       flexDirection: 'row' as const,

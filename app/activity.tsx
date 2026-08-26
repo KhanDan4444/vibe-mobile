@@ -91,6 +91,7 @@ function ActivityItem({
   onPress?: () => void;
 }) {
   const { t } = useTranslation();
+  const { colors: c } = useTheme();
   const isOwner = entry.actor_role === 'Gym Owner';
   const styles = useThemedStyles((theme) => ({
     row: {
@@ -172,7 +173,7 @@ function ActivityItem({
   const content = (
     <View style={styles.row}>
       <View style={styles.iconWrap}>
-        <Ionicons name={iconName} size={17} color={isLight ? '#0F766E' : theme.muted} />
+        <Ionicons name={iconName} size={17} color={isLight ? '#0F766E' : c.muted} />
       </View>
       <View style={styles.body}>
         <View style={styles.headerRow}>

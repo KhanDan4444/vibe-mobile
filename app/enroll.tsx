@@ -213,6 +213,28 @@ export default function EnrollScreen() {
       fontSize: 14,
       fontWeight: '600' as const,
     },
+    smsOkRow: {
+      marginTop: 16,
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      gap: 8,
+    },
+    smsOkIcon: {
+      width: 22,
+      height: 22,
+      borderRadius: 11,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      backgroundColor: 'rgba(5,150,105,0.16)',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: 'rgba(5,150,105,0.45)',
+    },
+    smsOkText: {
+      fontSize: 14,
+      fontWeight: '700' as const,
+      letterSpacing: 0.1,
+    },
     summary: {
       marginTop: 24,
       width: '100%' as const,
@@ -835,6 +857,16 @@ export default function EnrollScreen() {
                 <Ionicons name="warning-outline" size={16} color={c.warning} />
                 <Text style={[styles.smsWarnText, { color: c.warning }]}>
                   {t('enroll.smsFailedTitle')}
+                </Text>
+              </View>
+            ) : null}
+            {enrollDone.phone && enrollDone.smsSent === true ? (
+              <View style={styles.smsOkRow}>
+                <View style={styles.smsOkIcon}>
+                  <Ionicons name="checkmark" size={14} color={c.success} />
+                </View>
+                <Text style={[styles.smsOkText, { color: c.success }]}>
+                  {t('enroll.smsSentTitle')}
                 </Text>
               </View>
             ) : null}

@@ -16,13 +16,13 @@
     "tagline": "Members, payments & branches — in one place.",
     "brandSlogan": "Get up . Do It . Be Active !",
     "signInSubtitle": "Sign in to manage your workspace",
-    "identifier": "Username, email, or phone",
+    "identifier": "Username or phone",
     "password": "Password",
     "signIn": "Sign in",
     "forgotPassword": "Forgot Password?",
     "showPassword": "Show password",
     "hidePassword": "Hide password",
-    "identifierRequired": "Enter your username/email and password.",
+    "identifierRequired": "Enter your username or phone and password.",
     "adminBlocked": "Platform admin accounts use the web dashboard. Sign in with a gym owner or staff account.",
     "accessDenied": "This account cannot use the mobile app.",
     "loginFailed": "Login failed.",
@@ -702,6 +702,7 @@
     "smsFailedTitle": "SMS message is not sent!",
     "smsFailedBody": "The member is enrolled, but the phone message could not be delivered. You can resend the pass link from their profile.",
     "smsFailedDetail": "The member is enrolled, but SMS failed: {{detail}}",
+    "smsSentTitle": "Message is sent",
     "enrollAnother": "Enroll another",
     "viewMembers": "View members",
     "term": "Term",
@@ -1017,7 +1018,8 @@
     "previewRenewed": "Confirms a successful renewal",
     "typePassLink": "Member pass link",
     "previewPassLink": "Sends a link to show their check-in QR",
-    "filterPassLink": "Member pass link"
+    "filterPassLink": "Member pass link",
+    "sentBadge": "Sent"
   },
   "team": {
     "noBranch": "No branch",

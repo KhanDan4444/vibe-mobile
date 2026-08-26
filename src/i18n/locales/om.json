@@ -16,13 +16,13 @@
     "tagline": "Ka'ii . Dalagii . Dammaqii !",
     "brandSlogan": "Ka'ii . Dalagii . Dammaqii !",
     "signInSubtitle": "Iddoo hojii keessan bulchuuf seenaa",
-    "identifier": "Imeelii ykn Maqaa fayyadamaa",
+    "identifier": "Maqaa fayyadamaa ykn bilbila",
     "password": "Jecha iccitii",
     "signIn": "Seeni",
     "forgotPassword": "Jecha iccitii dagattee?",
     "showPassword": "Jechama siriitii agarsiisi",
     "hidePassword": "Jechama siriitii dhoksi",
-    "identifierRequired": "Maqaa fayyadamaa/imeelii fi jecha iccitii keessan galchaa.",
+    "identifierRequired": "Maqaa fayyadamaa ykn bilbila fi jecha iccitii keessan galchaa.",
     "adminBlocked": "Akkaawuntiin bulchaa platformii marsariitii fayyadama. Akkaawuntii abbaa jimii ykn hojjettootaa waliin seenaa.",
     "accessDenied": "Akkaawuntiin kun apiliikeeshinii mobaalaa fayyadamuu hin danda'u.",
     "loginFailed": "Seensaan hin milkoofne.",
@@ -701,6 +701,7 @@
     "smsFailedTitle": "Ergaan SMS hin ergamne!",
     "smsFailedBody": "Miseensi galmaa'eera, garuu ergaan hin geenye. Liinkii paasii irraa profile isaani irraa deebisuu dandeessa.",
     "smsFailedDetail": "Miseensi galmaa'eera, garuu SMS hin milkoofne: {{detail}}",
+    "smsSentTitle": "Ergaan ergameera",
     "enrollAnother": "Kan biraa galmeessi",
     "viewMembers": "Miseensota ilaali",
     "term": "Yeroo",
@@ -1009,7 +1010,8 @@
     "previewRenewed": "Haaromsa milkaa'e mirkaneessa",
     "typePassLink": "Liinkii paasii miseensaa",
     "previewPassLink": "Liinkii QR galchuu erga",
-    "filterPassLink": "Liinkii paasii miseensaa"
+    "filterPassLink": "Liinkii paasii miseensaa",
+    "sentBadge": "Ergameera"
   },
   "team": {
     "noBranch": "Dameen hin jiru",

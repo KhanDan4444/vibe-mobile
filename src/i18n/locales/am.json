@@ -16,13 +16,13 @@
     "tagline": "አባላት፣ ገቢ እና ቅርንጫፎች — በአንድ ቦታ",
     "brandSlogan": "ተነስ . አድርገው . ንቁ ሁን !",
     "signInSubtitle": "የስራ ቦታዎን ለማስተዳደር ይግቡ",
-    "identifier": "የተጠቃሚ ስም ወይም ኢሜይል",
+    "identifier": "የተጠቃሚ ስም ወይም ስልክ",
     "password": "የይለፍ ቃል",
     "signIn": "ግባ",
     "forgotPassword": "የይለፍ ቃል ረሱ?",
     "showPassword": "የይለፍ ቃል አሳይ",
     "hidePassword": "የይለፍ ቃል ደብቅ",
-    "identifierRequired": "የተጠቃሚ ስም/ኢሜይል እና የይለፍ ቃል ያስገቡ።",
+    "identifierRequired": "የተጠቃሚ ስም ወይም ስልክ እና የይለፍ ቃል ያስገቡ።",
     "adminBlocked": "የመድረክ አስተዳዳሪ መለያዎች የድር ዳሽቦርድ ይጠቀማሉ። በጂም ባለቤት ወይም ሰራተኛ መለያ ይግቡ።",
     "accessDenied": "ይህ መለያ ሞባይል መተግበሪያ ሊጠቀም አይችልም።",
     "loginFailed": "መግቢያ አልተሳካም።",
@@ -701,6 +701,7 @@
     "smsFailedTitle": "የSMS መልእክት አልተላከም!",
     "smsFailedBody": "አባሉ ተመዝግቧል፣ ነገር ግን መልእክቱ አልደረሰም። ከመገለጫቸው የፓስ አገናኝ እንደገና መላክ ይችላሉ።",
     "smsFailedDetail": "አባሉ ተመዝግቧል፣ ነገር ግን SMS አልተሳካም፦ {{detail}}",
+    "smsSentTitle": "መልእክቱ ተልኳል",
     "enrollAnother": "ሌላ አባል መዝግብ",
     "viewMembers": "አባላትን ይመልከቱ",
     "term": "የክፍያ ዘመን",
@@ -1009,7 +1010,8 @@
     "previewRenewed": "የተሳካ እድሳት ያረጋግጣል",
     "typePassLink": "የአባል ፓስ አገናኝ",
     "previewPassLink": "የመግቢያ QR አገናኝ ይልካል",
-    "filterPassLink": "የአባል ፓስ አገናኝ"
+    "filterPassLink": "የአባል ፓስ አገናኝ",
+    "sentBadge": "ተልኳል"
   },
   "team": {
     "noBranch": "ቅርንጫፍ የለም",
