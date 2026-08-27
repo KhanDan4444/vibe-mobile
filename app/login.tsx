@@ -134,7 +134,7 @@ export default function LoginScreen() {
                 <View style={[s.inputShell, authFieldRing({ focused: focused === 'identifier' })]}>
                   <Ionicons
                     name="person-outline"
-                    size={isTablet ? 24 : 22}
+                    size={isTablet ? 22 : 20}
                     color="rgba(94, 234, 212, 0.72)"
                     style={s.fieldIcon}
                   />
@@ -168,7 +168,7 @@ export default function LoginScreen() {
                 >
                   <Ionicons
                     name="lock-closed-outline"
-                    size={isTablet ? 24 : 22}
+                    size={isTablet ? 22 : 20}
                     color="rgba(94, 234, 212, 0.72)"
                     style={s.fieldIcon}
                   />

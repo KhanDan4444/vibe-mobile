@@ -3,6 +3,7 @@ import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, View, type TextStyle } from 'react-native';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { AppText as Text } from '@/src/components/AppText';
 import { ListFooterSkeleton, PageSkeleton } from '@/src/components/Skeleton';
 import { Ionicons } from '@expo/vector-icons';
@@ -27,7 +28,7 @@ import { useTabBarOverlayInset } from '@/src/theme/tabBar';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { appTextStyle } from '@/src/theme/typography';
 import { formatDisplayDate } from '@/src/utils/date';
-import { formatEtb } from '@/src/utils/formatMoney';
+import { formatCompactNumber, formatEtb } from '@/src/utils/formatMoney';
 import { DEFAULT_REVENUE_SORT, type RevenueSortId } from '@/src/utils/listSort';
 import { paymentSourceKey } from '@/src/utils/termPayments';
 import { statusLabelKey } from '@/src/utils/statusLabels';
@@ -37,13 +38,43 @@ import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { FilterChip } from '@/src/components/FilterChip';
 import { SearchField } from '@/src/components/SearchField';
 import { fieldRingStyle } from '@/src/theme/fieldChrome';
-import {
-  formatTrendForDisplay,
-  trendCaptionKeyForPreset,
-  trendThinBaselineKeyForPreset,
-} from '@/src/utils/trendDisplay';
+import { type ThemeColors } from '@/src/theme/tokens';
 import type { PaymentListRow, UnpaidMemberSummary } from '@/src/types/api';
-import type { ThemeColors } from '@/src/theme/tokens';
+
+/** Soft teal wash for the revenue hero — presence without glow spam. */
+function RevenueHeroAtmosphere({ isLight }: { isLight: boolean }) {
+  return (
+    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
+        <Defs>
+          {isLight ? (
+            <LinearGradient id="revenueHeroFill" x1="0%" y1="0%" x2="100%" y2="100%">
+              <Stop offset="0%" stopColor="#D8E9E8" stopOpacity="0.95" />
+              <Stop offset="48%" stopColor="#F3F8F8" stopOpacity="0.55" />
+              <Stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+            </LinearGradient>
+          ) : (
+            <LinearGradient id="revenueHeroFill" x1="0%" y1="0%" x2="90%" y2="100%">
+              <Stop offset="0%" stopColor="#1B2C32" stopOpacity="1" />
+              <Stop offset="50%" stopColor="#1A1E26" stopOpacity="0.55" />
+              <Stop offset="100%" stopColor="#1A1E26" stopOpacity="0" />
+            </LinearGradient>
+          )}
+        </Defs>
+        <Rect x="0" y="0" width="100%" height="100%" fill="url(#revenueHeroFill)" />
+      </Svg>
+      <View
+        style={[
+          StyleSheet.absoluteFillObject,
+          {
+            borderTopWidth: StyleSheet.hairlineWidth,
+            borderTopColor: isLight ? 'rgba(15,118,110,0.18)' : 'rgba(94,234,212,0.16)',
+          },
+        ]}
+      />
+    </View>
+  );
+}
 
 type PaymentPreset = 'today' | 'this_week' | 'this_month' | 'last_month' | 'last_30_days' | 'this_year';
 
@@ -190,32 +221,57 @@ function PaymentRowItem({
   );
 }
 
-function MethodStat({ method, label, amount }: { method: string; label: string; amount: number }) {
+function MethodStat({
+  method,
+  label,
+  amount,
+  showDivider,
+}: {
+  method: string;
+  label: string;
+  amount: number;
+  showDivider?: boolean;
+}) {
   const { language } = usePreferences();
   const { colors: c } = useTheme();
   const styles = useThemedStyles((colors) => ({
-    methodStat: { flex: 1, minWidth: 0, alignItems: 'center' as const },
-    methodStatIcon: { marginBottom: 4 },
+    methodStat: {
+      flex: 1,
+      flexBasis: 0,
+      minWidth: 0,
+      alignItems: 'center' as const,
+      justifyContent: 'flex-start' as const,
+      paddingHorizontal: 2,
+      borderLeftWidth: showDivider ? StyleSheet.hairlineWidth : 0,
+      borderLeftColor: colors.border,
+    },
+    methodStatIcon: { marginBottom: 5 },
     methodStatValue: {
-      fontSize: 14,
-      fontWeight: '700' as const,
-      color: colors.text,
+      fontSize: 12,
+      fontWeight: '600' as const,
+      color: colors.muted,
       fontVariant: ['tabular-nums'] as TextStyle['fontVariant'],
+      letterSpacing: -0.3,
+      maxWidth: '100%' as const,
     },
     methodStatLabel: {
-      marginTop: 3,
-      fontSize: 11,
+      marginTop: 2,
+      fontSize: 10,
       fontWeight: '500' as const,
       color: colors.dim,
       textAlign: 'center' as const,
+      letterSpacing: 0,
+      maxWidth: '100%' as const,
     },
   }));
 
   if (!amount) return null;
   return (
     <View style={styles.methodStat} accessibilityLabel={`${label} ${amount.toLocaleString()}`}>
-      <Ionicons name={paymentMethodIcon(method)} size={14} color={c.dim} style={styles.methodStatIcon} />
-      <Text style={styles.methodStatValue}>{amount.toLocaleString()}</Text>
+      <Ionicons name={paymentMethodIcon(method)} size={13} color={c.dim} style={styles.methodStatIcon} />
+      <Text style={styles.methodStatValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
+        {formatCompactNumber(amount)}
+      </Text>
       <Text style={appTextStyle(language, styles.methodStatLabel)} numberOfLines={1}>
         {label}
       </Text>
@@ -279,39 +335,50 @@ export default function RevenueScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const { token, user } = useAuth();
-  const { colors: c } = useTheme();
+  const { colors: c, theme } = useTheme();
   const { language } = usePreferences();
   const queryClient = useQueryClient();
   const { showFlash } = useFlash();
   const [deleteTarget, setDeleteTarget] = useState<PaymentListRow | null>(null);
+  const isLight = theme === 'light';
   const styles = useThemedStyles((colors) => ({
     container: { flex: 1, backgroundColor: colors.bg },
     headerBlock: { paddingTop: 0 },
     hero: {
-      paddingVertical: 18,
+      paddingVertical: 20,
       paddingHorizontal: 16,
+      overflow: 'hidden' as const,
     },
-    heroLabel: { fontSize: 13, fontWeight: '600' as const, color: colors.muted },
+    heroContent: { zIndex: 1 },
+    heroLabel: {
+      fontSize: 11,
+      fontWeight: '700' as const,
+      color: colors.dim,
+      letterSpacing: 0.8,
+      textTransform: 'uppercase' as const,
+    },
     heroTotal: {
-      marginTop: 6,
-      fontSize: 30,
+      marginTop: 10,
+      fontSize: 32,
       fontWeight: '700' as const,
       color: colors.text,
-      letterSpacing: -0.8,
+      letterSpacing: -1,
       fontVariant: ['tabular-nums'] as TextStyle['fontVariant'],
     },
-    heroMeta: { flexDirection: 'row' as const, alignItems: 'center' as const, marginTop: 6, flexWrap: 'wrap' as const },
+    heroMeta: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      marginTop: 8,
+      flexWrap: 'wrap' as const,
+    },
     heroMetaText: { fontSize: 13, color: colors.dim },
-    heroDot: { marginHorizontal: 6, color: colors.border },
-    heroTrend: { fontWeight: '600' as const },
-    heroTrendHint: { marginTop: 4, fontSize: 12, color: colors.dim, lineHeight: 17 },
     methodStats: {
       flexDirection: 'row' as const,
-      marginTop: 12,
-      paddingTop: 12,
+      alignItems: 'flex-start' as const,
+      marginTop: 16,
+      paddingTop: 14,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: colors.border,
-      gap: 8,
     },
     periodRow: { gap: 6, paddingTop: 10, paddingBottom: 8 },
     searchRow: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 10, marginBottom: 8 },
@@ -401,18 +468,6 @@ export default function RevenueScreen() {
 
   const payments = query.data?.pages.flatMap((p) => p.items) ?? [];
   const summary = query.data?.pages[0]?.summary;
-  const trendRaw = query.data?.pages[0]?.trendPercent;
-  const trendPreset = customRangeReady ? 'custom' : preset;
-  const trendDisplay = formatTrendForDisplay(trendRaw);
-  const trendNegative = (() => {
-    if (!trendDisplay.label) return false;
-    return trendDisplay.label.startsWith('-');
-  })();
-  const trendCaption = trendDisplay.extreme
-    ? t(trendThinBaselineKeyForPreset(trendPreset))
-    : trendDisplay.label
-      ? t(trendCaptionKeyForPreset(trendPreset))
-      : null;
   const byMethod = summary?.byMethod ?? {};
   const methodEntries = PAYMENT_METHODS.filter((m) => Number(byMethod[m] || 0) > 0);
   const unpaidMembers = query.data?.pages[0]?.unpaidMembers ?? [];
@@ -474,52 +529,33 @@ export default function RevenueScreen() {
   const listHeader = (
     <View style={styles.headerBlock}>
       <SoftSurface variant="panel" style={styles.hero}>
-        <Text style={appTextStyle(language, styles.heroLabel)}>
-          {periodLabel}
-        </Text>
-        <Text style={styles.heroTotal}>
-          {formatEtb(Number(summary?.total || 0), { forceCompact: false })}
-        </Text>
-        <View style={styles.heroMeta}>
-          <Text style={appTextStyle(language, styles.heroMetaText)}>
-            {t('revenue.paymentsCount', { count: summary?.count ?? 0 })}
+        <RevenueHeroAtmosphere isLight={isLight} />
+        <View style={styles.heroContent}>
+          <Text style={appTextStyle(language, styles.heroLabel)}>
+            {periodLabel}
           </Text>
-          {trendDisplay.label ? (
-            <>
-              <Text style={styles.heroDot}>·</Text>
-              <Text
-                style={appTextStyle(language, {
-                  ...styles.heroMetaText,
-                  ...styles.heroTrend,
-                  color: trendNegative ? c.statusExpired : c.success,
-                })}
-              >
-                {trendDisplay.label}
-              </Text>
-              {trendCaption ? (
-                <>
-                  <Text style={styles.heroDot}>·</Text>
-                  <Text style={appTextStyle(language, styles.heroMetaText)}>{trendCaption}</Text>
-                </>
-              ) : null}
-            </>
+          <Text display style={styles.heroTotal}>
+            {formatEtb(Number(summary?.total || 0), { forceCompact: false })}
+          </Text>
+          <View style={styles.heroMeta}>
+            <Text style={appTextStyle(language, styles.heroMetaText)}>
+              {t('revenue.paymentsCount', { count: summary?.count ?? 0 })}
+            </Text>
+          </View>
+          {methodEntries.length > 0 ? (
+            <View style={styles.methodStats}>
+              {methodEntries.map((m, index) => (
+                <MethodStat
+                  key={m}
+                  method={m}
+                  label={t(paymentMethodShortLabelKey(m)!)}
+                  amount={Number(byMethod[m] || 0)}
+                  showDivider={index > 0}
+                />
+              ))}
+            </View>
           ) : null}
         </View>
-        {trendDisplay.extreme && trendCaption ? (
-          <Text style={appTextStyle(language, styles.heroTrendHint)}>{trendCaption}</Text>
-        ) : null}
-        {methodEntries.length > 0 ? (
-          <View style={styles.methodStats}>
-            {methodEntries.map((m) => (
-              <MethodStat
-                key={m}
-                method={m}
-                label={t(paymentMethodShortLabelKey(m)!)}
-                amount={Number(byMethod[m] || 0)}
-              />
-            ))}
-          </View>
-        ) : null}
       </SoftSurface>
 
       {attentionMembers.length ? (

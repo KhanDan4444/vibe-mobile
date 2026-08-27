@@ -103,21 +103,27 @@ function SmsItem({
       color: theme.text,
       letterSpacing: -0.2,
     },
-    timeCol: {
-      alignItems: 'flex-end' as const,
-      gap: 4,
-      flexShrink: 0,
-    },
     time: {
       fontSize: 12,
       fontWeight: '500' as const,
       color: theme.dim,
       fontVariant: ['tabular-nums' as const],
       letterSpacing: -0.1,
+      flexShrink: 0,
+    },
+    badgeRow: {
+      marginTop: 5,
+      flexDirection: 'row' as const,
+      alignItems: 'flex-start' as const,
+      justifyContent: 'space-between' as const,
+      gap: 8,
+    },
+    badgeBlock: {
+      flex: 1,
+      minWidth: 0,
     },
     badge: {
       alignSelf: 'flex-start' as const,
-      marginTop: 5,
       paddingHorizontal: 9,
       paddingVertical: 3,
       borderRadius: 999,
@@ -130,12 +136,15 @@ function SmsItem({
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       gap: 4,
+      flexShrink: 0,
+      marginTop: 2,
     },
     sentBadgeText: {
       fontSize: 11,
       fontWeight: '700' as const,
       letterSpacing: 0.1,
       textTransform: 'lowercase' as const,
+      color: accent,
     },
     preview: { marginTop: 4, fontSize: 12, lineHeight: 16, color: theme.muted },
     meta: {
@@ -167,24 +176,24 @@ function SmsItem({
             <Text style={styles.member} numberOfLines={1}>
               {row.member_name}
             </Text>
-            <View style={styles.timeCol}>
-              <Text style={styles.time}>{formatLogTimestamp(row.sent_at, t, language)}</Text>
-              <View style={styles.sentRow}>
-                <Ionicons name="checkmark-circle" size={15} color={c.success} />
-                <Text style={[styles.sentBadgeText, { color: c.success }]}>
-                  {t('messages.sentBadge')}
-                </Text>
+            <Text style={styles.time}>{formatLogTimestamp(row.sent_at, t, language)}</Text>
+          </View>
+          <View style={styles.badgeRow}>
+            <View style={styles.badgeBlock}>
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{formatSmsType(row.message_type, t)}</Text>
               </View>
+              {preview ? (
+                <Text style={styles.preview} numberOfLines={2}>
+                  {preview}
+                </Text>
+              ) : null}
+            </View>
+            <View style={styles.sentRow}>
+              <Ionicons name="checkmark-circle" size={15} color={accent} />
+              <Text style={styles.sentBadgeText}>{t('messages.sentBadge')}</Text>
             </View>
           </View>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{formatSmsType(row.message_type, t)}</Text>
-          </View>
-          {preview ? (
-            <Text style={styles.preview} numberOfLines={2}>
-              {preview}
-            </Text>
-          ) : null}
           <Text latin style={styles.meta} numberOfLines={1}>
             {metaLine}
           </Text>
