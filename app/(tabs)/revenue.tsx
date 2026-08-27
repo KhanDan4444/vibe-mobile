@@ -246,7 +246,7 @@ function MethodStat({
       borderLeftWidth: showDivider ? StyleSheet.hairlineWidth : 0,
       borderLeftColor: colors.border,
     },
-    methodStatIcon: { marginBottom: 3 },
+    methodStatIcon: { marginBottom: 2 },
     methodStatValue: {
       fontSize: 11,
       fontWeight: '600' as const,
@@ -256,7 +256,7 @@ function MethodStat({
       maxWidth: '100%' as const,
     },
     methodStatLabel: {
-      marginTop: 1,
+      marginTop: 0,
       fontSize: 9,
       fontWeight: '500' as const,
       color: colors.dim,
@@ -346,7 +346,7 @@ export default function RevenueScreen() {
     container: { flex: 1, backgroundColor: colors.bg },
     headerBlock: { paddingTop: 0 },
     hero: {
-      paddingVertical: 20,
+      paddingVertical: 14,
       paddingHorizontal: 16,
       overflow: 'hidden' as const,
     },
@@ -359,8 +359,8 @@ export default function RevenueScreen() {
       textTransform: 'uppercase' as const,
     },
     heroTotal: {
-      marginTop: 10,
-      fontSize: 32,
+      marginTop: 6,
+      fontSize: 30,
       fontWeight: '700' as const,
       color: colors.text,
       letterSpacing: -1,
@@ -369,15 +369,15 @@ export default function RevenueScreen() {
     heroMeta: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
-      marginTop: 8,
+      marginTop: 4,
       flexWrap: 'wrap' as const,
     },
-    heroMetaText: { fontSize: 13, color: colors.dim },
+    heroMetaText: { fontSize: 12, color: colors.dim },
     methodStats: {
       flexDirection: 'row' as const,
       alignItems: 'flex-start' as const,
-      marginTop: 12,
-      paddingTop: 10,
+      marginTop: 8,
+      paddingTop: 8,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: colors.border,
     },
