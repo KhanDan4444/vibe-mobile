@@ -23,6 +23,7 @@ import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
 import { runInBackground } from '@/src/utils/runInBackground';
 import { formatPlanDuration, formatPlanDisplayName } from '@/src/utils/planFormat';
 import { formatEtb } from '@/src/utils/formatMoney';
+import { pullRefreshing } from '@/src/query/useQueryScreenLoading';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import type { PlanRow } from '@/src/types/api';
 import { fabElevation } from '@/src/theme/elevation';
@@ -395,7 +396,7 @@ export default function PlansScreen() {
             contentContainerStyle={[styles.list, { paddingHorizontal: pagePadding }]}
             refreshControl={
               <RefreshControl
-                refreshing={query.isRefetching}
+                refreshing={pullRefreshing(query.isRefetching)}
                 onRefresh={() => query.refetch()}
                 tintColor={c.accentText}
               />

@@ -55,6 +55,8 @@ export type ThemeColors = {
   statusNeutral: string;
   /** Former / archived — warm stone, distinct from All. */
   statusFormer: string;
+  /** New this month — muted parchment / soft cream. */
+  statusNew: string;
 };
 
 export const darkTheme: ThemeColors = {
@@ -89,6 +91,7 @@ export const darkTheme: ThemeColors = {
   statusUnpaid: '#fb923c',
   statusNeutral: '#94a3b8',
   statusFormer: '#a8a29e',
+  statusNew: '#c9c0b2',
 };
 
 /** Soft warm-gray canvas — calm and inviting without cream/terracotta cliché. */
@@ -124,6 +127,7 @@ export const lightTheme: ThemeColors = {
   statusUnpaid: '#ea580c',
   statusNeutral: '#64748b',
   statusFormer: '#78716c',
+  statusNew: '#8f877c',
 };
 
 export function colorsForTheme(theme: AppTheme): ThemeColors {

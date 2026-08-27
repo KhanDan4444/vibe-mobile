@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppText as Text } from '@/src/components/AppText';
 import { ListFooterSkeleton, PageSkeleton } from '@/src/components/Skeleton';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
@@ -25,6 +25,7 @@ import { restoreWithUndoFlash } from '@/src/utils/scheduleWithUndo';
 import { adjustMemberFilterCounts } from '@/src/utils/memberFilterCounts';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useTabBarOverlayInset } from '@/src/theme/tabBar';
+import { pullRefreshing, useQueryScreenLoading } from '@/src/query/useQueryScreenLoading';
 import StatusBadge from '@/src/components/StatusBadge';
 import { RowActionLink } from '@/src/components/RowActionLink';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
@@ -39,9 +40,18 @@ import { formatDisplayDate, daysUntilDate } from '@/src/utils/date';
 import { canRenewMember } from '@/src/utils/memberRenew';
 import type { MemberRow } from '@/src/types/api';
 
-type MemberFilter = 'all' | 'active' | 'due_soon' | 'expired' | 'unpaid' | 'former';
+type MemberFilter = 'all' | 'active' | 'due_soon' | 'expired' | 'unpaid' | 'new' | 'inactive_week' | 'former';
 
-const FILTER_OPTIONS: MemberFilter[] = ['all', 'active', 'unpaid', 'due_soon', 'expired', 'former'];
+const FILTER_OPTIONS: MemberFilter[] = [
+  'all',
+  'active',
+  'unpaid',
+  'due_soon',
+  'expired',
+  'new',
+  'inactive_week',
+  'former',
+];
 const MEMBER_FILTER_STORAGE_KEY = 'vibe.members.statusFilter';
 
 function dueSoonMeta(
@@ -65,12 +75,33 @@ function dueSoonMeta(
   return { underPhone: null, underBadge: t('dashboard.daysLeft', { count: days }) };
 }
 
+function noVisitMeta(
+  member: Pick<MemberRow, 'days_without_visit' | 'start_date'>,
+  t: TFunction,
+): { underPhone: string | null; underBadge: string | null } {
+  let days: number | null = null;
+  if (member.days_without_visit != null && !Number.isNaN(Number(member.days_without_visit))) {
+    days = Math.max(0, Number(member.days_without_visit));
+  } else {
+    const untilStart = daysUntilDate(member.start_date);
+    if (untilStart != null) days = Math.max(0, -untilStart);
+  }
+  if (days == null) return { underPhone: null, underBadge: null };
+  // Same slot as due soon "n days left" — under the status badge.
+  return {
+    underPhone: null,
+    underBadge: t('members.didntCome', { count: days }),
+  };
+}
+
 const FILTER_LABEL_KEYS: Record<MemberFilter, string> = {
   all: 'members.filterAll',
   active: 'members.filterActive',
   due_soon: 'members.filterDueSoon',
   expired: 'members.filterExpired',
   unpaid: 'members.filterUnpaid',
+  new: 'members.filterNewMember',
+  inactive_week: 'members.filterNoVisit',
   former: 'members.filterFormer',
 };
 
@@ -81,6 +112,8 @@ function filterDotColor(c: ThemeColors, option: MemberFilter) {
     unpaid: c.statusUnpaid,
     due_soon: c.statusDueSoon,
     expired: c.statusExpired,
+    new: c.statusNew,
+    inactive_week: c.statusNeutral,
     former: c.statusFormer,
   };
   return dots[option];
@@ -88,7 +121,15 @@ function filterDotColor(c: ThemeColors, option: MemberFilter) {
 
 function parseFilter(value: string | string[] | undefined): MemberFilter {
   const raw = Array.isArray(value) ? value[0] : value;
-  if (raw === 'active' || raw === 'due_soon' || raw === 'expired' || raw === 'unpaid' || raw === 'former') {
+  if (
+    raw === 'active' ||
+    raw === 'due_soon' ||
+    raw === 'expired' ||
+    raw === 'unpaid' ||
+    raw === 'new' ||
+    raw === 'inactive_week' ||
+    raw === 'former'
+  ) {
     return raw;
   }
   return 'all';
@@ -130,6 +171,7 @@ function MemberRowItem({
   onRestore,
   readOnly,
   onRenew,
+  showNoVisitDays,
 }: {
   member: MemberRow;
   onPress: () => void;
@@ -144,12 +186,15 @@ function MemberRowItem({
   onRestore?: () => void;
   readOnly?: boolean;
   onRenew?: () => void;
+  showNoVisitDays?: boolean;
 }) {
   const { t } = useTranslation();
   const isFormer = Boolean(member.deleted_at);
   const showRenew = !readOnly && !isFormer && canRenewMember(member);
   const { underPhone, underBadge } = !isFormer
-    ? dueSoonMeta(member, t, showRenew)
+    ? showNoVisitDays
+      ? noVisitMeta(member, t)
+      : dueSoonMeta(member, t, showRenew)
     : { underPhone: null, underBadge: null };
 
   const renewAction =
@@ -215,7 +260,16 @@ function MemberRowItem({
                 {member.is_unpaid && !isFormer ? (
                   <Text style={styles.unpaid}>{t('members.unpaidBadge')}</Text>
                 ) : null}
-                {rightAction ? (
+                {showNoVisitDays ? (
+                  <>
+                    {underBadge ? (
+                      <Text style={styles.daysLeftUnderBadge}>{underBadge}</Text>
+                    ) : null}
+                    {rightAction ? (
+                      <View style={styles.rowActions}>{rightAction}</View>
+                    ) : null}
+                  </>
+                ) : rightAction ? (
                   <View style={styles.rowActions}>{rightAction}</View>
                 ) : underBadge ? (
                   <Text style={styles.daysLeftUnderBadge}>{underBadge}</Text>
@@ -233,11 +287,27 @@ function MemberRowItem({
             {member.trainer_name ? ` · ${member.trainer_name}` : ''}
           </Text>
           {underPhone ? <Text style={styles.daysLeftUnderPhone}>{underPhone}</Text> : null}
-          {underBadge && !rightAction ? (
-            <Text style={styles.daysLeftUnderBadge}>{underBadge}</Text>
-          ) : null}
-          {member.is_unpaid && !isFormer ? <Text style={styles.unpaid}>{t('members.unpaidBadge')}</Text> : null}
-          {rightAction}
+          {showNoVisitDays ? (
+            <>
+              {underBadge ? (
+                <Text style={styles.daysLeftUnderBadge}>{underBadge}</Text>
+              ) : null}
+              {member.is_unpaid && !isFormer ? (
+                <Text style={styles.unpaid}>{t('members.unpaidBadge')}</Text>
+              ) : null}
+              {rightAction}
+            </>
+          ) : (
+            <>
+              {underBadge && !rightAction ? (
+                <Text style={styles.daysLeftUnderBadge}>{underBadge}</Text>
+              ) : null}
+              {member.is_unpaid && !isFormer ? (
+                <Text style={styles.unpaid}>{t('members.unpaidBadge')}</Text>
+              ) : null}
+              {rightAction}
+            </>
+          )}
         </View>
       ) : null}
     </SoftSurface>
@@ -298,6 +368,26 @@ export default function MembersScreen() {
     };
   }, [paramFilter, params.focus]);
 
+  // Tab screens stay mounted — re-apply deep-link filter whenever we land here.
+  useFocusEffect(
+    useCallback(() => {
+      if (paramFilter) {
+        setFilter(parseFilter(paramFilter));
+        setFilterReady(true);
+      }
+      void queryClient.refetchQueries({
+        queryKey: ['members', debouncedSearch, filter, sort, branchKey],
+        type: 'active',
+        stale: true,
+      });
+      void queryClient.refetchQueries({
+        queryKey: ['dashboard', branchKey],
+        type: 'active',
+        stale: true,
+      });
+    }, [paramFilter, params.focus, queryClient, debouncedSearch, filter, sort, branchKey]),
+  );
+
   useEffect(() => {
     if (!filterReady) return;
     AsyncStorage.setItem(MEMBER_FILTER_STORAGE_KEY, filter).catch(() => {});
@@ -348,6 +438,12 @@ export default function MembersScreen() {
     enabled: Boolean(token),
   });
 
+  const screenLoading = useQueryScreenLoading(
+    query.isLoading,
+    Boolean(query.data),
+    query.isPending,
+  );
+
   const listedMembers = query.data?.pages.flatMap((p) => p.items) ?? [];
   const members = listedMembers.filter((m) => !(filter === 'former' && pendingRestoreIds.has(m.id)));
   const counts = countsQuery.data;
@@ -387,6 +483,8 @@ export default function MembersScreen() {
       unpaid: counts?.unpaidCount ?? 0,
       dueSoon: counts?.dueSoonMembers ?? 0,
       expired: counts?.expiredMembers ?? 0,
+      new: counts?.newMembersThisMonth ?? 0,
+      inactiveWeek: counts?.inactiveMembersThisWeek ?? 0,
       former: archivedTotal,
     },
     {
@@ -401,6 +499,8 @@ export default function MembersScreen() {
     due_soon: adjustedCounts.dueSoon,
     expired: adjustedCounts.expired,
     unpaid: adjustedCounts.unpaid,
+    new: adjustedCounts.new,
+    inactive_week: adjustedCounts.inactiveWeek,
     former: adjustedCounts.former,
   };
 
@@ -445,14 +545,26 @@ export default function MembersScreen() {
   const renderStatusChip = (option: MemberFilter) => (
     <FilterChip
       key={option}
-      label={t(FILTER_LABEL_KEYS[option])}
+      label={
+        option === 'new'
+          ? t('members.filterNewMember', { count: filterCounts.new })
+          : t(FILTER_LABEL_KEYS[option])
+      }
       selected={filter === option}
       onPress={() => {
         setFilter(option);
         router.setParams({ filter: option });
       }}
       dotColor={filterDotColor(c, option)}
-      selectedColor={option === 'former' ? c.statusFormer : undefined}
+      selectedColor={
+        option === 'former'
+          ? c.statusFormer
+          : option === 'new'
+            ? c.statusNew
+            : option === 'inactive_week'
+              ? c.statusNeutral
+              : undefined
+      }
       count={filterCounts[option]}
     />
   );
@@ -514,7 +626,7 @@ export default function MembersScreen() {
         ) : null}
       </View>
 
-      {query.isLoading ? (
+      {screenLoading ? (
         <PageSkeleton variant="members" />
       ) : query.isError ? (
         <LoadError error={query.error} onRetry={() => void query.refetch()} />
@@ -537,6 +649,7 @@ export default function MembersScreen() {
               readOnly={readOnly}
               canRestore={canRestoreMembers}
               restoreBusy={pendingRestoreIds.has(item.id)}
+              showNoVisitDays={filter === 'inactive_week'}
               onRestore={
                 canRestoreMembers && item.deleted_at
                   ? () => void runRestore(item)
@@ -578,7 +691,7 @@ export default function MembersScreen() {
             />
           }
           ListFooterComponent={query.isFetchingNextPage ? <ListFooterSkeleton /> : null}
-          refreshing={query.isRefetching}
+          refreshing={pullRefreshing(query.isRefetching, query.isFetchingNextPage)}
           onRefresh={() => query.refetch()}
         />
       )}

@@ -6,11 +6,13 @@ export type MemberFilterCounts = {
   unpaid: number;
   dueSoon: number;
   expired: number;
+  new: number;
+  inactiveWeek: number;
   former: number;
 };
 
 /** Exclusive live filter chip (matches Members filter chips). */
-export function liveMemberFilterKey(member: MemberRow): keyof Omit<MemberFilterCounts, 'all' | 'former'> | null {
+export function liveMemberFilterKey(member: MemberRow): keyof Omit<MemberFilterCounts, 'all' | 'former' | 'new' | 'inactiveWeek'> | null {
   const status = String(member.status || '')
     .trim()
     .toLowerCase()
@@ -34,6 +36,9 @@ export function adjustMemberFilterCounts(
     unpaid: base.unpaid ?? 0,
     dueSoon: base.dueSoon ?? 0,
     expired: base.expired ?? 0,
+    // Not exclusive with status chips — keep dashboard month count as-is.
+    new: base.new ?? 0,
+    inactiveWeek: base.inactiveWeek ?? 0,
     former: base.former ?? 0,
   };
 

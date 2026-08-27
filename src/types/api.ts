@@ -70,6 +70,8 @@ export interface MemberRow {
   deleted_at?: string | null;
   trainer_id?: number | null;
   trainer_name?: string | null;
+  /** Calendar days since last check-in (or term start if never checked in). */
+  days_without_visit?: number | null;
 }
 
 export interface BranchRow {
@@ -216,6 +218,7 @@ export interface DashboardStats {
   revenueTrendPercent?: number | string | null;
   newMembersThisMonth?: number;
   newMembersTrendPercent?: number | string | null;
+  inactiveMembersThisWeek?: number;
   notifications?: DashboardNotification[];
   alertMembers?: DashboardAlertMember[];
   revenueChart?: DashboardChartPoint[];

@@ -1,7 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter, type Href, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { AppText as Text } from '@/src/components/AppText';
@@ -34,16 +34,16 @@ import { timings } from '@/src/theme/motion';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
 import { canRenewMember } from '@/src/utils/memberRenew';
 import { formatPlanDisplayName } from '@/src/utils/planFormat';
+import { pullRefreshing, useQueryScreenLoading } from '@/src/query/useQueryScreenLoading';
 
 const ATTENTION_PREVIEW = 3;
 
-type StatFilter = 'due_soon' | 'expired' | 'unpaid';
+type StatFilter = 'due_soon' | 'expired' | 'new';
 
 function filterForMemberStatus(status: string): StatFilter {
   const normalized = status.toLowerCase();
   if (normalized === 'expired') return 'expired';
-  if (normalized === 'due soon') return 'due_soon';
-  return 'unpaid';
+  return 'due_soon';
 }
 
 function AlertMemberRow({
@@ -119,6 +119,7 @@ export default function DashboardScreen() {
   const { t } = useTranslation();
   const linkColor = c.accentCta;
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
+  const queryClient = useQueryClient();
   const owner = isGymOwner(user?.role);
   const staffUser = isGymStaff(user?.role);
   const { readOnly } = useGymReadOnly();
@@ -136,11 +137,18 @@ export default function DashboardScreen() {
 
   const registeredGymName = profileQuery.data?.gym.name ?? cachedGymName ?? 'Your gym';
 
-  const { data, isLoading, isError, error, refetch, isRefetching } = useQuery({
+  const { data, isLoading, isPending, isError, error, refetch, isRefetching } = useQuery({
     queryKey: ['dashboard', branchKey],
     queryFn: () => fetchDashboard(token!, selectedBranchId),
     enabled: Boolean(token),
   });
+  const screenLoading = useQueryScreenLoading(isLoading, Boolean(data), isPending);
+
+  useFocusEffect(
+    useCallback(() => {
+      void queryClient.refetchQueries({ queryKey: ['dashboard', branchKey], type: 'active', stale: true });
+    }, [queryClient, branchKey]),
+  );
 
   const trendPercent = data?.revenueTrendPercent;
   const trendNegative = (() => {
@@ -165,11 +173,10 @@ export default function DashboardScreen() {
     return t('dashboard.trendVsLastMonth', { value: `${sign}${n.toFixed(0)}%` });
   })();
 
-  const goMembers = (filter?: StatFilter) => {
-    router.push({
-      pathname: '/(tabs)/members',
-      params: { filter: filter ?? 'active', focus: String(Date.now()) },
-    });
+  const goMembers = (filter?: StatFilter | 'active') => {
+    const next = filter ?? 'active';
+    // Query-string navigate is reliable for tab screens (params object can drop on tab switch).
+    router.navigate(`/(tabs)/members?filter=${next}&focus=${Date.now()}` as Href);
   };
 
   const [attentionExpanded, setAttentionExpanded] = useState(false);
@@ -178,8 +185,7 @@ export default function DashboardScreen() {
     ? allAlertMembers
     : allAlertMembers.slice(0, ATTENTION_PREVIEW);
   const attentionHasMore = allAlertMembers.length > ATTENTION_PREVIEW;
-  const unpaidCount = data?.unpaidCount ?? 0;
-  const attentionHasContent = allAlertMembers.length > 0 || unpaidCount > 0;
+  const attentionHasContent = allAlertMembers.length > 0;
 
   const summaryBlock = data ? (
     <SoftSurface variant="panel" style={styles.summary}>
@@ -218,9 +224,6 @@ export default function DashboardScreen() {
       ) : null}
       <Text style={[styles.muted, { color: c.dim }]}>
         {t('dashboard.membersTotal', { count: data.totalMembers })}
-        {data.newMembersThisMonth != null
-          ? ` · ${t('dashboard.newThisMonth', { count: data.newMembersThisMonth })}`
-          : ''}
       </Text>
       {owner ? (
         <MiniBarChart data={data.revenueChart ?? []} height={chartHeight} />
@@ -237,82 +240,61 @@ export default function DashboardScreen() {
             <Text style={[styles.viewAll, { color: linkColor }]}>{t('dashboard.viewAll')}</Text>
           </Pressable>
         </View>
-        {alertMembers.length ? (
-          <>
-            {alertMembers.map((member) => {
-              const renewable = canRenewMember(member);
-              const route = renewable ? `/renew/${member.id}` : `/member/${member.id}`;
-              return (
-                <AlertMemberRow
-                  key={member.id}
-                  member={member}
-                  colors={c}
-                  token={token!}
-                  actionColor={linkColor}
-                  onOpen={() => goMembers(filterForMemberStatus(member.status))}
-                  onAction={readOnly ? undefined : renewable ? () => router.push(route as never) : undefined}
-                />
-              );
-            })}
-            {attentionHasMore ? (
-              <View
-                style={[
-                  styles.showMoreWrap,
-                  {
-                    borderTopColor: isLight ? 'rgba(15,23,42,0.06)' : 'rgba(228,231,238,0.08)',
-                  },
-                ]}
-              >
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={
-                    attentionExpanded ? t('dashboard.showLess') : t('dashboard.showMore')
-                  }
-                  onPress={() => setAttentionExpanded((v) => !v)}
-                  style={({ pressed }) => [
-                    styles.showMoreBtn,
-                    {
-                      backgroundColor: isLight ? 'rgba(15,23,42,0.04)' : 'rgba(228,231,238,0.06)',
-                      opacity: pressed ? 0.82 : 1,
-                    },
-                  ]}
-                >
-                  <Text style={[styles.showMoreLabel, { color: c.muted }]}>
-                    {attentionExpanded ? t('dashboard.showLess') : t('dashboard.showMore')}
-                  </Text>
-                  <Ionicons
-                    name={attentionExpanded ? 'chevron-up' : 'chevron-down'}
-                    size={16}
-                    color={c.muted}
-                  />
-                </Pressable>
-                <Text style={[styles.showMoreMeta, { color: c.dim }]}>
-                  {t('dashboard.showingOf', {
-                    shown: alertMembers.length,
-                    total: allAlertMembers.length,
-                  })}
-                </Text>
-              </View>
-            ) : null}
-          </>
-        ) : (
-          <SoftSurface
-            variant="quiet"
-            onPress={() => goMembers('unpaid')}
-            style={[styles.attentionShortcut, { backgroundColor: c.accentSoft }]}
+        {alertMembers.map((member) => {
+          const renewable = canRenewMember(member);
+          const route = renewable ? `/renew/${member.id}` : `/member/${member.id}`;
+          return (
+            <AlertMemberRow
+              key={member.id}
+              member={member}
+              colors={c}
+              token={token!}
+              actionColor={linkColor}
+              onOpen={() => goMembers(filterForMemberStatus(member.status))}
+              onAction={readOnly ? undefined : renewable ? () => router.push(route as never) : undefined}
+            />
+          );
+        })}
+        {attentionHasMore ? (
+          <View
+            style={[
+              styles.showMoreWrap,
+              {
+                borderTopColor: isLight ? 'rgba(15,23,42,0.06)' : 'rgba(228,231,238,0.08)',
+              },
+            ]}
           >
-            <Text display style={[styles.attentionShortcutValue, { color: c.statusUnpaid }]}>{unpaidCount}</Text>
-            <View style={styles.attentionShortcutBody}>
-              <Text style={[styles.attentionShortcutTitle, { color: c.text }]}>
-                {t('dashboard.unpaidShortcutTitle')}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={
+                attentionExpanded ? t('dashboard.showLess') : t('dashboard.showMore')
+              }
+              onPress={() => setAttentionExpanded((v) => !v)}
+              style={({ pressed }) => [
+                styles.showMoreBtn,
+                {
+                  backgroundColor: isLight ? 'rgba(15,23,42,0.04)' : 'rgba(228,231,238,0.06)',
+                  opacity: pressed ? 0.82 : 1,
+                },
+              ]}
+            >
+              <Text style={[styles.showMoreLabel, { color: c.muted }]}>
+                {attentionExpanded ? t('dashboard.showLess') : t('dashboard.showMore')}
               </Text>
-              <Text style={[styles.attentionShortcutMeta, { color: c.dim }]}>
-                {t('dashboard.unpaidShortcutBody')}
-              </Text>
-            </View>
-            <Text style={[styles.viewAll, { color: linkColor }]}>{t('dashboard.viewAll')}</Text>
-          </SoftSurface>
-        )}
+              <Ionicons
+                name={attentionExpanded ? 'chevron-up' : 'chevron-down'}
+                size={16}
+                color={c.muted}
+              />
+            </Pressable>
+            <Text style={[styles.showMoreMeta, { color: c.dim }]}>
+              {t('dashboard.showingOf', {
+                shown: alertMembers.length,
+                total: allAlertMembers.length,
+              })}
+            </Text>
+          </View>
+        ) : null}
       </SoftSurface>
     ) : null;
 
@@ -325,7 +307,7 @@ export default function DashboardScreen() {
         isTablet && styles.contentTablet,
         { paddingBottom: 40 + tabOverlayInset },
       ]}
-      refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={c.accentText} />}
+      refreshControl={<RefreshControl refreshing={pullRefreshing(isRefetching)} onRefresh={refetch} tintColor={c.accentText} />}
     >
       <ResponsiveContent style={{ paddingHorizontal: pagePadding }}>
       <Text display style={[styles.gymName, { color: c.text }, isTablet && styles.gymNameTablet]}>{registeredGymName}</Text>
@@ -335,74 +317,97 @@ export default function DashboardScreen() {
 
       <BranchFilterBar horizontalPadding={0} />
 
-      {isLoading ? (
+      {screenLoading ? (
         <PageSkeleton variant="dashboard" padded={false} />
       ) : isError ? (
         <LoadError error={error} onRetry={() => void refetch()} />
       ) : data ? (
         <Animated.View entering={FadeIn.duration(timings.fadeMs)}>
+          <SoftSurface
+            variant="panel"
+            onPress={() => goMembers('active')}
+            style={styles.heroMetricCard}
+            accessibilityRole="button"
+            accessibilityLabel={`${t('dashboard.activeMembersLabel')}: ${data.activeMembers ?? 0} / ${data.totalMembers ?? 0}`}
+          >
+            <View style={styles.heroHeader}>
+              <Text style={[styles.heroMetricLabel, { color: c.muted }]}>
+                {t('dashboard.activeMembersLabel')}
+              </Text>
+              <Ionicons
+                name="people"
+                size={18}
+                color={c.statusActive}
+                accessibilityElementsHidden
+                importantForAccessibility="no"
+              />
+            </View>
+            <View style={styles.heroValueRow}>
+              <Text display style={[styles.heroMetricValue, { color: c.text }]}>
+                {data.activeMembers ?? 0}
+              </Text>
+              <Text display style={[styles.heroMetricSubValue, { color: c.muted }]}>
+                /{data.totalMembers ?? 0}
+              </Text>
+            </View>
+            <View style={[styles.heroProgressTrack, { backgroundColor: c.border }]}>
+              <View
+                style={[
+                  styles.heroProgressFill,
+                  {
+                    backgroundColor: c.statusActive,
+                    width: `${
+                      (data.totalMembers ?? 0) > 0
+                        ? Math.min(100, ((data.activeMembers ?? 0) / (data.totalMembers ?? 1)) * 100)
+                        : 0
+                    }%`,
+                  },
+                ]}
+              />
+            </View>
+          </SoftSurface>
           <View style={styles.grid}>
             <MetricStatCard
-              label={t('dashboard.active')}
-              value={data.activeMembers ?? 0}
-              accent={c.statusActive}
+              label={t('dashboard.dueSoon')}
+              value={data.dueSoonMembers ?? 0}
+              accent={c.statusDueSoon}
               tone="neutral"
+              icon="warning"
               layoutStyle={statCardLayoutStyle}
-              onPress={() => goMembers()}
+              onPress={() => goMembers('due_soon')}
             />
             <MetricStatCard
               label={t('dashboard.expired')}
               value={data.expiredMembers ?? 0}
               accent={c.statusExpired}
               tone="attention"
+              icon="close-circle"
               layoutStyle={statCardLayoutStyle}
               onPress={() => goMembers('expired')}
             />
             <MetricStatCard
-              label={t('dashboard.dueSoon')}
-              value={data.dueSoonMembers ?? 0}
-              accent={c.statusDueSoon}
+              label={t('dashboard.newMember', { count: data.newMembersThisMonth ?? 0 })}
+              value={data.newMembersThisMonth ?? 0}
+              accent={c.statusNew}
               tone="neutral"
+              icon="person-add"
+              caption={t('dashboard.thisMonthCaption')}
+              captionColor={c.statusNew}
               layoutStyle={statCardLayoutStyle}
-              onPress={() => goMembers('due_soon')}
+              onPress={() => goMembers('new')}
             />
             <MetricStatCard
-              label={t('dashboard.unpaid')}
-              value={data.unpaidCount ?? 0}
-              accent={c.statusUnpaid}
+              label={t('dashboard.checkedIn')}
+              value={typeof data.checkedInToday === 'number' ? data.checkedInToday : 0}
+              accent={c.warm}
               tone="neutral"
+              icon="clipboard-outline"
+              caption={t('dashboard.todayCaption')}
+              captionColor={c.warm}
               layoutStyle={statCardLayoutStyle}
-              onPress={() => goMembers('unpaid')}
+              onPress={() => router.push('/(tabs)/check-in' as never)}
             />
           </View>
-          {typeof data.checkedInToday === 'number' ? (
-            <SoftSurface
-              variant="panel"
-              onPress={() => router.push('/(tabs)/check-in' as never)}
-              style={styles.checkInTodayCard}
-              accessibilityRole="button"
-              accessibilityLabel={t('dashboard.checkedInTodayAria', { count: data.checkedInToday })}
-            >
-              <View style={styles.heroHeader}>
-                <Text style={[styles.checkInTodayLabel, { color: c.muted }]}>
-                  {t('dashboard.checkedInToday')}
-                </Text>
-                <Ionicons
-                  name="checkbox-outline"
-                  size={18}
-                  color={linkColor}
-                  accessibilityElementsHidden
-                  importantForAccessibility="no"
-                />
-              </View>
-              <Text display style={[styles.checkInTodayValue, { color: c.text }]}>
-                {data.checkedInToday}
-              </Text>
-              <Text style={[styles.checkInTodayHint, { color: c.dim }]}>
-                {t('dashboard.checkedInTodayHint')}
-              </Text>
-            </SoftSurface>
-          ) : null}
           {summaryBlock}
           {owner ? attentionBlock : null}
         </Animated.View>
@@ -430,9 +435,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 12,
   },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md, marginTop: space.sm },
-  checkInTodayCard: {
-    marginTop: space.md,
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md, marginTop: space.md },
+  heroMetricCard: {
+    marginTop: space.sm,
     padding: space.lg,
   },
   heroHeader: {
@@ -441,19 +446,38 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 12,
   },
-  checkInTodayLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
+  heroMetricLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    letterSpacing: 0.2,
   },
-  checkInTodayValue: {
-    marginTop: 6,
+  heroValueRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 12,
+  },
+  heroMetricValue: {
     fontSize: 40,
     fontWeight: '700',
     letterSpacing: -1,
   },
-  checkInTodayHint: { marginTop: 6, fontSize: 13 },
+  heroMetricSubValue: {
+    fontSize: 22,
+    fontWeight: '500',
+    letterSpacing: -0.4,
+  },
+  heroProgressTrack: {
+    marginTop: 16,
+    height: 6,
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+  heroProgressFill: {
+    height: 6,
+    borderRadius: 999,
+  },
   summary: {
     marginTop: space.md,
     padding: space.lg,
@@ -488,17 +512,6 @@ const styles = StyleSheet.create({
   alertMeta: { marginTop: 2, fontSize: 12, lineHeight: 16 },
   alertExpires: { marginTop: 1, fontSize: 12, lineHeight: 16 },
   alertRight: { alignItems: 'flex-end', gap: 6 },
-  attentionShortcut: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginTop: 4,
-    padding: space.md,
-  },
-  attentionShortcutValue: { fontSize: 28, fontWeight: '700', minWidth: 36, letterSpacing: -0.4 },
-  attentionShortcutBody: { flex: 1, minWidth: 0 },
-  attentionShortcutTitle: { fontSize: 14, fontWeight: '600' },
-  attentionShortcutMeta: { marginTop: 3, fontSize: 12, lineHeight: 16 },
   showMoreWrap: {
     borderTopWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: 4,

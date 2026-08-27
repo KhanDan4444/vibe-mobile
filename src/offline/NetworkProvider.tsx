@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import NetInfo from '@react-native-community/netinfo';
-import { AppState, type AppStateStatus } from 'react-native';
-import { onlineManager } from '@tanstack/react-query';
+import { AppState, Platform, type AppStateStatus } from 'react-native';
+import { focusManager, onlineManager } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
 import { getOfflineQueueSummary, processOfflineQueue } from '@/src/offline/processQueue';
 import { clearOfflineQueueForGym } from '@/src/offline/queue';
@@ -66,6 +66,14 @@ export function NetworkProvider({ children }: { children: React.ReactNode }) {
   }, [gymId, refreshPendingCount]);
 
   useEffect(() => {
+    focusManager.setEventListener((handleFocus) => {
+      const onChange = (status: AppStateStatus) => {
+        if (Platform.OS !== 'web') handleFocus(status === 'active');
+      };
+      const sub = AppState.addEventListener('change', onChange);
+      return () => sub.remove();
+    });
+
     onlineManager.setEventListener((setOnline) =>
       NetInfo.addEventListener((state) => {
         const online = computeOnline(state);
@@ -78,7 +86,10 @@ export function NetworkProvider({ children }: { children: React.ReactNode }) {
     });
 
     void refreshPendingCount();
-    return () => unsubscribe();
+    return () => {
+      focusManager.setEventListener(() => () => {});
+      unsubscribe();
+    };
   }, [refreshPendingCount]);
 
   useEffect(() => {

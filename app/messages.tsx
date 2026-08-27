@@ -23,6 +23,7 @@ import { useBranchScope } from '@/src/context/BranchContext';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
+import { pullRefreshing } from '@/src/query/useQueryScreenLoading';
 import { formatLogTimestamp } from '@/src/utils/date';
 import {
   SMS_TYPE_FILTER_KEYS,
@@ -144,7 +145,7 @@ function SmsItem({
       fontWeight: '700' as const,
       letterSpacing: 0.1,
       textTransform: 'lowercase' as const,
-      color: accent,
+      color: c.success,
     },
     preview: { marginTop: 4, fontSize: 12, lineHeight: 16, color: theme.muted },
     meta: {
@@ -190,7 +191,7 @@ function SmsItem({
               ) : null}
             </View>
             <View style={styles.sentRow}>
-              <Ionicons name="checkmark-circle" size={15} color={accent} />
+              <Ionicons name="checkmark-circle" size={15} color={c.success} />
               <Text style={styles.sentBadgeText}>{t('messages.sentBadge')}</Text>
             </View>
           </View>
@@ -322,7 +323,7 @@ export default function MessagesScreen() {
                 contentContainerStyle={styles.listContent}
                 refreshControl={
                   <RefreshControl
-                    refreshing={query.isRefetching}
+                    refreshing={pullRefreshing(query.isRefetching, query.isFetchingNextPage)}
                     onRefresh={() => query.refetch()}
                     tintColor={c.accentText}
                   />

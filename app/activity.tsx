@@ -23,6 +23,7 @@ import { useBranchScope } from '@/src/context/BranchContext';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
+import { pullRefreshing } from '@/src/query/useQueryScreenLoading';
 import { formatLogTimestamp } from '@/src/utils/date';
 import {
   activityActionIcon,
@@ -337,7 +338,7 @@ export default function ActivityScreen() {
                 contentContainerStyle={styles.listContent}
                 refreshControl={
                   <RefreshControl
-                    refreshing={query.isRefetching}
+                    refreshing={pullRefreshing(query.isRefetching, query.isFetchingNextPage)}
                     onRefresh={() => query.refetch()}
                     tintColor={c.accentText}
                   />

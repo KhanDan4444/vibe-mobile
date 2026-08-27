@@ -1,4 +1,5 @@
 import { View, type StyleProp, type ViewStyle } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { AppText as Text } from '@/src/components/AppText';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useTheme } from '@/src/context/PreferencesContext';
@@ -11,6 +12,11 @@ type Props = {
   accent?: string;
   /** attention = expired / unpaid wash when count > 0; neutral = active / due soon. */
   tone?: 'attention' | 'neutral';
+  /** Optional line under the label (e.g. period). */
+  caption?: string;
+  captionColor?: string;
+  /** Optional status icon (top-right), sized for dense metric tiles. */
+  icon?: keyof typeof Ionicons.glyphMap;
   layoutStyle?: StyleProp<ViewStyle>;
   onPress?: () => void;
   /** Center content (reports grid). Default is start-aligned like dashboard. */
@@ -26,6 +32,9 @@ export function MetricStatCard({
   value,
   accent,
   tone = 'neutral',
+  caption,
+  captionColor,
+  icon,
   layoutStyle,
   onPress,
   align = 'start',
@@ -41,6 +50,9 @@ export function MetricStatCard({
       : accent && tone === 'neutral'
         ? accent
         : c.text;
+  const iconColor = quiet ? c.dim : accent || c.muted;
+  const alignText = align === 'center' ? ('center' as const) : ('left' as const);
+  const showIcon = Boolean(icon) && align !== 'center';
 
   const card = (
     <SoftSurface
@@ -48,7 +60,7 @@ export function MetricStatCard({
       // Hot wash cards stay flat — Android elevation + tinted fills still halo on some devices.
       flat={hot}
       onPress={onPress}
-      accessibilityLabel={`${label}: ${value}`}
+      accessibilityLabel={caption ? `${label}: ${value}. ${caption}` : `${label}: ${value}`}
       style={[
         styles.card,
         align === 'center' ? styles.cardCenter : null,
@@ -60,18 +72,42 @@ export function MetricStatCard({
           : null,
       ]}
     >
+      {showIcon ? (
+        <View style={styles.header}>
+          <Text
+            style={[styles.labelHeader, { color: quiet ? c.dim : c.muted }]}
+            numberOfLines={2}
+          >
+            {label}
+          </Text>
+          <Ionicons
+            name={icon}
+            size={15}
+            color={iconColor}
+            accessibilityElementsHidden
+            importantForAccessibility="no"
+          />
+        </View>
+      ) : null}
       <Text display style={[styles.value, { color: valueColor }]}>
         {value}
       </Text>
-      <Text
-        style={[
-          styles.label,
-          { color: quiet ? c.dim : c.muted, textAlign: align === 'center' ? 'center' : 'left' },
-        ]}
-        numberOfLines={2}
-      >
-        {label}
-      </Text>
+      {!showIcon ? (
+        <Text
+          style={[styles.label, { color: quiet ? c.dim : c.muted, textAlign: alignText }]}
+          numberOfLines={2}
+        >
+          {label}
+        </Text>
+      ) : null}
+      {caption ? (
+        <Text
+          style={[styles.caption, { color: captionColor ?? c.success, textAlign: alignText }]}
+          numberOfLines={1}
+        >
+          {caption}
+        </Text>
+      ) : null}
     </SoftSurface>
   );
 
@@ -90,6 +126,20 @@ const styles = {
   cardCenter: {
     alignItems: 'center' as const,
   },
+  header: {
+    flexDirection: 'row' as const,
+    alignItems: 'flex-start' as const,
+    justifyContent: 'space-between' as const,
+    gap: 8,
+    marginBottom: 6,
+  },
+  labelHeader: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '500' as const,
+  },
   value: { fontSize: 24, fontWeight: '700' as const, letterSpacing: -0.6 },
   label: { marginTop: 4, fontSize: 12, lineHeight: 16 },
+  caption: { marginTop: 1, fontSize: 10, fontWeight: '500' as const, lineHeight: 12 },
 };

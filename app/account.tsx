@@ -1,6 +1,12 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Redirect, useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 import { AppText as Text } from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -12,8 +18,13 @@ import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { APP_LANGUAGES, LANGUAGE_LABEL_KEYS, type AppLanguage } from '@/src/i18n';
+import { springs } from '@/src/theme/motion';
+import { radiusMd, radiusSm, type AppTheme } from '@/src/theme/tokens';
 import { initialsFrom, roleSubtitleKey } from '@/src/utils/userDisplay';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
+
+const THEME_SEGMENT_PAD = 3;
+const THEME_SEGMENT_GAP = 2;
 
 type ChevronKind = 'forward' | 'down' | 'none';
 
@@ -55,11 +66,141 @@ function AccountRow({ icon, label, value, danger, chevron = 'forward', last, onP
   );
 }
 
+/** Compact Light | Dark control — sliding thumb, binary choice on the row. */
+function AppearanceThemeSegment({
+  value,
+  onChange,
+  lightLabel,
+  darkLabel,
+}: {
+  value: AppTheme;
+  onChange: (next: AppTheme) => void;
+  lightLabel: string;
+  darkLabel: string;
+}) {
+  const { colors: c } = useTheme();
+  const options: { id: AppTheme; label: string }[] = [
+    { id: 'light', label: lightLabel },
+    { id: 'dark', label: darkLabel },
+  ];
+  const trackWidth = useSharedValue(0);
+  const index = useSharedValue(value === 'dark' ? 1 : 0);
+
+  useEffect(() => {
+    index.value = withSpring(value === 'dark' ? 1 : 0, springs.press);
+  }, [index, value]);
+
+  const thumbStyle = useAnimatedStyle(() => {
+    const measured = trackWidth.value > 0;
+    const inner = Math.max(0, trackWidth.value - THEME_SEGMENT_PAD * 2 - THEME_SEGMENT_GAP);
+    const optionW = inner / 2;
+    return {
+      width: optionW,
+      opacity: measured ? 1 : 0,
+      transform: [
+        {
+          translateX:
+            THEME_SEGMENT_PAD + index.value * (optionW + THEME_SEGMENT_GAP),
+        },
+      ],
+    };
+  });
+
+  const pick = (next: AppTheme) => {
+    if (next === value) return;
+    if (Platform.OS !== 'web') {
+      void Haptics.selectionAsync().catch(() => undefined);
+    }
+    onChange(next);
+  };
+
+  return (
+    <View
+      style={[
+        styles.themeSegment,
+        {
+          backgroundColor: c.inputBg,
+          borderColor: c.border,
+        },
+      ]}
+      accessibilityRole="radiogroup"
+      accessibilityLabel="Appearance"
+      onLayout={(e) => {
+        trackWidth.value = e.nativeEvent.layout.width;
+      }}
+    >
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.themeSegmentThumb,
+          { backgroundColor: c.card, borderColor: c.cardEdge },
+          thumbStyle,
+        ]}
+      />
+      {options.map((opt) => {
+        const selected = value === opt.id;
+        return (
+          <Pressable
+            key={opt.id}
+            accessibilityRole="radio"
+            accessibilityState={{ selected }}
+            accessibilityLabel={opt.label}
+            hitSlop={4}
+            onPress={() => pick(opt.id)}
+            style={styles.themeSegmentOption}
+          >
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.78}
+              style={[
+                styles.themeSegmentLabel,
+                { color: selected ? c.text : c.dim },
+                selected && styles.themeSegmentLabelSelected,
+              ]}
+            >
+              {opt.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+function AppearanceRow({ last }: { last?: boolean }) {
+  const { colors: c, theme, setTheme } = useTheme();
+  const { t } = useTranslation();
+
+  return (
+    <View
+      style={[
+        styles.row,
+        !last && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.border },
+      ]}
+    >
+      <Ionicons
+        name={theme === 'dark' ? 'moon-outline' : 'sunny-outline'}
+        size={22}
+        color={c.muted}
+        style={styles.rowIcon}
+      />
+      <Text style={[styles.rowLabel, { color: c.text }]}>{t('profile.appearance')}</Text>
+      <AppearanceThemeSegment
+        value={theme}
+        onChange={(next) => void setTheme(next)}
+        lightLabel={t('profile.themeLight')}
+        darkLabel={t('profile.themeDark')}
+      />
+    </View>
+  );
+}
+
 export default function AccountScreen() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const { colors: c } = useTheme();
-  const { language, setLanguage, cycleTheme, theme } = usePreferences();
+  const { language, setLanguage } = usePreferences();
   const { t } = useTranslation();
   const { isTablet, pagePadding } = useResponsiveLayout();
   const owner = isGymOwner(user?.role);
@@ -70,7 +211,6 @@ export default function AccountScreen() {
   }
 
   const displayName = user.name || user.email || user.username || 'User';
-  const themeLabel = theme === 'dark' ? t('profile.themeDark') : t('profile.themeLight');
   const langLabel = t(LANGUAGE_LABEL_KEYS[language]);
 
   const pickLanguage = (lng: AppLanguage) => {
@@ -82,13 +222,7 @@ export default function AccountScreen() {
     <>
       <Text style={[styles.section, { color: c.dim }]}>{t('account.preferences')}</Text>
       <AccountGroup>
-        <AccountRow
-          icon={theme === 'dark' ? 'moon-outline' : 'sunny-outline'}
-          label={t('profile.appearance')}
-          value={themeLabel}
-          chevron="forward"
-          onPress={cycleTheme}
-        />
+        <AppearanceRow />
         <AccountRow
           icon="language-outline"
           label={t('profile.language')}
@@ -223,6 +357,44 @@ const styles = StyleSheet.create({
   rowLabel: { flex: 1, fontSize: 16, fontWeight: '600' },
   rowValue: { fontSize: 13, fontWeight: '600', marginRight: 4 },
   rowCaret: { marginLeft: 2 },
+  themeSegment: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: THEME_SEGMENT_PAD,
+    borderRadius: radiusMd,
+    borderWidth: StyleSheet.hairlineWidth,
+    gap: THEME_SEGMENT_GAP,
+    maxWidth: 184,
+    flexShrink: 0,
+    position: 'relative',
+  },
+  themeSegmentThumb: {
+    position: 'absolute',
+    top: THEME_SEGMENT_PAD,
+    bottom: THEME_SEGMENT_PAD,
+    left: 0,
+    borderRadius: radiusSm,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  themeSegmentOption: {
+    flexGrow: 1,
+    flexBasis: 0,
+    minWidth: 0,
+    minHeight: 34,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  themeSegmentLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: -0.1,
+  },
+  themeSegmentLabelSelected: {
+    fontWeight: '700',
+  },
   menuGrid: { gap: 0 },
   menuGridTablet: { flexDirection: 'row', gap: 20, alignItems: 'flex-start' },
   menuColumn: { width: '48.5%', flexGrow: 0 },

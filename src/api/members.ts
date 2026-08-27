@@ -5,7 +5,7 @@ export interface MemberListParams {
   page?: number;
   limit?: number;
   search?: string;
-  filter?: 'due_soon' | 'expired' | 'unpaid';
+  filter?: 'due_soon' | 'expired' | 'unpaid' | 'new' | 'inactive_week';
   status?: string;
   sort?: string;
   branch_id?: number | string;

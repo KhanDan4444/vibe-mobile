@@ -18,6 +18,7 @@ import { RevenueFiltersSheet } from '@/src/components/RevenueFiltersSheet';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { EmptyState } from '@/src/components/EmptyState';
 import { LoadError } from '@/src/components/LoadError';
+import { pullRefreshing, useQueryScreenLoading } from '@/src/query/useQueryScreenLoading';
 import { PAYMENT_METHODS, paymentMethodBadgeStyle, paymentMethodIcon, paymentMethodLabelKey, paymentMethodShortLabelKey } from '@/src/constants/payments';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useFlash } from '@/src/context/FlashContext';
@@ -28,7 +29,7 @@ import { useTabBarOverlayInset } from '@/src/theme/tabBar';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { appTextStyle } from '@/src/theme/typography';
 import { formatDisplayDate } from '@/src/utils/date';
-import { formatCompactNumber, formatEtb } from '@/src/utils/formatMoney';
+import { formatEtb } from '@/src/utils/formatMoney';
 import { DEFAULT_REVENUE_SORT, type RevenueSortId } from '@/src/utils/listSort';
 import { paymentSourceKey } from '@/src/utils/termPayments';
 import { statusLabelKey } from '@/src/utils/statusLabels';
@@ -245,18 +246,18 @@ function MethodStat({
       borderLeftWidth: showDivider ? StyleSheet.hairlineWidth : 0,
       borderLeftColor: colors.border,
     },
-    methodStatIcon: { marginBottom: 5 },
+    methodStatIcon: { marginBottom: 3 },
     methodStatValue: {
-      fontSize: 12,
+      fontSize: 11,
       fontWeight: '600' as const,
       color: colors.muted,
       fontVariant: ['tabular-nums'] as TextStyle['fontVariant'],
-      letterSpacing: -0.3,
+      letterSpacing: -0.4,
       maxWidth: '100%' as const,
     },
     methodStatLabel: {
-      marginTop: 2,
-      fontSize: 10,
+      marginTop: 1,
+      fontSize: 9,
       fontWeight: '500' as const,
       color: colors.dim,
       textAlign: 'center' as const,
@@ -268,9 +269,9 @@ function MethodStat({
   if (!amount) return null;
   return (
     <View style={styles.methodStat} accessibilityLabel={`${label} ${amount.toLocaleString()}`}>
-      <Ionicons name={paymentMethodIcon(method)} size={13} color={c.dim} style={styles.methodStatIcon} />
-      <Text style={styles.methodStatValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
-        {formatCompactNumber(amount)}
+      <Ionicons name={paymentMethodIcon(method)} size={12} color={c.dim} style={styles.methodStatIcon} />
+      <Text style={styles.methodStatValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
+        {amount.toLocaleString()}
       </Text>
       <Text style={appTextStyle(language, styles.methodStatLabel)} numberOfLines={1}>
         {label}
@@ -375,8 +376,8 @@ export default function RevenueScreen() {
     methodStats: {
       flexDirection: 'row' as const,
       alignItems: 'flex-start' as const,
-      marginTop: 16,
-      paddingTop: 14,
+      marginTop: 12,
+      paddingTop: 10,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: colors.border,
     },
@@ -465,6 +466,8 @@ export default function RevenueScreen() {
     getNextPageParam: (last) => (last.page < last.totalPages ? last.page + 1 : undefined),
     enabled: Boolean(token) && (!useCustomRange || customRangeReady),
   });
+
+  const screenLoading = useQueryScreenLoading(query.isLoading, Boolean(query.data), query.isPending);
 
   const payments = query.data?.pages.flatMap((p) => p.items) ?? [];
   const summary = query.data?.pages[0]?.summary;
@@ -652,7 +655,7 @@ export default function RevenueScreen() {
     <View style={styles.container}>
       <BranchFilterBar horizontalPadding={pagePadding} />
 
-      {query.isLoading && !query.data ? (
+      {screenLoading ? (
         <View style={{ flex: 1, paddingHorizontal: pagePadding }}>
           {listHeader}
           <PageSkeleton variant="payments" padded={false} />
@@ -687,7 +690,7 @@ export default function RevenueScreen() {
             styles.list,
             { paddingHorizontal: pagePadding, paddingBottom: 28 + tabOverlayInset },
           ]}
-          refreshControl={<RefreshControl refreshing={query.isRefetching} onRefresh={() => query.refetch()} tintColor={c.accentText} />}
+          refreshControl={<RefreshControl refreshing={pullRefreshing(query.isRefetching, query.isFetchingNextPage)} onRefresh={() => query.refetch()} tintColor={c.accentText} />}
           onEndReached={() => {
             if (query.hasNextPage && !query.isFetchingNextPage) query.fetchNextPage();
           }}

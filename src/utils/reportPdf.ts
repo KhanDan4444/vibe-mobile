@@ -29,26 +29,32 @@ const PDF_STYLES = `
   .header {
     margin-bottom: 6px;
   }
-  .eyebrow {
-    margin: 0 0 4px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: #0f766e;
+  .gym-name {
+    margin: 0 0 6px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #64748b;
+    letter-spacing: -0.01em;
   }
-  h1 {
-    font-size: 22px;
+  .report-title {
     margin: 0;
-    color: #0f172a;
-    font-weight: 700;
+    font-size: 24px;
+    font-weight: 800;
+    color: #0f766e;
     letter-spacing: -0.02em;
+    line-height: 1.15;
   }
   .meta {
     color: #64748b;
     margin: 8px 0 18px;
     font-size: 12px;
-    line-height: 1.45;
+    line-height: 1.55;
+  }
+  .meta-line {
+    margin: 0 0 3px;
+  }
+  .meta-line:last-child {
+    margin-bottom: 0;
   }
   h2 {
     font-size: 13px;
@@ -225,23 +231,33 @@ function revenueByMethodHtml(summary?: { total?: number; byMethod?: Record<strin
 function reportShell(opts: {
   gymName: string;
   eyebrow: string;
-  meta: string;
+  metaLines: string[];
   body: string;
 }) {
+  const metaHtml = opts.metaLines
+    .filter(Boolean)
+    .map((line) => `<p class="meta-line">${line}</p>`)
+    .join('');
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>${PDF_STYLES}</style></head><body>
     <div class="brand-bar"></div>
     <div class="content">
       <div class="header">
-        <p class="eyebrow">${escapeHtml(opts.eyebrow)}</p>
-        <h1>${escapeHtml(opts.gymName)}</h1>
+        <p class="gym-name">${escapeHtml(opts.gymName)}</p>
+        <h1 class="report-title">${escapeHtml(opts.eyebrow)}</h1>
       </div>
-      <p class="meta">${opts.meta}</p>
+      <div class="meta">${metaHtml}</div>
       ${opts.body}
       <div class="doc-footer">
         <span>${escapeHtml(opts.gymName)}</span>
       </div>
     </div>
   </body></html>`;
+}
+
+function branchMetaLine(branchLabel: string) {
+  const label = String(branchLabel || '').trim();
+  if (!label || /^all\b/i.test(label)) return '';
+  return `Branch: ${escapeHtml(label)}`;
 }
 
 /** Active = valid term and paid. Unpaid is separate (not counted as active). */
@@ -251,18 +267,23 @@ export function memberStatusCounts(members: MemberRow[]) {
   let expired = 0;
   let unpaid = 0;
   let former = 0;
+  let newMembers = 0;
+  const monthKey = new Date();
+  const monthPrefix = `${monthKey.getFullYear()}-${String(monthKey.getMonth() + 1).padStart(2, '0')}`;
   for (const m of members) {
     if (m.deleted_at) {
       former += 1;
       continue;
     }
+    const start = String(m.start_date || '').split('T')[0];
+    if (start && start.slice(0, 7) === monthPrefix) newMembers += 1;
     const s = (m.status || '').toLowerCase();
     if (m.is_unpaid) unpaid += 1;
     if (s === 'active' && !m.is_unpaid) active += 1;
     else if (s === 'due soon') dueSoon += 1;
     else if (s === 'expired') expired += 1;
   }
-  return { active, dueSoon, expired, unpaid, former, total: members.length };
+  return { active, dueSoon, expired, unpaid, former, newMembers, total: members.length };
 }
 
 /**
@@ -351,12 +372,11 @@ export function buildMembersPdfHtml(opts: {
 }) {
   const counts = memberStatusCounts(opts.members);
   const plans = plansUsedEntries(opts.members);
-  const meta = [
-    escapeHtml(opts.branchLabel),
-    escapeHtml(opts.filterLabel),
-    `${plans.length} plan(s)`,
+  const metaLines = [
     `Generated ${escapeHtml(generatedAt())}`,
-  ].join(' · ');
+    branchMetaLine(opts.branchLabel),
+    `${escapeHtml(opts.filterLabel)} · ${counts.total} member(s)`,
+  ].filter(Boolean);
   const body = `
     <div class="stats">
       <div class="stat"><label>Total</label><strong>${counts.total}</strong></div>
@@ -366,6 +386,7 @@ export function buildMembersPdfHtml(opts: {
       <div class="stat"><label>Expired</label><strong>${counts.expired}</strong></div>
       <div class="stat"><label>Unpaid</label><strong>${counts.unpaid}</strong></div>
       <div class="stat"><label>Former</label><strong>${counts.former}</strong></div>
+      <div class="stat"><label>New</label><strong>${counts.newMembers}</strong></div>
     </div>
     ${plansUsedHtml(opts.members)}
     <h2>Members</h2>
@@ -374,7 +395,7 @@ export function buildMembersPdfHtml(opts: {
   return reportShell({
     gymName: opts.gymName,
     eyebrow: 'Members report',
-    meta,
+    metaLines,
     body,
   });
 }
@@ -389,11 +410,12 @@ export function buildRevenuePdfHtml(opts: {
 }) {
   const total = opts.summary?.total ?? opts.payments.reduce((s, p) => s + Number(p.amount), 0);
   const count = opts.summary?.count ?? opts.payments.length;
-  const meta = [
-    escapeHtml(opts.branchLabel),
-    escapeHtml(opts.periodLabel),
+  const metaLines = [
     `Generated ${escapeHtml(generatedAt())}`,
-  ].join(' · ');
+    branchMetaLine(opts.branchLabel),
+    escapeHtml(opts.periodLabel),
+    `Total ${escapeHtml(formatMoneyEtb(total))} · ${count} payment(s)`,
+  ].filter(Boolean);
   const body = `
     <p class="total">${escapeHtml(formatMoneyEtb(total))}</p>
     <p class="meta" style="margin-top:-8px">${count} payments</p>
@@ -404,7 +426,7 @@ export function buildRevenuePdfHtml(opts: {
   return reportShell({
     gymName: opts.gymName,
     eyebrow: 'Revenue report',
-    meta,
+    metaLines,
     body,
   });
 }
@@ -422,13 +444,12 @@ export function buildFullReportPdfHtml(opts: {
   const counts = memberStatusCounts(opts.members);
   const plans = plansUsedEntries(opts.members);
   const total = opts.revenueSummary?.total ?? opts.payments.reduce((s, p) => s + Number(p.amount), 0);
-  const meta = [
-    escapeHtml(opts.branchLabel),
-    escapeHtml(opts.memberFilterLabel),
-    escapeHtml(opts.periodLabel),
-    `${plans.length} plan(s)`,
+  const metaLines = [
     `Generated ${escapeHtml(generatedAt())}`,
-  ].join(' · ');
+    branchMetaLine(opts.branchLabel),
+    `Members: ${escapeHtml(opts.memberFilterLabel)} · Revenue: ${escapeHtml(opts.periodLabel)}`,
+    `${counts.total} member(s) · ${plans.length} plan(s) · ${escapeHtml(formatMoneyEtb(total))} revenue · ${opts.payments.length} payment(s)`,
+  ].filter(Boolean);
   const body = `
     <div class="stats">
       <div class="stat"><label>Total</label><strong>${counts.total}</strong></div>
@@ -436,6 +457,7 @@ export function buildFullReportPdfHtml(opts: {
       <div class="stat"><label>Active</label><strong>${counts.active}</strong></div>
       <div class="stat"><label>Unpaid</label><strong>${counts.unpaid}</strong></div>
       <div class="stat"><label>Former</label><strong>${counts.former}</strong></div>
+      <div class="stat"><label>New</label><strong>${counts.newMembers}</strong></div>
     </div>
     ${plansUsedHtml(opts.members)}
     <h2>Members</h2>
@@ -452,7 +474,7 @@ export function buildFullReportPdfHtml(opts: {
   return reportShell({
     gymName: opts.gymName,
     eyebrow: 'Gym report',
-    meta,
+    metaLines,
     body,
   });
 }
