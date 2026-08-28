@@ -5,6 +5,7 @@ import { PrimaryButton } from '@/src/components/Form';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
+import { looksLikeMetricValue, metricDisplayStyle } from '@/src/theme/typography';
 import { statusWashOpaque } from '@/src/utils/statusWash';
 
 type SummaryRow = { label: string; value: string; latin?: boolean };
@@ -99,7 +100,6 @@ export function FormSuccessView({
     summaryLabel: { fontSize: 13, color: colors.dim, flexShrink: 0 },
     summaryValue: {
       fontSize: 14,
-      fontWeight: '600' as const,
       color: colors.text,
       flexShrink: 1,
       textAlign: 'right' as const,
@@ -137,7 +137,17 @@ export function FormSuccessView({
               style={[styles.summaryRow, index === rows.length - 1 ? styles.summaryRowLast : null]}
             >
               <Text style={styles.summaryLabel}>{row.label}</Text>
-              <Text latin={row.latin} style={styles.summaryValue} numberOfLines={1}>
+              <Text
+                latin={row.latin || looksLikeMetricValue(row.value)}
+                display={looksLikeMetricValue(row.value)}
+                style={[
+                  styles.summaryValue,
+                  looksLikeMetricValue(row.value)
+                    ? metricDisplayStyle({ fontSize: 14, color: c.text })
+                    : { fontWeight: '600' as const },
+                ]}
+                numberOfLines={1}
+              >
                 {row.value}
               </Text>
             </View>

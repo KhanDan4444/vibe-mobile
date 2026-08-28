@@ -18,7 +18,7 @@ import { useBranchScope } from '@/src/context/BranchContext';
 import { useTheme, usePreferences } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
-import { appTextStyle } from '@/src/theme/typography';
+import { appTextStyle, metricDisplayStyle } from '@/src/theme/typography';
 import type { AppLanguage } from '@/src/i18n';
 import type { ThemeColors } from '@/src/theme/tokens';
 import { space } from '@/src/theme/tokens';
@@ -67,7 +67,7 @@ function buildReportStyles(colors: ThemeColors) {
       padding: space.lg + 2,
     },
     revenuePeriod: { fontSize: 13, fontWeight: '600' as const, color: colors.accentText },
-    revenueTotal: { marginTop: 6, fontSize: 30, fontWeight: '700' as const, letterSpacing: -0.8, color: colors.text },
+    revenueTotal: { marginTop: 6, fontSize: 30, letterSpacing: -0.8, color: colors.text },
     revenueMeta: { marginTop: 6, fontSize: 13, color: colors.dim },
     fullSection: {
       marginTop: space.xxl,
@@ -325,7 +325,7 @@ export default function ReportsScreen() {
       {revenueSummary ? (
         <SoftSurface variant="panel" style={styles.revenueSummary}>
           <Text style={styles.revenuePeriod}>{periodLabel}</Text>
-          <Text style={styles.revenueTotal}>
+          <Text latin display style={metricDisplayStyle(styles.revenueTotal)}>
             {formatEtb(Number(revenueSummary.total || 0), { forceCompact: false })}
           </Text>
           <Text style={styles.revenueMeta}>

@@ -18,10 +18,11 @@ import { NotificationInboxProvider } from '@/src/notifications/NotificationInbox
 import { NetworkProvider, useNetwork } from '@/src/offline/NetworkProvider';
 import { OfflineStatusStrip, OfflineSyncOverlay } from '@/src/components/OfflineBanner';
 import { AppBootSplash, BOOT_SPLASH_BG_DARK, bootSplashExiting } from '@/src/components/AppBootSplash';
+import { AppHeaderTitle } from '@/src/components/AppHeaderTitle';
 import { SubscriptionLockout } from '@/src/components/SubscriptionLockout';
 import { PERSISTED_QUERY_KEYS, queryClient, QUERY_CACHE_STORAGE_KEY } from '@/src/query/client';
 import { SystemChrome } from '@/src/theme/SystemChrome';
-import { NOTO_ETHIOPIC, SPACE_GROTESK_SEMI, lineHeightFor } from '@/src/theme/typography';
+import { NOTO_ETHIOPIC, SPACE_GROTESK_SEMI, scaleLineHeight } from '@/src/theme/typography';
 import { useAppFonts } from '@/src/theme/useAppFonts';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -99,9 +100,12 @@ function RootNavigator() {
     headerShown: true as const,
     headerStyle: { backgroundColor: c.headerBg },
     headerTintColor: c.text,
+    headerTitle: ({ children, tintColor }: { children: string; tintColor?: string }) => (
+      <AppHeaderTitle tintColor={tintColor}>{children}</AppHeaderTitle>
+    ),
     headerTitleStyle:
       language === 'am'
-        ? ({ fontFamily: NOTO_ETHIOPIC, fontWeight: '600' as const, lineHeight: lineHeightFor(17) })
+        ? ({ fontFamily: NOTO_ETHIOPIC, fontWeight: '600' as const, lineHeight: scaleLineHeight(22) })
         : ({ fontFamily: SPACE_GROTESK_SEMI, fontWeight: '600' as const }),
     ...(user && !isOnline ? { safeAreaInsets: { top: 0 } } : {}),
   };

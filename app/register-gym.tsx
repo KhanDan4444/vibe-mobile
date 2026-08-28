@@ -1,17 +1,19 @@
 import { useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText as Text } from '@/src/components/AppText';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { completeGymSignup, requestGymSignupOtp } from '@/src/api/auth';
+import { completeGymSignup, requestGymSignupOtp, verifyGymSignupOtp } from '@/src/api/auth';
 import { AuthFormEnter } from '@/src/components/AuthFormEnter';
 import { AuthOtpBlock } from '@/src/components/AuthOtpBlock';
 import { AuthScreen } from '@/src/components/AuthScreen';
 import { AuthStepDots } from '@/src/components/AuthStepDots';
+import { AuthSuccessPanel } from '@/src/components/AuthSuccessPanel';
 import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton } from '@/src/components/Form';
 import { PasswordRule } from '@/src/components/PasswordRule';
 import { useOtpResendCooldown } from '@/src/hooks/useOtpResendCooldown';
+import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { AUTH, authSubtitle, authTitle } from '@/src/theme/authChrome';
 import { formatDisplayDate } from '@/src/utils/date';
 import {
@@ -30,13 +32,55 @@ const SIGNUP_STEP_DOT_KEYS = ['signup.stepDotPhone', 'signup.stepDotGym', 'signu
 type RegisterDone = {
   gymName: string;
   username: string;
+  ownerName?: string;
+  location?: string;
   phone?: string;
+  email?: string;
   trialEndDate?: string;
   trialDays: number;
 };
 
+function formatSignupLocation(city: string, address: string) {
+  const cityLabel = city.trim();
+  const addressLabel = address.trim();
+  if (cityLabel && addressLabel) return `${cityLabel}, ${addressLabel}`;
+  return cityLabel || addressLabel || undefined;
+}
+
+function SignupTrialNote({ days }: { days: number }) {
+  const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <View style={trialNoteStyles.wrap}>
+      <Text style={[trialNoteStyles.text, { color: AUTH.textDim }]}>
+        {expanded ? t('signup.trialNote', { days }) : t('signup.trialNoteShort', { days })}
+      </Text>
+      <Pressable
+        onPress={() => setExpanded((open) => !open)}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityState={{ expanded }}
+      >
+        <Text style={[trialNoteStyles.toggle, { color: AUTH.link }]}>
+          {expanded ? t('signup.trialShowLess') : t('signup.trialLearnMore')}
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
+const trialNoteStyles = StyleSheet.create({
+  wrap: { gap: 4 },
+  text: { fontSize: 12, lineHeight: 18, letterSpacing: 0.1 },
+  toggle: { fontSize: 12, fontWeight: '600', letterSpacing: 0.1 },
+});
+
 export default function RegisterGymScreen() {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
+  const { pagePadding, formMaxWidth } = useResponsiveLayout();
+  const stickyPadBottom = Math.max(insets.bottom, 10) + 8;
 
   const [step, setStep] = useState<SignupStep>('phone');
   const [sessionId, setSessionId] = useState('');
@@ -58,6 +102,7 @@ export default function RegisterGymScreen() {
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [registerDone, setRegisterDone] = useState<RegisterDone | null>(null);
+  const [otpVerified, setOtpVerified] = useState(false);
   const { cooldown, startCooldown, canResend } = useOtpResendCooldown();
   const otpRequestInFlight = useRef(false);
 
@@ -94,6 +139,7 @@ export default function RegisterGymScreen() {
       setSessionId(data.sessionId);
       setVerifiedPhone(normalized);
       startCooldown();
+      setOtpVerified(false);
       setStep('gym');
     } catch (e) {
       setError(e instanceof Error ? e.message : t('signup.otpFailed'));
@@ -114,6 +160,7 @@ export default function RegisterGymScreen() {
       setSessionId(data.sessionId);
       startCooldown();
       setCode('');
+      setOtpVerified(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : t('signup.otpFailed'));
     } finally {
@@ -122,19 +169,35 @@ export default function RegisterGymScreen() {
     }
   };
 
-  const continueGym = () => {
+  const backToPhone = () => {
+    setStep('phone');
+    setCode('');
+    setOtpVerified(false);
+    setError('');
+    setFieldErrors({});
+  };
+
+  const continueGym = async () => {
     setError('');
     const next = validateGymSignupGymStep({ code, gymName, city, address });
     setFieldErrors(next);
     if (Object.keys(next).length > 0) return;
-    setStep('account');
-  };
 
-  const backToPhone = () => {
-    setStep('phone');
-    setCode('');
-    setError('');
-    setFieldErrors({});
+    setLoading(true);
+    try {
+      await verifyGymSignupOtp({
+        sessionId,
+        code: code.trim(),
+        phone: verifiedPhone,
+      });
+      setOtpVerified(true);
+      setStep('account');
+    } catch (e) {
+      setOtpVerified(false);
+      setError(e instanceof Error ? e.message : t('signup.verifyFailed'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const lengthOk = password.length >= MIN_PASSWORD_LENGTH;
@@ -149,7 +212,7 @@ export default function RegisterGymScreen() {
       password,
       confirm,
     });
-    const gymErrors = validateGymSignupGymStep({ code, gymName, city, address });
+    const gymErrors = otpVerified ? {} : validateGymSignupGymStep({ code, gymName, city, address });
     const next = { ...gymErrors, ...accountErrors };
     setFieldErrors(next);
     if (Object.keys(gymErrors).length > 0) {
@@ -182,7 +245,10 @@ export default function RegisterGymScreen() {
       setRegisterDone({
         gymName: gymName.trim(),
         username: cleanUsername,
+        ownerName: ownerName.trim() || undefined,
+        location: formatSignupLocation(city, address),
         phone: verifiedPhone || phone.trim() || undefined,
+        email: trimmedEmail || undefined,
         trialEndDate: data.subscription?.end_date,
         trialDays,
       });
@@ -196,7 +262,10 @@ export default function RegisterGymScreen() {
   if (registerDone) {
     const summaryRows = [
       { label: t('signup.usernameLabel'), value: `@${registerDone.username}` },
+      registerDone.ownerName ? { label: t('signup.ownerNameLabel'), value: registerDone.ownerName } : null,
       registerDone.phone ? { label: t('signup.phoneLabel'), value: registerDone.phone } : null,
+      registerDone.email ? { label: t('signup.emailLabel'), value: registerDone.email } : null,
+      registerDone.location ? { label: t('signup.locationLabel'), value: registerDone.location } : null,
       registerDone.trialEndDate
         ? {
             label: t('signup.trialEndsLabel'),
@@ -209,44 +278,18 @@ export default function RegisterGymScreen() {
       <AuthScreen hero>
         <FormScroll contentContainerStyle={{ paddingTop: 28 }}>
           <AuthFormEnter delay={40}>
-            <View style={styles.successWrap}>
-              <View style={styles.checkCircle}>
-                <View style={styles.checkInner}>
-                  <Ionicons name="checkmark" size={34} color={AUTH.link} />
-                </View>
-              </View>
-
-              <Text display style={[styles.successTitle, { color: AUTH.text }]}>
-                {t('signup.successTitle')}
-              </Text>
-              <Text style={[styles.successGym, { color: AUTH.text }]} numberOfLines={2}>
-                {registerDone.gymName}
-              </Text>
-              <Text style={[styles.successBody, { color: AUTH.textMuted }]}>{t('signup.successBody')}</Text>
-
-              {summaryRows.length > 0 ? (
-                <View style={styles.summary}>
-                  {summaryRows.map((row) => (
-                    <View key={row.label} style={styles.summaryRow}>
-                      <Text style={[styles.summaryLabel, { color: AUTH.textDim }]}>{row.label}</Text>
-                      <Text latin style={[styles.summaryValue, { color: AUTH.text }]} numberOfLines={1}>
-                        {row.value}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              ) : null}
-
-              <Text style={[styles.successHint, { color: AUTH.textDim }]}>
-                {t('signup.successHint', { days: registerDone.trialDays })}
-              </Text>
-
-              <PrimaryButton
-                label={t('auth.signIn')}
-                onPress={() => router.replace('/login')}
-                style={styles.successCta}
-              />
-            </View>
+            <AuthSuccessPanel
+              title={t('signup.successTitle')}
+              hero={registerDone.gymName}
+              body={t('signup.successBody')}
+              rows={summaryRows.map((row) => ({
+                ...row,
+                latin: row.label !== t('signup.ownerNameLabel'),
+              }))}
+              hint={t('signup.successHint', { days: registerDone.trialDays })}
+              ctaLabel={t('auth.signIn')}
+              onCta={() => router.replace('/login')}
+            />
           </AuthFormEnter>
         </FormScroll>
       </AuthScreen>
@@ -256,6 +299,7 @@ export default function RegisterGymScreen() {
   return (
     <AuthScreen
       hero
+      flushBottom={step === 'account'}
       headerCenter={
         <AuthStepDots
           activeIndex={stepIndex}
@@ -267,7 +311,11 @@ export default function RegisterGymScreen() {
       }
     >
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <FormScroll contentContainerStyle={{ paddingTop: 20 }}>
+        <FormScroll
+          key={step}
+          style={step === 'account' ? { flex: 1 } : undefined}
+          contentContainerStyle={{ paddingTop: 20, paddingBottom: step === 'account' ? 16 : undefined }}
+        >
           <AuthFormEnter delay={40}>
             <Text display style={[styles.title, { color: AUTH.text }]}>
               {t('signup.title')}
@@ -302,6 +350,7 @@ export default function RegisterGymScreen() {
                   value={code}
                   onChange={(next) => {
                     setCode(next);
+                    setOtpVerified(false);
                     setFieldErrors((prev) => ({ ...prev, code: undefined }));
                   }}
                   error={fieldErrors.code ? resolveError(fieldErrors.code) : undefined}
@@ -353,15 +402,12 @@ export default function RegisterGymScreen() {
                 />
                 {fieldErrors.address ? <FieldError message={resolveError(fieldErrors.address)} /> : null}
 
-                <PrimaryButton label={t('common.continue')} onPress={continueGym} />
+                <PrimaryButton label={t('common.continue')} onPress={continueGym} loading={loading} />
               </>
             ) : null}
 
             {step === 'account' ? (
               <>
-                <View style={styles.stepDivider} />
-                <Text style={[styles.sectionTitle, { color: AUTH.textDim }]}>{t('signup.sectionAccount')}</Text>
-
                 <Label>{t('signup.ownerName')}</Label>
                 <Field
                   value={ownerName}
@@ -370,6 +416,7 @@ export default function RegisterGymScreen() {
                     setFieldErrors((prev) => ({ ...prev, ownerName: undefined }));
                   }}
                   autoCapitalize="words"
+                  placeholder={t('signup.ownerNamePlaceholder')}
                   error={Boolean(fieldErrors.ownerName)}
                 />
                 {fieldErrors.ownerName ? <FieldError message={resolveError(fieldErrors.ownerName)} /> : null}
@@ -447,21 +494,6 @@ export default function RegisterGymScreen() {
                 {fieldErrors.confirmPassword ? (
                   <FieldError message={resolveError(fieldErrors.confirmPassword)} />
                 ) : null}
-
-                <Text style={[styles.hint, { color: AUTH.textDim }]}>
-                  {t('signup.trialNote', { days: SIGNUP_TRIAL_DAYS })}
-                </Text>
-                <PrimaryButton label={t('signup.createAccount')} onPress={submitSignup} loading={loading} />
-                <Pressable
-                  style={styles.secondary}
-                  onPress={() => {
-                    setError('');
-                    setFieldErrors({});
-                    setStep('gym');
-                  }}
-                >
-                  <Text style={[styles.secondaryText, { color: AUTH.link }]}>{t('common.back')}</Text>
-                </Pressable>
               </>
             ) : null}
 
@@ -470,6 +502,35 @@ export default function RegisterGymScreen() {
             </Pressable>
           </AuthFormEnter>
         </FormScroll>
+
+        {step === 'account' ? (
+          <View
+            style={[
+              styles.stickyFooter,
+              { paddingBottom: stickyPadBottom, paddingHorizontal: pagePadding },
+            ]}
+          >
+            <View style={{ width: '100%', maxWidth: formMaxWidth, alignSelf: 'center' }}>
+              <SignupTrialNote days={SIGNUP_TRIAL_DAYS} />
+              <PrimaryButton
+                label={t('signup.createAccount')}
+                onPress={submitSignup}
+                loading={loading}
+                style={styles.stickyBtn}
+              />
+              <Pressable
+                style={styles.secondary}
+                onPress={() => {
+                  setError('');
+                  setFieldErrors({});
+                  setStep('gym');
+                }}
+              >
+                <Text style={[styles.secondaryText, { color: AUTH.link }]}>{t('common.back')}</Text>
+              </Pressable>
+            </View>
+          </View>
+        ) : null}
       </KeyboardAvoidingView>
     </AuthScreen>
   );
@@ -492,86 +553,15 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     marginBottom: 12,
   },
-  secondary: { alignItems: 'center', paddingVertical: 14 },
+  secondary: { alignItems: 'center', paddingVertical: 10 },
   back: { alignItems: 'center', paddingVertical: 18 },
   backLinkText: { fontSize: 14, fontWeight: '700', letterSpacing: 0.15 },
   secondaryText: { fontSize: 14, fontWeight: '600', letterSpacing: 0.15 },
-  successWrap: {
-    width: '100%',
-    alignItems: 'center',
-    paddingBottom: 24,
+  stickyFooter: {
+    paddingTop: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(8, 15, 24, 0.94)',
   },
-  checkCircle: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(45,212,191,0.12)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(45,212,191,0.35)',
-    marginBottom: 22,
-  },
-  checkInner: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(45,212,191,0.16)',
-  },
-  successTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    letterSpacing: 0.2,
-    textAlign: 'center',
-  },
-  successGym: {
-    marginTop: 10,
-    fontSize: 26,
-    fontWeight: '700',
-    letterSpacing: -0.4,
-    lineHeight: 32,
-    textAlign: 'center',
-  },
-  successBody: {
-    marginTop: 10,
-    fontSize: 15,
-    lineHeight: 22,
-    textAlign: 'center',
-    letterSpacing: 0.1,
-    maxWidth: 320,
-  },
-  summary: {
-    marginTop: 22,
-    width: '100%',
-    gap: 12,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  summaryLabel: {
-    fontSize: 13,
-    flexShrink: 0,
-  },
-  summaryValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    flexShrink: 1,
-    textAlign: 'right',
-  },
-  successHint: {
-    marginTop: 16,
-    fontSize: 12,
-    lineHeight: 18,
-    textAlign: 'center',
-    maxWidth: 300,
-  },
-  successCta: {
-    marginTop: 22,
-    width: '100%',
-  },
+  stickyBtn: { marginTop: 10, marginBottom: 0 },
 });

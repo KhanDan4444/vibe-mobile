@@ -4,6 +4,7 @@ import { AppText as Text } from '@/src/components/AppText';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { space } from '@/src/theme/tokens';
+import { metricDisplayStyle, scaleMinHeight } from '@/src/theme/typography';
 import { statusWashOpaque } from '@/src/utils/statusWash';
 
 type Props = {
@@ -40,6 +41,7 @@ export function MetricStatCard({
   align = 'start',
 }: Props) {
   const { colors: c } = useTheme();
+  const cardMinHeight = scaleMinHeight(76);
   const count = Number(value) || 0;
   const hot = tone === 'attention' && count > 0 && Boolean(accent);
   const quiet = count === 0;
@@ -50,7 +52,7 @@ export function MetricStatCard({
       : accent && tone === 'neutral'
         ? accent
         : c.text;
-  const iconColor = quiet ? c.dim : accent || c.muted;
+  const iconColor = captionColor ?? (quiet ? c.dim : accent || c.muted);
   const alignText = align === 'center' ? ('center' as const) : ('left' as const);
   const showIcon = Boolean(icon) && align !== 'center';
 
@@ -63,6 +65,7 @@ export function MetricStatCard({
       accessibilityLabel={caption ? `${label}: ${value}. ${caption}` : `${label}: ${value}`}
       style={[
         styles.card,
+        { minHeight: cardMinHeight },
         align === 'center' ? styles.cardCenter : null,
         hot && accent
           ? {
@@ -89,7 +92,7 @@ export function MetricStatCard({
           />
         </View>
       ) : null}
-      <Text display latin style={[styles.value, { color: valueColor }]}>
+      <Text latin display style={[metricDisplayStyle(styles.value), { color: valueColor }]}>
         {value}
       </Text>
       {!showIcon ? (
@@ -118,7 +121,6 @@ export function MetricStatCard({
 const styles = {
   card: {
     flex: 1,
-    minHeight: 76,
     paddingVertical: space.md + 2,
     paddingHorizontal: space.md,
     justifyContent: 'center' as const,
@@ -136,15 +138,12 @@ const styles = {
   labelHeader: {
     flex: 1,
     fontSize: 12,
-    lineHeight: 16,
     fontWeight: '500' as const,
   },
   value: {
     fontSize: 24,
-    fontWeight: '700' as const,
     letterSpacing: -0.6,
-    fontVariant: ['tabular-nums' as const],
   },
-  label: { marginTop: 4, fontSize: 12, lineHeight: 16 },
-  caption: { marginTop: 1, fontSize: 10, fontWeight: '500' as const, lineHeight: 12 },
+  label: { marginTop: 4, fontSize: 12 },
+  caption: { marginTop: 1, fontSize: 10, fontWeight: '500' as const },
 };

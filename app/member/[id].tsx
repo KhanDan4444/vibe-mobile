@@ -29,7 +29,7 @@ import { scheduleDeleteWithUndo, restoreWithUndoFlash } from '@/src/utils/schedu
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import type { ThemeColors } from '@/src/theme/tokens';
-import { appTextStyle } from '@/src/theme/typography';
+import { appTextStyle, metricDisplayStyle } from '@/src/theme/typography';
 import {
   attendanceDayRelative,
   formatAttendanceDayLabel,
@@ -190,7 +190,7 @@ function buildMemberStyles(c: ThemeColors) {
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: c.border,
     },
-    paymentAmount: { color: c.text, fontSize: 15, fontWeight: '600' as const },
+    paymentAmount: { color: c.text, fontSize: 15 },
     paymentMeta: { marginTop: 2, color: c.dim, fontSize: 12 },
     methodBadge: {
       flexDirection: 'row' as const,
@@ -565,7 +565,9 @@ export default function MemberDetailScreen() {
             return (
             <View key={p.id} style={styles.paymentRow}>
               <View style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
-                <Text display style={styles.paymentAmount}>{Number(p.amount).toLocaleString()} ETB</Text>
+                <Text latin display style={metricDisplayStyle(styles.paymentAmount)}>
+                  {Number(p.amount).toLocaleString()} ETB
+                </Text>
                 <Text style={appTextStyle(language, styles.paymentMeta)}>
                   {formatDisplayDate(p.date)}
                   {source ? ` · ${source}` : ''}

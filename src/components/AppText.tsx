@@ -8,7 +8,7 @@ import {
   type TextStyle,
 } from 'react-native';
 import { usePreferences } from '@/src/context/PreferencesContext';
-import { appTextStyle, displayTextStyle, listRowTextStyle } from '@/src/theme/typography';
+import { appTextStyle, displayTextStyle, listRowTextStyle, MAX_FONT_SCALE } from '@/src/theme/typography';
 
 function flattenStyle(style: TextProps['style']): TextStyle {
   const flat = StyleSheet.flatten(style);
@@ -30,7 +30,7 @@ type LatinOpt = {
  * - English display → Space Grotesk
  * - Amharic → Noto Sans Ethiopic (+ taller line height so glyphs are not clipped)
  */
-export function AppText({ style, latin, display, listRow, ...props }: TextProps & LatinOpt) {
+export function AppText({ style, latin, display, listRow, maxFontSizeMultiplier, ...props }: TextProps & LatinOpt & { maxFontSizeMultiplier?: number }) {
   const { language } = usePreferences();
   const lang = latin ? 'en' : language;
   const flat = flattenStyle(style);
@@ -39,14 +39,20 @@ export function AppText({ style, latin, display, listRow, ...props }: TextProps 
     : listRow
       ? listRowTextStyle(lang, flat)
       : appTextStyle(lang, flat);
-  return <Text {...props} style={resolved} />;
+  return (
+    <Text
+      {...props}
+      maxFontSizeMultiplier={maxFontSizeMultiplier ?? MAX_FONT_SCALE}
+      style={resolved}
+    />
+  );
 }
 
 /**
  * TextInput with the same language-safe font stack as {@link AppText}.
  */
-export const AppTextInput = forwardRef<TextInput, TextInputProps & LatinOpt>(function AppTextInput(
-  { style, latin, display, listRow, ...props },
+export const AppTextInput = forwardRef<TextInput, TextInputProps & LatinOpt & { maxFontSizeMultiplier?: number }>(function AppTextInput(
+  { style, latin, display, listRow, maxFontSizeMultiplier, ...props },
   ref,
 ) {
   const { language } = usePreferences();
@@ -61,6 +67,7 @@ export const AppTextInput = forwardRef<TextInput, TextInputProps & LatinOpt>(fun
     <TextInput
       ref={ref}
       underlineColorAndroid="transparent"
+      maxFontSizeMultiplier={maxFontSizeMultiplier ?? MAX_FONT_SCALE}
       {...props}
       // Transparent so Android's default white fill doesn't paint a "mid" box inside field shells.
       style={[{ backgroundColor: 'transparent' }, resolved]}

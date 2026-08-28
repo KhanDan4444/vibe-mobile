@@ -8,6 +8,7 @@ import { useTheme } from '@/src/context/PreferencesContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { timings } from '@/src/theme/motion';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
+import { metricDisplayStyle } from '@/src/theme/typography';
 import { radiusLg, space } from '@/src/theme/tokens';
 import { formatDisplayDate } from '@/src/utils/date';
 import { statusWashOpaque } from '@/src/utils/statusWash';
@@ -100,10 +101,8 @@ export function TrialBanner({ isTrial, trialDaysLeft, trialEndDate }: TrialBanne
     },
     daysValue: {
       fontSize: 20,
-      fontWeight: '700' as const,
       letterSpacing: -0.6,
       lineHeight: 22,
-      fontVariant: ['tabular-nums'] as const,
     },
     daysLabel: {
       marginTop: 1,
@@ -185,7 +184,7 @@ export function TrialBanner({ isTrial, trialDaysLeft, trialEndDate }: TrialBanne
           accessibilityElementsHidden
           importantForAccessibility="no"
         >
-          <Text display latin style={[styles.daysValue, { color: accent }]}>
+          <Text display latin style={[metricDisplayStyle(styles.daysValue), { color: accent }]}>
             {trialDaysLeft}
           </Text>
           <Text style={[styles.daysLabel, { color: accent }]}>

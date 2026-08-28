@@ -2,6 +2,7 @@ import { Pressable, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { AppText as Text } from '@/src/components/AppText';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
+import { metricDisplayStyle } from '@/src/theme/typography';
 import { formatDisplayDate } from '@/src/utils/date';
 import type { ChangePlanAmountHint as ChangePlanAmountHintData } from '@/src/utils/changePlan';
 
@@ -30,7 +31,8 @@ export function ChangePlanAmountHint({
   const { t } = useTranslation();
   const styles = useThemedStyles((colors) => ({
     wrap: { marginTop: 8, gap: 4 },
-    suggested: { color: colors.text, fontSize: 14, fontWeight: '600' as const },
+    suggested: { color: colors.text, fontSize: 14 },
+    suggestedAmount: { fontSize: 14, color: colors.text },
     detail: { color: colors.muted, fontSize: 13, lineHeight: 18 },
     adjust: { color: colors.dim, fontSize: 12, lineHeight: 17 },
     useSuggested: { color: colors.accentText, fontSize: 13, fontWeight: '600' as const, marginTop: 4 },
@@ -64,10 +66,19 @@ export function ChangePlanAmountHint({
     });
   }
 
+  const amountLabel = formatMoney(upgradeHint.suggestedAmount);
+  const [suggestedPrefix = '', suggestedSuffix = ''] = t('forms.suggestedAmountOnly', {
+    amount: '\0',
+  }).split('\0');
+
   return (
     <View style={styles.wrap}>
       <Text style={styles.suggested}>
-        {t('forms.suggestedAmountOnly', { amount: formatMoney(upgradeHint.suggestedAmount) })}
+        {suggestedPrefix}
+        <Text latin display style={metricDisplayStyle(styles.suggestedAmount)}>
+          {amountLabel}
+        </Text>
+        {suggestedSuffix}
       </Text>
       <Text style={styles.detail}>{detail}</Text>
       {!amountEdited && !upgradeHint.isDowngrade ? (

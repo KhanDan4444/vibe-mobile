@@ -61,6 +61,17 @@ export function requestGymSignupOtp(phone: string) {
   );
 }
 
+export function verifyGymSignupOtp(payload: { sessionId: string; code: string; phone: string }) {
+  return apiRequest<{ ok: boolean; message?: string }>('/auth/gym-signup/verify-otp', {
+    method: 'POST',
+    body: JSON.stringify({
+      sessionId: payload.sessionId,
+      code: payload.code.trim(),
+      phone: payload.phone.trim(),
+    }),
+  });
+}
+
 export function completeGymSignup(payload: GymSignupCompletePayload) {
   return apiRequest<GymSignupCompleteResponse>('/auth/gym-signup/complete', {
     method: 'POST',

@@ -10,6 +10,7 @@ import Animated, {
 import { useTranslation } from 'react-i18next';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTheme } from '@/src/context/PreferencesContext';
+import { metricDisplayStyle } from '@/src/theme/typography';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -171,11 +172,9 @@ export function VisitRing({
     },
     count: {
       fontSize: size >= 84 ? 20 : 18,
-      fontWeight: '700' as const,
-      fontVariant: ['tabular-nums' as const],
       letterSpacing: -0.3,
     },
-    limit: { fontWeight: '500' as const, color: themeColors.muted, fontSize: size >= 84 ? 16 : 14 },
+    limit: { color: themeColors.muted, fontSize: size >= 84 ? 16 : 14 },
     unit: {
       marginTop: 3,
       fontSize: 9,
@@ -248,7 +247,7 @@ export function VisitRing({
       <Animated.View style={[styles.center, countStyle]} pointerEvents="none">
         {capped ? (
           <>
-            <Text display style={[styles.count, { color: countColor }]}>
+            <Text latin display style={[metricDisplayStyle(styles.count), { color: countColor }]}>
               {safeVisits}
               <Text style={styles.limit}>/{limitNum}</Text>
             </Text>
@@ -256,7 +255,7 @@ export function VisitRing({
           </>
         ) : (
           <>
-            <Text display style={[styles.count, { color: c.text }]}>
+            <Text latin display style={[metricDisplayStyle(styles.count), { color: c.text }]}>
               {safeVisits}
             </Text>
             <Text style={styles.unit}>{t('checkIn.ringUnit')}</Text>

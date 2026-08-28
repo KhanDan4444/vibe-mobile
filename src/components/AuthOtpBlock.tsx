@@ -20,6 +20,7 @@ export const OTP_SLOT_COUNT = 6;
 type Props = {
   label: string;
   phone: string;
+  destinationFallback?: string;
   value: string;
   onChange: (value: string) => void;
   error?: string;
@@ -28,11 +29,13 @@ type Props = {
   resendLoading?: boolean;
   onResend: () => void;
   onChangePhone: () => void;
+  changePhoneLabel?: string;
 };
 
 export function AuthOtpBlock({
   label,
   phone,
+  destinationFallback,
   value,
   onChange,
   error,
@@ -41,10 +44,15 @@ export function AuthOtpBlock({
   resendLoading = false,
   onResend,
   onChangePhone,
+  changePhoneLabel,
 }: Props) {
   const { t } = useTranslation();
   const inputRef = useRef<TextInput>(null);
   const maskedPhone = maskPhoneForDisplay(phone);
+  const hasPhoneDestination = Boolean(phone.trim());
+  const destinationDisplay = hasPhoneDestination
+    ? maskedPhone
+    : destinationFallback || t('signup.otpSentRegisteredPhone');
   const digits = value.replace(/\D/g, '').slice(0, OTP_SLOT_COUNT);
   const shakeX = useSharedValue(0);
   const focusRing = useSharedValue(0);
@@ -87,7 +95,7 @@ export function AuthOtpBlock({
         <Ionicons name="chatbubble-ellipses-outline" size={14} color="rgba(153,246,228,0.75)" style={styles.destinationIcon} />
         <Text style={[styles.destinationText, { color: AUTH.textDim }]}>
           {t('signup.otpSentPrefix')}{' '}
-          <Text style={styles.destinationPhone}>{maskedPhone}</Text>
+          <Text style={styles.destinationPhone}>{destinationDisplay}</Text>
         </Text>
       </View>
 
@@ -130,7 +138,7 @@ export function AuthOtpBlock({
               caretHidden
               accessibilityLabel={otpAccessibilityLabel}
               accessibilityHint={
-                error ? error : `${t('signup.otpSentPrefix')} ${maskedPhone}`
+                error ? error : `${t('signup.otpSentPrefix')} ${destinationDisplay}`
               }
               onFocus={() => {
                 focusRing.value = withTiming(1, { duration: 120 });
@@ -161,7 +169,7 @@ export function AuthOtpBlock({
           ·
         </Text>
         <Pressable onPress={onChangePhone} hitSlop={6}>
-          <Text style={[styles.actionLink, { color: AUTH.link }]}>{t('signup.changePhone')}</Text>
+          <Text style={[styles.actionLink, { color: AUTH.link }]}>{changePhoneLabel || t('signup.changePhone')}</Text>
         </Pressable>
       </View>
     </View>

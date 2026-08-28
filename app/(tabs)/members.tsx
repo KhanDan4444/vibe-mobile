@@ -19,6 +19,7 @@ import { LoadError } from '@/src/components/LoadError';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
+import { listPrimaryTextProps } from '@/src/theme/typography';
 import { useFlash } from '@/src/context/FlashContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { restoreWithUndoFlash } from '@/src/utils/scheduleWithUndo';
@@ -236,10 +237,10 @@ function MemberRowItem({
         <View style={styles.rowBody}>
           <View style={styles.rowPrimary}>
             <View style={styles.rowMain}>
-              <Text listRow style={styles.name} numberOfLines={1}>
+              <Text listRow {...listPrimaryTextProps} style={styles.name}>
                 {member.name}
               </Text>
-              <Text style={styles.phone} numberOfLines={1}>
+              <Text {...listPrimaryTextProps} style={styles.phone}>
                 {member.phone || '—'}
               </Text>
               {underPhone ? <Text style={styles.daysLeftUnderPhone}>{underPhone}</Text> : null}
@@ -282,7 +283,7 @@ function MemberRowItem({
       {multiColumn ? (
         <View style={styles.rowMetaStacked}>
           <StatusBadge status={isFormer ? 'Former' : member.status} />
-          <Text style={[styles.plan, styles.planStacked]} numberOfLines={1}>
+          <Text {...listPrimaryTextProps} style={[styles.plan, styles.planStacked]}>
             {member.plan_name || t('members.noPlan')}
             {member.trainer_name ? ` · ${member.trainer_name}` : ''}
           </Text>

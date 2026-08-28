@@ -18,6 +18,8 @@ type Props = {
    * balancing against the language control width.
    */
   headerCenter?: ReactNode;
+  /** When true, body omits bottom inset — use for screens with a sticky footer. */
+  flushBottom?: boolean;
 };
 
 /**
@@ -30,9 +32,10 @@ export function AuthScreen({
   onHeroReady,
   showLanguage = true,
   headerCenter,
+  flushBottom = false,
 }: Props) {
   const insets = useSafeAreaInsets();
-  const pad = { paddingBottom: Math.max(insets.bottom, 8) + 20 };
+  const pad = { paddingBottom: flushBottom ? 0 : Math.max(insets.bottom, 8) + 20 };
   const showTopBar = showLanguage || Boolean(headerCenter);
 
   const topBar = showTopBar ? (

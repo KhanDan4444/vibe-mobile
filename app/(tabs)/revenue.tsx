@@ -27,7 +27,7 @@ import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useTabBarOverlayInset } from '@/src/theme/tabBar';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
-import { appTextStyle } from '@/src/theme/typography';
+import { appTextStyle, metricDisplayStyle } from '@/src/theme/typography';
 import { formatDisplayDate } from '@/src/utils/date';
 import { formatEtb } from '@/src/utils/formatMoney';
 import { DEFAULT_REVENUE_SORT, type RevenueSortId } from '@/src/utils/listSort';
@@ -146,14 +146,12 @@ function PaymentRowItem({
       borderWidth: StyleSheet.hairlineWidth,
     },
     methodBadgeText: { fontSize: 11, fontWeight: '700' as const },
-    rowAmountCol: { alignItems: 'flex-end' as const, justifyContent: 'center' as const },
+    rowAmountCol: { alignItems: 'flex-end' as const, justifyContent: 'center' as const, flexShrink: 0, maxWidth: '38%' as const },
     rowAmount: {
       fontSize: 15,
-      fontWeight: '700' as const,
       color: colors.accentText,
-      fontVariant: ['tabular-nums'] as TextStyle['fontVariant'],
+      textAlign: 'right' as const,
     },
-    rowCurrency: { fontSize: 10, fontWeight: '600' as const, color: colors.dim, marginTop: 1 },
   }));
 
   const badge = paymentMethodBadgeStyle(payment.method, c);
@@ -209,8 +207,16 @@ function PaymentRowItem({
         </View>
       </View>
       <View style={styles.rowAmountCol}>
-        <Text style={styles.rowAmount}>{Number(payment.amount).toLocaleString()}</Text>
-        <Text style={appTextStyle(language, styles.rowCurrency)}>ETB</Text>
+        <Text
+          display
+          latin
+          style={metricDisplayStyle(styles.rowAmount)}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.8}
+        >
+          {`${Number(payment.amount).toLocaleString()} ETB`}
+        </Text>
       </View>
       {menuItems.length > 0 ? (
         <ActionOverflowMenu
@@ -249,9 +255,7 @@ function MethodStat({
     methodStatIcon: { marginBottom: 2 },
     methodStatValue: {
       fontSize: 11,
-      fontWeight: '600' as const,
       color: colors.muted,
-      fontVariant: ['tabular-nums'] as TextStyle['fontVariant'],
       letterSpacing: -0.4,
       maxWidth: '100%' as const,
     },
@@ -270,10 +274,10 @@ function MethodStat({
   return (
     <View style={styles.methodStat} accessibilityLabel={`${label} ${amount.toLocaleString()}`}>
       <Ionicons name={paymentMethodIcon(method)} size={12} color={c.dim} style={styles.methodStatIcon} />
-      <Text style={styles.methodStatValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
+      <Text display latin style={metricDisplayStyle(styles.methodStatValue)} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
         {amount.toLocaleString()}
       </Text>
-      <Text style={appTextStyle(language, styles.methodStatLabel)} numberOfLines={1}>
+      <Text style={appTextStyle(language, styles.methodStatLabel)} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.8}>
         {label}
       </Text>
     </View>
@@ -361,10 +365,8 @@ export default function RevenueScreen() {
     heroTotal: {
       marginTop: 6,
       fontSize: 30,
-      fontWeight: '700' as const,
       color: colors.text,
       letterSpacing: -1,
-      fontVariant: ['tabular-nums'] as TextStyle['fontVariant'],
     },
     heroMeta: {
       flexDirection: 'row' as const,
@@ -537,7 +539,7 @@ export default function RevenueScreen() {
           <Text style={appTextStyle(language, styles.heroLabel)}>
             {periodLabel}
           </Text>
-          <Text display latin style={styles.heroTotal}>
+          <Text latin display style={metricDisplayStyle(styles.heroTotal)}>
             {formatEtb(Number(summary?.total || 0), { forceCompact: false })}
           </Text>
           <View style={styles.heroMeta}>

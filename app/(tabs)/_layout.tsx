@@ -6,6 +6,7 @@ import { View, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { AppBootSplash } from '@/src/components/AppBootSplash';
 import { AppHeaderRight } from '@/src/components/AppHeaderRight';
+import { AppHeaderTitle } from '@/src/components/AppHeaderTitle';
 import { AppTabBarIcon } from '@/src/components/AppTabBarIcon';
 import { AppText as Text } from '@/src/components/AppText';
 import { GymBootError } from '@/src/components/GymBootError';
@@ -15,7 +16,7 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useNetwork } from '@/src/offline/NetworkProvider';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
-import { DM_SANS, DM_SANS_SEMI, NOTO_ETHIOPIC, lineHeightFor } from '@/src/theme/typography';
+import { DM_SANS, DM_SANS_SEMI, NOTO_ETHIOPIC, effectiveFontScale, scaleLineHeight } from '@/src/theme/typography';
 import { hasGymPortalAccess } from '@/src/utils/roles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -58,6 +59,9 @@ export default function TabLayout() {
   const { tabIconSize, isTablet } = useResponsiveLayout();
   const pathname = usePathname();
   const tabBarBottom = Math.max(insets.bottom, isTablet ? 10 : 6);
+  const fontScale = effectiveFontScale();
+  const tabLabelSize = isTablet ? 12 : 11;
+  const tabBarCoreHeight = Math.ceil((isTablet ? 58 : 52) * fontScale);
   const tabIndex = activeTabIndex(pathname);
   const isAm = language === 'am';
 
@@ -70,13 +74,16 @@ export default function TabLayout() {
               color,
               marginTop: 2,
               letterSpacing: focused ? 0.15 : 0,
-              fontSize: isTablet ? 12 : 11,
-              lineHeight: lineHeightFor(isTablet ? 12 : 11),
+              fontSize: tabLabelSize,
+              lineHeight: scaleLineHeight(tabLabelSize + 5),
               fontFamily: isAm ? NOTO_ETHIOPIC : focused ? DM_SANS_SEMI : DM_SANS,
               fontWeight: isAm ? (focused ? '600' : '500') : undefined,
+              textAlign: 'center',
             },
           ]}
-          numberOfLines={1}
+          numberOfLines={2}
+          adjustsFontSizeToFit
+          minimumFontScale={0.85}
         >
           {title}
         </Text>
@@ -119,10 +126,13 @@ export default function TabLayout() {
               borderTopColor: c.tabBarBorder,
               borderTopWidth: StyleSheet.hairlineWidth,
               paddingBottom: tabBarBottom,
-              height: (isTablet ? 58 : 52) + tabBarBottom,
+              height: tabBarCoreHeight + tabBarBottom,
               elevation: 0,
               shadowOpacity: 0,
             },
+            headerTitle: ({ children, tintColor }) => (
+              <AppHeaderTitle tintColor={tintColor}>{children}</AppHeaderTitle>
+            ),
             headerStyle: {
               backgroundColor: c.headerBg,
               borderBottomWidth: StyleSheet.hairlineWidth,
@@ -132,7 +142,7 @@ export default function TabLayout() {
             },
             headerTintColor: c.text,
             headerTitleStyle: isAm
-              ? { fontFamily: NOTO_ETHIOPIC, fontWeight: '600', lineHeight: lineHeightFor(17) }
+              ? { fontFamily: NOTO_ETHIOPIC, fontWeight: '600', lineHeight: scaleLineHeight(22) }
               : { fontFamily: DM_SANS_SEMI, fontWeight: '600' },
             headerRight,
             // Root offline strip already owns the top inset.

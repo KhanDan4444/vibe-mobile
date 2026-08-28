@@ -27,6 +27,7 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { isGymOwner } from '@/src/utils/roles';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
+import { listPrimaryTextProps } from '@/src/theme/typography';
 import { trainerMutationErrorMessage } from '@/src/utils/trainerErrors';
 import type { StaffRow, TrainerRow } from '@/src/types/api';
 
@@ -96,7 +97,7 @@ function StaffCard({
         <InitialsAvatar name={member.name} size={44} />
         <View style={styles.cardMain}>
           <View style={styles.titleRow}>
-            <Text listRow style={styles.name} numberOfLines={1}>
+            <Text listRow {...listPrimaryTextProps} style={styles.name}>
               {member.name}
             </Text>
             <Text style={[styles.badge, member.is_active ? styles.active : styles.inactive]}>
@@ -154,7 +155,7 @@ function TrainerCard({
         <View style={styles.headerRow}>
           <InitialsAvatar name={trainer.name} size={44} />
           <View style={styles.cardMain}>
-            <Text listRow style={styles.name} numberOfLines={1}>
+            <Text listRow {...listPrimaryTextProps} style={styles.name}>
               {trainer.name}
             </Text>
             <Text style={styles.meta} numberOfLines={1}>
@@ -193,7 +194,7 @@ function TrainerCard({
       <View style={styles.headerRow}>
         <InitialsAvatar name={trainer.name} size={44} />
         <View style={styles.cardMain}>
-          <Text listRow style={styles.name} numberOfLines={1}>
+          <Text listRow {...listPrimaryTextProps} style={styles.name}>
             {trainer.name}
           </Text>
           <Text style={styles.meta} numberOfLines={1}>

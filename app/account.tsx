@@ -22,6 +22,7 @@ import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { APP_LANGUAGES, LANGUAGE_LABEL_KEYS, type AppLanguage } from '@/src/i18n';
 import { springs, timings } from '@/src/theme/motion';
 import { radiusMd, radiusSm, type AppTheme } from '@/src/theme/tokens';
+import { listPrimaryTextProps, scaleMinHeight, avatarTextProps } from '@/src/theme/typography';
 import { initialsFrom, roleSubtitleKey } from '@/src/utils/userDisplay';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
 
@@ -57,7 +58,11 @@ function AccountRow({ icon, label, value, danger, chevron = 'forward', last, onP
 
   return (
     <Pressable
-      style={[styles.row, !last && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.border }]}
+      style={[
+        styles.row,
+        { minHeight: scaleMinHeight(52) },
+        !last && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.border },
+      ]}
       onPress={onPress}
     >
       <Ionicons name={icon} size={22} color={iconColor} style={styles.rowIcon} />
@@ -204,7 +209,7 @@ function AppearanceThemeSegment({
       style={[
         styles.themeSegment,
         {
-          backgroundColor: c.accentSoft,
+          backgroundColor: c.inputBg,
           borderColor: c.border,
         },
       ]}
@@ -225,7 +230,7 @@ function AppearanceThemeSegment({
           label={opt.label}
           icon={opt.icon}
           a11yLabel={opt.a11yLabel}
-          dimColor={c.dim}
+          dimColor={c.muted}
           onPress={() => pick(opt.id)}
         />
       ))}
@@ -348,15 +353,15 @@ export default function AccountScreen() {
         <ResponsiveContent style={{ paddingHorizontal: pagePadding }}>
           <SoftSurface variant="panel" style={styles.profileCard}>
             <View style={[styles.avatar, { backgroundColor: c.accent }]}>
-              <Text latin style={styles.avatarText}>
+              <Text {...avatarTextProps} latin style={styles.avatarText}>
                 {initialsFrom(user.name, user.email, user.username)}
               </Text>
             </View>
             <View style={styles.profileText}>
-              <Text style={[styles.name, { color: c.text }]} numberOfLines={1}>
+              <Text {...listPrimaryTextProps} style={[styles.name, { color: c.text }]}>
                 {displayName}
               </Text>
-              <Text latin style={[styles.meta, { color: c.muted }]} numberOfLines={1}>
+              <Text {...listPrimaryTextProps} latin style={[styles.meta, { color: c.muted }]}>
                 {user.username || user.email}
               </Text>
               <Text style={[styles.role, { color: c.dim }]}>{t(roleSubtitleKey(user.role))}</Text>
@@ -421,7 +426,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 14,
     paddingHorizontal: 14,
-    minHeight: 52,
   },
   rowIcon: { marginRight: 12 },
   rowLabel: { flex: 1, fontSize: 16, fontWeight: '600', marginRight: 10 },

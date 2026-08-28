@@ -14,6 +14,7 @@ import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { timings } from '@/src/theme/motion';
 import { useTabBarOverlayInset } from '@/src/theme/tabBar';
 import { radiusMd } from '@/src/theme/tokens';
+import { listPrimaryTextProps } from '@/src/theme/typography';
 import { isGymOwner } from '@/src/utils/roles';
 
 type MenuItem = {
@@ -104,7 +105,7 @@ function MenuRow({
         <View style={styles.rowText}>
           <Text style={[styles.rowLabel, { color: c.text }]}>{t(MENU_KEYS[item.labelKey])}</Text>
           {item.subtitleKey ? (
-            <Text style={[styles.rowSub, { color: c.dim }]} numberOfLines={1}>
+            <Text {...listPrimaryTextProps} style={[styles.rowSub, { color: c.dim }]}>
               {t(MENU_KEYS[item.subtitleKey])}
             </Text>
           ) : null}
@@ -214,5 +215,5 @@ const styles = StyleSheet.create({
   },
   rowText: { flex: 1, minWidth: 0 },
   rowLabel: { fontSize: 16, fontWeight: '600', letterSpacing: -0.15 },
-  rowSub: { marginTop: 2, fontSize: 13, lineHeight: 18 },
+  rowSub: { marginTop: 2, fontSize: 13 },
 });

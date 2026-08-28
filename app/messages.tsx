@@ -33,6 +33,7 @@ import {
   smsTypeIcon,
 } from '@/src/utils/smsLabels';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
+import { listPrimaryTextProps } from '@/src/theme/typography';
 import { statusWashOpaque } from '@/src/utils/statusWash';
 import { useTranslation } from 'react-i18next';
 import { isGymOwner } from '@/src/utils/roles';
@@ -147,11 +148,10 @@ function SmsItem({
       textTransform: 'lowercase' as const,
       color: c.success,
     },
-    preview: { marginTop: 4, fontSize: 12, lineHeight: 16, color: theme.muted },
+    preview: { marginTop: 4, fontSize: 12, color: theme.muted },
     meta: {
       marginTop: 6,
       fontSize: 12,
-      lineHeight: 16,
       color: theme.dim,
     },
   }));
@@ -174,7 +174,7 @@ function SmsItem({
         </View>
         <View style={styles.body}>
           <View style={styles.headerRow}>
-            <Text style={styles.member} numberOfLines={1}>
+            <Text {...listPrimaryTextProps} style={styles.member}>
               {row.member_name}
             </Text>
             <Text style={styles.time}>{formatLogTimestamp(row.sent_at, t, language)}</Text>
@@ -195,7 +195,7 @@ function SmsItem({
               <Text style={styles.sentBadgeText}>{t('messages.sentBadge')}</Text>
             </View>
           </View>
-          <Text latin style={styles.meta} numberOfLines={1}>
+          <Text latin {...listPrimaryTextProps} style={styles.meta}>
             {metaLine}
           </Text>
         </View>

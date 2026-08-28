@@ -6,7 +6,7 @@ import type { MemberStatusCounts } from '@/src/api/reports';
 import { usePreferences } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
-import { appTextStyle } from '@/src/theme/typography';
+import { appTextStyle, metricDisplayStyle } from '@/src/theme/typography';
 import { memberStatusBreakdownExclusive, memberStatusCounts } from '@/src/utils/reportPdf';
 
 const SEGMENT_KEYS = [
@@ -41,7 +41,7 @@ export function StatusBreakdown({ members, counts: countsProp, barCounts: barPro
     legendItem: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 6, maxWidth: '100%' as const },
     dot: { width: 8, height: 8, borderRadius: 4 },
     legendLabel: { fontSize: 13, color: c.muted, flexShrink: 1 },
-    legendValue: { fontSize: 13, fontWeight: '700' as const, color: c.text },
+    legendValue: { fontSize: 13, color: c.text },
   }));
 
   const counts = countsProp ?? memberStatusCounts(members ?? []);
@@ -67,7 +67,7 @@ export function StatusBreakdown({ members, counts: countsProp, barCounts: barPro
           <View key={seg.key} style={styles.legendItem}>
             <View style={[styles.dot, { backgroundColor: seg.color }]} />
             <Text style={appTextStyle(language, styles.legendLabel)}>{t(seg.labelKey)}</Text>
-            <Text style={styles.legendValue}>{counts[seg.key] ?? 0}</Text>
+            <Text latin display style={metricDisplayStyle(styles.legendValue)}>{counts[seg.key] ?? 0}</Text>
           </View>
         ))}
       </View>

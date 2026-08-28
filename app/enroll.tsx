@@ -42,6 +42,7 @@ import { useOfflineFlash } from '@/src/hooks/useSaveFlash';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
+import { looksLikeMetricValue, metricDisplayStyle } from '@/src/theme/typography';
 import { PAYMENT_METHODS, paymentMethodLabelKey } from '@/src/constants/payments';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { useNetwork } from '@/src/offline/NetworkProvider';
@@ -261,7 +262,6 @@ export default function EnrollScreen() {
     summaryValue: {
       color: colors.text,
       fontSize: 14,
-      fontWeight: '600' as const,
       flexShrink: 1,
       textAlign: 'right' as const,
     },
@@ -883,7 +883,21 @@ export default function EnrollScreen() {
                     ]}
                   >
                     <Text style={styles.summaryLabel}>{row.label}</Text>
-                    <Text style={[styles.summaryValue, row.unpaid ? styles.summaryUnpaid : null]} numberOfLines={2}>
+                    <Text
+                      latin={looksLikeMetricValue(row.value)}
+                      display={looksLikeMetricValue(row.value)}
+                      style={[
+                        styles.summaryValue,
+                        row.unpaid ? styles.summaryUnpaid : null,
+                        looksLikeMetricValue(row.value)
+                          ? metricDisplayStyle({
+                              fontSize: 14,
+                              color: row.unpaid ? c.warning : c.text,
+                            })
+                          : { fontWeight: '600' as const },
+                      ]}
+                      numberOfLines={2}
+                    >
                       {row.value}
                     </Text>
                   </View>

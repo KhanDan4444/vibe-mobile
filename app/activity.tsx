@@ -34,6 +34,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { isGymOwner } from '@/src/utils/roles';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
+import { badgeTextProps, listPrimaryTextProps } from '@/src/theme/typography';
 import type { ActivityLogRow } from '@/src/types/api';
 
 type ActorFilter = 'all' | 'owner' | 'staff';
@@ -139,7 +140,7 @@ function ActivityItem({
       letterSpacing: -0.1,
     },
     entity: { marginTop: 4, fontSize: 14, color: theme.muted },
-    details: { marginTop: 3, fontSize: 13, color: theme.text, lineHeight: 18 },
+    details: { marginTop: 3, fontSize: 13, color: theme.text },
     actorRow: {
       marginTop: 7,
       flexDirection: 'row' as const,
@@ -184,7 +185,7 @@ function ActivityItem({
           <Text style={styles.time}>{formatLogTimestamp(entry.created_at, t, language)}</Text>
         </View>
         {entry.entity_label ? (
-          <Text style={styles.entity} numberOfLines={1}>
+          <Text {...listPrimaryTextProps} style={styles.entity}>
             {entry.entity_label}
           </Text>
         ) : null}
@@ -194,11 +195,11 @@ function ActivityItem({
           </Text>
         ) : null}
         <View style={styles.actorRow}>
-          <Text style={styles.actorName} numberOfLines={1}>
+          <Text {...listPrimaryTextProps} style={styles.actorName}>
             {entry.actor_name || entry.actor_email}
           </Text>
           <View style={[styles.roleBadge, isOwner ? styles.roleBadgeOwner : styles.roleBadgeStaff]}>
-            <Text style={[styles.roleBadgeText, isOwner ? styles.roleBadgeTextOwner : styles.roleBadgeTextStaff]}>
+            <Text {...badgeTextProps} style={[styles.roleBadgeText, isOwner ? styles.roleBadgeTextOwner : styles.roleBadgeTextStaff]}>
               {formatActorRole(entry.actor_role, t)}
             </Text>
           </View>

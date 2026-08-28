@@ -8,6 +8,7 @@ import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { fetchMemberPhotoDataUri } from '@/src/utils/memberPhoto';
 import { memberPhotoBustQueryKey } from '@/src/utils/memberPhotoCache';
+import { avatarTextProps } from '@/src/theme/typography';
 
 export function MemberPhoto({
   memberId,
@@ -130,7 +131,7 @@ export function MemberPhoto({
 
   return (
     <View style={[styles.fallback, shellStyle]}>
-      <Text style={[styles.initials, { fontSize: size * 0.35 }]}>{initials || '?'}</Text>
+      <Text {...avatarTextProps} style={[styles.initials, { fontSize: size * 0.35 }]}>{initials || '?'}</Text>
     </View>
   );
 }

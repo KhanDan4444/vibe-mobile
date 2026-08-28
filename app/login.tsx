@@ -29,6 +29,7 @@ import { AUTH, authFieldRing } from '@/src/theme/authChrome';
 import { elevationStyle } from '@/src/theme/elevation';
 import { springs } from '@/src/theme/motion';
 import { radiusMd } from '@/src/theme/tokens';
+import { scaleLineHeight, scaleMinHeight } from '@/src/theme/typography';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { hasGymPortalAccess, isPlatformAdmin } from '@/src/utils/roles';
 import { API_BASE_URL } from '@/src/config/api';
@@ -45,6 +46,10 @@ export default function LoginScreen() {
   const { dismissBootSplash } = useBootSplash();
   const { formMaxWidth, pagePadding, isTablet } = useResponsiveLayout();
   const s = isTablet ? tabletStyles : phoneStyles;
+  const fieldMinHeight = scaleMinHeight(50);
+  const inputMinHeight = scaleMinHeight(48);
+  const buttonMinHeight = scaleMinHeight(52);
+  const inputLineHeight = scaleLineHeight(22);
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -131,7 +136,13 @@ export default function LoginScreen() {
                   </Text>
                 ) : null}
 
-                <View style={[s.inputShell, authFieldRing({ focused: focused === 'identifier' })]}>
+                <View
+                  style={[
+                    s.inputShell,
+                    { minHeight: fieldMinHeight },
+                    authFieldRing({ focused: focused === 'identifier' }),
+                  ]}
+                >
                   <Ionicons
                     name="person-outline"
                     size={isTablet ? 22 : 20}
@@ -150,7 +161,7 @@ export default function LoginScreen() {
                     onFocus={() => setFocused('identifier')}
                     onBlur={() => setFocused(null)}
                     onSubmitEditing={() => passwordRef.current?.focus()}
-                    style={s.inputField}
+                    style={[s.inputField, { minHeight: inputMinHeight, lineHeight: inputLineHeight }]}
                     placeholder={t('auth.identifier')}
                     placeholderTextColor={AUTH.placeholder}
                     accessibilityLabel={t('auth.identifier')}
@@ -163,6 +174,7 @@ export default function LoginScreen() {
                   style={[
                     s.inputShell,
                     s.inputShellTight,
+                    { minHeight: fieldMinHeight },
                     authFieldRing({ focused: focused === 'password' }),
                   ]}
                 >
@@ -184,7 +196,7 @@ export default function LoginScreen() {
                     onFocus={() => setFocused('password')}
                     onBlur={() => setFocused(null)}
                     onSubmitEditing={handleSubmit}
-                    style={s.inputField}
+                    style={[s.inputField, { minHeight: inputMinHeight, lineHeight: inputLineHeight }]}
                     placeholder={t('auth.password')}
                     placeholderTextColor={AUTH.placeholder}
                     accessibilityLabel={t('auth.password')}
@@ -236,6 +248,7 @@ export default function LoginScreen() {
                 <AnimatedPressable
                   style={[
                     s.button,
+                    { minHeight: buttonMinHeight },
                     buttonAnim,
                     elevationStyle('raised', theme),
                     { backgroundColor: AUTH.cta, shadowColor: AUTH.cta },

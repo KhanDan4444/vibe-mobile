@@ -10,8 +10,9 @@ import { useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useAuthThemeForced } from '@/src/context/AuthThemeContext';
 import { AUTH, authFieldRing } from '@/src/theme/authChrome';
-import { fieldChrome, fieldRingStyle } from '@/src/theme/fieldChrome';
+import { FIELD_MIN_HEIGHT, fieldChrome, fieldRingStyle } from '@/src/theme/fieldChrome';
 import { radiusMd } from '@/src/theme/tokens';
+import { scaleLineHeight, scaleMinHeight } from '@/src/theme/typography';
 import type { ThemeColors } from '@/src/theme/tokens';
 
 export { SecondaryButton } from '@/src/components/ui/Button';
@@ -184,6 +185,9 @@ export const Field = React.forwardRef<
   const authSurface = useAuthThemeForced();
   const [focused, setFocused] = React.useState(false);
   const [revealed, setRevealed] = React.useState(false);
+  const authFieldMinHeight = scaleMinHeight(50);
+  const fieldMinHeight = authSurface ? authFieldMinHeight : scaleMinHeight(FIELD_MIN_HEIGHT);
+  const authInputLineHeight = scaleLineHeight(22);
   const showToggle = Boolean(secureTextEntry);
   // ASCII-oriented keyboards / passwords should not use Ethiopic metrics (layout jump on focus).
   // Also force Latin face when the visible placeholder/value is ASCII (e.g. "e.g. Monthly").
@@ -203,10 +207,10 @@ export const Field = React.forwardRef<
     <View
       style={[
         formStyles.inputShell,
+        { minHeight: fieldMinHeight },
         authSurface
           ? {
               backgroundColor: AUTH.fieldBg,
-              minHeight: 50,
               paddingHorizontal: 16,
             }
           : {
@@ -225,7 +229,7 @@ export const Field = React.forwardRef<
         style={[
           formStyles.inputText,
           { color: authSurface ? AUTH.text : c.text },
-          authSurface ? { fontWeight: '400', letterSpacing: 0.1, lineHeight: 22 } : null,
+          authSurface ? { fontWeight: '400', letterSpacing: 0.1, lineHeight: authInputLineHeight } : null,
           inputTextStyle,
         ]}
         value={value}

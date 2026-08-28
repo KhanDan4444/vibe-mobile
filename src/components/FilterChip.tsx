@@ -3,7 +3,7 @@ import { AppText as Text } from '@/src/components/AppText';
 import { usePreferences } from '@/src/context/PreferencesContext';
 import { radiusMd } from '@/src/theme/tokens';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
-import { appTextStyle } from '@/src/theme/typography';
+import { appTextStyle, scaleMinHeight } from '@/src/theme/typography';
 
 type FilterChipProps = {
   label: string;
@@ -38,6 +38,7 @@ export function FilterChip({
   style,
 }: FilterChipProps) {
   const { language } = usePreferences();
+  const chipMinHeight = scaleMinHeight(36);
   const styles = useThemedStyles((colors) => ({
     chip: {
       flexDirection: 'row' as const,
@@ -46,9 +47,10 @@ export function FilterChip({
       paddingHorizontal: 12,
       paddingVertical: pill ? 6 : 7,
       borderRadius: pill ? 999 : radiusMd,
-      minHeight: 36,
+      minHeight: chipMinHeight,
       backgroundColor: 'transparent',
-      flexShrink: 0,
+      flexShrink: 1,
+      maxWidth: '100%' as const,
     },
     chipActive: {
       backgroundColor: colors.accentSoft,
@@ -121,6 +123,9 @@ export function FilterChip({
           ...(solidSelected ? styles.labelActiveSolid : {}),
           ...(softCustom ? { color: selectedColor } : {}),
         })}
+        numberOfLines={2}
+        adjustsFontSizeToFit
+        minimumFontScale={0.85}
       >
         {label}
       </Text>

@@ -7,6 +7,7 @@ import { NotificationsSheet } from '@/src/components/NotificationsSheet';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useNotificationInbox } from '@/src/notifications/NotificationInboxContext';
 import { initialsFrom } from '@/src/utils/userDisplay';
+import { avatarTextProps, badgeTextProps } from '@/src/theme/typography';
 import { useAuth } from '@/src/auth/AuthContext';
 
 /** Bell + profile avatar for the top-right header (matches web). */
@@ -25,13 +26,13 @@ export function AppHeaderRight({ leading }: { leading?: React.ReactNode }) {
           <Ionicons name="notifications-outline" size={24} color={c.muted} />
           {unread > 0 ? (
             <View style={[styles.badge, { backgroundColor: c.errorSolid }]}>
-              <Text style={styles.badgeText}>{unread > 99 ? '99+' : unread}</Text>
+              <Text {...badgeTextProps} style={styles.badgeText}>{unread > 99 ? '99+' : unread}</Text>
             </View>
           ) : null}
         </Pressable>
         <Pressable style={styles.avatarBtn} onPress={() => router.push('/account')}>
           <View style={[styles.avatar, { backgroundColor: c.accent }]}>
-            <Text style={styles.avatarText}>
+            <Text {...avatarTextProps} style={styles.avatarText}>
               {initialsFrom(user?.name, user?.email, user?.username)}
             </Text>
           </View>

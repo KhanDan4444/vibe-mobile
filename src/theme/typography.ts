@@ -1,5 +1,36 @@
 import type { TextStyle } from 'react-native';
+import { PixelRatio, Platform } from 'react-native';
 import type { AppLanguage } from '@/src/i18n';
+
+/** Cap system font scaling so dense gym UI stays usable (still honors moderate accessibility sizes). */
+export const MAX_FONT_SCALE = 1.35;
+
+/** Fixed-size avatar initials — container is pixel-sized; do not scale with system font. */
+export const avatarTextProps = { maxFontSizeMultiplier: 1 } as const;
+
+/** Primary list-row titles — wrap/shrink before hard truncation. */
+export const listPrimaryTextProps = {
+  numberOfLines: 2 as const,
+  adjustsFontSizeToFit: true as const,
+  minimumFontScale: 0.85 as const,
+};
+
+/** Compact badge/chip copy inside fixed pills. */
+export const badgeTextProps = { maxFontSizeMultiplier: 1.15 } as const;
+
+export function effectiveFontScale() {
+  return Math.min(PixelRatio.getFontScale(), MAX_FONT_SCALE);
+}
+
+/** Scale fixed line heights to match system font size (explicit lineHeight does not auto-scale). */
+export function scaleLineHeight(lineHeight: number) {
+  return Math.ceil(lineHeight * effectiveFontScale());
+}
+
+/** Scale fixed min-heights for inputs, tab bars, tiles, etc. */
+export function scaleMinHeight(minHeight: number) {
+  return Math.ceil(minHeight * effectiveFontScale());
+}
 
 /** Loaded via useAppFonts — Latin UI face (matches web `DM Sans`). */
 export const DM_SANS = 'DMSans_400Regular';
@@ -15,12 +46,13 @@ export const NOTO_ETHIOPIC = 'NotoSansEthiopic_400Regular';
 
 /** Line height that keeps Amharic vowel marks from clipping. */
 export function lineHeightFor(fontSize: number) {
-  return Math.ceil(fontSize * 1.55);
+  return scaleLineHeight(Math.ceil(fontSize * 1.55));
 }
 
 /** Denser Latin list-row copy; Amharic keeps the taller mark-safe height (web `.list-row-copy`). */
 export function listRowLineHeight(language: AppLanguage, fontSize: number) {
-  return language === 'am' ? lineHeightFor(fontSize) : Math.ceil(fontSize * 1.4);
+  const base = language === 'am' ? Math.ceil(fontSize * 1.55) : Math.ceil(fontSize * 1.4);
+  return scaleLineHeight(base);
 }
 
 function dmSansForWeight(fontWeight: TextStyle['fontWeight']): string {
@@ -89,12 +121,45 @@ function withAmUppercaseFix(style: TextStyle, out: TextStyle): TextStyle {
   return out;
 }
 
+function resolveLineHeight(style: TextStyle, fontSize: number) {
+  if (typeof style.lineHeight === 'number') {
+    return scaleLineHeight(style.lineHeight);
+  }
+  return lineHeightFor(fontSize);
+}
+
+function isNamedFontWeight(weight: TextStyle['fontWeight']) {
+  return weight != null && weight !== 'normal' && weight !== '400';
+}
+
+/**
+ * Bold Space Grotesk metrics — matches web `font-display font-bold tabular-nums`.
+ * Always Latin/EN so numerals use Grotesk even when UI language is Amharic.
+ */
+export function metricDisplayStyle(style: TextStyle = {}): TextStyle {
+  return displayTextStyle('en', {
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
+    ...style,
+  });
+}
+
+/** Currency or plain numeric summary values — use bold Grotesk tabular nums. */
+export function looksLikeMetricValue(value: string): boolean {
+  const v = value.trim();
+  if (!v) return false;
+  if (/\bETB\b/i.test(v)) return true;
+  if (/^[+\-]?[\d,.\s]+$/.test(v)) return true;
+  if (/^\+[\d,.\s]+/.test(v)) return true;
+  return false;
+}
+
 /** Body / UI text — DM Sans (EN) or Noto Ethiopic (AM). */
 export function appTextStyle(language: AppLanguage, style: TextStyle = {}): TextStyle {
   const fontSize = typeof style.fontSize === 'number' ? style.fontSize : 14;
   const base: TextStyle = {
     ...style,
-    lineHeight: style.lineHeight ?? lineHeightFor(fontSize),
+    lineHeight: resolveLineHeight(style, fontSize),
   };
   if (language === 'am') {
     return withAmUppercaseFix(style, { ...base, fontFamily: notoEthiopicForWeight(style.fontWeight) });
@@ -111,13 +176,19 @@ export function displayTextStyle(language: AppLanguage, style: TextStyle = {}): 
   const fontSize = typeof style.fontSize === 'number' ? style.fontSize : 16;
   const base: TextStyle = {
     ...style,
-    lineHeight: style.lineHeight ?? lineHeightFor(fontSize),
+    lineHeight: resolveLineHeight(style, fontSize),
   };
   if (language === 'am') {
     return withAmUppercaseFix(style, { ...base, fontFamily: notoEthiopicForWeight(style.fontWeight) });
   }
   if (style.fontFamily) return base;
-  return { ...base, fontFamily: spaceGroteskForWeight(style.fontWeight) };
+  const fontFamily = spaceGroteskForWeight(style.fontWeight);
+  const out: TextStyle = { ...base, fontFamily };
+  // Android faux-bolds custom faces when fontWeight + fontFamily disagree — use the file weight only.
+  if (isNamedFontWeight(style.fontWeight) && Platform.OS === 'android') {
+    out.fontWeight = 'normal';
+  }
+  return out;
 }
 
 /** Dense list primary labels (member names, row titles). */
@@ -125,7 +196,10 @@ export function listRowTextStyle(language: AppLanguage, style: TextStyle = {}): 
   const fontSize = typeof style.fontSize === 'number' ? style.fontSize : 15;
   return appTextStyle(language, {
     ...style,
-    lineHeight: style.lineHeight ?? listRowLineHeight(language, fontSize),
+    lineHeight:
+      typeof style.lineHeight === 'number'
+        ? scaleLineHeight(style.lineHeight)
+        : listRowLineHeight(language, fontSize),
   });
 }
 

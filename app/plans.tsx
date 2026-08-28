@@ -23,6 +23,7 @@ import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
 import { runInBackground } from '@/src/utils/runInBackground';
 import { formatPlanDuration, formatPlanDisplayName } from '@/src/utils/planFormat';
 import { formatEtb } from '@/src/utils/formatMoney';
+import { listPrimaryTextProps, metricDisplayStyle } from '@/src/theme/typography';
 import { pullRefreshing } from '@/src/query/useQueryScreenLoading';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import type { PlanRow } from '@/src/types/api';
@@ -116,7 +117,7 @@ function PlanCard({
     },
     topRow: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 8 },
     priceBlock: { flex: 1, minWidth: 0 },
-    price: { fontSize: 22, fontWeight: '800' as const, letterSpacing: -0.4, color: colors.text },
+    price: { fontSize: 22, letterSpacing: -0.4, color: colors.text },
     priceHint: { marginTop: 4, fontSize: 12, color: colors.dim },
     popularPill: {
       position: 'absolute' as const,
@@ -199,7 +200,7 @@ function PlanCard({
       >
         <View style={styles.topRow}>
           <View style={styles.priceBlock}>
-            <Text listRow style={styles.price}>
+            <Text latin display style={metricDisplayStyle(styles.price)}>
               {formatEtb(Number(plan.price) || 0, { forceCompact: false })}
             </Text>
             <Text style={styles.priceHint}>
@@ -210,7 +211,7 @@ function PlanCard({
           </View>
           <ActionOverflowMenu title={displayName} items={menuItems} />
         </View>
-        <Text listRow style={styles.name} numberOfLines={1}>
+        <Text listRow {...listPrimaryTextProps} style={styles.name}>
           {displayName}
         </Text>
         <View style={styles.metaRow}>
@@ -237,7 +238,7 @@ export default function PlansScreen() {
     container: { flex: 1, backgroundColor: colors.bg },
     list: { paddingBottom: 88, paddingTop: 6, overflow: 'visible' as const },
     listHeader: { marginBottom: 10, gap: 10 },
-    statusLine: { fontSize: 13, color: colors.dim, lineHeight: 18 },
+    statusLine: { fontSize: 13, color: colors.dim },
     sortRow: { alignItems: 'flex-start' as const },
     fab: {
       position: 'absolute' as const,

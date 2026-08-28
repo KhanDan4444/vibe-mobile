@@ -50,6 +50,7 @@ import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useTabBarOverlayInset } from '@/src/theme/tabBar';
 import { timings } from '@/src/theme/motion';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
+import { metricDisplayStyle } from '@/src/theme/typography';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { todayString, formatDisplayDate, formatDisplayTime } from '@/src/utils/date';
 import { isGymOwner } from '@/src/utils/roles';
@@ -532,11 +533,9 @@ export default function CheckInScreen() {
     },
     todayCount: {
       fontSize: 56,
-      fontWeight: '700' as const,
-      fontVariant: ['tabular-nums' as const],
-      color: isLight ? '#0f172a' : '#e4e7ee',
       lineHeight: 56,
       letterSpacing: -1.6,
+      color: isLight ? '#0f172a' : '#e4e7ee',
     },
     deskTools: {
       flexDirection: 'row' as const,
@@ -624,10 +623,8 @@ export default function CheckInScreen() {
     todayBranch: { marginTop: 2, fontSize: 12, color: theme.dim },
     todayTime: {
       fontSize: 13,
-      fontWeight: '600' as const,
-      fontVariant: ['tabular-nums' as const],
-      color: theme.muted,
       letterSpacing: -0.15,
+      color: theme.muted,
     },
     showMoreWrap: {
       borderTopWidth: StyleSheet.hairlineWidth,
@@ -756,7 +753,7 @@ export default function CheckInScreen() {
                       </Pressable>
                     ) : null}
                   </View>
-                  <Text display latin style={styles.todayCount}>
+                  <Text latin display style={metricDisplayStyle(styles.todayCount)}>
                     {todaySnapQuery.isLoading ? '—' : todayTotal}
                   </Text>
                 </View>
@@ -906,7 +903,7 @@ export default function CheckInScreen() {
                             </Text>
                           ) : null}
                         </View>
-                        <Text style={styles.todayTime}>
+                        <Text latin display style={metricDisplayStyle(styles.todayTime)}>
                           {formatDisplayTime(row.checked_in_at, i18n.language)}
                         </Text>
                       </Pressable>

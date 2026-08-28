@@ -31,6 +31,7 @@ import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { MetricStatCard } from '@/src/components/MetricStatCard';
 import { LoadError } from '@/src/components/LoadError';
 import { space } from '@/src/theme/tokens';
+import { metricDisplayStyle } from '@/src/theme/typography';
 import { timings } from '@/src/theme/motion';
 import { branchDisplayName } from '@/src/utils/branchDisplayName';
 import { canRenewMember } from '@/src/utils/memberRenew';
@@ -225,7 +226,7 @@ export default function DashboardScreen() {
           importantForAccessibility="no"
         />
       </View>
-      <Text display latin style={[styles.income, { color: c.text }]}>
+      <Text latin display style={[metricDisplayStyle(styles.income), { color: c.text }]}>
         {formatEtb(Number(data.monthlyIncome || 0), { forceCompact: false })}
       </Text>
       {trendLabel ? (
@@ -361,22 +362,22 @@ export default function DashboardScreen() {
             </View>
             <View style={styles.heroValueRow}>
               <Text
-                display
                 latin
+                display
                 style={[
-                  styles.heroMetricValue,
-                  heroMetricSm ? styles.heroMetricValueLg : null,
+                  metricDisplayStyle(styles.heroMetricValue),
+                  heroMetricSm ? metricDisplayStyle(styles.heroMetricValueLg) : null,
                   { color: c.text },
                 ]}
               >
                 {data.activeMembers ?? 0}
               </Text>
               <Text
-                display
                 latin
+                display
                 style={[
-                  styles.heroMetricSubValue,
-                  heroMetricSm ? styles.heroMetricSubValueLg : null,
+                  metricDisplayStyle({ ...styles.heroMetricSubValue, fontWeight: '500' }),
+                  heroMetricSm ? metricDisplayStyle({ ...styles.heroMetricSubValueLg, fontWeight: '500' }) : null,
                   { color: c.muted },
                 ]}
               >
@@ -489,16 +490,14 @@ const styles = StyleSheet.create({
   },
   heroValueRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'center',
     flexWrap: 'wrap',
     gap: 8,
     marginTop: 12,
   },
   heroMetricValue: {
     fontSize: 36,
-    fontWeight: '700',
     letterSpacing: -0.9,
-    fontVariant: ['tabular-nums'],
   },
   heroMetricValueLg: {
     fontSize: 48,
@@ -506,9 +505,7 @@ const styles = StyleSheet.create({
   },
   heroMetricSubValue: {
     fontSize: 20,
-    fontWeight: '500',
     letterSpacing: -0.5,
-    fontVariant: ['tabular-nums'],
   },
   heroMetricSubValueLg: {
     fontSize: 24,
@@ -539,9 +536,7 @@ const styles = StyleSheet.create({
   income: {
     marginTop: 6,
     fontSize: 32,
-    fontWeight: '700',
     letterSpacing: -0.8,
-    fontVariant: ['tabular-nums'],
   },
   trend: { marginTop: 6, fontSize: 13, fontWeight: '600' },
   muted: { marginTop: 6, fontSize: 13 },
