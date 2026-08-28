@@ -2,9 +2,11 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Redirect, useRouter } from 'expo-router';
 import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, {
+  interpolateColor,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { AppText as Text } from '@/src/components/AppText';
@@ -18,15 +20,17 @@ import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { APP_LANGUAGES, LANGUAGE_LABEL_KEYS, type AppLanguage } from '@/src/i18n';
-import { springs } from '@/src/theme/motion';
+import { springs, timings } from '@/src/theme/motion';
 import { radiusMd, radiusSm, type AppTheme } from '@/src/theme/tokens';
 import { initialsFrom, roleSubtitleKey } from '@/src/utils/userDisplay';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
 
 const THEME_SEGMENT_PAD = 3;
 const THEME_SEGMENT_GAP = 2;
-/** Fixed width — short labels, no auto-shrink text. */
-const THEME_SEGMENT_WIDTH = 156;
+/** Fixed width — icon + short label, no auto-shrink text. */
+const THEME_SEGMENT_WIDTH = 168;
+
+const AnimatedLabel = Animated.createAnimatedComponent(Text);
 
 type ChevronKind = 'forward' | 'down' | 'none';
 
@@ -68,6 +72,74 @@ function AccountRow({ icon, label, value, danger, chevron = 'forward', last, onP
   );
 }
 
+/** One theme segment — crossfades label + icon color when selected. */
+function ThemeSegmentOption({
+  selected,
+  label,
+  icon,
+  a11yLabel,
+  dimColor,
+  onPress,
+}: {
+  selected: boolean;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  a11yLabel: string;
+  dimColor: string;
+  onPress: () => void;
+}) {
+  const progress = useSharedValue(selected ? 1 : 0);
+
+  useEffect(() => {
+    progress.value = withTiming(selected ? 1 : 0, { duration: timings.fadeMs });
+  }, [progress, selected]);
+
+  const dimLayerStyle = useAnimatedStyle(() => ({
+    opacity: 1 - progress.value,
+  }));
+  const brightLayerStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+  }));
+  const labelStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(progress.value, [0, 1], [dimColor, '#ffffff']),
+  }));
+
+  return (
+    <Pressable
+      accessibilityRole="radio"
+      accessibilityState={{ selected }}
+      accessibilityLabel={a11yLabel}
+      hitSlop={6}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.themeSegmentOption,
+        pressed ? styles.themeSegmentOptionPressed : null,
+      ]}
+    >
+      <View style={styles.themeSegmentContent}>
+        <View style={styles.themeSegmentIconWrap}>
+          <Animated.View style={[styles.themeSegmentIconLayer, dimLayerStyle]}>
+            <Ionicons name={icon} size={14} color={dimColor} />
+          </Animated.View>
+          <Animated.View style={[styles.themeSegmentIconLayer, brightLayerStyle]}>
+            <Ionicons name={icon} size={14} color="#ffffff" />
+          </Animated.View>
+        </View>
+        <AnimatedLabel
+          numberOfLines={1}
+          style={[
+            styles.themeSegmentLabel,
+            selected && styles.themeSegmentLabelSelected,
+            labelStyle,
+          ]}
+        >
+          {label}
+        </AnimatedLabel>
+      </View>
+    </Pressable>
+  );
+}
+
 /** Compact Light | Dark control — sliding thumb, binary choice on the row. */
 function AppearanceThemeSegment({
   value,
@@ -87,9 +159,14 @@ function AppearanceThemeSegment({
   groupA11yLabel: string;
 }) {
   const { colors: c } = useTheme();
-  const options: { id: AppTheme; label: string; a11yLabel: string }[] = [
-    { id: 'light', label: lightLabel, a11yLabel: lightA11yLabel },
-    { id: 'dark', label: darkLabel, a11yLabel: darkA11yLabel },
+  const options: {
+    id: AppTheme;
+    label: string;
+    a11yLabel: string;
+    icon: keyof typeof Ionicons.glyphMap;
+  }[] = [
+    { id: 'light', label: lightLabel, a11yLabel: lightA11yLabel, icon: 'sunny-outline' },
+    { id: 'dark', label: darkLabel, a11yLabel: darkA11yLabel, icon: 'moon-outline' },
   ];
   const trackWidth = useSharedValue(0);
   const index = useSharedValue(value === 'dark' ? 1 : 0);
@@ -127,7 +204,7 @@ function AppearanceThemeSegment({
       style={[
         styles.themeSegment,
         {
-          backgroundColor: c.inputBg,
+          backgroundColor: c.accentSoft,
           borderColor: c.border,
         },
       ]}
@@ -141,31 +218,17 @@ function AppearanceThemeSegment({
         pointerEvents="none"
         style={[styles.themeSegmentThumb, { backgroundColor: c.accentCta }, thumbStyle]}
       />
-      {options.map((opt) => {
-        const selected = value === opt.id;
-        return (
-          <Pressable
-            key={opt.id}
-            accessibilityRole="radio"
-            accessibilityState={{ selected }}
-            accessibilityLabel={opt.a11yLabel}
-            hitSlop={6}
-            onPress={() => pick(opt.id)}
-            style={styles.themeSegmentOption}
-          >
-            <Text
-              numberOfLines={1}
-              style={[
-                styles.themeSegmentLabel,
-                { color: selected ? '#ffffff' : c.dim },
-                selected && styles.themeSegmentLabelSelected,
-              ]}
-            >
-              {opt.label}
-            </Text>
-          </Pressable>
-        );
-      })}
+      {options.map((opt) => (
+        <ThemeSegmentOption
+          key={opt.id}
+          selected={value === opt.id}
+          label={opt.label}
+          icon={opt.icon}
+          a11yLabel={opt.a11yLabel}
+          dimColor={c.dim}
+          onPress={() => pick(opt.id)}
+        />
+      ))}
     </View>
   );
 }
@@ -184,7 +247,7 @@ function AppearanceRow({ last }: { last?: boolean }) {
       <Ionicons
         name={theme === 'dark' ? 'moon-outline' : 'sunny-outline'}
         size={22}
-        color={c.muted}
+        color={c.accentText}
         style={styles.rowIcon}
       />
       <Text style={[styles.rowLabel, { color: c.text }]} numberOfLines={1}>
@@ -385,17 +448,39 @@ const styles = StyleSheet.create({
   themeSegmentOption: {
     flex: 1,
     minWidth: 0,
-    minHeight: 32,
-    paddingHorizontal: 6,
+    minHeight: 34,
+    paddingHorizontal: 4,
     paddingVertical: 6,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1,
   },
+  themeSegmentOptionPressed: {
+    opacity: 0.88,
+    transform: [{ scale: 0.97 }],
+  },
+  themeSegmentContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    maxWidth: '100%',
+  },
+  themeSegmentIconWrap: {
+    width: 14,
+    height: 14,
+    position: 'relative',
+  },
+  themeSegmentIconLayer: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   themeSegmentLabel: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     letterSpacing: -0.15,
+    flexShrink: 1,
   },
   themeSegmentLabelSelected: {
     fontWeight: '700',

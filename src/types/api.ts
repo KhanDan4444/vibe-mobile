@@ -23,6 +23,9 @@ export interface GymSubscription {
   readOnly?: boolean;
   locked?: boolean;
   accessDenied?: boolean;
+  isTrial?: boolean;
+  trialDaysLeft?: number | null;
+  trialEndDate?: string | null;
 }
 
 export interface PublicSaasPlan {
@@ -41,8 +44,20 @@ export interface GymSignupCompletePayload {
   username: string;
   password: string;
   phone: string;
-  saas_plan_id: number;
+  city: string;
+  address?: string;
   email?: string;
+}
+
+export interface GymSignupCompleteResponse {
+  message?: string;
+  subscription?: {
+    plan_name?: string;
+    start_date?: string;
+    end_date?: string;
+    is_trial?: boolean;
+    trial_days?: number;
+  };
 }
 
 export interface PaginatedResponse<T> {
@@ -224,6 +239,9 @@ export interface DashboardStats {
   revenueChart?: DashboardChartPoint[];
   readOnly?: boolean;
   checkedInToday?: number;
+  isTrial?: boolean;
+  trialDaysLeft?: number | null;
+  trialEndDate?: string | null;
 }
 
 export interface PlanRow {

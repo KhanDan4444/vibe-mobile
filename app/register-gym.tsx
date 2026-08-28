@@ -1,30 +1,28 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText as Text } from '@/src/components/AppText';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { completeGymSignup, getPublicSaasPlans, requestGymSignupOtp } from '@/src/api/auth';
+import { completeGymSignup, requestGymSignupOtp } from '@/src/api/auth';
 import { AuthFormEnter } from '@/src/components/AuthFormEnter';
+import { AuthOtpBlock } from '@/src/components/AuthOtpBlock';
 import { AuthScreen } from '@/src/components/AuthScreen';
 import { AuthStepDots } from '@/src/components/AuthStepDots';
-import { OptionPickerField } from '@/src/components/OptionPickerField';
 import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton } from '@/src/components/Form';
 import { PasswordRule } from '@/src/components/PasswordRule';
-import { SoftSurface } from '@/src/components/ui/SoftSurface';
-import { PageSkeleton } from '@/src/components/Skeleton';
-import { useTheme } from '@/src/context/PreferencesContext';
+import { useOtpResendCooldown } from '@/src/hooks/useOtpResendCooldown';
 import { AUTH, authSubtitle, authTitle } from '@/src/theme/authChrome';
-import type { PublicSaasPlan } from '@/src/types/api';
-import { formatEtb } from '@/src/utils/formatMoney';
-import { isValidEthiopianPhone, normalizeEthiopianPhone } from '@/src/utils/phone';
+import { formatDisplayDate } from '@/src/utils/date';
 import {
-  MIN_PASSWORD_LENGTH,
-  validatePasswordPair,
-  type PasswordPairErrors,
-} from '@/src/utils/passwordValidation';
+  SIGNUP_TRIAL_DAYS,
+  validateGymSignupAccountStep,
+  validateGymSignupGymStep,
+  type GymSignupFieldErrors,
+} from '@/src/utils/gymSignupValidation';
+import { isValidEthiopianPhone, normalizeEthiopianPhone } from '@/src/utils/phone';
+import { MIN_PASSWORD_LENGTH } from '@/src/utils/passwordValidation';
 
-const USERNAME_RE = /^[a-z0-9._]{3,30}$/;
 const STEPS = ['phone', 'gym', 'account'] as const;
 type SignupStep = (typeof STEPS)[number];
 
@@ -32,71 +30,46 @@ type RegisterDone = {
   gymName: string;
   username: string;
   phone?: string;
-  planName?: string;
+  trialEndDate?: string;
+  trialDays: number;
 };
 
 export default function RegisterGymScreen() {
   const { t } = useTranslation();
-  const { colors: c } = useTheme();
 
-  const [plans, setPlans] = useState<PublicSaasPlan[]>([]);
-  const [plansLoading, setPlansLoading] = useState(true);
   const [step, setStep] = useState<SignupStep>('phone');
   const [sessionId, setSessionId] = useState('');
   const [verifiedPhone, setVerifiedPhone] = useState('');
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [gymName, setGymName] = useState('');
+  const [city, setCity] = useState('');
+  const [address, setAddress] = useState('');
   const [ownerName, setOwnerName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [saasPlanId, setSaasPlanId] = useState('');
-  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [fieldErrors, setFieldErrors] = useState<PasswordPairErrors>({});
+  const [fieldErrors, setFieldErrors] = useState<GymSignupFieldErrors>({});
   const [showLengthRule, setShowLengthRule] = useState(false);
   const [showMatchRule, setShowMatchRule] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
   const [registerDone, setRegisterDone] = useState<RegisterDone | null>(null);
+  const { cooldown, startCooldown, canResend } = useOtpResendCooldown();
+  const otpRequestInFlight = useRef(false);
 
   const stepIndex = STEPS.indexOf(step);
   const stepSubtitle =
     step === 'phone' ? t('signup.stepPhone') : step === 'gym' ? t('signup.stepGym') : t('signup.stepAccount');
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const list = await getPublicSaasPlans();
-        if (!cancelled) {
-          setPlans(list);
-          if (list.length > 0) setSaasPlanId(String(list[0].id));
-        }
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : t('signup.loadFailed'));
-      } finally {
-        if (!cancelled) setPlansLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [t]);
-
-  const planOptions = useMemo(
-    () =>
-      plans.map((p) => ({
-        value: String(p.id),
-        label: `${p.name} — ${formatEtb(Number(p.price))} / ${p.duration}mo`,
-      })),
-    [plans],
-  );
+  const bannerError = error && Object.keys(fieldErrors).length === 0 ? error : '';
+  const resolveError = (key?: string) => (key ? t(key) : undefined);
 
   const requestOtp = async () => {
+    if (otpRequestInFlight.current || loading) return;
     setError('');
-    setMessage('');
+    setFieldErrors({});
     const trimmed = phone.trim();
     if (!trimmed) {
       setError(t('signup.phoneRequired'));
@@ -111,35 +84,47 @@ export default function RegisterGymScreen() {
       setError(t('signup.phoneInvalid'));
       return;
     }
+    otpRequestInFlight.current = true;
     setLoading(true);
     try {
       const data = await requestGymSignupOtp(trimmed);
       if (!data.sessionId) throw new Error(t('signup.noSession'));
       setSessionId(data.sessionId);
       setVerifiedPhone(normalized);
-      setMessage(data.message || t('signup.otpSent'));
+      startCooldown();
       setStep('gym');
     } catch (e) {
       setError(e instanceof Error ? e.message : t('signup.otpFailed'));
     } finally {
+      otpRequestInFlight.current = false;
       setLoading(false);
+    }
+  };
+
+  const resendOtp = async () => {
+    if (!canResend || resendLoading || loading || otpRequestInFlight.current) return;
+    setError('');
+    otpRequestInFlight.current = true;
+    setResendLoading(true);
+    try {
+      const data = await requestGymSignupOtp(phone.trim());
+      if (!data.sessionId) throw new Error(t('signup.noSession'));
+      setSessionId(data.sessionId);
+      startCooldown();
+      setCode('');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t('signup.otpFailed'));
+    } finally {
+      otpRequestInFlight.current = false;
+      setResendLoading(false);
     }
   };
 
   const continueGym = () => {
     setError('');
-    if (!code.trim()) {
-      setError(t('signup.codeRequired'));
-      return;
-    }
-    if (!gymName.trim()) {
-      setError(t('signup.gymNameRequired'));
-      return;
-    }
-    if (!saasPlanId) {
-      setError(t('signup.planRequired'));
-      return;
-    }
+    const next = validateGymSignupGymStep({ code, gymName, city, address });
+    setFieldErrors(next);
+    if (Object.keys(next).length > 0) return;
     setStep('account');
   };
 
@@ -147,48 +132,57 @@ export default function RegisterGymScreen() {
     setStep('phone');
     setCode('');
     setError('');
-    setMessage('');
+    setFieldErrors({});
   };
 
   const lengthOk = password.length >= MIN_PASSWORD_LENGTH;
   const matchOk = confirm.length > 0 && confirm === password;
-  const resolveError = (key?: string) => (key ? t(key) : undefined);
 
   const submitSignup = async () => {
     setError('');
-    if (!ownerName.trim()) {
-      setError(t('signup.ownerNameRequired'));
-      return;
-    }
-    const cleanUsername = username.trim().toLowerCase();
-    if (!USERNAME_RE.test(cleanUsername)) {
-      setError(t('signup.usernameInvalid'));
-      return;
-    }
-    const next = validatePasswordPair(password, confirm);
+    const accountErrors = validateGymSignupAccountStep({
+      ownerName,
+      username,
+      email,
+      password,
+      confirm,
+    });
+    const gymErrors = validateGymSignupGymStep({ code, gymName, city, address });
+    const next = { ...gymErrors, ...accountErrors };
     setFieldErrors(next);
-    if (Object.keys(next).length > 0) return;
+    if (Object.keys(gymErrors).length > 0) {
+      setStep('gym');
+      return;
+    }
+    if (Object.keys(accountErrors).length > 0) return;
 
     setLoading(true);
     try {
+      const cleanUsername = username.trim().toLowerCase();
       const payload = {
         sessionId,
         code: code.trim(),
         gym_name: gymName.trim(),
+        city: city.trim(),
         owner_name: ownerName.trim(),
         username: cleanUsername,
         password,
         phone: verifiedPhone,
-        saas_plan_id: parseInt(saasPlanId, 10),
       };
       const trimmedEmail = email.trim().toLowerCase();
-      await completeGymSignup(trimmedEmail ? { ...payload, email: trimmedEmail } : payload);
-      const planName = plans.find((p) => String(p.id) === saasPlanId)?.name;
+      const trimmedAddress = address.trim();
+      const data = await completeGymSignup({
+        ...payload,
+        ...(trimmedEmail ? { email: trimmedEmail } : {}),
+        ...(trimmedAddress ? { address: trimmedAddress } : {}),
+      });
+      const trialDays = data.subscription?.trial_days ?? SIGNUP_TRIAL_DAYS;
       setRegisterDone({
         gymName: gymName.trim(),
         username: cleanUsername,
         phone: verifiedPhone || phone.trim() || undefined,
-        planName,
+        trialEndDate: data.subscription?.end_date,
+        trialDays,
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : t('signup.completeFailed'));
@@ -197,37 +191,16 @@ export default function RegisterGymScreen() {
     }
   };
 
-  if (plansLoading) {
-    return (
-      <AuthScreen>
-        <PageSkeleton variant="form" count={4} />
-      </AuthScreen>
-    );
-  }
-
-  if (plans.length === 0) {
-    return (
-      <AuthScreen hero>
-        <AuthFormEnter delay={40}>
-          <SoftSurface
-            variant="panel"
-            style={[styles.centered, styles.unavailableCard, { backgroundColor: AUTH.fieldBg }]}
-          >
-            <Text style={[styles.unavailableText, { color: AUTH.textMuted }]}>{t('signup.unavailable')}</Text>
-            <Pressable onPress={() => router.replace('/login')} style={styles.backLink}>
-              <Text style={[styles.backLinkText, { color: AUTH.link }]}>{t('signup.backToLogin')}</Text>
-            </Pressable>
-          </SoftSurface>
-        </AuthFormEnter>
-      </AuthScreen>
-    );
-  }
-
   if (registerDone) {
     const summaryRows = [
       { label: t('signup.usernameLabel'), value: `@${registerDone.username}` },
       registerDone.phone ? { label: t('signup.phoneLabel'), value: registerDone.phone } : null,
-      registerDone.planName ? { label: t('signup.planLabel'), value: registerDone.planName } : null,
+      registerDone.trialEndDate
+        ? {
+            label: t('signup.trialEndsLabel'),
+            value: formatDisplayDate(registerDone.trialEndDate),
+          }
+        : null,
     ].filter(Boolean) as { label: string; value: string }[];
 
     return (
@@ -262,7 +235,9 @@ export default function RegisterGymScreen() {
                 </View>
               ) : null}
 
-              <Text style={[styles.successHint, { color: AUTH.textDim }]}>{t('signup.successHint')}</Text>
+              <Text style={[styles.successHint, { color: AUTH.textDim }]}>
+                {t('signup.successHint', { days: registerDone.trialDays })}
+              </Text>
 
               <PrimaryButton
                 label={t('auth.signIn')}
@@ -288,10 +263,7 @@ export default function RegisterGymScreen() {
           </AuthFormEnter>
 
           <AuthFormEnter delay={120}>
-            <ErrorBanner message={error} />
-            {message && step === 'gym' ? (
-              <Text style={[styles.message, { color: c.success }]}>{message}</Text>
-            ) : null}
+            <ErrorBanner message={bannerError} />
 
             {step === 'phone' ? (
               <>
@@ -305,56 +277,121 @@ export default function RegisterGymScreen() {
                   placeholder={t('signup.phonePlaceholder')}
                 />
                 <Text style={[styles.hint, { color: AUTH.textDim }]}>{t('signup.phoneHint')}</Text>
+                <Text style={[styles.hint, { color: AUTH.textDim }]}>
+                  {t('signup.trialNote', { days: SIGNUP_TRIAL_DAYS })}
+                </Text>
                 <PrimaryButton label={t('signup.sendOtp')} onPress={requestOtp} loading={loading} />
               </>
             ) : null}
 
             {step === 'gym' ? (
               <>
-                <Label>{t('signup.code')}</Label>
-                <Field value={code} onChangeText={setCode} keyboardType="numeric" autoCapitalize="none" latin />
-
-                <Label>{t('signup.gymName')}</Label>
-                <Field value={gymName} onChangeText={setGymName} placeholder={t('signup.gymNamePlaceholder')} />
-
-                <OptionPickerField
-                  label={t('signup.plan')}
-                  placeholder={t('signup.plan')}
-                  options={planOptions}
-                  value={saasPlanId}
-                  onChange={setSaasPlanId}
-                  sheetTitle={t('signup.plan')}
+                <AuthOtpBlock
+                  label={t('signup.code')}
+                  phone={verifiedPhone || phone}
+                  value={code}
+                  onChange={(next) => {
+                    setCode(next);
+                    setFieldErrors((prev) => ({ ...prev, code: undefined }));
+                  }}
+                  error={fieldErrors.code ? resolveError(fieldErrors.code) : undefined}
+                  cooldown={cooldown}
+                  canResend={canResend}
+                  resendLoading={resendLoading}
+                  onResend={resendOtp}
+                  onChangePhone={backToPhone}
                 />
 
+                <View style={styles.stepDivider} />
+                <Text style={[styles.sectionTitle, { color: AUTH.textDim }]}>{t('signup.sectionGym')}</Text>
+
+                <Label>{t('signup.gymName')}</Label>
+                <Field
+                  value={gymName}
+                  onChangeText={(v) => {
+                    setGymName(v);
+                    setFieldErrors((prev) => ({ ...prev, gymName: undefined }));
+                  }}
+                  placeholder={t('signup.gymNamePlaceholder')}
+                  error={Boolean(fieldErrors.gymName)}
+                />
+                {fieldErrors.gymName ? <FieldError message={resolveError(fieldErrors.gymName)} /> : null}
+
+                <Label>{t('signup.city')}</Label>
+                <Field
+                  value={city}
+                  onChangeText={(v) => {
+                    setCity(v);
+                    setFieldErrors((prev) => ({ ...prev, city: undefined }));
+                  }}
+                  autoCapitalize="words"
+                  placeholder={t('signup.cityPlaceholder')}
+                  error={Boolean(fieldErrors.city)}
+                />
+                {fieldErrors.city ? <FieldError message={resolveError(fieldErrors.city)} /> : null}
+
+                <Label>{t('signup.addressOptional')}</Label>
+                <Field
+                  value={address}
+                  onChangeText={(v) => {
+                    setAddress(v);
+                    setFieldErrors((prev) => ({ ...prev, address: undefined }));
+                  }}
+                  autoCapitalize="words"
+                  placeholder={t('signup.addressPlaceholder')}
+                  error={Boolean(fieldErrors.address)}
+                />
+                {fieldErrors.address ? <FieldError message={resolveError(fieldErrors.address)} /> : null}
+
+                <Text style={[styles.hint, { color: AUTH.textDim }]}>
+                  {t('signup.trialNote', { days: SIGNUP_TRIAL_DAYS })}
+                </Text>
+
                 <PrimaryButton label={t('common.continue')} onPress={continueGym} />
-                <Pressable style={styles.secondary} onPress={backToPhone}>
-                  <Text style={[styles.secondaryText, { color: AUTH.link }]}>{t('signup.changePhone')}</Text>
-                </Pressable>
               </>
             ) : null}
 
             {step === 'account' ? (
               <>
                 <Label>{t('signup.ownerName')}</Label>
-                <Field value={ownerName} onChangeText={setOwnerName} autoCapitalize="words" />
+                <Field
+                  value={ownerName}
+                  onChangeText={(v) => {
+                    setOwnerName(v);
+                    setFieldErrors((prev) => ({ ...prev, ownerName: undefined }));
+                  }}
+                  autoCapitalize="words"
+                  error={Boolean(fieldErrors.ownerName)}
+                />
+                {fieldErrors.ownerName ? <FieldError message={resolveError(fieldErrors.ownerName)} /> : null}
 
                 <Label>{t('signup.username')}</Label>
                 <Field
                   value={username}
-                  onChangeText={(v) => setUsername(v.toLowerCase())}
+                  onChangeText={(v) => {
+                    setUsername(v.toLowerCase());
+                    setFieldErrors((prev) => ({ ...prev, username: undefined }));
+                  }}
                   autoCapitalize="none"
                   latin
                   placeholder={t('signup.usernamePlaceholder')}
+                  error={Boolean(fieldErrors.username)}
                 />
+                {fieldErrors.username ? <FieldError message={resolveError(fieldErrors.username)} /> : null}
 
                 <Label>{t('signup.emailOptional')}</Label>
                 <Field
                   value={email}
-                  onChangeText={setEmail}
+                  onChangeText={(v) => {
+                    setEmail(v);
+                    setFieldErrors((prev) => ({ ...prev, email: undefined }));
+                  }}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   latin
+                  error={Boolean(fieldErrors.email)}
                 />
+                {fieldErrors.email ? <FieldError message={resolveError(fieldErrors.email)} /> : null}
 
                 <Label>{t('signup.password')}</Label>
                 <Field
@@ -400,7 +437,9 @@ export default function RegisterGymScreen() {
                   <FieldError message={resolveError(fieldErrors.confirmPassword)} />
                 ) : null}
 
-                <Text style={[styles.hint, { color: AUTH.textDim }]}>{t('signup.paymentNote')}</Text>
+                <Text style={[styles.hint, { color: AUTH.textDim }]}>
+                  {t('signup.trialNote', { days: SIGNUP_TRIAL_DAYS })}
+                </Text>
                 <PrimaryButton label={t('signup.createAccount')} onPress={submitSignup} loading={loading} />
                 <Pressable
                   style={styles.secondary}
@@ -426,20 +465,24 @@ export default function RegisterGymScreen() {
 }
 
 const styles = StyleSheet.create({
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  unavailableCard: {
-    padding: 24,
-    maxWidth: 360,
-    width: '100%',
-  },
-  unavailableText: { fontSize: 15, lineHeight: 22, textAlign: 'center' },
   title: authTitle,
   subtitle: authSubtitle,
-  message: { marginBottom: 12, fontSize: 14, textAlign: 'center', letterSpacing: 0.1 },
   hint: { fontSize: 12, lineHeight: 18, marginTop: 6, marginBottom: 20, letterSpacing: 0.1 },
+  stepDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    marginTop: 8,
+    marginBottom: 14,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    marginBottom: 12,
+  },
   secondary: { alignItems: 'center', paddingVertical: 14 },
   back: { alignItems: 'center', paddingVertical: 18 },
-  backLink: { marginTop: 16 },
   backLinkText: { fontSize: 14, fontWeight: '700', letterSpacing: 0.15 },
   secondaryText: { fontSize: 14, fontWeight: '600', letterSpacing: 0.15 },
   successWrap: {

@@ -234,6 +234,7 @@
     "stepPhone": "Verify your phone to get started",
     "stepGym": "Confirm the code and set up your gym",
     "stepAccount": "Create your owner login",
+    "sectionGym": "Gym details",
     "ownerPhone": "Owner phone *",
     "phonePlaceholder": "09xxxxxxxx",
     "phoneHint": "We will send a verification code to this number.",
@@ -250,6 +251,18 @@
     "gymName": "Gym name *",
     "gymNamePlaceholder": "Your gym name",
     "gymNameRequired": "Enter your gym name.",
+    "city": "City *",
+    "cityPlaceholder": "e.g. Addis Ababa",
+    "addressOptional": "Address (optional)",
+    "addressPlaceholder": "Street or area",
+    "codeInvalid": "Enter the 4–8 digit verification code.",
+    "codePlaceholder": "6-digit code",
+    "otpSentToPhone": "We sent a 6-digit code to {{phone}}",
+    "otpSentPrefix": "We sent a 6-digit code to",
+    "otpResend": "Resend code",
+    "otpResendIn": "Resend in {{time}}",
+    "sendingOtp": "Sending…",
+    "trialNote": "You'll get a {{days}}-day free trial with full access. No payment now — after the trial, your subscription follows the platform admin's SaaS plan.",
     "ownerName": "Full name *",
     "ownerNameRequired": "Enter the owner name.",
     "username": "Username *",
@@ -263,16 +276,16 @@
     "passwordShort": "Password must be at least 8 characters.",
     "passwordMismatch": "Passwords do not match.",
     "namesRequired": "Enter gym name and owner name.",
-    "paymentNote": "Your license starts after registration. Contact the platform administrator to complete SaaS payment.",
+    "paymentNote": "You'll get a {{days}}-day free trial with full access. No payment now — after the trial, your subscription follows the platform admin's SaaS plan.",
     "createAccount": "Create gym account",
     "changePhone": "Use a different phone number",
     "completeFailed": "Could not complete registration.",
     "successTitle": "You're all set",
     "successBody": "Your gym is ready. Sign in with the username below.",
-    "successHint": "Contact the platform administrator to complete SaaS payment when you're ready.",
+    "successHint": "Your {{days}}-day free trial is active. When it ends, contact the platform administrator to subscribe under a SaaS plan.",
     "usernameLabel": "Username",
     "phoneLabel": "Phone",
-    "planLabel": "Plan",
+    "trialEndsLabel": "Trial ends",
     "backToLogin": "Back to sign in"
   },
   "lockout": {
@@ -587,7 +600,12 @@
   },
   "alerts": {
     "branchReadOnlyTitle": "Inactive branch — view only",
-    "branchReadOnlyBody": "{{name}} is inactive. Member history is visible but enrollments and edits are disabled. Reactivate the branch under Branches to make changes."
+    "branchReadOnlyBody": "{{name}} is inactive. Member history is visible but enrollments and edits are disabled. Reactivate the branch under Branches to make changes.",
+    "trialEyebrow": "Free trial",
+    "trialTitle": "{{count}} days left on your trial",
+    "trialBody": "Your trial ends on {{date}}. Contact your platform administrator to subscribe and keep full access after the trial.",
+    "trialDayUnit": "day",
+    "trialDaysUnit": "days"
   },
   "gymBoot": {
     "errorTitle": "Could not load gym data",
@@ -913,7 +931,9 @@
     "planPriceInvalid": "Enter a valid price (zero or more).",
     "branchRequired": "Select a branch.",
     "createPlanFirst": "Create a membership plan before enrolling members.",
-    "addressTooLong": "Address is too long."
+    "addressTooLong": "Address is too long.",
+    "cityRequired": "City is required.",
+    "cityTooLong": "City name is too long."
   },
   "paymentEdit": {
     "deleteTitle": "Delete payment?",

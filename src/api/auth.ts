@@ -1,5 +1,11 @@
 import { apiRequest } from '@/src/api/client';
-import type { GymSignupCompletePayload, GymSubscription, LoginResponse, PublicSaasPlan } from '@/src/types/api';
+import type {
+  GymSignupCompletePayload,
+  GymSignupCompleteResponse,
+  GymSubscription,
+  LoginResponse,
+  PublicSaasPlan,
+} from '@/src/types/api';
 import { normalizeEthiopianPhone } from '@/src/utils/phone';
 
 export function loginRequest(email: string, password: string, rememberMe = true) {
@@ -56,7 +62,7 @@ export function requestGymSignupOtp(phone: string) {
 }
 
 export function completeGymSignup(payload: GymSignupCompletePayload) {
-  return apiRequest<{ message?: string }>('/auth/gym-signup/complete', {
+  return apiRequest<GymSignupCompleteResponse>('/auth/gym-signup/complete', {
     method: 'POST',
     body: JSON.stringify(payload),
   });

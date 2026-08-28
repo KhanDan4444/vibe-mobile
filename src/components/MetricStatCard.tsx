@@ -89,7 +89,7 @@ export function MetricStatCard({
           />
         </View>
       ) : null}
-      <Text display style={[styles.value, { color: valueColor }]}>
+      <Text display latin style={[styles.value, { color: valueColor }]}>
         {value}
       </Text>
       {!showIcon ? (
@@ -139,7 +139,12 @@ const styles = {
     lineHeight: 16,
     fontWeight: '500' as const,
   },
-  value: { fontSize: 24, fontWeight: '700' as const, letterSpacing: -0.6 },
+  value: {
+    fontSize: 24,
+    fontWeight: '700' as const,
+    letterSpacing: -0.6,
+    fontVariant: ['tabular-nums'] as const,
+  },
   label: { marginTop: 4, fontSize: 12, lineHeight: 16 },
   caption: { marginTop: 1, fontSize: 10, fontWeight: '500' as const, lineHeight: 12 },
 };

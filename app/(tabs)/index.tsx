@@ -10,6 +10,7 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { fetchDashboard } from '@/src/api/dashboard';
 import { fetchGymProfile } from '@/src/api/profile';
 import { BranchFilterBar } from '@/src/components/BranchFilterBar';
+import { TrialBanner } from '@/src/components/TrialBanner';
 import { MemberPhoto } from '@/src/components/MemberPhoto';
 import { MiniBarChart } from '@/src/components/MiniBarChart';
 import { PageSkeleton } from '@/src/components/Skeleton';
@@ -112,7 +113,7 @@ function AlertMemberRow({
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const { token, user, gymName: cachedGymName } = useAuth();
+  const { token, user, gymName: cachedGymName, subscription } = useAuth();
   const { selectedBranchId } = useBranchScope();
   const { colors: c, theme } = useTheme();
   const isLight = theme === 'light';
@@ -144,6 +145,13 @@ export default function DashboardScreen() {
     enabled: Boolean(token),
   });
   const screenLoading = useQueryScreenLoading(isLoading, Boolean(data), isPending);
+  const trialDaysLeft = data?.trialDaysLeft ?? subscription?.trialDaysLeft;
+  const showTrialBanner =
+    owner &&
+    Boolean(data?.isTrial ?? subscription?.isTrial) &&
+    !readOnly &&
+    trialDaysLeft != null &&
+    trialDaysLeft >= 0;
 
   useFocusEffect(
     useCallback(() => {
@@ -217,7 +225,7 @@ export default function DashboardScreen() {
           importantForAccessibility="no"
         />
       </View>
-      <Text display style={[styles.income, { color: c.text }]}>
+      <Text display latin style={[styles.income, { color: c.text }]}>
         {formatEtb(Number(data.monthlyIncome || 0), { forceCompact: false })}
       </Text>
       {trendLabel ? (
@@ -318,6 +326,14 @@ export default function DashboardScreen() {
 
       <BranchFilterBar horizontalPadding={0} />
 
+      {showTrialBanner ? (
+        <TrialBanner
+          isTrial={data?.isTrial ?? subscription?.isTrial}
+          trialDaysLeft={trialDaysLeft}
+          trialEndDate={data?.trialEndDate ?? subscription?.trialEndDate}
+        />
+      ) : null}
+
       {screenLoading ? (
         <PageSkeleton variant="dashboard" padded={false} />
       ) : isError ? (
@@ -327,7 +343,7 @@ export default function DashboardScreen() {
           <SoftSurface
             variant="panel"
             onPress={() => goMembers('active')}
-            style={styles.heroMetricCard}
+            style={[styles.heroMetricCard, showTrialBanner ? styles.heroMetricCardAfterTrial : null]}
             accessibilityRole="button"
             accessibilityLabel={`${t('dashboard.activeMembersLabel')}: ${data.activeMembers ?? 0} / ${data.totalMembers ?? 0}`}
           >
@@ -457,6 +473,9 @@ const styles = StyleSheet.create({
     marginTop: space.sm,
     padding: space.lg,
   },
+  heroMetricCardAfterTrial: {
+    marginTop: 0,
+  },
   heroHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -517,7 +536,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   summaryTitleChevron: { fontSize: 16, fontWeight: '600', lineHeight: 18 },
-  income: { marginTop: 6, fontSize: 32, fontWeight: '700', letterSpacing: -0.8 },
+  income: {
+    marginTop: 6,
+    fontSize: 32,
+    fontWeight: '700',
+    letterSpacing: -0.8,
+    fontVariant: ['tabular-nums'],
+  },
   trend: { marginTop: 6, fontSize: 13, fontWeight: '600' },
   muted: { marginTop: 6, fontSize: 13 },
   alertCard: {
@@ -562,13 +587,4 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '500',
   },
-  banner: {
-    marginTop: 20,
-    backgroundColor: 'rgba(251,191,36,0.12)',
-    borderRadius: 10,
-    padding: 14,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(251,191,36,0.35)',
-  },
-  bannerText: { color: '#fcd34d', fontSize: 14 },
 });

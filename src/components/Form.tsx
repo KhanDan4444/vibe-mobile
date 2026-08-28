@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -156,6 +156,7 @@ export const Field = React.forwardRef<
     disabled?: boolean;
     latin?: boolean;
     style?: StyleProp<ViewStyle>;
+    inputTextStyle?: StyleProp<TextStyle>;
   }
 >(function Field(
   {
@@ -174,6 +175,7 @@ export const Field = React.forwardRef<
     disabled,
     latin,
     style,
+    inputTextStyle,
   },
   ref,
 ) {
@@ -224,6 +226,7 @@ export const Field = React.forwardRef<
           formStyles.inputText,
           { color: authSurface ? AUTH.text : c.text },
           authSurface ? { fontWeight: '400', letterSpacing: 0.1, lineHeight: 22 } : null,
+          inputTextStyle,
         ]}
         value={value}
         onChangeText={onChangeText}

@@ -532,7 +532,7 @@ export default function CheckInScreen() {
     },
     todayCount: {
       fontSize: 56,
-      fontWeight: '600' as const,
+      fontWeight: '700' as const,
       fontVariant: ['tabular-nums' as const],
       color: isLight ? '#0f172a' : '#e4e7ee',
       lineHeight: 56,
@@ -628,10 +628,6 @@ export default function CheckInScreen() {
       fontVariant: ['tabular-nums' as const],
       color: theme.muted,
       letterSpacing: -0.15,
-    },
-    todayTimeLatest: {
-      color: isLight ? '#0f766e' : theme.accentText,
-      fontWeight: '700' as const,
     },
     showMoreWrap: {
       borderTopWidth: StyleSheet.hairlineWidth,
@@ -760,7 +756,7 @@ export default function CheckInScreen() {
                       </Pressable>
                     ) : null}
                   </View>
-                  <Text display style={styles.todayCount}>
+                  <Text display latin style={styles.todayCount}>
                     {todaySnapQuery.isLoading ? '—' : todayTotal}
                   </Text>
                 </View>
@@ -910,9 +906,7 @@ export default function CheckInScreen() {
                             </Text>
                           ) : null}
                         </View>
-                        <Text
-                          style={[styles.todayTime, index === 0 ? styles.todayTimeLatest : null]}
-                        >
+                        <Text style={styles.todayTime}>
                           {formatDisplayTime(row.checked_in_at, i18n.language)}
                         </Text>
                       </Pressable>

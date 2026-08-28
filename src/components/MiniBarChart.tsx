@@ -13,7 +13,9 @@ import {
   pickNearestSliceIndex,
 } from '@/src/utils/chartData';
 import { formatChartAmount, formatCompactNumber, formatEtb } from '@/src/utils/formatMoney';
-import { formatDisplayDate } from '@/src/utils/date';
+import { SPACE_GROTESK_BOLD } from '@/src/theme/typography';
+
+const SVG_METRIC_FONT = SPACE_GROTESK_BOLD;
 
 const CHART_WIDTH = 320;
 const CHART_HEIGHT = 132;
@@ -152,8 +154,13 @@ function ChartSummaryFooter({
           {shortDate(start.date)}
         </Text>
         <View style={styles.labelsCenter}>
-          <Text style={styles.footerCaption}>{caption}</Text>
-          <Text style={[styles.footerAmount, styles.amountText, styles.footerAmountHero]} numberOfLines={1}>
+          <Text style={[styles.footerCaption]}>{caption}</Text>
+          <Text
+            display
+            latin
+            style={[styles.footerAmount, styles.amountText, styles.footerAmountHero]}
+            numberOfLines={1}
+          >
             {formatEtb(Number(focus.amount), { forceCompact: true })}
           </Text>
         </View>
@@ -477,7 +484,8 @@ function BarChartView({
                     y={y}
                     fill={highlighted ? accent : styles.label.color}
                     fontSize={highlighted ? 10 : 9}
-                    fontWeight={highlighted ? '700' : '600'}
+                    fontFamily={SVG_METRIC_FONT}
+                    fontWeight="700"
                     textAnchor="middle"
                   >
                     {compactAmount(amount)}
@@ -629,7 +637,7 @@ function PieChartView({
               <SvgText x={cx} y={cy - 12} fill={styles.label.color} fontSize="10" fontWeight="600" textAnchor="middle">
                 {chartPointLabel(selectedSlice.date, otherLabel)}
               </SvgText>
-              <SvgText x={cx} y={cy + 4} fill={styles.amountText.color} fontSize="15" fontWeight="700" textAnchor="middle">
+              <SvgText x={cx} y={cy + 4} fill={styles.amountText.color} fontSize="15" fontFamily={SVG_METRIC_FONT} fontWeight="700" textAnchor="middle">
                 {formatCompactNumber(selectedSlice.amount)}
               </SvgText>
               <SvgText x={cx} y={cy + 18} fill={styles.label.color} fontSize="10" textAnchor="middle">
@@ -641,7 +649,7 @@ function PieChartView({
               <SvgText x={cx} y={cy - 14} fill={styles.label.color} fontSize="10" fontWeight="600" textAnchor="middle">
                 {t('dashboard.chartPieTotal')}
               </SvgText>
-              <SvgText x={cx} y={cy + 2} fill={styles.amountText.color} fontSize="15" fontWeight="700" textAnchor="middle">
+              <SvgText x={cx} y={cy + 2} fill={styles.amountText.color} fontSize="15" fontFamily={SVG_METRIC_FONT} fontWeight="700" textAnchor="middle">
                 {formatCompactNumber(total)}
               </SvgText>
               <SvgText x={cx} y={cy + 16} fill={styles.label.color} fontSize="10" textAnchor="middle">
@@ -674,7 +682,7 @@ function PieChartView({
               <Text style={[styles.pieLegendDate, active && styles.pieLegendDateSelected]} numberOfLines={1}>
                 {chartPointLabel(slice.date, otherLabel)}
               </Text>
-              <Text style={styles.pieLegendAmount} numberOfLines={1}>
+              <Text display latin style={styles.pieLegendAmount} numberOfLines={1}>
                 {formatEtb(slice.amount, { forceCompact: true })}
               </Text>
             </Pressable>
@@ -708,8 +716,8 @@ function useChartStyles() {
     labelEnd: { textAlign: 'right' as const },
     footerBlock: { marginTop: 8 },
     footerCaption: { fontSize: 10, color: c.dim, textTransform: 'uppercase' as const, letterSpacing: 0.4 },
-    footerAmount: { marginTop: 2, fontSize: 16, fontWeight: '700' as const },
-    footerAmountHero: { fontWeight: '800' as const, letterSpacing: -0.2 },
+    footerAmount: { marginTop: 2, fontSize: 16, fontWeight: '700' as const, fontVariant: ['tabular-nums'] as const },
+    footerAmountHero: { fontWeight: '700' as const, letterSpacing: -0.4 },
     amountText: { color: c.text },
     label: { fontSize: 11, color: c.dim },
     muted: { color: c.muted },
@@ -747,7 +755,7 @@ function useChartStyles() {
     pieLegendPercentSelected: { color: c.accentText },
     pieLegendDate: { fontSize: 12, fontWeight: '600' as const, color: c.text },
     pieLegendDateSelected: { color: c.accentText },
-    pieLegendAmount: { marginTop: 2, fontSize: 11, color: c.dim },
+    pieLegendAmount: { marginTop: 2, fontSize: 11, fontWeight: '700' as const, fontVariant: ['tabular-nums'] as const, color: c.dim },
   }));
 }
 

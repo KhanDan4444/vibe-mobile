@@ -537,7 +537,7 @@ export default function RevenueScreen() {
           <Text style={appTextStyle(language, styles.heroLabel)}>
             {periodLabel}
           </Text>
-          <Text display style={styles.heroTotal}>
+          <Text display latin style={styles.heroTotal}>
             {formatEtb(Number(summary?.total || 0), { forceCompact: false })}
           </Text>
           <View style={styles.heroMeta}>

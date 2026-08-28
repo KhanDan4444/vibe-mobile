@@ -234,6 +234,7 @@
     "stepPhone": "Jalqabuuf bilbila keessan mirkaneessaa",
     "stepGym": "Koodii mirkaneessaa fi jimii keessan qopheessaa",
     "stepAccount": "Seensa abbaa jimii uumaa",
+    "sectionGym": "Bal'ina jimii",
     "ownerPhone": "Bilbila abbaa jimii",
     "phonePlaceholder": "09xxxxxxxx",
     "phoneHint": "Koodii mirkaneessaa lakkoofsa kanaaf ni ergina.",
@@ -250,6 +251,18 @@
     "gymName": "Maqaa jimii",
     "gymNamePlaceholder": "Maqaa jimii keessan",
     "gymNameRequired": "Maqaa jimii galchaa.",
+    "city": "Magaalaa *",
+    "cityPlaceholder": "fkn. Finfinnee",
+    "addressOptional": "Teessoo (filannoo)",
+    "addressPlaceholder": "Karaa ykn naannoo",
+    "codeInvalid": "Koodii mirkaneessaa dijiitii 4–8 galchi.",
+    "codePlaceholder": "Koodii dijiitii 6",
+    "otpSentToPhone": "Koodii dijiitii 6 gara {{phone}}tti ergineerra",
+    "otpSentPrefix": "Koodii dijiitii 6 gara",
+    "otpResend": "Koodii irra deebi'ii ergi",
+    "otpResendIn": "Sec. {{time}} booda irra deebi'ii ergi",
+    "sendingOtp": "Ergamaa jira…",
+    "trialNote": "Argannoo guutuu guyyaa {{days}} fayyaa bilisaa argattu. Amma kaffaltiin hin jiru — erga fayyaa xumuramee booda, karoora SaaS bulchaa waltajjii irratti hunda'a.",
     "ownerName": "Maqaa guutuu",
     "ownerNameRequired": "Maqaa abbaa galchaa.",
     "username": "Maqaa fayyadamaa",
@@ -269,10 +282,10 @@
     "completeFailed": "Galmee xumuruu hin dandeenye.",
     "successTitle": "Hunda qopheessiteetta",
     "successBody": "Jimiin kee qophaa'eera. Maqaa fayyadamaa armaan gadiitiin seeni.",
-    "successHint": "Kaffaltii SaaS xumuruuf yeroo qophaa'itan bulchaa waltajjii qunnamaa.",
+    "successHint": "Fayyaa bilisaa guyyaa {{days}} kee hojiirra jira. Yeroo xumuramu, karoora SaaS jalatti galmaa'uuf bulchaa waltajjii qunnamaa.",
     "usernameLabel": "Maqaa fayyadamaa",
     "phoneLabel": "Bilbila",
-    "planLabel": "Karoora",
+    "trialEndsLabel": "Fayyaan bilisaa xumura",
     "backToLogin": "Gara seensaatti deebi'i"
   },
   "lockout": {
@@ -587,7 +600,12 @@
   },
   "alerts": {
     "branchReadOnlyTitle": "Damee si'aawaa miti — dubbisa qofa",
-    "branchReadOnlyBody": "{{name}} si'aawaa miti. Seenaan miseensaa ni mul'ata garuu galmeen fi jijjiiramni dhaabbateera. Dameewwan jalaa damee sanas haara'omsa."
+    "branchReadOnlyBody": "{{name}} si'aawaa miti. Seenaan miseensaa ni mul'ata garuu galmeen fi jijjiiramni dhaabbateera. Dameewwan jalaa damee sanas haara'omsa.",
+    "trialEyebrow": "Fayyaa bilisaa",
+    "trialTitle": "Guyyaa {{count}} fayyaa kee irratti hafe",
+    "trialBody": "Fayyaan kee {{date}} xumura. Erga fayyaan xumuramee booda argannoo guutuu qabachuuf bulchaa waltajjii kee qunnamaa.",
+    "trialDayUnit": "guyyaa",
+    "trialDaysUnit": "guyyoota"
   },
   "gymBoot": {
     "errorTitle": "Daataa jimii fe'uu hin dandeenye",
@@ -909,7 +927,9 @@
     "planPriceInvalid": "Gatiyaa sirrii galchi (duudaa ykn sanaa ol).",
     "branchRequired": "Damee filadhu.",
     "createPlanFirst": "Miseensota galmeessuu kee dura karoora miseensummaa uumi.",
-    "addressTooLong": "Teessoon baay'ee dheeraadha."
+    "addressTooLong": "Teessoon baay'ee dheeraadha.",
+    "cityRequired": "Magaalaan barbaachisaa dha.",
+    "cityTooLong": "Maqaan magaalaa baay'ee dheeraadha."
   },
   "paymentEdit": {
     "deleteTitle": "Kaffaltii haqamuu?",

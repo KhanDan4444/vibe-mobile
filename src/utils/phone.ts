@@ -20,6 +20,21 @@ export function isValidEthiopianPhone(input: string): boolean {
   return normalizeEthiopianPhone(input) != null;
 }
 
+export function formatPhoneForInput(phone: string | null | undefined): string {
+  if (!phone) return '';
+  const normalized = normalizeEthiopianPhone(phone);
+  if (!normalized) return String(phone);
+  return `0${normalized.slice(4)}`;
+}
+
+/** Mask local Ethiopian mobile for OTP confirmation copy — e.g. 0912 ••• 678 */
+export function maskPhoneForDisplay(input: string | null | undefined): string {
+  const local = formatPhoneForInput(normalizeEthiopianPhone(input) || input);
+  if (!local || local.length < 7) return local || '•••';
+  if (local.length >= 10) return `${local.slice(0, 4)} ••• ${local.slice(-3)}`;
+  return `${local.slice(0, 3)} ••• ${local.slice(-2)}`;
+}
+
 /** Required Ethiopian mobile for member forms. */
 export function validateRequiredEthiopianPhone(
   input: string | null | undefined
