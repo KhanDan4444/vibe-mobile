@@ -25,6 +25,8 @@ import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
 
 const THEME_SEGMENT_PAD = 3;
 const THEME_SEGMENT_GAP = 2;
+/** Fixed width — short labels, no auto-shrink text. */
+const THEME_SEGMENT_WIDTH = 156;
 
 type ChevronKind = 'forward' | 'down' | 'none';
 
@@ -72,16 +74,22 @@ function AppearanceThemeSegment({
   onChange,
   lightLabel,
   darkLabel,
+  lightA11yLabel,
+  darkA11yLabel,
+  groupA11yLabel,
 }: {
   value: AppTheme;
   onChange: (next: AppTheme) => void;
   lightLabel: string;
   darkLabel: string;
+  lightA11yLabel: string;
+  darkA11yLabel: string;
+  groupA11yLabel: string;
 }) {
   const { colors: c } = useTheme();
-  const options: { id: AppTheme; label: string }[] = [
-    { id: 'light', label: lightLabel },
-    { id: 'dark', label: darkLabel },
+  const options: { id: AppTheme; label: string; a11yLabel: string }[] = [
+    { id: 'light', label: lightLabel, a11yLabel: lightA11yLabel },
+    { id: 'dark', label: darkLabel, a11yLabel: darkA11yLabel },
   ];
   const trackWidth = useSharedValue(0);
   const index = useSharedValue(value === 'dark' ? 1 : 0);
@@ -124,18 +132,14 @@ function AppearanceThemeSegment({
         },
       ]}
       accessibilityRole="radiogroup"
-      accessibilityLabel="Appearance"
+      accessibilityLabel={groupA11yLabel}
       onLayout={(e) => {
         trackWidth.value = e.nativeEvent.layout.width;
       }}
     >
       <Animated.View
         pointerEvents="none"
-        style={[
-          styles.themeSegmentThumb,
-          { backgroundColor: c.card, borderColor: c.cardEdge },
-          thumbStyle,
-        ]}
+        style={[styles.themeSegmentThumb, { backgroundColor: c.accentCta }, thumbStyle]}
       />
       {options.map((opt) => {
         const selected = value === opt.id;
@@ -144,18 +148,16 @@ function AppearanceThemeSegment({
             key={opt.id}
             accessibilityRole="radio"
             accessibilityState={{ selected }}
-            accessibilityLabel={opt.label}
-            hitSlop={4}
+            accessibilityLabel={opt.a11yLabel}
+            hitSlop={6}
             onPress={() => pick(opt.id)}
             style={styles.themeSegmentOption}
           >
             <Text
               numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.78}
               style={[
                 styles.themeSegmentLabel,
-                { color: selected ? c.text : c.dim },
+                { color: selected ? '#ffffff' : c.dim },
                 selected && styles.themeSegmentLabelSelected,
               ]}
             >
@@ -185,12 +187,17 @@ function AppearanceRow({ last }: { last?: boolean }) {
         color={c.muted}
         style={styles.rowIcon}
       />
-      <Text style={[styles.rowLabel, { color: c.text }]}>{t('profile.appearance')}</Text>
+      <Text style={[styles.rowLabel, { color: c.text }]} numberOfLines={1}>
+        {t('profile.appearance')}
+      </Text>
       <AppearanceThemeSegment
         value={theme}
         onChange={(next) => void setTheme(next)}
         lightLabel={t('profile.themeLight')}
         darkLabel={t('profile.themeDark')}
+        lightA11yLabel={t('profile.themeLightA11y')}
+        darkA11yLabel={t('profile.themeDarkA11y')}
+        groupA11yLabel={t('profile.appearance')}
       />
     </View>
   );
@@ -354,17 +361,17 @@ const styles = StyleSheet.create({
     minHeight: 52,
   },
   rowIcon: { marginRight: 12 },
-  rowLabel: { flex: 1, fontSize: 16, fontWeight: '600' },
+  rowLabel: { flex: 1, fontSize: 16, fontWeight: '600', marginRight: 10 },
   rowValue: { fontSize: 13, fontWeight: '600', marginRight: 4 },
   rowCaret: { marginLeft: 2 },
   themeSegment: {
     flexDirection: 'row',
     alignItems: 'center',
+    width: THEME_SEGMENT_WIDTH,
     padding: THEME_SEGMENT_PAD,
     borderRadius: radiusMd,
     borderWidth: StyleSheet.hairlineWidth,
     gap: THEME_SEGMENT_GAP,
-    maxWidth: 184,
     flexShrink: 0,
     position: 'relative',
   },
@@ -374,23 +381,21 @@ const styles = StyleSheet.create({
     bottom: THEME_SEGMENT_PAD,
     left: 0,
     borderRadius: radiusSm,
-    borderWidth: StyleSheet.hairlineWidth,
   },
   themeSegmentOption: {
-    flexGrow: 1,
-    flexBasis: 0,
+    flex: 1,
     minWidth: 0,
-    minHeight: 34,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
+    minHeight: 32,
+    paddingHorizontal: 6,
+    paddingVertical: 6,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1,
   },
   themeSegmentLabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
-    letterSpacing: -0.1,
+    letterSpacing: -0.15,
   },
   themeSegmentLabelSelected: {
     fontWeight: '700',

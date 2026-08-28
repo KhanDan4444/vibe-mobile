@@ -350,6 +350,8 @@
     "appearance": "ገጽታ",
     "themeLight": "ብርሃን",
     "themeDark": "ጨለማ",
+    "themeLightA11y": "የብርሃን ገጽታ",
+    "themeDarkA11y": "የጨለማ ገጽታ",
     "language": "ቋንቋ",
     "english": "English",
     "amharic": "አማርኛ",

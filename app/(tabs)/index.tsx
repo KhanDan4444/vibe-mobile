@@ -123,7 +123,8 @@ export default function DashboardScreen() {
   const owner = isGymOwner(user?.role);
   const staffUser = isGymStaff(user?.role);
   const { readOnly } = useGymReadOnly();
-  const { statCardLayoutStyle, isTablet, pagePadding, chartHeight } = useResponsiveLayout();
+  const { statCardLayoutStyle, isTablet, pagePadding, chartHeight, width } = useResponsiveLayout();
+  const heroMetricSm = width >= 640;
   const tabOverlayInset = useTabBarOverlayInset();
   const staffBranchLabel = staffUser
     ? branchDisplayName(user?.branch_name) || (user?.branch_id ? `Branch #${user.branch_id}` : null)
@@ -335,7 +336,7 @@ export default function DashboardScreen() {
                 {t('dashboard.activeMembersLabel')}
               </Text>
               <Ionicons
-                name="people"
+                name="people-outline"
                 size={18}
                 color={c.statusActive}
                 accessibilityElementsHidden
@@ -343,10 +344,26 @@ export default function DashboardScreen() {
               />
             </View>
             <View style={styles.heroValueRow}>
-              <Text display style={[styles.heroMetricValue, { color: c.text }]}>
+              <Text
+                display
+                latin
+                style={[
+                  styles.heroMetricValue,
+                  heroMetricSm ? styles.heroMetricValueLg : null,
+                  { color: c.text },
+                ]}
+              >
                 {data.activeMembers ?? 0}
               </Text>
-              <Text display style={[styles.heroMetricSubValue, { color: c.muted }]}>
+              <Text
+                display
+                latin
+                style={[
+                  styles.heroMetricSubValue,
+                  heroMetricSm ? styles.heroMetricSubValueLg : null,
+                  { color: c.muted },
+                ]}
+              >
                 /{data.totalMembers ?? 0}
               </Text>
             </View>
@@ -372,7 +389,7 @@ export default function DashboardScreen() {
               value={data.dueSoonMembers ?? 0}
               accent={c.statusDueSoon}
               tone="neutral"
-              icon="warning"
+              icon="warning-outline"
               layoutStyle={statCardLayoutStyle}
               onPress={() => goMembers('due_soon')}
             />
@@ -381,7 +398,7 @@ export default function DashboardScreen() {
               value={data.expiredMembers ?? 0}
               accent={c.statusExpired}
               tone="attention"
-              icon="close-circle"
+              icon="close-circle-outline"
               layoutStyle={statCardLayoutStyle}
               onPress={() => goMembers('expired')}
             />
@@ -390,7 +407,7 @@ export default function DashboardScreen() {
               value={data.newMembersThisMonth ?? 0}
               accent={c.statusNew}
               tone="neutral"
-              icon="person-add"
+              icon="person-add-outline"
               caption={t('dashboard.thisMonthCaption')}
               captionColor={c.statusNew}
               layoutStyle={statCardLayoutStyle}
@@ -455,18 +472,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'baseline',
     flexWrap: 'wrap',
-    gap: 6,
+    gap: 8,
     marginTop: 12,
   },
   heroMetricValue: {
-    fontSize: 40,
+    fontSize: 36,
     fontWeight: '700',
-    letterSpacing: -1,
+    letterSpacing: -0.9,
+    fontVariant: ['tabular-nums'],
+  },
+  heroMetricValueLg: {
+    fontSize: 48,
+    letterSpacing: -1.2,
   },
   heroMetricSubValue: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '500',
-    letterSpacing: -0.4,
+    letterSpacing: -0.5,
+    fontVariant: ['tabular-nums'],
+  },
+  heroMetricSubValueLg: {
+    fontSize: 24,
+    letterSpacing: -0.6,
   },
   heroProgressTrack: {
     marginTop: 16,

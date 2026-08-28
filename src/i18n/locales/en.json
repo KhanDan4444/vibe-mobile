@@ -350,6 +350,8 @@
     "appearance": "Appearance",
     "themeLight": "Light",
     "themeDark": "Dark",
+    "themeLightA11y": "Light theme",
+    "themeDarkA11y": "Dark theme",
     "language": "Language",
     "english": "English",
     "amharic": "አማርኛ",
