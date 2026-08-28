@@ -25,6 +25,7 @@ import { MIN_PASSWORD_LENGTH } from '@/src/utils/passwordValidation';
 
 const STEPS = ['phone', 'gym', 'account'] as const;
 type SignupStep = (typeof STEPS)[number];
+const SIGNUP_STEP_DOT_KEYS = ['signup.stepDotPhone', 'signup.stepDotGym', 'signup.stepDotAccount'] as const;
 
 type RegisterDone = {
   gymName: string;
@@ -61,6 +62,7 @@ export default function RegisterGymScreen() {
   const otpRequestInFlight = useRef(false);
 
   const stepIndex = STEPS.indexOf(step);
+  const signupStepLabels = SIGNUP_STEP_DOT_KEYS.map((key) => t(key));
   const stepSubtitle =
     step === 'phone' ? t('signup.stepPhone') : step === 'gym' ? t('signup.stepGym') : t('signup.stepAccount');
   const bannerError = error && Object.keys(fieldErrors).length === 0 ? error : '';
@@ -252,7 +254,18 @@ export default function RegisterGymScreen() {
   }
 
   return (
-    <AuthScreen hero headerCenter={<AuthStepDots activeIndex={stepIndex} steps={3} compact />}>
+    <AuthScreen
+      hero
+      headerCenter={
+        <AuthStepDots
+          activeIndex={stepIndex}
+          steps={STEPS.length}
+          compact
+          stepLabels={signupStepLabels}
+          progressLabel={t('signup.stepProgress', { current: stepIndex + 1, total: STEPS.length })}
+        />
+      }
+    >
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <FormScroll contentContainerStyle={{ paddingTop: 20 }}>
           <AuthFormEnter delay={40}>
@@ -277,9 +290,6 @@ export default function RegisterGymScreen() {
                   placeholder={t('signup.phonePlaceholder')}
                 />
                 <Text style={[styles.hint, { color: AUTH.textDim }]}>{t('signup.phoneHint')}</Text>
-                <Text style={[styles.hint, { color: AUTH.textDim }]}>
-                  {t('signup.trialNote', { days: SIGNUP_TRIAL_DAYS })}
-                </Text>
                 <PrimaryButton label={t('signup.sendOtp')} onPress={requestOtp} loading={loading} />
               </>
             ) : null}
@@ -343,16 +353,15 @@ export default function RegisterGymScreen() {
                 />
                 {fieldErrors.address ? <FieldError message={resolveError(fieldErrors.address)} /> : null}
 
-                <Text style={[styles.hint, { color: AUTH.textDim }]}>
-                  {t('signup.trialNote', { days: SIGNUP_TRIAL_DAYS })}
-                </Text>
-
                 <PrimaryButton label={t('common.continue')} onPress={continueGym} />
               </>
             ) : null}
 
             {step === 'account' ? (
               <>
+                <View style={styles.stepDivider} />
+                <Text style={[styles.sectionTitle, { color: AUTH.textDim }]}>{t('signup.sectionAccount')}</Text>
+
                 <Label>{t('signup.ownerName')}</Label>
                 <Field
                   value={ownerName}
@@ -378,6 +387,7 @@ export default function RegisterGymScreen() {
                   error={Boolean(fieldErrors.username)}
                 />
                 {fieldErrors.username ? <FieldError message={resolveError(fieldErrors.username)} /> : null}
+                <Text style={[styles.hint, { color: AUTH.textDim }]}>{t('signup.usernameHint')}</Text>
 
                 <Label>{t('signup.emailOptional')}</Label>
                 <Field
@@ -392,6 +402,7 @@ export default function RegisterGymScreen() {
                   error={Boolean(fieldErrors.email)}
                 />
                 {fieldErrors.email ? <FieldError message={resolveError(fieldErrors.email)} /> : null}
+                <Text style={[styles.hint, { color: AUTH.textDim }]}>{t('signup.emailHint')}</Text>
 
                 <Label>{t('signup.password')}</Label>
                 <Field

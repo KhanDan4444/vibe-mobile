@@ -1,7 +1,7 @@
 import { ApiError } from '@/src/api/client';
 
 /** True when the request aborted because the server did not respond in time. */
-export function isTimeoutApiError(error: unknown): boolean {
+export function isTimeoutApiError(error: unknown): error is ApiError {
   return error instanceof ApiError && error.code === 'TIMEOUT';
 }
 

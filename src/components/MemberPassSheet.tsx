@@ -162,7 +162,7 @@ export function MemberPassSheet({
       setPass(data);
     } catch (err) {
       setPass(null);
-      setError(userFacingApiMessage(err, t('checkIn.loadPassFailed')));
+      setError(userFacingApiMessage(err, t('auth.connectionFailed'), t('checkIn.loadPassFailed')));
     } finally {
       setLoading(false);
     }
@@ -203,7 +203,7 @@ export function MemberPassSheet({
       }
     } catch (err) {
       showFlash({
-        title: userFacingApiMessage(err, t('checkIn.regeneratePassFailed')),
+        title: userFacingApiMessage(err, t('auth.connectionFailed'), t('checkIn.regeneratePassFailed')),
         variant: 'danger',
       });
     } finally {
@@ -256,7 +256,7 @@ export function MemberPassSheet({
       });
     } catch (err) {
       showFlash({
-        title: userFacingApiMessage(err, t('checkIn.printPassFailed')),
+        title: userFacingApiMessage(err, t('auth.connectionFailed'), t('checkIn.printPassFailed')),
         variant: 'danger',
       });
     } finally {
@@ -280,7 +280,7 @@ export function MemberPassSheet({
       });
     } catch (err) {
       showFlash({
-        title: userFacingApiMessage(err, t('checkIn.passSmsFailed')),
+        title: userFacingApiMessage(err, t('auth.connectionFailed'), t('checkIn.passSmsFailed')),
         variant: 'danger',
       });
     } finally {

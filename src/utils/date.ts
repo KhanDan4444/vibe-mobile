@@ -1,3 +1,5 @@
+import type { TFunction } from 'i18next';
+
 export function toDateString(date: string | Date | null | undefined): string {
   if (!date) return '';
   if (date instanceof Date) {
@@ -57,7 +59,7 @@ export function formatFriendlyDate(date: string | Date | null | undefined, langu
 /** Inbox timestamps: "in 2 days", "yesterday", else a friendly date. */
 export function formatRelativeDay(
   date: string | Date | null | undefined,
-  t?: (key: string, options?: object) => string,
+  t?: TFunction,
   language = 'en',
 ): string {
   if (!date || date === '—' || date === 'Action needed' || date === 'System Alert') return '';
@@ -119,7 +121,7 @@ export function formatDisplayDateTime(
 /** Activity/log timestamps: "Today · 11:34 am" or "04-07-26 · 11:34 am". */
 export function formatLogTimestamp(
   value: string | Date | null | undefined,
-  t?: (key: string, options?: object) => string,
+  t?: TFunction,
   language = 'en',
 ): string {
   if (!value) return '—';

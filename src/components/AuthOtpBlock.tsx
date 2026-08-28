@@ -1,5 +1,11 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { AppText as Text } from '@/src/components/AppText';
@@ -40,8 +46,39 @@ export function AuthOtpBlock({
   const inputRef = useRef<TextInput>(null);
   const maskedPhone = maskPhoneForDisplay(phone);
   const digits = value.replace(/\D/g, '').slice(0, OTP_SLOT_COUNT);
+  const shakeX = useSharedValue(0);
+  const focusRing = useSharedValue(0);
+
+  useEffect(() => {
+    if (!error) return;
+    shakeX.value = withSequence(
+      withTiming(-6, { duration: 45 }),
+      withTiming(6, { duration: 45 }),
+      withTiming(-4, { duration: 45 }),
+      withTiming(4, { duration: 45 }),
+      withTiming(0, { duration: 45 })
+    );
+  }, [error, shakeX]);
+
+  const slotsAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shakeX.value }],
+  }));
+
+  const focusRingStyle = useAnimatedStyle(() => ({
+    borderColor:
+      focusRing.value > 0
+        ? error
+          ? 'rgba(251,113,133,0.55)'
+          : 'rgba(94,234,212,0.48)'
+        : 'transparent',
+  }));
 
   const focusInput = () => inputRef.current?.focus();
+
+  const otpAccessibilityLabel = t('signup.otpInputAriaLabel', {
+    count: digits.length,
+    total: OTP_SLOT_COUNT,
+  });
 
   return (
     <View style={styles.panel}>
@@ -55,42 +92,56 @@ export function AuthOtpBlock({
       </View>
 
       <Pressable onPress={focusInput} accessibilityRole="none">
-        <View style={styles.slotsWrap}>
-          <View style={styles.slotsRow}>
-            {Array.from({ length: OTP_SLOT_COUNT }).map((_, index) => {
-              const filled = Boolean(digits[index]);
-              const active =
-                digits.length === index || (digits.length >= OTP_SLOT_COUNT && index === OTP_SLOT_COUNT - 1);
-              return (
-                <View
-                  key={index}
-                  style={[
-                    styles.slot,
-                    filled ? styles.slotFilled : null,
-                    active ? styles.slotActive : null,
-                    error ? styles.slotError : null,
-                  ]}
-                >
-                  <Text latin style={styles.slotDigit}>
-                    {digits[index] ?? ''}
-                  </Text>
-                </View>
-              );
-            })}
-          </View>
-          <TextInput
-            ref={inputRef}
-            value={digits}
-            onChangeText={(next) => onChange(next.replace(/\D/g, '').slice(0, OTP_SLOT_COUNT))}
-            keyboardType="number-pad"
-            textContentType="oneTimeCode"
-            autoComplete="sms-otp"
-            importantForAutofill="yes"
-            maxLength={OTP_SLOT_COUNT}
-            caretHidden
-            style={styles.hiddenInput}
-          />
-        </View>
+        <Animated.View style={[styles.slotsFocusRing, focusRingStyle]}>
+          <Animated.View style={[styles.slotsWrap, slotsAnimatedStyle]}>
+            <View style={styles.slotsRow}>
+              {Array.from({ length: OTP_SLOT_COUNT }).map((_, index) => {
+                const filled = Boolean(digits[index]);
+                const active =
+                  digits.length === index || (digits.length >= OTP_SLOT_COUNT && index === OTP_SLOT_COUNT - 1);
+                return (
+                  <View
+                    key={index}
+                    style={[
+                      styles.slot,
+                      filled ? styles.slotFilled : null,
+                      active ? styles.slotActive : null,
+                      error ? styles.slotError : null,
+                    ]}
+                    importantForAccessibility="no-hide-descendants"
+                    accessibilityElementsHidden
+                  >
+                    <Text latin style={styles.slotDigit}>
+                      {digits[index] ?? ''}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+            <TextInput
+              ref={inputRef}
+              value={digits}
+              onChangeText={(next) => onChange(next.replace(/\D/g, '').slice(0, OTP_SLOT_COUNT))}
+              keyboardType="number-pad"
+              textContentType="oneTimeCode"
+              autoComplete="sms-otp"
+              importantForAutofill="yes"
+              maxLength={OTP_SLOT_COUNT}
+              caretHidden
+              accessibilityLabel={otpAccessibilityLabel}
+              accessibilityHint={
+                error ? error : `${t('signup.otpSentPrefix')} ${maskedPhone}`
+              }
+              onFocus={() => {
+                focusRing.value = withTiming(1, { duration: 120 });
+              }}
+              onBlur={() => {
+                focusRing.value = withTiming(0, { duration: 120 });
+              }}
+              style={styles.hiddenInput}
+            />
+          </Animated.View>
+        </Animated.View>
       </Pressable>
 
       {error ? <FieldError message={error} /> : null}
@@ -148,6 +199,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: 'rgba(153,246,228,0.92)',
     letterSpacing: 0.2,
+  },
+  slotsFocusRing: {
+    borderWidth: 2,
+    borderRadius: radiusLg + 2,
+    borderColor: 'transparent',
+    padding: 2,
   },
   slotsWrap: {
     position: 'relative',

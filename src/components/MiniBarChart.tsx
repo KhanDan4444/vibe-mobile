@@ -13,6 +13,7 @@ import {
   pickNearestSliceIndex,
 } from '@/src/utils/chartData';
 import { formatChartAmount, formatCompactNumber, formatEtb } from '@/src/utils/formatMoney';
+import { formatDisplayDate } from '@/src/utils/date';
 import { SPACE_GROTESK_BOLD } from '@/src/theme/typography';
 
 const SVG_METRIC_FONT = SPACE_GROTESK_BOLD;

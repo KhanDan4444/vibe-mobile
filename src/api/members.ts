@@ -112,6 +112,7 @@ export type MemberPassResponse = {
   token: string;
   pass_version: number;
   qr_data_url: string;
+  sms_sent?: boolean;
   gym_name?: string | null;
   member: {
     id: number;

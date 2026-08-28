@@ -143,7 +143,7 @@ const styles = {
     fontSize: 24,
     fontWeight: '700' as const,
     letterSpacing: -0.6,
-    fontVariant: ['tabular-nums'] as const,
+    fontVariant: ['tabular-nums' as const],
   },
   label: { marginTop: 4, fontSize: 12, lineHeight: 16 },
   caption: { marginTop: 1, fontSize: 10, fontWeight: '500' as const, lineHeight: 12 },

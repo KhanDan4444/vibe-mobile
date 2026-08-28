@@ -1,4 +1,5 @@
 import type { TFunction } from 'i18next';
+import i18n from '@/src/i18n';
 import type { DashboardNotification } from '@/src/types/api';
 import { formatFriendlyDate, formatRelativeDay } from '@/src/utils/date';
 import { formatEtb } from '@/src/utils/formatMoney';
@@ -130,13 +131,10 @@ export function stripBranchBracketPrefix(message: string | null | undefined): st
   return String(message || '').replace(/^\[[^\]]+\]\s*/, '');
 }
 
-function langFromT(t: TFunction) {
-  return t.i18n?.language || 'en';
-}
-
 function inboxDate(t: TFunction, raw?: string | null) {
   if (!raw || raw === 'Action needed' || raw === 'System Alert') return '';
-  return formatRelativeDay(raw, t, langFromT(t)) || formatFriendlyDate(raw, langFromT(t));
+  const language = i18n.language || 'en';
+  return formatRelativeDay(raw, t, language) || formatFriendlyDate(raw, language);
 }
 
 function planLabel(t: TFunction, notification: DashboardNotification) {

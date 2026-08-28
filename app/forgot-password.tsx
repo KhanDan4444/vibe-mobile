@@ -128,7 +128,18 @@ export default function ForgotPasswordScreen() {
   }
 
   return (
-    <AuthScreen hero headerCenter={<AuthStepDots activeIndex={stepIndex} steps={2} compact />}>
+    <AuthScreen
+      hero
+      headerCenter={
+        <AuthStepDots
+          activeIndex={stepIndex}
+          steps={2}
+          compact
+          stepLabels={[t('forgot.stepDotRequest'), t('forgot.stepDotReset')]}
+          progressLabel={t('forgot.stepProgress', { current: stepIndex + 1, total: 2 })}
+        />
+      }
+    >
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <FormScroll contentContainerStyle={{ paddingTop: 20 }}>
           <AuthFormEnter delay={40}>

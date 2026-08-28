@@ -306,7 +306,7 @@ export default function MemberDetailScreen() {
 
   const openCheckInForMember = () => {
     router.push({
-      pathname: '/(tabs)/check-in',
+      pathname: '/(tabs)/check-in' as never,
       params: {
         q: member.phone || member.name || '',
         memberId: String(member.id),
