@@ -450,13 +450,13 @@ export function CheckInSearchSkeleton({
           style={[styles.checkInCard, multi ? styles.checkInCardHalf : null]}
         >
           <View style={styles.checkInRow}>
-            <SkeletonBone width={88} height={88} radius={44} />
-            <View style={{ flex: 1, gap: 6, minWidth: 0 }}>
+            <SkeletonBone width={72} height={72} radius={36} />
+            <View style={{ flex: 1, gap: 4, minWidth: 0 }}>
               <SkeletonBone width="72%" height={15} />
               <SkeletonBone width="48%" height={12} />
-              <SkeletonBone width={72} height={18} radius={999} style={{ marginTop: 2 }} />
+              <SkeletonBone width={64} height={16} radius={999} style={{ marginTop: 1 }} />
             </View>
-            <SkeletonBone width={92} height={34} radius={8} />
+            <SkeletonBone width={84} height={32} radius={7} />
           </View>
         </SoftSurface>
       ))}
@@ -620,8 +620,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15,118,110,0.35)',
   },
   checkInCard: {
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    paddingVertical: 9,
+    paddingHorizontal: 10,
     marginBottom: 10,
   },
   checkInGrid: {
@@ -638,7 +638,7 @@ const styles = StyleSheet.create({
   checkInRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   statGrid: {
     flexDirection: 'row',

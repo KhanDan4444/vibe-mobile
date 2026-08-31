@@ -19,6 +19,7 @@ import type { AttendanceSettings, CheckInMember } from '@/src/api/checkIns';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { springs, timings } from '@/src/theme/motion';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
+import { effectiveVisitsLimit } from '@/src/utils/attendanceCap';
 
 type CardError = { code: string; message: string };
 
@@ -82,11 +83,11 @@ function CheckInPill({
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 5,
-          minHeight: 34,
-          paddingHorizontal: 11,
-          paddingVertical: 7,
-          borderRadius: 8,
+          gap: 4,
+          minHeight: 32,
+          paddingHorizontal: 10,
+          paddingVertical: 6,
+          borderRadius: 7,
           backgroundColor: idle ? c.border : c.accent,
           opacity: idle ? 0.7 : 1,
         }}
@@ -95,8 +96,9 @@ function CheckInPill({
           <ActivityIndicator size="small" color="#ffffff" />
         ) : (
           <>
-            <Ionicons name="checkmark-circle" size={15} color="#ffffff" />
+            <Ionicons name="checkmark-circle" size={14} color="#ffffff" />
             <Text
+              maxFontSizeMultiplier={1.2}
               style={{
                 fontSize: 12,
                 fontWeight: '700',
@@ -139,8 +141,8 @@ export function CheckInMemberCard({
       flex: 1,
     },
     card: {
-      paddingVertical: 12,
-      paddingHorizontal: 12,
+      paddingVertical: 9,
+      paddingHorizontal: 10,
     },
     cardError: {
       borderWidth: 1,
@@ -150,9 +152,9 @@ export function CheckInMemberCard({
     row: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
-      gap: 12,
+      gap: 10,
     },
-    identity: { flex: 1, minWidth: 0, gap: 3 },
+    identity: { flex: 1, minWidth: 0, gap: 2 },
     name: {
       fontSize: 15,
       fontWeight: '600' as const,
@@ -164,8 +166,12 @@ export function CheckInMemberCard({
       flexDirection: 'row' as const,
       flexWrap: 'wrap' as const,
       alignItems: 'center' as const,
-      gap: 6,
-      marginTop: 2,
+      gap: 4,
+      marginTop: 1,
+    },
+    badgeCompact: {
+      paddingHorizontal: 8,
+      paddingVertical: 2,
     },
     unpaid: { fontSize: 11, fontWeight: '600' as const, color: theme.statusUnpaid },
     errorText: {
@@ -177,7 +183,7 @@ export function CheckInMemberCard({
     },
     actionCol: {
       flexShrink: 0,
-      maxWidth: 120,
+      maxWidth: 100,
       alignItems: 'flex-end' as const,
       justifyContent: 'center' as const,
     },
@@ -194,15 +200,25 @@ export function CheckInMemberCard({
 
   let action: ReactNode;
   if (expired) {
-    action = <Text style={styles.statusText}>{t('checkIn.blockedExpired')}</Text>;
+    action = (
+      <Text maxFontSizeMultiplier={1.2} style={styles.statusText}>
+        {t('checkIn.blockedExpired')}
+      </Text>
+    );
   } else if (checkedIn) {
     action = (
       <Animated.View entering={FadeInRight.duration(180)}>
-        <Text style={styles.statusText}>{t('checkIn.alreadyTodayShort')}</Text>
+        <Text maxFontSizeMultiplier={1.2} style={styles.statusText}>
+          {t('checkIn.alreadyTodayShort')}
+        </Text>
       </Animated.View>
     );
   } else if (cardError?.code === 'WEEKLY_LIMIT') {
-    action = <Text style={styles.statusText}>{t('checkIn.weeklyLimitShort')}</Text>;
+    action = (
+      <Text maxFontSizeMultiplier={1.2} style={styles.statusText}>
+        {t('checkIn.weeklyLimitShort')}
+      </Text>
+    );
   } else {
     action = (
       <CheckInPill
@@ -223,9 +239,8 @@ export function CheckInMemberCard({
         <View style={styles.row}>
           <VisitRing
             visits={member.visits_this_week}
-            limit={member.visits_limit}
-            size={88}
-            stroke={6}
+            limit={effectiveVisitsLimit(member.visits_limit, settings?.visits_per_week)}
+            size={72}
             weekStartsOn={settings?.week_starts_on || member.week_starts_on || 'monday'}
             celebrate={success}
             badge={
@@ -233,7 +248,7 @@ export function CheckInMemberCard({
                 memberId={member.id}
                 name={member.name}
                 token={token}
-                size={26}
+                size={22}
                 hasPhoto={Boolean(member.photo_url)}
               />
             }
@@ -246,7 +261,7 @@ export function CheckInMemberCard({
               {member.phone || '—'}
             </Text>
             <View style={styles.badges}>
-              <StatusBadge status={member.status} showDot={false} />
+              <StatusBadge status={member.status} showDot={false} style={styles.badgeCompact} />
               {member.is_unpaid ? (
                 <Text style={styles.unpaid}>{t('members.unpaidBadge')}</Text>
               ) : null}

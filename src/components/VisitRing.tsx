@@ -74,7 +74,8 @@ export function VisitRing({
   const atLimit = capped && safeVisits >= (limitNum as number);
   const nearLimit =
     capped && !atLimit && safeVisits === (limitNum as number) - 1 && (limitNum as number) > 1;
-  const empty = capped && safeVisits === 0;
+  // Dash track for any zero week — capped or unlimited — so a new week resets to dashes.
+  const empty = safeVisits === 0;
   const lastWeekOfMonth = isLastWeekOfMonth(new Date(), weekStartsOn);
   const warnAmber = nearLimit || (atLimit && !lastWeekOfMonth);
   const warnRed = atLimit && lastWeekOfMonth;
@@ -169,6 +170,7 @@ export function VisitRing({
       bottom: 0,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
+      paddingHorizontal: 4,
     },
     count: {
       fontSize: size >= 84 ? 20 : 18,
@@ -247,18 +249,18 @@ export function VisitRing({
       <Animated.View style={[styles.center, countStyle]} pointerEvents="none">
         {capped ? (
           <>
-            <Text latin display style={[metricDisplayStyle(styles.count), { color: countColor }]}>
+            <Text latin display maxFontSizeMultiplier={1.2} style={[metricDisplayStyle(styles.count), { color: countColor }]}>
               {safeVisits}
-              <Text style={styles.limit}>/{limitNum}</Text>
+              <Text maxFontSizeMultiplier={1.2} style={styles.limit}>/{limitNum}</Text>
             </Text>
-            <Text style={styles.unit}>{t('checkIn.ringUnit')}</Text>
+            <Text maxFontSizeMultiplier={1.2} style={styles.unit}>{t('checkIn.ringUnit')}</Text>
           </>
         ) : (
           <>
-            <Text latin display style={[metricDisplayStyle(styles.count), { color: c.text }]}>
+            <Text latin display maxFontSizeMultiplier={1.2} style={[metricDisplayStyle(styles.count), { color: c.text }]}>
               {safeVisits}
             </Text>
-            <Text style={styles.unit}>{t('checkIn.ringUnit')}</Text>
+            <Text maxFontSizeMultiplier={1.2} style={styles.unit}>{t('checkIn.ringUnit')}</Text>
           </>
         )}
       </Animated.View>

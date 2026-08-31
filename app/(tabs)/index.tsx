@@ -232,9 +232,6 @@ export default function DashboardScreen() {
       {trendLabel ? (
         <Text style={[styles.trend, { color: trendNegative ? c.statusExpired : c.success }]}>{trendLabel}</Text>
       ) : null}
-      <Text style={[styles.muted, { color: c.dim }]}>
-        {t('dashboard.membersTotal', { count: data.totalMembers })}
-      </Text>
       {owner ? (
         <MiniBarChart data={data.revenueChart ?? []} height={chartHeight} />
       ) : null}
@@ -539,7 +536,6 @@ const styles = StyleSheet.create({
     letterSpacing: -0.8,
   },
   trend: { marginTop: 6, fontSize: 13, fontWeight: '600' },
-  muted: { marginTop: 6, fontSize: 13 },
   alertCard: {
     marginTop: space.lg,
     padding: space.lg,

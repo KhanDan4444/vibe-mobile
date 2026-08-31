@@ -1,9 +1,11 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { AppState, PixelRatio, useWindowDimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePathname } from 'expo-router';
 import { useAuth } from '@/src/auth/AuthContext';
 import { useAuthThemeForced } from '@/src/context/AuthThemeContext';
 import { changeAppLanguage, nextLanguage, normalizeLanguage, type AppLanguage, LANGUAGE_LABEL_KEYS } from '@/src/i18n';
+import { MAX_FONT_SCALE } from '@/src/theme/typography';
 import { colorsForTheme, type AppTheme, type ThemeColors } from '@/src/theme/tokens';
 import {
   ensureUserLanguageFromGuest,
@@ -25,6 +27,8 @@ type PreferencesValue = {
   language: AppLanguage;
   colors: ThemeColors;
   isDark: boolean;
+  /** Capped system font scale — updates live when display size changes. */
+  fontScale: number;
   setTheme: (theme: AppTheme) => void;
   cycleTheme: () => void;
   setLanguage: (lng: AppLanguage) => void;
@@ -33,10 +37,16 @@ type PreferencesValue = {
 
 const PreferencesContext = createContext<PreferencesValue | null>(null);
 
+function readFontScale() {
+  return Math.min(PixelRatio.getFontScale(), MAX_FONT_SCALE);
+}
+
 export function PreferencesProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const pathname = usePathname();
   const onAuthRoute = isAuthPath(pathname);
+  const windowDims = useWindowDimensions();
+  const [fontScale, setFontScale] = useState(readFontScale);
   const [theme, setThemeState] = useState<AppTheme>('dark');
   const [language, setLanguageState] = useState<AppLanguage>('en');
   const [hydrated, setHydrated] = useState(false);
@@ -45,6 +55,21 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
   /** Prevents hydrate from overwriting the language just carried across login/logout. */
   const skipHydrateLanguageRef = useRef(false);
   languageRef.current = language;
+
+  // Live system font scale — Dimensions fires on most devices; AppState covers the rest.
+  useEffect(() => {
+    setFontScale(Math.min(windowDims.fontScale || 1, MAX_FONT_SCALE));
+  }, [windowDims.fontScale]);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        const next = readFontScale();
+        setFontScale((prev) => (prev !== next ? next : prev));
+      }
+    });
+    return () => sub.remove();
+  }, []);
 
   useEffect(() => {
     const scope = user ? `${user.gym_id ?? ''}:${user.id ?? ''}` : 'guest';
@@ -143,12 +168,13 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
       language,
       colors,
       isDark: theme === 'dark',
+      fontScale,
       setTheme,
       cycleTheme,
       setLanguage,
       hydrated,
     }),
-    [theme, language, colors, setTheme, cycleTheme, setLanguage, hydrated]
+    [theme, language, colors, fontScale, setTheme, cycleTheme, setLanguage, hydrated]
   );
 
   return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>;
@@ -165,15 +191,16 @@ export function useTheme() {
   const authForced = useAuthThemeForced();
   const pathname = usePathname();
   const onAuthRoute = isAuthPath(pathname);
-  const { colors, theme, isDark, cycleTheme, setTheme } = usePreferences();
+  const { colors, theme, isDark, fontScale, cycleTheme, setTheme } = usePreferences();
   if (authForced || onAuthRoute) {
     return {
       colors: colorsForTheme('dark'),
       theme: 'dark' as AppTheme,
       isDark: true,
+      fontScale,
       cycleTheme,
       setTheme,
     };
   }
-  return { colors, theme, isDark, cycleTheme, setTheme };
+  return { colors, theme, isDark, fontScale, cycleTheme, setTheme };
 }

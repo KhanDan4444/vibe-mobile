@@ -13,7 +13,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { AppText as Text } from '@/src/components/AppText';
 import { AttendanceHistorySheet } from '@/src/components/AttendanceHistorySheet';
@@ -48,15 +48,19 @@ import { useTheme } from '@/src/context/PreferencesContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useTabBarOverlayInset } from '@/src/theme/tabBar';
-import { timings } from '@/src/theme/motion';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { metricDisplayStyle } from '@/src/theme/typography';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { todayString, formatDisplayDate, formatDisplayTime } from '@/src/utils/date';
 import { isGymOwner } from '@/src/utils/roles';
+import {
+  effectiveVisitsLimit,
+  effectiveVisitsPerWeek,
+  WEEKLY_VISIT_CAP_DEFAULT,
+} from '@/src/utils/attendanceCap';
 
-const CAP_OPTIONS: { value: number | null; labelKey: string }[] = [
-  { value: null, labelKey: 'checkIn.capUnlimited' },
+const CAP_OPTIONS: { value: number; labelKey: string }[] = [
+  { value: WEEKLY_VISIT_CAP_DEFAULT, labelKey: 'checkIn.capDays' },
   { value: 4, labelKey: 'checkIn.capDays' },
   { value: 5, labelKey: 'checkIn.capDays' },
   { value: 6, labelKey: 'checkIn.capDays' },
@@ -243,8 +247,9 @@ export default function CheckInScreen() {
 
   const capChipLabel = useMemo(() => {
     if (!settings) return null;
-    if (settings.visits_per_week == null) return t('checkIn.capChipUnlimited');
-    return t('checkIn.capChipDays', { count: settings.visits_per_week });
+    return t('checkIn.capChipDays', {
+      count: effectiveVisitsPerWeek(settings.visits_per_week),
+    });
   }, [settings, t]);
 
   const invalidateCheckIns = useCallback(async () => {
@@ -833,14 +838,7 @@ export default function CheckInScreen() {
                   <Text display style={[styles.sectionTitle, { marginBottom: 0 }]}>
                     {t('checkIn.checkedInTodayTitle')}
                   </Text>
-                  <Text style={styles.todayDate}>
-                    {todayRows.length > 0
-                      ? t('checkIn.todayMeta', {
-                          date: formatDisplayDate(todayString()),
-                          count: todayRows.length,
-                        })
-                      : formatDisplayDate(todayString())}
-                  </Text>
+                  <Text style={styles.todayDate}>{formatDisplayDate(todayString())}</Text>
                 </View>
                 <Pressable
                   accessibilityRole="button"
@@ -872,7 +870,6 @@ export default function CheckInScreen() {
             ) : null}
 
             {todayRows.length > 0 ? (
-              <Animated.View entering={FadeInDown.duration(timings.enterMs).springify().damping(22)}>
                 <SoftSurface variant="panel" style={styles.todayCard}>
                   {visibleTodayRows.map((row, index) => (
                     <View key={row.id}>
@@ -940,7 +937,6 @@ export default function CheckInScreen() {
                     </View>
                   ) : null}
                 </SoftSurface>
-              </Animated.View>
             ) : null}
           </View>
         }
@@ -963,13 +959,12 @@ export default function CheckInScreen() {
       >
         <Text style={styles.sheetBody}>{t('checkIn.visitRulesBody')}</Text>
         {CAP_OPTIONS.map((opt) => {
-          const active = (settings?.visits_per_week ?? null) === opt.value;
+          const active =
+            effectiveVisitsPerWeek(settings?.visits_per_week) === opt.value;
           return (
             <SheetOption
               key={String(opt.value)}
-              label={
-                opt.value == null ? t(opt.labelKey) : t(opt.labelKey, { count: opt.value })
-              }
+              label={t(opt.labelKey, { count: opt.value })}
               selected={active}
               onPress={() => {
                 if (readOnly || saveCapMutation.isPending) return;

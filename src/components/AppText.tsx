@@ -31,7 +31,7 @@ type LatinOpt = {
  * - Amharic → Noto Sans Ethiopic (+ taller line height so glyphs are not clipped)
  */
 export function AppText({ style, latin, display, listRow, maxFontSizeMultiplier, ...props }: TextProps & LatinOpt & { maxFontSizeMultiplier?: number }) {
-  const { language } = usePreferences();
+  const { language, fontScale } = usePreferences();
   const lang = latin ? 'en' : language;
   const flat = flattenStyle(style);
   const resolved = display
@@ -42,6 +42,7 @@ export function AppText({ style, latin, display, listRow, maxFontSizeMultiplier,
   return (
     <Text
       {...props}
+      key={`fs-${fontScale}`}
       maxFontSizeMultiplier={maxFontSizeMultiplier ?? MAX_FONT_SCALE}
       style={resolved}
     />
@@ -55,7 +56,7 @@ export const AppTextInput = forwardRef<TextInput, TextInputProps & LatinOpt & { 
   { style, latin, display, listRow, maxFontSizeMultiplier, ...props },
   ref,
 ) {
-  const { language } = usePreferences();
+  const { language, fontScale } = usePreferences();
   const lang = latin ? 'en' : language;
   const flat = flattenStyle(style);
   const resolved = display
@@ -66,6 +67,7 @@ export const AppTextInput = forwardRef<TextInput, TextInputProps & LatinOpt & { 
   return (
     <TextInput
       ref={ref}
+      key={`fs-${fontScale}`}
       underlineColorAndroid="transparent"
       maxFontSizeMultiplier={maxFontSizeMultiplier ?? MAX_FONT_SCALE}
       {...props}

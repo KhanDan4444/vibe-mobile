@@ -140,7 +140,21 @@ export function regenerateMemberPass(token: string, id: number) {
 }
 
 export function sendMemberPassSms(token: string, id: number) {
-  return apiRequest<{ ok: boolean; phone: string }>(`/members/${id}/pass/sms`, {
+  return apiRequest<{ ok: boolean; phone: string | null; channel?: string }>(`/members/${id}/pass/sms`, {
+    method: 'POST',
+    token,
+  });
+}
+
+export function createMemberTelegramLink(token: string, id: number) {
+  return apiRequest<{
+    ok: boolean;
+    link: string | null;
+    qr_data_url?: string | null;
+    already_linked?: boolean;
+    expires_at?: string;
+    expires_in_seconds?: number;
+  }>(`/members/${id}/telegram/link-token`, {
     method: 'POST',
     token,
   });

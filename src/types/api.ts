@@ -73,6 +73,7 @@ export interface MemberRow {
   id: number;
   name: string;
   phone: string | null;
+  telegram_chat_id?: string | null;
   plan_id: number | null;
   plan_name: string | null;
   start_date: string;
@@ -139,6 +140,7 @@ export interface TrainersResponse {
 export interface MemberSmsRow {
   id: number;
   recipient_phone: string;
+  channel?: string | null;
   message_type: string;
   member_id: number;
   message_id: string | null;

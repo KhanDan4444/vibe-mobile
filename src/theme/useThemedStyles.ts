@@ -6,6 +6,7 @@ import type { ThemeColors } from '@/src/theme/tokens';
 type NamedStyles = Record<string, ViewStyle | TextStyle | ImageStyle>;
 
 export function useThemedStyles<T extends NamedStyles>(factory: (c: ThemeColors) => T): T {
-  const { colors } = useTheme();
-  return useMemo(() => StyleSheet.create(factory(colors)), [colors]);
+  const { colors, fontScale } = useTheme();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- factory is stable per screen; fontScale must bust cache.
+  return useMemo(() => StyleSheet.create(factory(colors)), [colors, fontScale]);
 }

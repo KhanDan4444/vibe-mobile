@@ -16,9 +16,9 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useNetwork } from '@/src/offline/NetworkProvider';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
-import { DM_SANS, DM_SANS_SEMI, NOTO_ETHIOPIC, effectiveFontScale, scaleLineHeight } from '@/src/theme/typography';
+import { useTabBarMetrics } from '@/src/theme/tabBar';
+import { badgeTextProps, DM_SANS, DM_SANS_SEMI, NOTO_ETHIOPIC, scaleLineHeight } from '@/src/theme/typography';
 import { hasGymPortalAccess } from '@/src/utils/roles';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const headerRight = () => <AppHeaderRight />;
 const TAB_ROUTES = [
@@ -55,13 +55,11 @@ export default function TabLayout() {
   const { language } = usePreferences();
   const { t } = useTranslation();
   const { isOnline } = useNetwork();
-  const insets = useSafeAreaInsets();
   const { tabIconSize, isTablet } = useResponsiveLayout();
+  const { bodyHeight: tabBarCoreHeight, bottomPadding: tabBarBottom, totalHeight: tabBarHeight } =
+    useTabBarMetrics();
   const pathname = usePathname();
-  const tabBarBottom = Math.max(insets.bottom, isTablet ? 10 : 6);
-  const fontScale = effectiveFontScale();
   const tabLabelSize = isTablet ? 12 : 11;
-  const tabBarCoreHeight = Math.ceil((isTablet ? 58 : 52) * fontScale);
   const tabIndex = activeTabIndex(pathname);
   const isAm = language === 'am';
 
@@ -69,6 +67,7 @@ export default function TabLayout() {
     function TabLabel({ focused, color }: { focused: boolean; color: string }) {
       return (
         <Text
+          {...badgeTextProps}
           style={[
             {
               color,
@@ -126,7 +125,7 @@ export default function TabLayout() {
               borderTopColor: c.tabBarBorder,
               borderTopWidth: StyleSheet.hairlineWidth,
               paddingBottom: tabBarBottom,
-              height: tabBarCoreHeight + tabBarBottom,
+              height: tabBarHeight,
               elevation: 0,
               shadowOpacity: 0,
             },

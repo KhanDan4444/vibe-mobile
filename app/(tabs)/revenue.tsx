@@ -32,15 +32,13 @@ import { formatDisplayDate } from '@/src/utils/date';
 import { formatEtb } from '@/src/utils/formatMoney';
 import { DEFAULT_REVENUE_SORT, type RevenueSortId } from '@/src/utils/listSort';
 import { paymentSourceKey } from '@/src/utils/termPayments';
-import { statusLabelKey } from '@/src/utils/statusLabels';
 import { isGymOwner } from '@/src/utils/roles';
 import { scheduleDeleteWithUndo } from '@/src/utils/scheduleWithUndo';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { FilterChip } from '@/src/components/FilterChip';
 import { SearchField } from '@/src/components/SearchField';
 import { fieldRingStyle } from '@/src/theme/fieldChrome';
-import { type ThemeColors } from '@/src/theme/tokens';
-import type { PaymentListRow, UnpaidMemberSummary } from '@/src/types/api';
+import type { PaymentListRow } from '@/src/types/api';
 
 /** Soft teal wash for the revenue hero — presence without glow spam. */
 function RevenueHeroAtmosphere({ isLight }: { isLight: boolean }) {
@@ -284,58 +282,6 @@ function MethodStat({
   );
 }
 
-function attentionColor(status: string, c: ThemeColors) {
-  const s = status.toLowerCase();
-  if (s === 'expired') return c.statusExpired;
-  if (s === 'due soon') return c.warning;
-  return c.statusUnpaid;
-}
-
-function AttentionCard({
-  member,
-  onPress,
-  wide,
-}: {
-  member: UnpaidMemberSummary;
-  onPress: () => void;
-  wide?: boolean;
-}) {
-  const styles = useThemedStyles((c) => ({
-    attentionCard: {
-      width: 170,
-      padding: 12,
-      marginRight: 10,
-    },
-    attentionCardWide: {
-      width: undefined,
-      flexGrow: 1,
-      flexBasis: '30%',
-      maxWidth: '32%',
-      marginRight: 0,
-      marginBottom: 10,
-    },
-    attentionName: { color: c.text, fontSize: 14, fontWeight: '600' as const },
-    attentionMeta: { marginTop: 6, color: c.dim, fontSize: 12 },
-    attentionStatus: { marginTop: 8, fontSize: 11, fontWeight: '500' as const },
-  }));
-  const { language } = usePreferences();
-  const { colors: themeColors } = useTheme();
-  const { t } = useTranslation();
-
-  return (
-    <SoftSurface
-      onPress={onPress}
-      style={[styles.attentionCard, wide && styles.attentionCardWide]}
-    >
-      <Text listRow style={styles.attentionName} numberOfLines={1}>{member.name}</Text>
-      <Text style={appTextStyle(language, styles.attentionMeta)}>{formatDisplayDate(member.end_date)}</Text>
-      <Text style={appTextStyle(language, { ...styles.attentionStatus, color: attentionColor(member.status, themeColors) })}>
-        {t(statusLabelKey(member.status))}
-      </Text>
-    </SoftSurface>
-  );
-}
-
 export default function RevenueScreen() {
   const router = useRouter();
   const { t } = useTranslation();
@@ -414,18 +360,13 @@ export default function RevenueScreen() {
     listHeadingText: { fontSize: 15, fontWeight: '600' as const, letterSpacing: -0.15, color: colors.text },
     listHeadingCount: { fontSize: 12, color: colors.dim },
     hint: { fontSize: 13, color: colors.dim, marginBottom: 8 },
-    attentionSection: { marginTop: 16 },
-    attentionHeader: { flexDirection: 'row' as const, justifyContent: 'space-between' as const, alignItems: 'center' as const, marginBottom: 10 },
-    attentionTitle: { color: colors.text, fontSize: 15, fontWeight: '600' as const, letterSpacing: -0.15 },
-    attentionLink: { color: colors.accentText, fontSize: 13, fontWeight: '600' as const },
-    attentionList: { paddingRight: 8 },
     list: { paddingBottom: 28 },
     emptyWrap: { alignItems: 'center' as const, paddingTop: 48, gap: 12, alignSelf: 'center' as const, maxWidth: 360 },
     empty: { textAlign: 'center' as const, color: colors.dim, fontSize: 15 },
   }));
   const owner = isGymOwner(user?.role);
   const { readOnly } = useGymReadOnly();
-  const { pagePadding, isTablet, listColumnItemStyle } = useResponsiveLayout();
+  const { pagePadding, listColumnItemStyle } = useResponsiveLayout();
   const tabOverlayInset = useTabBarOverlayInset();
   const listColumns = 1;
   const { selectedBranchId, showBranchFilter } = useBranchScope();
@@ -475,10 +416,6 @@ export default function RevenueScreen() {
   const summary = query.data?.pages[0]?.summary;
   const byMethod = summary?.byMethod ?? {};
   const methodEntries = PAYMENT_METHODS.filter((m) => Number(byMethod[m] || 0) > 0);
-  const unpaidMembers = query.data?.pages[0]?.unpaidMembers ?? [];
-  const attentionMembers = unpaidMembers
-    .filter((m) => ['expired', 'due soon'].includes(m.status.toLowerCase()))
-    .slice(0, 8);
 
   const periodLabel = customRangeReady
     ? `${formatDisplayDate(customFrom)} – ${formatDisplayDate(customTo)}`
@@ -563,39 +500,6 @@ export default function RevenueScreen() {
         </View>
       </SoftSurface>
 
-      {attentionMembers.length ? (
-        <View style={styles.attentionSection}>
-          <View style={styles.attentionHeader}>
-            <Text display style={styles.attentionTitle}>{t('revenue.attentionTitle')}</Text>
-            <Pressable onPress={() => router.push('/(tabs)/members?filter=unpaid')}>
-              <Text style={appTextStyle(language, styles.attentionLink)}>{t('revenue.viewUnpaid')}</Text>
-            </Pressable>
-          </View>
-          {isTablet ? (
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-              {attentionMembers.map((member) => (
-                <AttentionCard
-                  key={member.id}
-                  member={member}
-                  wide
-                  onPress={() => router.push(`/member/${member.id}`)}
-                />
-              ))}
-            </View>
-          ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.attentionList}>
-              {attentionMembers.map((member) => (
-                <AttentionCard
-                  key={member.id}
-                  member={member}
-                  onPress={() => router.push(`/member/${member.id}`)}
-                />
-              ))}
-            </ScrollView>
-          )}
-        </View>
-      ) : null}
-
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.periodRow}>
         {QUICK_PERIODS.map((p) => {
           const active = !useCustomRange && preset === p.value;
@@ -639,11 +543,9 @@ export default function RevenueScreen() {
 
       <View style={styles.listHeading}>
         <Text display style={styles.listHeadingText}>{t('revenue.transactions')}</Text>
-        {!query.isLoading ? (
-          <Text style={appTextStyle(language, styles.listHeadingCount)}>
-            {t('revenue.shown', { count: payments.length })}
-          </Text>
-        ) : null}
+        <Text style={appTextStyle(language, styles.listHeadingCount)}>
+          {t('revenue.shown', { count: screenLoading ? 0 : payments.length })}
+        </Text>
       </View>
 
       {useCustomRange && !customRangeReady ? (
@@ -652,65 +554,68 @@ export default function RevenueScreen() {
     </View>
   );
 
+  const listEmpty = (() => {
+    if (screenLoading) {
+      return <PageSkeleton variant="payments" padded={false} />;
+    }
+    if (query.isError && !query.data) {
+      return <LoadError error={query.error} onRetry={() => void query.refetch()} />;
+    }
+    if (!useCustomRange || customRangeReady) {
+      return (
+        <EmptyState
+          icon="receipt-outline"
+          title={t('revenue.emptyTitle')}
+          body={t('revenue.emptyBody')}
+        />
+      );
+    }
+    return null;
+  })();
+
   return (
     <TabScreenFrame>
     <View style={styles.container}>
       <BranchFilterBar horizontalPadding={pagePadding} />
 
-      {screenLoading ? (
-        <View style={{ flex: 1, paddingHorizontal: pagePadding }}>
-          {listHeader}
-          <PageSkeleton variant="payments" padded={false} />
-        </View>
-      ) : query.isError ? (
-        <View style={{ flex: 1, paddingHorizontal: pagePadding }}>
-          {listHeader}
-          <LoadError error={query.error} onRetry={() => void query.refetch()} />
-        </View>
-      ) : (
-        <FlatList
-          key={`revenue-cols-${listColumns}`}
-          data={payments}
-          numColumns={listColumns}
-          columnWrapperStyle={listColumns > 1 ? { gap: 10 } : undefined}
-          keyExtractor={(item) => String(item.id)}
-          ListHeaderComponent={listHeader}
-          renderItem={({ item }) => (
-            <PaymentRowItem
-              payment={item}
-              token={token!}
-              owner={owner}
-              readOnly={readOnly}
-              multiColumn={listColumns > 1}
-              columnStyle={listColumnItemStyle}
-              onOpenMember={() => router.push(`/member/${item.member_id}`)}
-              onEdit={() => openEdit(item)}
-              onDelete={() => setDeleteTarget(item)}
-            />
-          )}
-          contentContainerStyle={[
-            styles.list,
-            { paddingHorizontal: pagePadding, paddingBottom: 28 + tabOverlayInset },
-          ]}
-          refreshControl={<RefreshControl refreshing={pullRefreshing(query.isRefetching, query.isFetchingNextPage)} onRefresh={() => query.refetch()} tintColor={c.accentText} />}
-          onEndReached={() => {
-            if (query.hasNextPage && !query.isFetchingNextPage) query.fetchNextPage();
-          }}
-          onEndReachedThreshold={0.4}
-          ListEmptyComponent={
-            !useCustomRange || customRangeReady ? (
-              <EmptyState
-                icon="receipt-outline"
-                title={t('revenue.emptyTitle')}
-                body={t('revenue.emptyBody')}
-              />
-            ) : null
-          }
-          ListFooterComponent={
-            query.isFetchingNextPage ? <ListFooterSkeleton /> : null
-          }
-        />
-      )}
+      {/* Always FlatList — swapping View↔FlatList remounted the header and felt like a shake. */}
+      <FlatList
+        data={screenLoading || (query.isError && !query.data) ? [] : payments}
+        numColumns={listColumns}
+        columnWrapperStyle={listColumns > 1 ? { gap: 10 } : undefined}
+        keyExtractor={(item) => String(item.id)}
+        ListHeaderComponent={listHeader}
+        renderItem={({ item }) => (
+          <PaymentRowItem
+            payment={item}
+            token={token!}
+            owner={owner}
+            readOnly={readOnly}
+            multiColumn={listColumns > 1}
+            columnStyle={listColumnItemStyle}
+            onOpenMember={() => router.push(`/member/${item.member_id}`)}
+            onEdit={() => openEdit(item)}
+            onDelete={() => setDeleteTarget(item)}
+          />
+        )}
+        contentContainerStyle={[
+          styles.list,
+          { paddingHorizontal: pagePadding, paddingBottom: 28 + tabOverlayInset },
+        ]}
+        refreshControl={
+          <RefreshControl
+            refreshing={pullRefreshing(query.isRefetching, query.isFetchingNextPage)}
+            onRefresh={() => query.refetch()}
+            tintColor={c.accentText}
+          />
+        }
+        onEndReached={() => {
+          if (query.hasNextPage && !query.isFetchingNextPage) query.fetchNextPage();
+        }}
+        onEndReachedThreshold={0.4}
+        ListEmptyComponent={listEmpty}
+        ListFooterComponent={query.isFetchingNextPage ? <ListFooterSkeleton /> : null}
+      />
 
       <ConfirmDialog
         visible={Boolean(deleteTarget)}

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Image, Pressable, Share, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -8,6 +8,8 @@ import { BottomSheet } from '@/src/components/BottomSheet';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import {
+  createMemberTelegramLink,
+  fetchMember,
   fetchMemberPass,
   regenerateMemberPass,
   sendMemberPassSms,
@@ -72,19 +74,35 @@ export function MemberPassSheet({
   memberId,
   memberName,
   memberPhone,
+  telegramChatId,
   onClose,
+  onTelegramLinked,
 }: {
   visible: boolean;
   memberId: number;
   memberName: string;
   memberPhone?: string | null;
+  telegramChatId?: string | null;
   onClose: () => void;
+  onTelegramLinked?: () => void;
 }) {
   const { t } = useTranslation();
   const { token, user } = useAuth();
   const { colors: c } = useTheme();
   const { showFlash } = useFlash();
   const owner = isGymOwner(user?.role);
+  const [liveTelegramChatId, setLiveTelegramChatId] = useState<string | null>(telegramChatId ?? null);
+  const [showTelegramSetup, setShowTelegramSetup] = useState(false);
+  const [telegramSetupFromSendPass, setTelegramSetupFromSendPass] = useState(false);
+  const telegramSetupFromSendPassRef = useRef(false);
+  const telegramLinkedRef = useRef(false);
+  telegramSetupFromSendPassRef.current = telegramSetupFromSendPass;
+
+  const telegramLinked = Boolean(liveTelegramChatId);
+  telegramLinkedRef.current = telegramLinked;
+  const canSendPass = telegramLinked;
+  const onPassView = telegramLinked || !showTelegramSetup;
+
   const styles = useThemedStyles((colors) => ({
     card: {
       overflow: 'hidden' as const,
@@ -143,6 +161,87 @@ export function MemberPassSheet({
       paddingHorizontal: 8,
     },
     regenText: { fontSize: 13, fontWeight: '600' as const, color: colors.accentText },
+    telegramLinked: {
+      marginTop: 10,
+      fontSize: 12,
+      fontWeight: '600' as const,
+      color: colors.accentText,
+      textAlign: 'center' as const,
+    },
+    linkTelegramBtn: {
+      marginTop: 10,
+      alignSelf: 'center' as const,
+      paddingVertical: 4,
+      paddingHorizontal: 6,
+    },
+    linkTelegramText: { fontSize: 12, fontWeight: '600' as const, color: colors.accentText },
+    backToPass: {
+      alignSelf: 'flex-start' as const,
+      marginBottom: 10,
+      paddingVertical: 4,
+      paddingHorizontal: 2,
+    },
+    backToPassText: { fontSize: 12, fontWeight: '600' as const, color: colors.accentText },
+    telegramBanner: {
+      marginBottom: 10,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: `${colors.accentText}40`,
+      backgroundColor: `${colors.accentText}14`,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    telegramBannerText: {
+      fontSize: 12,
+      lineHeight: 17,
+      color: colors.accentText,
+      textAlign: 'center' as const,
+    },
+    telegramPanel: {
+      marginTop: 4,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.card,
+      paddingHorizontal: 14,
+      paddingVertical: 14,
+    },
+    telegramTitle: {
+      fontSize: 14,
+      fontWeight: '600' as const,
+      color: colors.text,
+      textAlign: 'center' as const,
+    },
+    telegramHint: {
+      marginTop: 4,
+      fontSize: 12,
+      lineHeight: 17,
+      color: colors.muted,
+      textAlign: 'center' as const,
+    },
+    telegramQr: {
+      width: 180,
+      height: 180,
+      borderRadius: radiusLg,
+      backgroundColor: '#fff',
+      marginTop: 12,
+      alignSelf: 'center' as const,
+    },
+    telegramUrl: {
+      marginTop: 10,
+      fontSize: 11,
+      lineHeight: 16,
+      color: colors.muted,
+      textAlign: 'center' as const,
+    },
+    telegramActions: { marginTop: 10 },
+    telegramRefresh: {
+      marginTop: 10,
+      alignSelf: 'center' as const,
+      paddingVertical: 6,
+      paddingHorizontal: 8,
+    },
+    telegramRefreshText: { fontSize: 12, fontWeight: '600' as const, color: colors.accentText },
   }));
 
   const [loading, setLoading] = useState(false);
@@ -152,6 +251,77 @@ export function MemberPassSheet({
   const [regenerating, setRegenerating] = useState(false);
   const [printing, setPrinting] = useState(false);
   const [smsSending, setSmsSending] = useState(false);
+  const [telegramLinking, setTelegramLinking] = useState(false);
+  const [telegramLink, setTelegramLink] = useState<{
+    link: string;
+    qr_data_url?: string | null;
+    expires_in_seconds?: number;
+  } | null>(null);
+
+  const refreshMember = useCallback(async () => {
+    if (!token || !memberId) return null;
+    try {
+      const data = await fetchMember(token, memberId);
+      setLiveTelegramChatId(data.telegram_chat_id ?? null);
+      return data;
+    } catch {
+      return null;
+    }
+  }, [token, memberId]);
+
+  const sendPassLink = useCallback(async () => {
+    if (!token) return false;
+    setSmsSending(true);
+    try {
+      const data = await sendMemberPassSms(token, memberId);
+      const viaTelegram = data.channel === 'telegram';
+      showFlash({
+        title: t('checkIn.passSmsSentTitle'),
+        subtitle: viaTelegram
+          ? t('checkIn.passTelegramSentSub', { name: memberName })
+          : t('checkIn.passSmsSentSub', { name: memberName, phone: data.phone || memberPhone }),
+        variant: 'success',
+      });
+      return true;
+    } catch (err) {
+      showFlash({
+        title: userFacingApiMessage(err, t('auth.connectionFailed'), t('checkIn.passSmsFailed')),
+        variant: 'danger',
+      });
+      return false;
+    } finally {
+      setSmsSending(false);
+    }
+  }, [token, memberId, memberName, memberPhone, showFlash, t]);
+
+  const handleTelegramLinked = useCallback(
+    async (fromSendPass: boolean) => {
+      setTelegramLink(null);
+      setShowTelegramSetup(false);
+      setTelegramSetupFromSendPass(false);
+      onTelegramLinked?.();
+      if (fromSendPass) {
+        await sendPassLink();
+        return;
+      }
+      showFlash({
+        title: t('checkIn.telegramLinked'),
+        variant: 'success',
+      });
+    },
+    [onTelegramLinked, sendPassLink, showFlash, t]
+  );
+
+  const handleTelegramUnlinked = useCallback(() => {
+    setTelegramLink(null);
+    setShowTelegramSetup(false);
+    setTelegramSetupFromSendPass(false);
+    onTelegramLinked?.();
+    showFlash({
+      title: t('checkIn.telegramUnlinked'),
+      variant: 'success',
+    });
+  }, [onTelegramLinked, showFlash, t]);
 
   const load = useCallback(async () => {
     if (!token || !memberId) return;
@@ -169,14 +339,38 @@ export function MemberPassSheet({
   }, [token, memberId, t]);
 
   useEffect(() => {
+    setLiveTelegramChatId(telegramChatId ?? null);
+  }, [telegramChatId]);
+
+  useEffect(() => {
     if (!visible) {
       setPass(null);
       setError('');
       setConfirmRegen(false);
+      setTelegramLink(null);
+      setShowTelegramSetup(false);
+      setTelegramSetupFromSendPass(false);
       return;
     }
     void load();
-  }, [visible, load]);
+    void refreshMember();
+  }, [visible, load, refreshMember]);
+
+  useEffect(() => {
+    if (!visible || (!telegramLinked && !telegramLink)) return undefined;
+    const timer = setInterval(() => {
+      void refreshMember().then((data) => {
+        const wasLinked = telegramLinkedRef.current;
+        const nowLinked = Boolean(data?.telegram_chat_id);
+        if (!wasLinked && nowLinked) {
+          void handleTelegramLinked(telegramSetupFromSendPassRef.current);
+        } else if (wasLinked && !nowLinked) {
+          handleTelegramUnlinked();
+        }
+      });
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [visible, telegramLinked, telegramLink, refreshMember, handleTelegramLinked, handleTelegramUnlinked]);
 
   const onRegenerate = async () => {
     if (!token || regenerating) return;
@@ -266,29 +460,169 @@ export function MemberPassSheet({
 
   const onSms = async () => {
     if (!token || smsSending) return;
-    if (!memberPhone) {
-      showFlash({ title: t('checkIn.passNoPhone'), variant: 'danger' });
+    if (!canSendPass) {
+      setTelegramSetupFromSendPass(true);
+      setShowTelegramSetup(true);
+      if (!telegramLink) void onTelegramLink();
       return;
     }
-    setSmsSending(true);
+    await sendPassLink();
+  };
+
+  const onTelegramLink = async () => {
+    if (!token || telegramLinking || telegramLinked) return;
+    setShowTelegramSetup(true);
+    setTelegramLinking(true);
     try {
-      const data = await sendMemberPassSms(token, memberId);
-      showFlash({
-        title: t('checkIn.passSmsSentTitle'),
-        subtitle: t('checkIn.passSmsSentSub', { name: memberName, phone: data.phone || memberPhone }),
-        variant: 'success',
-      });
+      const data = await createMemberTelegramLink(token, memberId);
+      if (data.already_linked) {
+        await refreshMember();
+        await handleTelegramLinked(telegramSetupFromSendPassRef.current);
+        return;
+      }
+      if (data.link) {
+        setTelegramLink({
+          link: data.link,
+          qr_data_url: data.qr_data_url,
+          expires_in_seconds: data.expires_in_seconds,
+        });
+      }
     } catch (err) {
       showFlash({
-        title: userFacingApiMessage(err, t('auth.connectionFailed'), t('checkIn.passSmsFailed')),
+        title: userFacingApiMessage(err, t('auth.connectionFailed'), t('checkIn.telegramLinkFailed')),
         variant: 'danger',
       });
     } finally {
-      setSmsSending(false);
+      setTelegramLinking(false);
     }
   };
 
-  const busy = loading || regenerating || printing || smsSending;
+  const onShareTelegramLink = async () => {
+    if (!telegramLink?.link) return;
+    try {
+      await Share.share({ message: telegramLink.link });
+    } catch {
+      /* user dismissed */
+    }
+  };
+
+  const busy = loading || regenerating || printing || smsSending || telegramLinking;
+
+  const passCard = (
+    <SoftSurface variant="quiet" style={styles.card}>
+      <View style={styles.brandBar} />
+      <View style={styles.body}>
+        {loading ? (
+          <ActivityIndicator color={c.accent} />
+        ) : (
+          <>
+            {pass?.gym_name ? (
+              <Text style={styles.gym} numberOfLines={2}>
+                {pass.gym_name}
+              </Text>
+            ) : null}
+            <Text style={styles.passSubtitle}>{t('checkIn.memberPassTitle')}</Text>
+            <Text display style={styles.name} numberOfLines={2}>
+              {memberName}
+            </Text>
+            {memberPhone ? <Text style={styles.phone}>{memberPhone}</Text> : null}
+            {pass?.qr_data_url ? (
+              <Image
+                source={{ uri: pass.qr_data_url }}
+                style={styles.qr}
+                accessibilityLabel={t('checkIn.memberPassQrAlt', { name: memberName })}
+              />
+            ) : (
+              <View style={[styles.qr, { alignItems: 'center', justifyContent: 'center', backgroundColor: c.border }]}>
+                <Text style={{ color: c.muted }}>—</Text>
+              </View>
+            )}
+          </>
+        )}
+        {error ? (
+          <View>
+            <Text style={styles.error}>{error}</Text>
+            <Pressable onPress={() => void load()} style={{ marginTop: 10 }}>
+              <Text style={{ color: c.accentText, textAlign: 'center', fontWeight: '600' }}>{t('common.retry')}</Text>
+            </Pressable>
+          </View>
+        ) : null}
+      </View>
+    </SoftSurface>
+  );
+
+  const passActions = (
+    <View style={styles.actions}>
+      <View style={styles.actionCol}>
+        <PassActionButton
+          label={printing ? t('common.processing') : t('checkIn.printPass')}
+          onPress={() => void onPrint()}
+          disabled={busy || !pass?.qr_data_url}
+          loading={printing}
+        />
+      </View>
+      <View style={styles.actionCol}>
+        <PassActionButton
+          label={smsSending ? t('common.processing') : t('checkIn.smsPass')}
+          onPress={() => void onSms()}
+          disabled={smsSending}
+          loading={smsSending}
+        />
+      </View>
+    </View>
+  );
+
+  const telegramSetupPanel = (
+    <View style={styles.telegramPanel}>
+      <Pressable
+        style={styles.backToPass}
+        onPress={() => {
+          setShowTelegramSetup(false);
+          setTelegramSetupFromSendPass(false);
+        }}
+      >
+        <Text style={styles.backToPassText}>← {t('checkIn.backToPass')}</Text>
+      </Pressable>
+      {telegramSetupFromSendPass ? (
+        <View style={styles.telegramBanner}>
+          <Text style={styles.telegramBannerText}>{t('checkIn.telegramLinkThenSendPass')}</Text>
+        </View>
+      ) : null}
+      <Text style={styles.telegramTitle}>{t('checkIn.telegramLinkDeskTitle')}</Text>
+      <Text style={styles.telegramHint}>{t('checkIn.telegramLinkDeskHint')}</Text>
+      {telegramLinking && !telegramLink ? (
+        <ActivityIndicator color={c.accent} style={{ marginTop: 24 }} />
+      ) : telegramLink?.qr_data_url ? (
+        <Image
+          source={{ uri: telegramLink.qr_data_url }}
+          style={styles.telegramQr}
+          accessibilityLabel={t('checkIn.telegramLinkQrAlt', { name: memberName })}
+        />
+      ) : null}
+      {telegramLink?.link ? (
+        <>
+          <Text latin style={styles.telegramUrl}>
+            {telegramLink.link}
+          </Text>
+          <View style={styles.telegramActions}>
+            <PassActionButton label={t('checkIn.telegramLinkShare')} onPress={() => void onShareTelegramLink()} />
+          </View>
+          {telegramLink.expires_in_seconds ? (
+            <Text style={[styles.telegramHint, { marginTop: 8 }]}>
+              {t('checkIn.telegramLinkExpires', {
+                minutes: Math.max(1, Math.round(telegramLink.expires_in_seconds / 60)),
+              })}
+            </Text>
+          ) : null}
+          <Pressable style={styles.telegramRefresh} disabled={telegramLinking} onPress={() => void onTelegramLink()}>
+            <Text style={styles.telegramRefreshText}>
+              {telegramLinking ? t('common.processing') : t('checkIn.telegramLinkRefresh')}
+            </Text>
+          </Pressable>
+        </>
+      ) : null}
+    </View>
+  );
 
   return (
     <>
@@ -302,67 +636,36 @@ export function MemberPassSheet({
         <Text style={{ color: c.muted, fontSize: 14, lineHeight: 20, marginBottom: 8 }}>
           {t('checkIn.memberPassBody', { name: memberName })}
         </Text>
-        <SoftSurface variant="quiet" style={styles.card}>
-          <View style={styles.brandBar} />
-          <View style={styles.body}>
-            {loading ? (
-              <ActivityIndicator color={c.accent} />
+
+        {onPassView ? (
+          <>
+            {passCard}
+            {passActions}
+            {telegramLinked ? (
+              <Text style={styles.telegramLinked}>{t('checkIn.telegramLinked')}</Text>
             ) : (
-              <>
-                {pass?.gym_name ? (
-                  <Text style={styles.gym} numberOfLines={2}>
-                    {pass.gym_name}
-                  </Text>
-                ) : null}
-                <Text style={styles.passSubtitle}>{t('checkIn.memberPassTitle')}</Text>
-                <Text display style={styles.name} numberOfLines={2}>
-                  {memberName}
-                </Text>
-                {memberPhone ? <Text style={styles.phone}>{memberPhone}</Text> : null}
-                {pass?.qr_data_url ? (
-                  <Image
-                    source={{ uri: pass.qr_data_url }}
-                    style={styles.qr}
-                    accessibilityLabel={t('checkIn.memberPassQrAlt', { name: memberName })}
-                  />
+              <Pressable
+                style={styles.linkTelegramBtn}
+                disabled={busy}
+                onPress={() => {
+                  setTelegramSetupFromSendPass(false);
+                  setShowTelegramSetup(true);
+                  if (!telegramLink) void onTelegramLink();
+                }}
+              >
+                {telegramLinking ? (
+                  <ActivityIndicator color={c.muted} size="small" />
                 ) : (
-                  <View style={[styles.qr, { alignItems: 'center', justifyContent: 'center', backgroundColor: c.border }]}>
-                    <Text style={{ color: c.muted }}>—</Text>
-                  </View>
+                  <Text style={styles.linkTelegramText}>{t('checkIn.telegramLink')}</Text>
                 )}
-              </>
+              </Pressable>
             )}
-            {error ? (
-              <View>
-                <Text style={styles.error}>{error}</Text>
-                <Pressable onPress={() => void load()} style={{ marginTop: 10 }}>
-                  <Text style={{ color: c.accentText, textAlign: 'center', fontWeight: '600' }}>{t('common.retry')}</Text>
-                </Pressable>
-              </View>
-            ) : null}
-          </View>
-        </SoftSurface>
+          </>
+        ) : (
+          telegramSetupPanel
+        )}
 
-        <View style={styles.actions}>
-          <View style={styles.actionCol}>
-            <PassActionButton
-              label={printing ? t('common.processing') : t('checkIn.printPass')}
-              onPress={() => void onPrint()}
-              disabled={busy || !pass?.qr_data_url}
-              loading={printing}
-            />
-          </View>
-          <View style={styles.actionCol}>
-            <PassActionButton
-              label={smsSending ? t('common.processing') : t('checkIn.smsPass')}
-              onPress={() => void onSms()}
-              disabled={busy || !memberPhone}
-              loading={smsSending}
-            />
-          </View>
-        </View>
-
-        {owner ? (
+        {owner && onPassView ? (
           <Pressable
             style={styles.regenLink}
             disabled={busy}

@@ -79,3 +79,18 @@ export const SMS_TYPE_FILTER_KEYS = [
   { value: 'member_renewed' as const, labelKey: 'messages.filterRenewed' },
   { value: 'member_pass_link' as const, labelKey: 'messages.filterPassLink' },
 ] as const;
+
+export function formatMessageChannel(channel: string | null | undefined, t: TFunction) {
+  const key = channel === 'telegram' ? 'messages.channelTelegram' : 'messages.channelSms';
+  return t(key);
+}
+
+export function messageChannelAccent(channel: string | null | undefined, c: ThemeColors): string {
+  return channel === 'telegram' ? c.statusDueSoon : c.statusActive;
+}
+
+export const MESSAGE_CHANNEL_FILTER_KEYS = [
+  { value: 'all' as const, labelKey: 'messages.channelFilterAll' },
+  { value: 'sms' as const, labelKey: 'messages.channelSms' },
+  { value: 'telegram' as const, labelKey: 'messages.channelTelegram' },
+] as const;

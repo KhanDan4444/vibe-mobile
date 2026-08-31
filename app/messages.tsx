@@ -27,8 +27,11 @@ import { pullRefreshing } from '@/src/query/useQueryScreenLoading';
 import { formatLogTimestamp } from '@/src/utils/date';
 import {
   SMS_TYPE_FILTER_KEYS,
+  MESSAGE_CHANNEL_FILTER_KEYS,
+  formatMessageChannel,
   formatSmsPreview,
   formatSmsType,
+  messageChannelAccent,
   smsTypeAccent,
   smsTypeIcon,
 } from '@/src/utils/smsLabels';
@@ -40,6 +43,7 @@ import { isGymOwner } from '@/src/utils/roles';
 import type { MemberSmsRow } from '@/src/types/api';
 
 type SmsFilter = (typeof SMS_TYPE_FILTER_KEYS)[number]['value'];
+type ChannelFilter = (typeof MESSAGE_CHANNEL_FILTER_KEYS)[number]['value'];
 
 function SmsItem({
   row,
@@ -62,7 +66,11 @@ function SmsItem({
   const { colors: c } = useTheme();
   const accent = smsTypeAccent(row.message_type, c);
   const preview = typeFiltered ? '' : formatSmsPreview(row.message_type, t);
-  const phone = row.recipient_phone || row.member_phone || '—';
+  const channel = row.channel || 'sms';
+  const channelLabel = formatMessageChannel(channel, t);
+  const channelAccent = messageChannelAccent(channel, c);
+  const phone =
+    channel === 'telegram' ? channelLabel : row.recipient_phone || row.member_phone || '—';
   const branch = row.branch_name ? branchDisplayName(row.branch_name) : null;
   const iconName = smsTypeIcon(row.message_type);
 
@@ -113,6 +121,17 @@ function SmsItem({
       letterSpacing: -0.1,
       flexShrink: 0,
     },
+    channelBadge: {
+      alignSelf: 'flex-start' as const,
+      marginTop: 5,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 999,
+      borderWidth: StyleSheet.hairlineWidth,
+      backgroundColor: statusWashOpaque(channelAccent, theme.card, 0.12),
+      borderColor: statusWashOpaque(channelAccent, theme.cardEdge, 0.32),
+    },
+    channelBadgeText: { fontSize: 10, fontWeight: '700' as const, color: channelAccent, textTransform: 'uppercase' as const },
     badgeRow: {
       marginTop: 5,
       flexDirection: 'row' as const,
@@ -181,8 +200,13 @@ function SmsItem({
           </View>
           <View style={styles.badgeRow}>
             <View style={styles.badgeBlock}>
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{formatSmsType(row.message_type, t)}</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{formatSmsType(row.message_type, t)}</Text>
+                </View>
+                <View style={styles.channelBadge}>
+                  <Text style={styles.channelBadgeText}>{channelLabel}</Text>
+                </View>
               </View>
               {preview ? (
                 <Text style={styles.preview} numberOfLines={2}>
@@ -215,7 +239,9 @@ export default function MessagesScreen() {
   const { pagePadding } = useResponsiveLayout();
   const styles = useThemedStyles((colors) => ({
     container: { flex: 1, backgroundColor: colors.bg },
-    filters: { paddingTop: 10, paddingBottom: 10 },
+    filters: { paddingTop: 10, paddingBottom: 10, gap: 8 },
+    filterRow: { flexDirection: 'row' as const, gap: 8 },
+    filterCol: { flex: 1, minWidth: 0 },
     listWrap: { flex: 1 },
     statusMeta: {
       fontSize: 13,
@@ -236,17 +262,19 @@ export default function MessagesScreen() {
 
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
   const [typeFilter, setTypeFilter] = useState<SmsFilter>('all');
+  const [channelFilter, setChannelFilter] = useState<ChannelFilter>('all');
   const canViewMessages = Boolean(user && isGymOwner(user.role));
   const typeFiltered = typeFilter !== 'all';
   const lang = language || 'en';
 
   const query = useInfiniteQuery({
-    queryKey: ['member-sms', typeFilter, branchKey],
+    queryKey: ['member-sms', typeFilter, channelFilter, branchKey],
     queryFn: ({ pageParam = 1 }) =>
       fetchMemberSms(token!, {
         page: pageParam,
         limit: 25,
         type: typeFilter,
+        channel: channelFilter,
         ...(selectedBranchId !== 'all' ? { branch_id: selectedBranchId } : {}),
       }),
     initialPageParam: 1,
@@ -260,6 +288,16 @@ export default function MessagesScreen() {
         value: f.value,
         label: t(f.labelKey),
         color: f.value === 'all' ? c.statusNeutral : smsTypeAccent(f.value, c),
+      })),
+    [t, c],
+  );
+
+  const channelOptions = useMemo(
+    () =>
+      MESSAGE_CHANNEL_FILTER_KEYS.map((f) => ({
+        value: f.value,
+        label: t(f.labelKey),
+        color: f.value === 'all' ? c.statusNeutral : messageChannelAccent(f.value, c),
       })),
     [t, c],
   );
@@ -286,13 +324,26 @@ export default function MessagesScreen() {
       <View style={styles.container}>
         <BranchFilterBar horizontalPadding={pagePadding} />
         <View style={[styles.filters, { paddingHorizontal: pagePadding }]}>
-          <FilterPickerButton
-            label={t('messages.filterLabel')}
-            sheetTitle={t('messages.filterLabel')}
-            value={typeFilter}
-            onChange={setTypeFilter}
-            options={typeOptions}
-          />
+          <View style={styles.filterRow}>
+            <View style={styles.filterCol}>
+              <FilterPickerButton
+                label={t('messages.filterLabel')}
+                sheetTitle={t('messages.filterLabel')}
+                value={typeFilter}
+                onChange={setTypeFilter}
+                options={typeOptions}
+              />
+            </View>
+            <View style={styles.filterCol}>
+              <FilterPickerButton
+                label={t('messages.channelFilterLabel')}
+                sheetTitle={t('messages.channelFilterLabel')}
+                value={channelFilter}
+                onChange={setChannelFilter}
+                options={channelOptions}
+              />
+            </View>
+          </View>
         </View>
 
         {query.isLoading ? (

@@ -13,6 +13,7 @@ export interface MemberSmsParams {
     | 'member_renewed'
     | 'member_pass_link';
   branch_id?: number | string;
+  channel?: 'all' | 'sms' | 'telegram';
 }
 
 export function fetchMemberSms(token: string, params: MemberSmsParams = {}) {
@@ -20,6 +21,7 @@ export function fetchMemberSms(token: string, params: MemberSmsParams = {}) {
   if (params.page) qs.set('page', String(params.page));
   if (params.limit) qs.set('limit', String(params.limit));
   if (params.type && params.type !== 'all') qs.set('type', params.type);
+  if (params.channel && params.channel !== 'all') qs.set('channel', params.channel);
   if (params.branch_id) qs.set('branch_id', String(params.branch_id));
   const query = qs.toString();
   return apiRequest<PaginatedResponse<MemberSmsRow>>(`/gym/member-sms${query ? `?${query}` : ''}`, {

@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { Ionicons } from '@expo/vector-icons';
-import { PageSkeleton } from '@/src/components/Skeleton';
+import { PageSkeleton, SkeletonBone } from '@/src/components/Skeleton';
 import { LoadError } from '@/src/components/LoadError';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -19,6 +19,7 @@ import { ResponsiveContent } from '@/src/components/ResponsiveContent';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { formatPlanDisplayName } from '@/src/utils/formatPlanDisplayName';
+import { effectiveVisitsLimit } from '@/src/utils/attendanceCap';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import type { AppLanguage } from '@/src/i18n';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
@@ -100,6 +101,29 @@ function buildMemberStyles(c: ThemeColors) {
       color: c.text,
     },
     visitMeta: { marginTop: 4, fontSize: 12, lineHeight: 17, color: c.muted },
+    telegramLinkedRow: {
+      marginTop: 6,
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 6,
+    },
+    telegramDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: c.accentText,
+    },
+    telegramLinkedLabel: {
+      fontSize: 12,
+      fontWeight: '600' as const,
+      color: c.accentText,
+    },
+    visitSkeletonRow: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 14,
+    },
+    visitSkeletonCopy: { flex: 1, minWidth: 0, gap: 8 },
     visitRow: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
@@ -301,6 +325,8 @@ export default function MemberDetailScreen() {
   const member = memberQuery.data;
   const payments = paymentsQuery.data ?? [];
   const visitSummary = visitQuery.data ?? null;
+  const visitSummaryLoading = visitQuery.isLoading && !visitSummary;
+  const telegramLinked = Boolean(member.telegram_chat_id);
   const owner = Boolean(user && isGymOwner(user.role));
   const isFormer = Boolean(member.deleted_at);
 
@@ -393,7 +419,18 @@ export default function MemberDetailScreen() {
         </View>
       </SoftSurface>
 
-      {!isFormer && visitSummary ? (
+      {!isFormer && visitSummaryLoading ? (
+        <SoftSurface variant="panel" style={[styles.card, isTablet && { flex: 1 }]}>
+          <View style={styles.visitSkeletonRow}>
+            <SkeletonBone width={72} height={72} radius={36} />
+            <View style={styles.visitSkeletonCopy}>
+              <SkeletonBone width="45%" height={14} />
+              <SkeletonBone width="60%" height={12} />
+            </View>
+            <SkeletonBone width={88} height={36} radius={8} />
+          </View>
+        </SoftSurface>
+      ) : !isFormer && visitSummary ? (
         <SoftSurface variant="panel" style={[styles.card, isTablet && { flex: 1 }]}>
           <View style={styles.visitRow}>
             <Pressable
@@ -404,7 +441,7 @@ export default function MemberDetailScreen() {
             >
               <VisitRing
                 visits={visitSummary.visits_this_week ?? 0}
-                limit={visitSummary.visits_limit}
+                limit={effectiveVisitsLimit(visitSummary.visits_limit)}
                 size={72}
                 weekStartsOn={visitSummary.week_starts_on || 'monday'}
                 accessibilityLabel={t('checkIn.openCheckInFor', { name: member.name })}
@@ -414,13 +451,17 @@ export default function MemberDetailScreen() {
                   {t('checkIn.ringLabel')}
                 </Text>
                 <Text style={styles.visitMeta}>
-                  {visitSummary.visits_limit != null
-                    ? t('checkIn.ringProgress', {
-                        count: visitSummary.visits_this_week,
-                        limit: visitSummary.visits_limit,
-                      })
-                    : t('checkIn.ringUnlimited', { count: visitSummary.visits_this_week })}
+                  {t('checkIn.ringProgress', {
+                    count: visitSummary.visits_this_week,
+                    limit: effectiveVisitsLimit(visitSummary.visits_limit),
+                  })}
                 </Text>
+                {telegramLinked ? (
+                  <View style={styles.telegramLinkedRow}>
+                    <View style={styles.telegramDot} />
+                    <Text style={styles.telegramLinkedLabel}>{t('checkIn.telegramLinked')}</Text>
+                  </View>
+                ) : null}
               </View>
             </Pressable>
             <Pressable
@@ -610,7 +651,11 @@ export default function MemberDetailScreen() {
       memberId={member.id}
       memberName={member.name}
       memberPhone={member.phone}
+      telegramChatId={member.telegram_chat_id}
       onClose={() => setPassOpen(false)}
+      onTelegramLinked={() => {
+        void queryClient.invalidateQueries({ queryKey: ['member', memberId] });
+      }}
     />
     {token ? (
       <MemberVisitHistorySheet
