@@ -48,6 +48,10 @@ export type ThemeColors = {
   inputBorder: string;
   success: string;
   warning: string;
+  /** Hyperlink / Telegram chrome — web sky blue, not brand teal. */
+  link: string;
+  /** Telegram status dot — web sky-500 / sky-400. */
+  linkDot: string;
   statusActive: string;
   statusDueSoon: string;
   statusExpired: string;
@@ -85,6 +89,8 @@ export const darkTheme: ThemeColors = {
   inputBorder: '#363c48',
   success: '#34d399',
   warning: '#fbbf24',
+  link: '#7dd3fc',
+  linkDot: '#38bdf8',
   statusActive: '#34d399',
   statusDueSoon: '#38bdf8',
   statusExpired: '#f87171',
@@ -121,6 +127,8 @@ export const lightTheme: ThemeColors = {
   inputBorder: '#d1d5db',
   success: '#059669',
   warning: '#d97706',
+  link: '#0284c7',
+  linkDot: '#0ea5e9',
   statusActive: '#059669',
   statusDueSoon: '#0284c7',
   statusExpired: '#e11d48',

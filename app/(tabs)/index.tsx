@@ -493,11 +493,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   heroMetricValue: {
-    fontSize: 36,
+    fontSize: 34,
     letterSpacing: -0.9,
   },
   heroMetricValueLg: {
-    fontSize: 48,
+    fontSize: 46,
     letterSpacing: -1.2,
   },
   heroMetricSubValue: {
@@ -532,7 +532,7 @@ const styles = StyleSheet.create({
   summaryTitleChevron: { fontSize: 16, fontWeight: '600', lineHeight: 18 },
   income: {
     marginTop: 6,
-    fontSize: 32,
+    fontSize: 30,
     letterSpacing: -0.8,
   },
   trend: { marginTop: 6, fontSize: 13, fontWeight: '600' },

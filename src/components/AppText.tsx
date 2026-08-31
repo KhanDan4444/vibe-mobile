@@ -22,6 +22,11 @@ type LatinOpt = {
   display?: boolean;
   /** Dense list primary copy (member names, row titles). */
   listRow?: boolean;
+  /**
+   * Lock size/line-height against phone font settings (tab bar, badges, chrome).
+   * Still applies the language font stack.
+   */
+  fixedLayout?: boolean;
 };
 
 /**
@@ -30,20 +35,22 @@ type LatinOpt = {
  * - English display → Space Grotesk
  * - Amharic → Noto Sans Ethiopic (+ taller line height so glyphs are not clipped)
  */
-export function AppText({ style, latin, display, listRow, maxFontSizeMultiplier, ...props }: TextProps & LatinOpt & { maxFontSizeMultiplier?: number }) {
+export function AppText({ style, latin, display, listRow, fixedLayout, maxFontSizeMultiplier, allowFontScaling, ...props }: TextProps & LatinOpt & { maxFontSizeMultiplier?: number }) {
   const { language, fontScale } = usePreferences();
   const lang = latin ? 'en' : language;
   const flat = flattenStyle(style);
+  const lock = Boolean(fixedLayout);
   const resolved = display
     ? displayTextStyle(lang, flat)
     : listRow
       ? listRowTextStyle(lang, flat)
-      : appTextStyle(lang, flat);
+      : appTextStyle(lang, flat, lock ? { scaleLineHeight: false } : undefined);
   return (
     <Text
       {...props}
-      key={`fs-${fontScale}`}
-      maxFontSizeMultiplier={maxFontSizeMultiplier ?? MAX_FONT_SCALE}
+      key={lock ? 'fs-lock' : `fs-${fontScale}`}
+      allowFontScaling={lock ? false : allowFontScaling}
+      maxFontSizeMultiplier={lock ? 1 : (maxFontSizeMultiplier ?? MAX_FONT_SCALE)}
       style={resolved}
     />
   );

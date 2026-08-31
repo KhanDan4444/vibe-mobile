@@ -47,10 +47,10 @@ export function RowActionLink({
         },
       ]}
     >
-      <Ionicons name={icon} size={emphasized ? 21 : 18} color={color} />
+      <Ionicons name={icon} size={emphasized ? 19 : 18} color={color} />
       <Text
         style={{
-          fontSize: emphasized ? 17 : 16,
+          fontSize: 16,
           fontWeight: '700',
           letterSpacing: 0.15,
           color,

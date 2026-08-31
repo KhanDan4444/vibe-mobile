@@ -155,11 +155,16 @@ export function looksLikeMetricValue(value: string): boolean {
 }
 
 /** Body / UI text — DM Sans (EN) or Noto Ethiopic (AM). */
-export function appTextStyle(language: AppLanguage, style: TextStyle = {}): TextStyle {
+export function appTextStyle(language: AppLanguage, style: TextStyle = {}, opts?: { scaleLineHeight?: boolean }): TextStyle {
   const fontSize = typeof style.fontSize === 'number' ? style.fontSize : 14;
+  const scaleLh = opts?.scaleLineHeight !== false;
   const base: TextStyle = {
     ...style,
-    lineHeight: resolveLineHeight(style, fontSize),
+    lineHeight: scaleLh
+      ? resolveLineHeight(style, fontSize)
+      : typeof style.lineHeight === 'number'
+        ? style.lineHeight
+        : Math.ceil(fontSize * 1.35),
   };
   if (language === 'am') {
     return withAmUppercaseFix(style, { ...base, fontFamily: notoEthiopicForWeight(style.fontWeight) });

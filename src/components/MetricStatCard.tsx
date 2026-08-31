@@ -141,7 +141,7 @@ const styles = {
     fontWeight: '500' as const,
   },
   value: {
-    fontSize: 24,
+    fontSize: 22,
     letterSpacing: -0.6,
   },
   label: { marginTop: 4, fontSize: 12 },

@@ -28,6 +28,7 @@ import { fetchTrainers } from '@/src/api/trainers';
 import { BranchPicker } from '@/src/components/BranchPicker';
 import { DateField } from '@/src/components/DateField';
 import { EnrollStepProgress } from '@/src/components/EnrollStepProgress';
+import { EnrollTelegramPrompt } from '@/src/components/EnrollTelegramPrompt';
 import { PhotoPickerField } from '@/src/components/PhotoPickerField';
 import { PlanPickerField } from '@/src/components/PlanPickerField';
 import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
@@ -70,6 +71,7 @@ function planPrice(plan: PlanRow): number {
 }
 
 type EnrollDone = {
+  memberId: number;
   name: string;
   phone: string;
   branchName: string;
@@ -82,8 +84,6 @@ type EnrollDone = {
   trainerName?: string;
   trainerFee?: number;
   trainerFeeMethod?: string;
-  smsSent?: boolean;
-  smsError?: string;
 };
 
 const SWIPE_HINT_KEY = 'niku.enroll.swipeHintSeen';
@@ -202,39 +202,6 @@ export default function EnrollScreen() {
       color: colors.muted,
       textAlign: 'center' as const,
       paddingHorizontal: 8,
-    },
-    smsWarnRow: {
-      marginTop: 16,
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
-      gap: 6,
-    },
-    smsWarnText: {
-      fontSize: 14,
-      fontWeight: '600' as const,
-    },
-    smsOkRow: {
-      marginTop: 16,
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
-      gap: 8,
-    },
-    smsOkIcon: {
-      width: 22,
-      height: 22,
-      borderRadius: 11,
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
-      backgroundColor: 'rgba(5,150,105,0.16)',
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: 'rgba(5,150,105,0.45)',
-    },
-    smsOkText: {
-      fontSize: 14,
-      fontWeight: '700' as const,
-      letterSpacing: 0.1,
     },
     summary: {
       marginTop: 24,
@@ -605,6 +572,7 @@ export default function EnrollScreen() {
             : ''))
         : '';
       setEnrollDone({
+        memberId: data.member.id,
         name: data.member.name || name.trim(),
         phone: data.member.phone || phone.trim(),
         branchName: branchLabel,
@@ -619,8 +587,6 @@ export default function EnrollScreen() {
         trainerFeeMethod: trainerId && Number(trainerFee) > 0
           ? (skipPayment ? trainerFeeMethod : method)
           : undefined,
-        smsSent: data.sms_sent,
-        smsError: data.sms_error || undefined,
       });
     },
     onError: (e: Error) => setError(formatApiError(e.message)),
@@ -852,25 +818,6 @@ export default function EnrollScreen() {
               {enrollDone.skipPayment ? t('enroll.successSkip') : t('enroll.successPaid')}
             </Text>
 
-            {enrollDone.phone && enrollDone.smsSent === false ? (
-              <View style={styles.smsWarnRow}>
-                <Ionicons name="warning-outline" size={16} color={c.warning} />
-                <Text style={[styles.smsWarnText, { color: c.warning }]}>
-                  {t('enroll.smsFailedTitle')}
-                </Text>
-              </View>
-            ) : null}
-            {enrollDone.phone && enrollDone.smsSent === true ? (
-              <View style={styles.smsOkRow}>
-                <View style={styles.smsOkIcon}>
-                  <Ionicons name="checkmark" size={14} color={c.success} />
-                </View>
-                <Text style={[styles.smsOkText, { color: c.success }]}>
-                  {t('enroll.smsSentTitle')}
-                </Text>
-              </View>
-            ) : null}
-
             {rows.length > 0 ? (
               <SoftSurface variant="quiet" style={styles.summary}>
                 {rows.map((row, index) => (
@@ -903,6 +850,10 @@ export default function EnrollScreen() {
                   </View>
                 ))}
               </SoftSurface>
+            ) : null}
+
+            {enrollDone.memberId ? (
+              <EnrollTelegramPrompt memberId={enrollDone.memberId} memberName={enrollDone.name} />
             ) : null}
 
             <View style={styles.actions}>

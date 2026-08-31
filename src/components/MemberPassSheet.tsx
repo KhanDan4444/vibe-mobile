@@ -165,7 +165,7 @@ export function MemberPassSheet({
       marginTop: 10,
       fontSize: 12,
       fontWeight: '600' as const,
-      color: colors.accentText,
+      color: colors.link,
       textAlign: 'center' as const,
     },
     linkTelegramBtn: {
@@ -174,7 +174,7 @@ export function MemberPassSheet({
       paddingVertical: 4,
       paddingHorizontal: 6,
     },
-    linkTelegramText: { fontSize: 12, fontWeight: '600' as const, color: colors.accentText },
+    linkTelegramText: { fontSize: 12, fontWeight: '600' as const, color: colors.link },
     backToPass: {
       alignSelf: 'flex-start' as const,
       marginBottom: 10,
@@ -186,15 +186,15 @@ export function MemberPassSheet({
       marginBottom: 10,
       borderRadius: 10,
       borderWidth: 1,
-      borderColor: `${colors.accentText}40`,
-      backgroundColor: `${colors.accentText}14`,
+      borderColor: `${colors.link}40`,
+      backgroundColor: `${colors.link}14`,
       paddingHorizontal: 12,
       paddingVertical: 10,
     },
     telegramBannerText: {
       fontSize: 12,
       lineHeight: 17,
-      color: colors.accentText,
+      color: colors.link,
       textAlign: 'center' as const,
     },
     telegramPanel: {

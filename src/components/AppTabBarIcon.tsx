@@ -75,7 +75,9 @@ export function AppTabBarIcon({
             },
           ]}
         >
-          <Text style={styles.badgeText}>{badgeCount > 9 ? '9+' : badgeCount}</Text>
+          <Text fixedLayout style={styles.badgeText}>
+            {badgeCount > 9 ? '9+' : badgeCount}
+          </Text>
         </View>
       ) : null}
     </View>

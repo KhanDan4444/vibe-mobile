@@ -1,6 +1,5 @@
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { usePreferences } from '@/src/context/PreferencesContext';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 
 /**
@@ -13,8 +12,8 @@ export function useTabBarOverlayInset() {
 }
 
 /** Tab bar icon + label stack (excludes home-indicator / nav-bar padding). */
-export const TAB_BAR_BODY_PHONE = 52;
-export const TAB_BAR_BODY_TABLET = 58;
+export const TAB_BAR_BODY_PHONE = 56;
+export const TAB_BAR_BODY_TABLET = 60;
 
 /** Floor when `insets.bottom` is 0 (common on Android 3-button nav). */
 const TAB_BAR_MIN_BOTTOM_PHONE = Platform.OS === 'android' ? 12 : 10;
@@ -23,29 +22,20 @@ const TAB_BAR_MIN_BOTTOM_TABLET = 12;
 /**
  * Bottom padding above the system nav bar / home indicator.
  * Gesture-nav phones report a real inset; 3-button Android often reports 0.
+ * Intentionally ignores system font scale so tab chrome stays stable.
  */
-export function tabBarBottomPadding(
-  insetsBottom: number,
-  isTablet: boolean,
-  fontScale: number,
-): number {
+export function tabBarBottomPadding(insetsBottom: number, isTablet: boolean): number {
   const min = isTablet ? TAB_BAR_MIN_BOTTOM_TABLET : TAB_BAR_MIN_BOTTOM_PHONE;
-  const base = Math.max(insetsBottom, min);
-  // When there is no home-indicator inset, add a little extra at larger display sizes.
-  const fontBump =
-    insetsBottom < 16 && fontScale > 1 ? Math.round((fontScale - 1) * 4) : 0;
-  return base + fontBump;
+  return Math.max(insetsBottom, min);
 }
 
 /** Shared tab bar dimensions — keeps `(tabs)/_layout` and toast clearance in sync. */
 export function useTabBarMetrics() {
   const insets = useSafeAreaInsets();
-  const { fontScale } = usePreferences();
   const { isTablet } = useResponsiveLayout();
 
-  const bodyBase = isTablet ? TAB_BAR_BODY_TABLET : TAB_BAR_BODY_PHONE;
-  const bodyHeight = Math.ceil(bodyBase * fontScale);
-  const bottomPadding = tabBarBottomPadding(insets.bottom, isTablet, fontScale);
+  const bodyHeight = isTablet ? TAB_BAR_BODY_TABLET : TAB_BAR_BODY_PHONE;
+  const bottomPadding = tabBarBottomPadding(insets.bottom, isTablet);
 
   return {
     bodyHeight,

@@ -17,7 +17,7 @@ import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import { useNetwork } from '@/src/offline/NetworkProvider';
 import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useTabBarMetrics } from '@/src/theme/tabBar';
-import { badgeTextProps, DM_SANS, DM_SANS_SEMI, NOTO_ETHIOPIC, scaleLineHeight } from '@/src/theme/typography';
+import { DM_SANS, DM_SANS_SEMI, NOTO_ETHIOPIC, scaleLineHeight } from '@/src/theme/typography';
 import { hasGymPortalAccess } from '@/src/utils/roles';
 
 const headerRight = () => <AppHeaderRight />;
@@ -56,8 +56,7 @@ export default function TabLayout() {
   const { t } = useTranslation();
   const { isOnline } = useNetwork();
   const { tabIconSize, isTablet } = useResponsiveLayout();
-  const { bodyHeight: tabBarCoreHeight, bottomPadding: tabBarBottom, totalHeight: tabBarHeight } =
-    useTabBarMetrics();
+  const { bottomPadding: tabBarBottom, totalHeight: tabBarHeight } = useTabBarMetrics();
   const pathname = usePathname();
   const tabLabelSize = isTablet ? 12 : 11;
   const tabIndex = activeTabIndex(pathname);
@@ -67,22 +66,20 @@ export default function TabLayout() {
     function TabLabel({ focused, color }: { focused: boolean; color: string }) {
       return (
         <Text
-          {...badgeTextProps}
+          fixedLayout
           style={[
             {
               color,
               marginTop: 2,
               letterSpacing: focused ? 0.15 : 0,
               fontSize: tabLabelSize,
-              lineHeight: scaleLineHeight(tabLabelSize + 5),
+              lineHeight: tabLabelSize + 5,
               fontFamily: isAm ? NOTO_ETHIOPIC : focused ? DM_SANS_SEMI : DM_SANS,
               fontWeight: isAm ? (focused ? '600' : '500') : undefined,
               textAlign: 'center',
             },
           ]}
-          numberOfLines={2}
-          adjustsFontSizeToFit
-          minimumFontScale={0.85}
+          numberOfLines={1}
         >
           {title}
         </Text>
@@ -124,10 +121,19 @@ export default function TabLayout() {
               backgroundColor: c.tabBarBg,
               borderTopColor: c.tabBarBorder,
               borderTopWidth: StyleSheet.hairlineWidth,
+              paddingTop: 6,
               paddingBottom: tabBarBottom,
               height: tabBarHeight,
               elevation: 0,
               shadowOpacity: 0,
+            },
+            tabBarItemStyle: {
+              paddingTop: 0,
+              paddingBottom: 0,
+            },
+            tabBarIconStyle: {
+              marginTop: 0,
+              marginBottom: 0,
             },
             headerTitle: ({ children, tintColor }) => (
               <AppHeaderTitle tintColor={tintColor}>{children}</AppHeaderTitle>
