@@ -33,7 +33,7 @@ export function useResponsiveLayout() {
   const reportStatWidthPercent = isTablet ? '31.5%' : '47%';
 
   const formMaxWidth = isTablet ? 440 : width;
-  const tabIconSize = isTablet ? 26 : 24;
+  const tabIconSize = isTablet ? 26 : 22;
   /** FABs sit inside TabScreenFrame — inset from the framed content edge, not the screen. */
   const fabRight = isTablet ? pagePadding : 20;
   /** Larger FAB on tablet so it doesn't look lost on the bigger canvas. */

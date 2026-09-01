@@ -39,8 +39,8 @@ export function AppTabBarIcon({
 }) {
   const { colors: c } = useTheme();
   const { isTablet } = useResponsiveLayout();
-  const shellWidth = isTablet ? 52 : 48;
-  const shellHeight = isTablet ? 32 : 30;
+  const shellWidth = isTablet ? 52 : 46;
+  const shellHeight = isTablet ? 32 : 28;
   const shellRadius = shellHeight / 2;
   const iconName = focused && nameFocused ? nameFocused : name;
   const iconColor = focused ? '#ffffff' : color;
@@ -66,7 +66,7 @@ export function AppTabBarIcon({
       <Animated.View
         style={[
           styles.shell,
-          { minWidth: shellWidth, height: shellHeight, paddingHorizontal: isTablet ? 14 : 12, borderRadius: shellRadius },
+          { minWidth: shellWidth, height: shellHeight, paddingHorizontal: isTablet ? 14 : 11, borderRadius: shellRadius },
           shellStyle,
         ]}
       >

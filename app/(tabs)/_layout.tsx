@@ -58,9 +58,9 @@ export default function TabLayout() {
   const { tabIconSize, isTablet } = useResponsiveLayout();
   const { bottomPadding: tabBarBottom, totalHeight: tabBarHeight } = useTabBarMetrics();
   const pathname = usePathname();
-  const tabLabelSize = isTablet ? 13 : 12;
-  const tabLabelGap = isTablet ? 5 : 4;
-  const tabBarTopPad = isTablet ? 6 : 4;
+  const tabLabelSize = isTablet ? 13 : 11;
+  const tabLabelGap = isTablet ? 3 : 2;
+  const tabBarTopPad = isTablet ? 5 : 3;
   const tabBarExtraBottom = 1;
   const tabIndex = activeTabIndex(pathname);
   const isAm = language === 'am';
