@@ -279,7 +279,7 @@ export default function ForgotPasswordScreen() {
             )}
 
             <Pressable style={styles.back} onPress={() => router.replace('/login')}>
-              <Text style={[styles.secondaryText, { color: AUTH.textDim }]}>{t('forgot.backToLogin')}</Text>
+              <Text style={[styles.secondaryText, { color: AUTH.link }]}>{t('forgot.backToLogin')}</Text>
             </Pressable>
           </AuthFormEnter>
         </FormScroll>

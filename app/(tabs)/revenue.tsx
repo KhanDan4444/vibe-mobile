@@ -310,7 +310,7 @@ export default function RevenueScreen() {
     },
     heroTotal: {
       marginTop: 6,
-      fontSize: 30,
+      fontSize: 32,
       color: colors.text,
       letterSpacing: -1,
     },

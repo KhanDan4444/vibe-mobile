@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, Share, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -232,14 +233,42 @@ export function MemberPassSheet({
       marginTop: 12,
       alignSelf: 'center' as const,
     },
-    telegramUrl: {
+    telegramUrlRow: {
       marginTop: 10,
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 6,
+      paddingHorizontal: 8,
+    },
+    telegramUrl: {
+      flex: 1,
       fontSize: 11,
       lineHeight: 16,
       color: colors.muted,
+    },
+    telegramShareBtn: {
+      width: 44,
+      height: 44,
+      borderRadius: 10,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      backgroundColor: `${colors.link}14`,
+    },
+    telegramWaitingRow: {
+      marginTop: 12,
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      gap: 8,
+      paddingHorizontal: 8,
+    },
+    telegramWaitingText: {
+      flexShrink: 1,
+      fontSize: 12,
+      lineHeight: 17,
+      color: colors.muted,
       textAlign: 'center' as const,
     },
-    telegramActions: { marginTop: 10 },
     telegramRefresh: {
       marginTop: 10,
       alignSelf: 'center' as const,
@@ -300,12 +329,12 @@ export function MemberPassSheet({
   }, [token, memberId, memberName, memberPhone, showFlash, t]);
 
   const handleTelegramLinked = useCallback(
-    async (fromSendPass: boolean) => {
+    async (fromSendPass: boolean, opts?: { alreadyLinked?: boolean }) => {
       setTelegramLink(null);
       setShowTelegramSetup(false);
       setTelegramSetupFromSendPass(false);
       onTelegramLinked?.();
-      if (fromSendPass) {
+      if (fromSendPass && opts?.alreadyLinked) {
         await sendPassLink();
         return;
       }
@@ -482,7 +511,7 @@ export function MemberPassSheet({
       const data = await createMemberTelegramLink(token, memberId);
       if (data.already_linked) {
         await refreshMember();
-        await handleTelegramLinked(telegramSetupFromSendPassRef.current);
+        await handleTelegramLinked(telegramSetupFromSendPassRef.current, { alreadyLinked: true });
         return;
       }
       if (data.link) {
@@ -593,8 +622,7 @@ export function MemberPassSheet({
           <Text style={styles.telegramBannerText}>{t('checkIn.telegramLinkThenSendPass')}</Text>
         </View>
       ) : null}
-      <Text style={styles.telegramTitle}>{t('checkIn.telegramLinkDeskTitle')}</Text>
-      <Text style={styles.telegramHint}>{t('checkIn.telegramLinkDeskHint')}</Text>
+      <Text style={styles.telegramTitle}>{t('checkIn.telegramLink')}</Text>
       {telegramLinking && !telegramLink ? (
         <ActivityIndicator color={c.accent} style={{ marginTop: 24 }} />
       ) : telegramLink?.qr_data_url ? (
@@ -606,11 +634,19 @@ export function MemberPassSheet({
       ) : null}
       {telegramLink?.link ? (
         <>
-          <Text latin style={styles.telegramUrl}>
-            {telegramLink.link}
-          </Text>
-          <View style={styles.telegramActions}>
-            <PassActionButton label={t('checkIn.telegramLinkShare')} onPress={() => void onShareTelegramLink()} />
+          <View style={styles.telegramUrlRow}>
+            <Text latin style={styles.telegramUrl} selectable numberOfLines={3}>
+              {telegramLink.link}
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('checkIn.telegramLinkShare')}
+              hitSlop={8}
+              style={({ pressed }) => [styles.telegramShareBtn, pressed ? { opacity: 0.75 } : null]}
+              onPress={() => void onShareTelegramLink()}
+            >
+              <Ionicons name="share-outline" size={18} color={c.link} />
+            </Pressable>
           </View>
           {telegramLink.expires_in_seconds ? (
             <Text style={[styles.telegramHint, { marginTop: 8 }]}>
@@ -619,6 +655,10 @@ export function MemberPassSheet({
               })}
             </Text>
           ) : null}
+          <View style={styles.telegramWaitingRow}>
+            <ActivityIndicator color={c.link} size="small" />
+            <Text style={styles.telegramWaitingText}>{t('enroll.telegramWaitingForMember')}</Text>
+          </View>
           <Pressable style={styles.telegramRefresh} disabled={telegramLinking} onPress={() => void onTelegramLink()}>
             <Text style={styles.telegramRefreshText}>
               {telegramLinking ? t('common.processing') : t('checkIn.telegramLinkRefresh')}

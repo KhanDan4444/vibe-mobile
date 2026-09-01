@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, Share, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { AppText as Text } from '@/src/components/AppText';
 import { createMemberTelegramLink, fetchMember } from '@/src/api/members';
@@ -79,37 +80,18 @@ function buildStyles(colors: ReturnType<typeof useTheme>['colors']) {
       fontWeight: '600' as const,
       color: colors.accentText,
     },
-    skyTextLink: {
-      alignSelf: 'center' as const,
-      paddingVertical: 8,
-      paddingHorizontal: 4,
-    },
-    skyTextLinkLabel: {
-      fontSize: 12,
-      fontWeight: '600' as const,
-      color: colors.link,
-      textAlign: 'center' as const,
-    },
     title: {
       fontSize: 14,
       fontWeight: '600' as const,
       color: colors.text,
       textAlign: 'center' as const,
     },
-    hint: {
-      marginTop: 6,
-      fontSize: 12,
-      lineHeight: 17,
-      color: colors.muted,
-      textAlign: 'center' as const,
-    },
-    shareSubline: {
-      marginTop: 16,
-      marginBottom: 8,
-      fontSize: 12,
-      fontWeight: '600' as const,
-      color: colors.muted,
-      textAlign: 'center' as const,
+    urlRow: {
+      marginTop: 10,
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 6,
+      paddingHorizontal: 8,
     },
     error: {
       marginTop: 12,
@@ -133,12 +115,18 @@ function buildStyles(colors: ReturnType<typeof useTheme>['colors']) {
       alignSelf: 'center' as const,
     },
     url: {
-      marginTop: 10,
+      flex: 1,
       fontSize: 11,
       lineHeight: 16,
       color: colors.muted,
-      textAlign: 'center' as const,
-      paddingHorizontal: 8,
+    },
+    shareBtn: {
+      width: 44,
+      height: 44,
+      borderRadius: 10,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      backgroundColor: `${colors.link}14`,
     },
     expires: {
       marginTop: 10,
@@ -194,7 +182,6 @@ export function EnrollTelegramPrompt({ memberId, memberName }: Props) {
   const { token } = useAuth();
   const { colors: c } = useTheme();
   const [open, setOpen] = useState(false);
-  const [showQr, setShowQr] = useState(false);
   const [linked, setLinked] = useState(false);
   const [linking, setLinking] = useState(false);
   const [error, setError] = useState('');
@@ -208,7 +195,6 @@ export function EnrollTelegramPrompt({ memberId, memberName }: Props) {
 
   const closePanel = useCallback(() => {
     setOpen(false);
-    setShowQr(false);
   }, []);
 
   const refreshLinked = useCallback(async () => {
@@ -263,7 +249,6 @@ export function EnrollTelegramPrompt({ memberId, memberName }: Props) {
 
   const handleOpen = () => {
     setOpen(true);
-    setShowQr(false);
     if (!telegramLink) void loadLink();
   };
 
@@ -303,7 +288,6 @@ export function EnrollTelegramPrompt({ memberId, memberName }: Props) {
         <Text style={styles.brandLinkText}>← {t('enroll.telegramEnrollLater')}</Text>
       </Pressable>
       <Text style={styles.title}>{t('checkIn.telegramLink')}</Text>
-      <Text style={styles.hint}>{t('enroll.telegramEnrollHint')}</Text>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -315,8 +299,28 @@ export function EnrollTelegramPrompt({ memberId, memberName }: Props) {
 
       {telegramLink?.link ? (
         <>
-          <Text style={styles.shareSubline}>{t('enroll.telegramShareSubline')}</Text>
-          <SkyOutlineButton label={t('checkIn.telegramLinkShare')} onPress={() => void handleShare()} styles={styles} />
+          {telegramLink.qr_data_url ? (
+            <Image
+              source={{ uri: telegramLink.qr_data_url }}
+              style={styles.qr}
+              accessibilityLabel={t('checkIn.telegramLinkQrAlt', { name: memberName })}
+            />
+          ) : null}
+
+          <View style={styles.urlRow}>
+            <Text latin style={styles.url} selectable numberOfLines={3}>
+              {telegramLink.link}
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('checkIn.telegramLinkShare')}
+              hitSlop={8}
+              style={({ pressed }) => [styles.shareBtn, pressed ? { opacity: 0.75 } : null]}
+              onPress={() => void handleShare()}
+            >
+              <Ionicons name="share-outline" size={18} color={c.link} />
+            </Pressable>
+          </View>
 
           {telegramLink.expires_in_seconds ? (
             <Text style={styles.expires}>
@@ -330,30 +334,6 @@ export function EnrollTelegramPrompt({ memberId, memberName }: Props) {
             <ActivityIndicator color={c.link} size="small" />
             <Text style={styles.waitingText}>{t('enroll.telegramWaitingForMember')}</Text>
           </View>
-
-          <Pressable
-            style={styles.skyTextLink}
-            onPress={() => setShowQr((v) => !v)}
-            accessibilityRole="button"
-            accessibilityState={{ expanded: showQr }}
-          >
-            <Text style={styles.skyTextLinkLabel}>
-              {showQr ? t('enroll.telegramHideQr') : t('enroll.telegramShowQr')}
-            </Text>
-          </Pressable>
-
-          {showQr && telegramLink.qr_data_url ? (
-            <>
-              <Image
-                source={{ uri: telegramLink.qr_data_url }}
-                style={styles.qr}
-                accessibilityLabel={t('checkIn.telegramLinkQrAlt', { name: memberName })}
-              />
-              <Text latin style={styles.url} selectable>
-                {telegramLink.link}
-              </Text>
-            </>
-          ) : null}
 
           <View style={styles.refreshWrap}>
             <Pressable disabled={linking} onPress={() => void loadLink()}>

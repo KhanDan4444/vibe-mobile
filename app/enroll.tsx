@@ -158,14 +158,14 @@ export default function EnrollScreen() {
       paddingVertical: 8,
     },
     checkCircle: {
-      width: 96,
-      height: 96,
-      borderRadius: 48,
+      width: 88,
+      height: 88,
+      borderRadius: 44,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
       borderWidth: 1.5,
-      borderColor: `${colors.accentText}45`,
-      backgroundColor: colors.accentSoft,
+      borderColor: `${colors.statusActive}45`,
+      backgroundColor: `${colors.statusActive}18`,
       marginBottom: 22,
     },
     checkInner: {
@@ -174,7 +174,7 @@ export default function EnrollScreen() {
       borderRadius: 32,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
-      backgroundColor: `${colors.accentText}28`,
+      backgroundColor: `${colors.statusActive}28`,
     },
     successTitle: {
       fontSize: 20,
@@ -221,6 +221,7 @@ export default function EnrollScreen() {
       marginTop: 4,
       paddingTop: 14,
     },
+    summaryRowBeforeSection: { borderBottomWidth: 0 },
     summaryRowLast: { borderBottomWidth: 0 },
     summaryLabel: { color: colors.muted, fontSize: 14, flexShrink: 0 },
     summaryValue: {
@@ -760,7 +761,7 @@ export default function EnrollScreen() {
           <View style={styles.successWrap}>
             <Animated.View style={[styles.checkCircle, { transform: [{ scale: checkScale }] }]}>
               <View style={styles.checkInner}>
-                <Ionicons name="checkmark" size={36} color={c.accentText} />
+                <Ionicons name="checkmark" size={36} color={c.statusActive} />
               </View>
             </Animated.View>
             <Text style={styles.successTitle}>{t('enroll.successTitle')}</Text>
@@ -773,12 +774,15 @@ export default function EnrollScreen() {
 
             {rows.length > 0 ? (
               <SoftSurface variant="quiet" style={styles.summary}>
-                {rows.map((row, index) => (
+                {rows.map((row, index) => {
+                  const nextIsSection = rows[index + 1]?.sectionStart;
+                  return (
                   <View
                     key={row.label}
                     style={[
                       styles.summaryRow,
                       row.sectionStart && index > 0 ? styles.summaryRowSection : null,
+                      nextIsSection ? styles.summaryRowBeforeSection : null,
                       index === rows.length - 1 ? styles.summaryRowLast : null,
                     ]}
                   >
@@ -801,7 +805,8 @@ export default function EnrollScreen() {
                       {row.value}
                     </Text>
                   </View>
-                ))}
+                  );
+                })}
               </SoftSurface>
             ) : null}
 
