@@ -26,6 +26,7 @@ export type CheckInMember = {
   week_starts_on?: 'monday' | 'sunday';
   one_checkin_per_day?: boolean;
   over_limit_policy?: 'block' | 'warn_allow';
+  checked_in_today?: boolean;
 };
 
 export type CheckInRow = {

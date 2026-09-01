@@ -58,7 +58,10 @@ export default function TabLayout() {
   const { tabIconSize, isTablet } = useResponsiveLayout();
   const { bottomPadding: tabBarBottom, totalHeight: tabBarHeight } = useTabBarMetrics();
   const pathname = usePathname();
-  const tabLabelSize = isTablet ? 12 : 11;
+  const tabLabelSize = isTablet ? 13 : 12;
+  const tabLabelGap = isTablet ? 5 : 4;
+  const tabBarTopPad = isTablet ? 6 : 4;
+  const tabBarExtraBottom = 1;
   const tabIndex = activeTabIndex(pathname);
   const isAm = language === 'am';
 
@@ -70,7 +73,7 @@ export default function TabLayout() {
           style={[
             {
               color,
-              marginTop: 2,
+              marginTop: tabLabelGap,
               letterSpacing: focused ? 0.15 : 0,
               fontSize: tabLabelSize,
               lineHeight: tabLabelSize + 5,
@@ -121,9 +124,9 @@ export default function TabLayout() {
               backgroundColor: c.tabBarBg,
               borderTopColor: c.tabBarBorder,
               borderTopWidth: StyleSheet.hairlineWidth,
-              paddingTop: 6,
-              paddingBottom: tabBarBottom,
-              height: tabBarHeight,
+              paddingTop: tabBarTopPad,
+              paddingBottom: tabBarBottom + tabBarExtraBottom,
+              height: tabBarHeight + tabBarExtraBottom,
               elevation: 0,
               shadowOpacity: 0,
             },

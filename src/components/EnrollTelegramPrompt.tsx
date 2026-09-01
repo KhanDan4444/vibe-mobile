@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, Share, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { AppText as Text } from '@/src/components/AppText';
-import { SecondaryButton } from '@/src/components/Form';
 import { createMemberTelegramLink, fetchMember } from '@/src/api/members';
 import { useAuth } from '@/src/auth/AuthContext';
 import { useTheme } from '@/src/context/PreferencesContext';
@@ -15,24 +14,42 @@ type Props = {
   memberName: string;
 };
 
-/**
- * Optional Telegram link step on enroll success — member scans on their phone.
- */
-export function EnrollTelegramPrompt({ memberId, memberName }: Props) {
-  const { t } = useTranslation();
-  const { token } = useAuth();
+function SkyOutlineButton({
+  label,
+  onPress,
+  disabled,
+  loading,
+  styles,
+}: {
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+  loading?: boolean;
+  styles: ReturnType<typeof buildStyles>;
+}) {
   const { colors: c } = useTheme();
-  const [open, setOpen] = useState(false);
-  const [linked, setLinked] = useState(false);
-  const [linking, setLinking] = useState(false);
-  const [error, setError] = useState('');
-  const [telegramLink, setTelegramLink] = useState<{
-    link: string;
-    qr_data_url?: string | null;
-    expires_in_seconds?: number;
-  } | null>(null);
+  return (
+    <Pressable
+      accessibilityRole="button"
+      disabled={disabled || loading}
+      style={({ pressed }) => [
+        styles.outlineBtn,
+        (disabled || loading) && { opacity: 0.55 },
+        pressed && !disabled && !loading ? { opacity: 0.85 } : null,
+      ]}
+      onPress={onPress}
+    >
+      {loading ? (
+        <ActivityIndicator color={c.link} size="small" />
+      ) : (
+        <Text style={styles.outlineBtnText}>{label}</Text>
+      )}
+    </Pressable>
+  );
+}
 
-  const styles = useThemedStyles((colors) => ({
+function buildStyles(colors: ReturnType<typeof useTheme>['colors']) {
+  return {
     panel: { marginTop: 24, width: '100%' as const },
     outlineBtn: {
       width: '100%' as const,
@@ -62,10 +79,36 @@ export function EnrollTelegramPrompt({ memberId, memberName }: Props) {
       fontWeight: '600' as const,
       color: colors.accentText,
     },
+    skyTextLink: {
+      alignSelf: 'center' as const,
+      paddingVertical: 8,
+      paddingHorizontal: 4,
+    },
+    skyTextLinkLabel: {
+      fontSize: 12,
+      fontWeight: '600' as const,
+      color: colors.link,
+      textAlign: 'center' as const,
+    },
     title: {
       fontSize: 14,
       fontWeight: '600' as const,
       color: colors.text,
+      textAlign: 'center' as const,
+    },
+    hint: {
+      marginTop: 6,
+      fontSize: 12,
+      lineHeight: 17,
+      color: colors.muted,
+      textAlign: 'center' as const,
+    },
+    shareSubline: {
+      marginTop: 16,
+      marginBottom: 8,
+      fontSize: 12,
+      fontWeight: '600' as const,
+      color: colors.muted,
       textAlign: 'center' as const,
     },
     error: {
@@ -75,37 +118,51 @@ export function EnrollTelegramPrompt({ memberId, memberName }: Props) {
       color: colors.error,
       textAlign: 'center' as const,
     },
+    loadingWrap: {
+      marginTop: 20,
+      minHeight: 44,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+    },
     qr: {
       width: 180,
       height: 180,
       borderRadius: radiusLg,
       backgroundColor: '#fff',
-      marginTop: 20,
-      alignSelf: 'center' as const,
-    },
-    qrPlaceholder: {
-      width: 180,
-      height: 180,
-      borderRadius: radiusLg,
-      backgroundColor: colors.border,
-      marginTop: 20,
+      marginTop: 12,
       alignSelf: 'center' as const,
     },
     url: {
-      marginTop: 12,
+      marginTop: 10,
       fontSize: 11,
       lineHeight: 16,
       color: colors.muted,
       textAlign: 'center' as const,
+      paddingHorizontal: 8,
     },
     expires: {
-      marginTop: 8,
+      marginTop: 10,
       fontSize: 11,
       color: colors.muted,
       textAlign: 'center' as const,
     },
-    refreshWrap: {
+    waitingRow: {
       marginTop: 12,
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      gap: 8,
+      paddingHorizontal: 8,
+    },
+    waitingText: {
+      flexShrink: 1,
+      fontSize: 12,
+      lineHeight: 17,
+      color: colors.muted,
+      textAlign: 'center' as const,
+    },
+    refreshWrap: {
+      marginTop: 8,
       alignItems: 'center' as const,
     },
     linkedRow: {
@@ -126,8 +183,33 @@ export function EnrollTelegramPrompt({ memberId, memberName }: Props) {
       color: colors.link,
       textAlign: 'center' as const,
     },
-    shareBtn: { marginTop: 12 },
-  }));
+  };
+}
+
+/**
+ * Optional Telegram link on enroll success — share-first for staff phone at desk.
+ */
+export function EnrollTelegramPrompt({ memberId, memberName }: Props) {
+  const { t } = useTranslation();
+  const { token } = useAuth();
+  const { colors: c } = useTheme();
+  const [open, setOpen] = useState(false);
+  const [showQr, setShowQr] = useState(false);
+  const [linked, setLinked] = useState(false);
+  const [linking, setLinking] = useState(false);
+  const [error, setError] = useState('');
+  const [telegramLink, setTelegramLink] = useState<{
+    link: string;
+    qr_data_url?: string | null;
+    expires_in_seconds?: number;
+  } | null>(null);
+
+  const styles = useThemedStyles((colors) => buildStyles(colors));
+
+  const closePanel = useCallback(() => {
+    setOpen(false);
+    setShowQr(false);
+  }, []);
 
   const refreshLinked = useCallback(async () => {
     if (!memberId || !token) return false;
@@ -137,13 +219,13 @@ export function EnrollTelegramPrompt({ memberId, memberName }: Props) {
       if (isLinked) {
         setLinked(true);
         setTelegramLink(null);
-        setOpen(false);
+        closePanel();
       }
       return isLinked;
     } catch {
       return false;
     }
-  }, [token, memberId]);
+  }, [token, memberId, closePanel]);
 
   const loadLink = useCallback(async () => {
     if (!memberId || !token || linking) return;
@@ -153,7 +235,7 @@ export function EnrollTelegramPrompt({ memberId, memberName }: Props) {
       const data = await createMemberTelegramLink(token, memberId);
       if (data.already_linked) {
         setLinked(true);
-        setOpen(false);
+        closePanel();
         setTelegramLink(null);
         return;
       }
@@ -169,7 +251,7 @@ export function EnrollTelegramPrompt({ memberId, memberName }: Props) {
     } finally {
       setLinking(false);
     }
-  }, [token, memberId, linking, t]);
+  }, [token, memberId, linking, t, closePanel]);
 
   useEffect(() => {
     if (!open || linked || !telegramLink) return undefined;
@@ -181,6 +263,7 @@ export function EnrollTelegramPrompt({ memberId, memberName }: Props) {
 
   const handleOpen = () => {
     setOpen(true);
+    setShowQr(false);
     if (!telegramLink) void loadLink();
   };
 
@@ -209,46 +292,32 @@ export function EnrollTelegramPrompt({ memberId, memberName }: Props) {
   if (!open) {
     return (
       <View style={styles.panel}>
-        <Pressable
-          accessibilityRole="button"
-          style={({ pressed }) => [styles.outlineBtn, pressed ? { opacity: 0.85 } : null]}
-          onPress={handleOpen}
-        >
-          <Text style={styles.outlineBtnText}>{t('checkIn.telegramLink')}</Text>
-        </Pressable>
+        <SkyOutlineButton label={t('checkIn.telegramLink')} onPress={handleOpen} styles={styles} />
       </View>
     );
   }
 
   return (
     <View style={styles.panel}>
-      <Pressable style={styles.brandLink} onPress={() => setOpen(false)}>
+      <Pressable style={styles.brandLink} onPress={closePanel}>
         <Text style={styles.brandLinkText}>← {t('enroll.telegramEnrollLater')}</Text>
       </Pressable>
-      <Text style={styles.title}>{t('checkIn.telegramLinkDeskTitle')}</Text>
+      <Text style={styles.title}>{t('checkIn.telegramLink')}</Text>
+      <Text style={styles.hint}>{t('enroll.telegramEnrollHint')}</Text>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       {linking && !telegramLink ? (
-        <View style={[styles.qrPlaceholder, { alignItems: 'center', justifyContent: 'center' }]}>
-          <ActivityIndicator color={c.accent} />
+        <View style={styles.loadingWrap}>
+          <ActivityIndicator color={c.link} />
         </View>
-      ) : telegramLink?.qr_data_url ? (
-        <Image
-          source={{ uri: telegramLink.qr_data_url }}
-          style={styles.qr}
-          accessibilityLabel={t('checkIn.telegramLinkQrAlt', { name: memberName })}
-        />
       ) : null}
 
       {telegramLink?.link ? (
         <>
-          <Text latin style={styles.url}>
-            {telegramLink.link}
-          </Text>
-          <View style={styles.shareBtn}>
-            <SecondaryButton label={t('checkIn.telegramLinkShare')} onPress={() => void handleShare()} />
-          </View>
+          <Text style={styles.shareSubline}>{t('enroll.telegramShareSubline')}</Text>
+          <SkyOutlineButton label={t('checkIn.telegramLinkShare')} onPress={() => void handleShare()} styles={styles} />
+
           {telegramLink.expires_in_seconds ? (
             <Text style={styles.expires}>
               {t('checkIn.telegramLinkExpires', {
@@ -256,6 +325,36 @@ export function EnrollTelegramPrompt({ memberId, memberName }: Props) {
               })}
             </Text>
           ) : null}
+
+          <View style={styles.waitingRow}>
+            <ActivityIndicator color={c.link} size="small" />
+            <Text style={styles.waitingText}>{t('enroll.telegramWaitingForMember')}</Text>
+          </View>
+
+          <Pressable
+            style={styles.skyTextLink}
+            onPress={() => setShowQr((v) => !v)}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: showQr }}
+          >
+            <Text style={styles.skyTextLinkLabel}>
+              {showQr ? t('enroll.telegramHideQr') : t('enroll.telegramShowQr')}
+            </Text>
+          </Pressable>
+
+          {showQr && telegramLink.qr_data_url ? (
+            <>
+              <Image
+                source={{ uri: telegramLink.qr_data_url }}
+                style={styles.qr}
+                accessibilityLabel={t('checkIn.telegramLinkQrAlt', { name: memberName })}
+              />
+              <Text latin style={styles.url} selectable>
+                {telegramLink.link}
+              </Text>
+            </>
+          ) : null}
+
           <View style={styles.refreshWrap}>
             <Pressable disabled={linking} onPress={() => void loadLink()}>
               <Text style={styles.brandLinkText}>

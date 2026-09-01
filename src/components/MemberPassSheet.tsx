@@ -17,6 +17,7 @@ import {
 } from '@/src/api/members';
 import { useAuth } from '@/src/auth/AuthContext';
 import { useFlash } from '@/src/context/FlashContext';
+import { FLASH_SHEET_ACTION_MS, type FlashToast } from '@/src/components/FlashBanner';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
@@ -25,6 +26,10 @@ import { radiusLg } from '@/src/theme/tokens';
 
 function escapeHtml(s: string) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function passToast(toast: Omit<FlashToast, 'durationMs'>) {
+  return { durationMs: FLASH_SHEET_ACTION_MS, ...toast };
 }
 
 function PassActionButton({
@@ -275,19 +280,19 @@ export function MemberPassSheet({
     try {
       const data = await sendMemberPassSms(token, memberId);
       const viaTelegram = data.channel === 'telegram';
-      showFlash({
+      showFlash(passToast({
         title: t('checkIn.passSmsSentTitle'),
         subtitle: viaTelegram
           ? t('checkIn.passTelegramSentSub', { name: memberName })
           : t('checkIn.passSmsSentSub', { name: memberName, phone: data.phone || memberPhone }),
         variant: 'success',
-      });
+      }));
       return true;
     } catch (err) {
-      showFlash({
+      showFlash(passToast({
         title: userFacingApiMessage(err, t('auth.connectionFailed'), t('checkIn.passSmsFailed')),
         variant: 'danger',
-      });
+      }));
       return false;
     } finally {
       setSmsSending(false);
@@ -304,10 +309,10 @@ export function MemberPassSheet({
         await sendPassLink();
         return;
       }
-      showFlash({
+      showFlash(passToast({
         title: t('checkIn.telegramLinked'),
         variant: 'success',
-      });
+      }));
     },
     [onTelegramLinked, sendPassLink, showFlash, t]
   );
@@ -317,10 +322,10 @@ export function MemberPassSheet({
     setShowTelegramSetup(false);
     setTelegramSetupFromSendPass(false);
     onTelegramLinked?.();
-    showFlash({
+    showFlash(passToast({
       title: t('checkIn.telegramUnlinked'),
       variant: 'success',
-    });
+    }));
   }, [onTelegramLinked, showFlash, t]);
 
   const load = useCallback(async () => {
@@ -380,26 +385,26 @@ export function MemberPassSheet({
       setPass(data);
       setConfirmRegen(false);
       if (data.sms_sent) {
-        showFlash({
+        showFlash(passToast({
           title: t('checkIn.passRegeneratedTitle'),
           subtitle: t('checkIn.passRegeneratedSmsSub', {
             name: memberName,
             phone: data.member?.phone || memberPhone,
           }),
           variant: 'success',
-        });
+        }));
       } else {
-        showFlash({
+        showFlash(passToast({
           title: t('checkIn.passRegeneratedTitle'),
           subtitle: t('checkIn.passRegeneratedSub', { name: memberName }),
           variant: 'success',
-        });
+        }));
       }
     } catch (err) {
-      showFlash({
+      showFlash(passToast({
         title: userFacingApiMessage(err, t('auth.connectionFailed'), t('checkIn.regeneratePassFailed')),
         variant: 'danger',
-      });
+      }));
     } finally {
       setRegenerating(false);
     }
@@ -443,16 +448,16 @@ export function MemberPassSheet({
       } else {
         await Print.printAsync({ html });
       }
-      showFlash({
+      showFlash(passToast({
         title: t('checkIn.passPrintedTitle'),
         subtitle: t('checkIn.passPrintedSub', { name: memberName }),
         variant: 'success',
-      });
+      }));
     } catch (err) {
-      showFlash({
+      showFlash(passToast({
         title: userFacingApiMessage(err, t('auth.connectionFailed'), t('checkIn.printPassFailed')),
         variant: 'danger',
-      });
+      }));
     } finally {
       setPrinting(false);
     }
@@ -488,10 +493,10 @@ export function MemberPassSheet({
         });
       }
     } catch (err) {
-      showFlash({
+      showFlash(passToast({
         title: userFacingApiMessage(err, t('auth.connectionFailed'), t('checkIn.telegramLinkFailed')),
         variant: 'danger',
-      });
+      }));
     } finally {
       setTelegramLinking(false);
     }

@@ -14,7 +14,6 @@ import {
   View,
   type TextInput,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText as Text } from '@/src/components/AppText';
@@ -86,8 +85,6 @@ type EnrollDone = {
   trainerFeeMethod?: string;
 };
 
-const SWIPE_HINT_KEY = 'niku.enroll.swipeHintSeen';
-
 export default function EnrollScreen() {
   const router = useRouter();
   const navigation = useNavigation();
@@ -121,10 +118,8 @@ export default function EnrollScreen() {
   const [enrollMaxStep, setEnrollMaxStep] = useState(1);
   const [enrollDone, setEnrollDone] = useState<EnrollDone | null>(null);
   const [reduceMotion, setReduceMotion] = useState(false);
-  const [showSwipeHint, setShowSwipeHint] = useState(false);
   const phoneRef = useRef<TextInput>(null);
   const checkScale = useRef(new Animated.Value(1)).current;
-  const checkOpacity = useRef(new Animated.Value(1)).current;
   const { colors: c, theme } = useTheme();
   const { t } = useTranslation();
   const styles = useThemedStyles((colors) => ({
@@ -168,7 +163,9 @@ export default function EnrollScreen() {
       borderRadius: 48,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
-      backgroundColor: 'rgba(5,150,105,0.14)',
+      borderWidth: 1.5,
+      borderColor: `${colors.accentText}45`,
+      backgroundColor: colors.accentSoft,
       marginBottom: 22,
     },
     checkInner: {
@@ -177,7 +174,7 @@ export default function EnrollScreen() {
       borderRadius: 32,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
-      backgroundColor: 'rgba(5,150,105,0.18)',
+      backgroundColor: `${colors.accentText}28`,
     },
     successTitle: {
       fontSize: 20,
@@ -234,6 +231,11 @@ export default function EnrollScreen() {
     },
     summaryUnpaid: { color: colors.warning },
     actions: { marginTop: 28, width: '100%' as const, gap: 10 },
+    actionsRow: {
+      flexDirection: 'row' as const,
+      gap: 10,
+    },
+    actionBtn: { flex: 1, marginTop: 0, marginBottom: 0 },
     stickyFooter: {
       backgroundColor: colors.bg,
       paddingTop: 12,
@@ -250,26 +252,6 @@ export default function EnrollScreen() {
       gap: 10,
     },
     stickyBtn: { flex: 1, marginTop: 0, marginBottom: 0 },
-    swipeHint: {
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
-      gap: 8,
-      alignSelf: 'flex-start' as const,
-      marginTop: -8,
-      marginBottom: 14,
-      paddingVertical: 8,
-      paddingHorizontal: 12,
-      backgroundColor: colors.accentSoft,
-    },
-    swipeHintText: {
-      flexShrink: 1,
-      color: colors.accentText,
-      fontSize: 13,
-      fontWeight: '600' as const,
-    },
-    swipeHintDismiss: {
-      padding: 2,
-    },
     warningBox: {
       marginTop: 12,
       flexDirection: 'row' as const,
@@ -290,27 +272,6 @@ export default function EnrollScreen() {
       fontWeight: '500' as const,
     },
   }));
-
-  const swipeHintVisibleRef = useRef(false);
-
-  const dismissSwipeHint = useCallback(() => {
-    if (!swipeHintVisibleRef.current) return;
-    swipeHintVisibleRef.current = false;
-    void AsyncStorage.setItem(SWIPE_HINT_KEY, '1');
-    setShowSwipeHint(false);
-  }, []);
-
-  useEffect(() => {
-    let alive = true;
-    void AsyncStorage.getItem(SWIPE_HINT_KEY).then((v) => {
-      if (!alive || v === '1') return;
-      swipeHintVisibleRef.current = true;
-      setShowSwipeHint(true);
-    });
-    return () => {
-      alive = false;
-    };
-  }, []);
 
   const canEnroll = Boolean(user && hasGymPortalAccess(user.role));
   const owner = isGymOwner(user?.role);
@@ -378,16 +339,11 @@ export default function EnrollScreen() {
     flashHaptic('success');
     if (reduceMotion) {
       checkScale.setValue(1);
-      checkOpacity.setValue(1);
       return;
     }
     checkScale.setValue(0.72);
-    checkOpacity.setValue(0);
-    Animated.parallel([
-      Animated.spring(checkScale, { toValue: 1, friction: 5, tension: 120, useNativeDriver: true }),
-      Animated.timing(checkOpacity, { toValue: 1, duration: 280, useNativeDriver: true }),
-    ]).start();
-  }, [enrollDone, checkOpacity, checkScale, reduceMotion]);
+    Animated.spring(checkScale, { toValue: 1, friction: 5, tension: 120, useNativeDriver: true }).start();
+  }, [enrollDone, checkScale, reduceMotion]);
 
   useEffect(() => {
     if (!showBranchPicker || branchId != null) return;
@@ -424,6 +380,7 @@ export default function EnrollScreen() {
     setEnrollStep(1);
     setEnrollMaxStep(1);
     setEnrollDone(null);
+    checkScale.setValue(1);
     void clearEnrollDraft();
     const active = branches.filter((b) => b.is_active !== false);
     const preferred = active.find((b) => b.is_default) ?? active[0];
@@ -658,7 +615,6 @@ export default function EnrollScreen() {
   };
 
   const goNext = () => {
-    dismissSwipeHint();
     dismissKeyboard();
     setError('');
     if (enrollStep === 1) {
@@ -676,7 +632,6 @@ export default function EnrollScreen() {
 
   const goBack = () => {
     if (enrollStep <= 1) return;
-    dismissSwipeHint();
     dismissKeyboard();
     setError('');
     void selectionHaptic();
@@ -685,7 +640,6 @@ export default function EnrollScreen() {
 
   const selectEnrollStep = (n: number) => {
     if (n < 1 || n > enrollMaxStep || n === enrollStep) return;
-    dismissSwipeHint();
     dismissKeyboard();
     if (n > enrollStep) {
       for (let s = enrollStep; s < n; s += 1) {
@@ -716,12 +670,11 @@ export default function EnrollScreen() {
           const enoughVelocity = Math.abs(g.vx) >= 0.55;
           if (!enoughDistance && !enoughVelocity) return;
           if (Math.abs(g.dy) > Math.abs(g.dx) * 0.6) return;
-          dismissSwipeHint();
           if (g.dx < 0) goNextRef.current();
           else goBackRef.current();
         },
       }),
-    [dismissSwipeHint]
+    []
   );
 
   const submitEnroll = () => {
@@ -805,9 +758,9 @@ export default function EnrollScreen() {
       <Screen>
         <FormScroll>
           <View style={styles.successWrap}>
-            <Animated.View style={[styles.checkCircle, { opacity: checkOpacity, transform: [{ scale: checkScale }] }]}>
+            <Animated.View style={[styles.checkCircle, { transform: [{ scale: checkScale }] }]}>
               <View style={styles.checkInner}>
-                <Ionicons name="checkmark" size={36} color={c.success} />
+                <Ionicons name="checkmark" size={36} color={c.accentText} />
               </View>
             </Animated.View>
             <Text style={styles.successTitle}>{t('enroll.successTitle')}</Text>
@@ -857,11 +810,14 @@ export default function EnrollScreen() {
             ) : null}
 
             <View style={styles.actions}>
-              <PrimaryButton label={t('enroll.enrollAnother')} onPress={resetForm} />
-              <SecondaryButton
-                label={t('enroll.viewMembers')}
-                onPress={() => router.replace('/(tabs)/members')}
-              />
+              <View style={styles.actionsRow}>
+                <PrimaryButton label={t('enroll.enrollAnother')} onPress={resetForm} style={styles.actionBtn} />
+                <SecondaryButton
+                  label={t('enroll.viewMembers')}
+                  onPress={() => router.replace('/(tabs)/members')}
+                  style={styles.actionBtn}
+                />
+              </View>
             </View>
           </View>
         </FormScroll>
@@ -887,28 +843,6 @@ export default function EnrollScreen() {
             reduceMotion={reduceMotion}
           />
 
-          {showSwipeHint ? (
-            <SoftSurface
-              variant="quiet"
-              onPress={dismissSwipeHint}
-              style={styles.swipeHint}
-              accessibilityRole="button"
-              accessibilityLabel={t('enroll.swipeHint')}
-            >
-              <Ionicons name="swap-horizontal" size={16} color={c.accentText} />
-              <Text style={styles.swipeHintText}>{t('enroll.swipeHintShort')}</Text>
-              <Pressable
-                onPress={dismissSwipeHint}
-                hitSlop={8}
-                style={styles.swipeHintDismiss}
-                accessibilityRole="button"
-                accessibilityLabel={t('common.dismiss')}
-              >
-                <Ionicons name="close" size={14} color={c.accentText} />
-              </Pressable>
-            </SoftSurface>
-          ) : null}
-
           <ErrorBanner
             message={
               error ||
@@ -916,7 +850,7 @@ export default function EnrollScreen() {
             }
           />
 
-          <View accessibilityHint={t('enroll.swipeHint')} {...swipeResponder.panHandlers}>
+          <View {...swipeResponder.panHandlers}>
             {enrollStep === 1 ? (
               <>
                 <Text style={styles.sectionTitle}>{t('enroll.sectionMember')}</Text>

@@ -10,6 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTheme } from '@/src/context/PreferencesContext';
+import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 
 type IonName = ComponentProps<typeof Ionicons>['name'];
 
@@ -37,6 +38,10 @@ export function AppTabBarIcon({
   badgeCount?: number;
 }) {
   const { colors: c } = useTheme();
+  const { isTablet } = useResponsiveLayout();
+  const shellWidth = isTablet ? 52 : 48;
+  const shellHeight = isTablet ? 32 : 30;
+  const shellRadius = shellHeight / 2;
   const iconName = focused && nameFocused ? nameFocused : name;
   const iconColor = focused ? '#ffffff' : color;
   const focus = useSharedValue(focused ? 1 : 0);
@@ -57,11 +62,17 @@ export function AppTabBarIcon({
   }));
 
   return (
-    <View style={styles.wrap}>
-      <Animated.View style={[styles.shell, shellStyle]}>
+    <View style={[styles.wrap, { width: shellWidth, height: shellHeight }]}>
+      <Animated.View
+        style={[
+          styles.shell,
+          { minWidth: shellWidth, height: shellHeight, paddingHorizontal: isTablet ? 14 : 12, borderRadius: shellRadius },
+          shellStyle,
+        ]}
+      >
         <Animated.View
           pointerEvents="none"
-          style={[styles.pill, { backgroundColor: c.accentCta }, solidPillStyle]}
+          style={[styles.pill, { backgroundColor: c.accentCta, borderRadius: shellRadius }, solidPillStyle]}
         />
         <Ionicons name={iconName} color={iconColor} size={size} />
       </Animated.View>
@@ -86,23 +97,16 @@ export function AppTabBarIcon({
 
 const styles = StyleSheet.create({
   wrap: {
-    width: 48,
-    height: 30,
     alignItems: 'center',
     justifyContent: 'center',
   },
   shell: {
-    minWidth: 48,
-    height: 30,
-    paddingHorizontal: 12,
-    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
   },
   pill: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 15,
   },
   badge: {
     position: 'absolute',

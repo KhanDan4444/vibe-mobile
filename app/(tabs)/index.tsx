@@ -493,11 +493,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   heroMetricValue: {
-    fontSize: 34,
+    fontSize: 35,
     letterSpacing: -0.9,
   },
   heroMetricValueLg: {
-    fontSize: 46,
+    fontSize: 47,
     letterSpacing: -1.2,
   },
   heroMetricSubValue: {

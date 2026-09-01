@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -41,6 +41,7 @@ import {
   type CheckInMember,
   type CheckInRow,
 } from '@/src/api/checkIns';
+import { fetchDashboard } from '@/src/api/dashboard';
 import { ApiError } from '@/src/api/client';
 import { useBranchScope } from '@/src/context/BranchContext';
 import { useFlash } from '@/src/context/FlashContext';
@@ -135,6 +136,7 @@ const stylesAtmosphere = StyleSheet.create({
 
 type CardError = { code: string; message: string };
 type SearchCache = { members: CheckInMember[]; settings: AttendanceSettings };
+type TodaySnap = { total: number; checkIns: CheckInRow[]; date?: string };
 
 function isExpiredStatus(status: string) {
   return (status || '').toLowerCase() === 'expired';
@@ -218,10 +220,15 @@ export default function CheckInScreen() {
     queryKey: ['check-ins', 'today-snap', branchKey],
     queryFn: () =>
       listCheckIns(token!, {
-        date: todayString(),
         limit: TODAY_LIST_LIMIT,
         branchId: selectedBranchId,
       }),
+    enabled: Boolean(token),
+  });
+
+  const dashboardQuery = useQuery({
+    queryKey: ['dashboard', branchKey],
+    queryFn: () => fetchDashboard(token!, selectedBranchId),
     enabled: Boolean(token),
   });
 
@@ -236,7 +243,16 @@ export default function CheckInScreen() {
   const canManage = Boolean(settingsQuery.data?.canManage && owner);
   const members = searchQuery.data?.members ?? [];
   const todayRows = todaySnapQuery.data?.checkIns ?? [];
-  const todayTotal = todaySnapQuery.data?.total ?? 0;
+  const listTodayTotal = todaySnapQuery.data?.total;
+  const dashboardTodayTotal = dashboardQuery.data?.checkedInToday;
+  const todayTotal = useMemo(() => {
+    if (typeof listTodayTotal === 'number' && typeof dashboardTodayTotal === 'number') {
+      return Math.max(listTodayTotal, dashboardTodayTotal);
+    }
+    if (typeof listTodayTotal === 'number') return listTodayTotal;
+    if (typeof dashboardTodayTotal === 'number') return dashboardTodayTotal;
+    return 0;
+  }, [listTodayTotal, dashboardTodayTotal]);
   const todayHasMore = todayRows.length > TODAY_PREVIEW;
   const visibleTodayRows =
     todayExpanded || !todayHasMore ? todayRows : todayRows.slice(0, TODAY_PREVIEW);
@@ -259,6 +275,35 @@ export default function CheckInScreen() {
       queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
     ]);
   }, [queryClient]);
+
+  const bumpTodayCounts = useCallback(
+    (row: CheckInRow) => {
+      queryClient.setQueryData<TodaySnap>(['check-ins', 'today-snap', branchKey], (old) => {
+        if (!old) {
+          return { total: 1, checkIns: [row] };
+        }
+        if (old.checkIns.some((r) => r.id === row.id)) return old;
+        return {
+          ...old,
+          total: (old.total ?? old.checkIns.length) + 1,
+          checkIns: [row, ...old.checkIns],
+        };
+      });
+      queryClient.setQueryData(['dashboard', branchKey], (old: { checkedInToday?: number } | undefined) => {
+        if (!old) return old;
+        return { ...old, checkedInToday: (old.checkedInToday ?? 0) + 1 };
+      });
+    },
+    [queryClient, branchKey]
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!token) return;
+      void queryClient.refetchQueries({ queryKey: ['check-ins', 'today-snap', branchKey], type: 'active' });
+      void queryClient.refetchQueries({ queryKey: ['dashboard', branchKey], type: 'active' });
+    }, [queryClient, branchKey, token])
+  );
 
   const checkInMutation = useMutation({
     mutationFn: (payload: { member: CheckInMember; force?: boolean }) =>
@@ -288,11 +333,17 @@ export default function CheckInScreen() {
             ...old,
             members: old.members.map((m) =>
               m.id === vars.member.id
-                ? { ...m, visits_this_week: data.visits_this_week, visits_limit: data.visits_limit }
+                ? {
+                    ...m,
+                    checked_in_today: true,
+                    visits_this_week: data.visits_this_week,
+                    visits_limit: data.visits_limit,
+                  }
                 : m
             ),
           };
         });
+        if (data.checkIn) bumpTodayCounts(data.checkIn);
       });
       setTimeout(() => {
         setSuccessIds((prev) => {
@@ -360,6 +411,7 @@ export default function CheckInScreen() {
     if (readOnly || isExpiredStatus(member.status)) return;
     if (checkInMutation.isPending) return;
     if (
+      member.checked_in_today ||
       alreadyTodayIds.has(member.id) ||
       cardErrors[member.id]?.code === 'ALREADY_TODAY' ||
       successIds[member.id]
@@ -405,6 +457,7 @@ export default function CheckInScreen() {
           });
         }, 900);
       }
+      if (data.checkIn) bumpTodayCounts(data.checkIn);
       void invalidateCheckIns();
     } catch (err) {
       const apiErr = err instanceof ApiError ? err : null;
@@ -472,9 +525,11 @@ export default function CheckInScreen() {
     }
   };
 
-  const refreshing = todaySnapQuery.isRefetching || settingsQuery.isRefetching;
+  const refreshing =
+    todaySnapQuery.isRefetching || settingsQuery.isRefetching || dashboardQuery.isRefetching;
   const onRefresh = () => {
     void todaySnapQuery.refetch();
+    void dashboardQuery.refetch();
     void settingsQuery.refetch();
     if (debounced) void searchQuery.refetch();
   };
@@ -817,6 +872,7 @@ export default function CheckInScreen() {
                           }
                           success={Boolean(successIds[member.id])}
                           alreadyToday={
+                            member.checked_in_today ||
                             alreadyTodayIds.has(member.id) ||
                             Boolean(successIds[member.id]) ||
                             cardErrors[member.id]?.code === 'ALREADY_TODAY'

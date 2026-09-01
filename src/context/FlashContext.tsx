@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { Modal, StyleSheet, View } from 'react-native';
 import FlashToaster, { MAX_VISIBLE_TOASTS, type FlashToast } from '@/src/components/FlashBanner';
 import { flashHaptic } from '@/src/utils/flashHaptic';
 
@@ -45,10 +46,26 @@ export function FlashProvider({ children }: { children: React.ReactNode }) {
   return (
     <FlashContext.Provider value={value}>
       {children}
-      <FlashToaster toasts={toasts} onDismiss={dismissToast} />
+      <Modal
+        visible={toasts.length > 0}
+        transparent
+        animationType="none"
+        statusBarTranslucent
+        onRequestClose={() => {}}
+      >
+        <View pointerEvents="box-none" style={styles.toastPortal}>
+          <FlashToaster toasts={toasts} onDismiss={dismissToast} />
+        </View>
+      </Modal>
     </FlashContext.Provider>
   );
 }
+
+const styles = StyleSheet.create({
+  toastPortal: {
+    ...StyleSheet.absoluteFillObject,
+  },
+});
 
 export function useFlash() {
   const ctx = useContext(FlashContext);
