@@ -226,7 +226,15 @@ export default function DashboardScreen() {
           importantForAccessibility="no"
         />
       </View>
-      <Text latin display style={[metricDisplayStyle(styles.income), { color: c.text }]}>
+      <Text
+        latin
+        display
+        style={[
+          metricDisplayStyle(styles.income),
+          isTablet ? metricDisplayStyle(styles.incomeLg) : null,
+          { color: c.text },
+        ]}
+      >
         {formatEtb(Number(data.monthlyIncome || 0), { forceCompact: false })}
       </Text>
       {trendLabel ? (
@@ -534,6 +542,10 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontSize: 30,
     letterSpacing: -0.8,
+  },
+  incomeLg: {
+    fontSize: 35,
+    letterSpacing: -0.9,
   },
   trend: { marginTop: 6, fontSize: 13, fontWeight: '600' },
   alertCard: {

@@ -314,6 +314,10 @@ export default function RevenueScreen() {
       color: colors.text,
       letterSpacing: -1,
     },
+    heroTotalLg: {
+      fontSize: 35,
+      letterSpacing: -0.9,
+    },
     heroMeta: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
@@ -366,7 +370,7 @@ export default function RevenueScreen() {
   }));
   const owner = isGymOwner(user?.role);
   const { readOnly } = useGymReadOnly();
-  const { pagePadding, listColumnItemStyle } = useResponsiveLayout();
+  const { pagePadding, listColumnItemStyle, isTablet } = useResponsiveLayout();
   const tabOverlayInset = useTabBarOverlayInset();
   const listColumns = 1;
   const { selectedBranchId, showBranchFilter } = useBranchScope();
@@ -476,7 +480,14 @@ export default function RevenueScreen() {
           <Text style={appTextStyle(language, styles.heroLabel)}>
             {periodLabel}
           </Text>
-          <Text latin display style={metricDisplayStyle(styles.heroTotal)}>
+          <Text
+            latin
+            display
+            style={[
+              metricDisplayStyle(styles.heroTotal),
+              isTablet ? metricDisplayStyle(styles.heroTotalLg) : null,
+            ]}
+          >
             {formatEtb(Number(summary?.total || 0), { forceCompact: false })}
           </Text>
           <View style={styles.heroMeta}>
