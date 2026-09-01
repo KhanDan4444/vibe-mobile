@@ -530,7 +530,7 @@ const styles = StyleSheet.create({
     marginTop: space.md,
     padding: space.lg,
   },
-  summaryTitle: { fontSize: 12, fontWeight: '600', letterSpacing: 0.4, textTransform: 'uppercase' },
+  summaryTitle: { fontSize: 11, fontWeight: '600', letterSpacing: 0.4, textTransform: 'uppercase' },
   summaryTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',

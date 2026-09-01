@@ -66,8 +66,15 @@ function buildReportStyles(colors: ThemeColors) {
       marginTop: space.lg,
       padding: space.lg + 2,
     },
-    revenuePeriod: { fontSize: 13, fontWeight: '600' as const, color: colors.accentText },
+    revenuePeriod: {
+      fontSize: 11,
+      fontWeight: '600' as const,
+      letterSpacing: 0.4,
+      textTransform: 'uppercase' as const,
+      color: colors.muted,
+    },
     revenueTotal: { marginTop: 6, fontSize: 30, letterSpacing: -0.8, color: colors.text },
+    revenueTotalLg: { fontSize: 35, letterSpacing: -0.9 },
     revenueMeta: { marginTop: 6, fontSize: 13, color: colors.dim },
     fullSection: {
       marginTop: space.xxl,
@@ -86,7 +93,7 @@ export default function ReportsScreen() {
   const { colors: c } = useTheme();
   const { language } = usePreferences();
   const { t } = useTranslation();
-  const { pagePadding, reportStatLayoutStyle } = useResponsiveLayout();
+  const { pagePadding, reportStatLayoutStyle, isTablet } = useResponsiveLayout();
   const styles = useThemedStyles((colors) => buildReportStyles(colors));
   const [revenuePreset, setRevenuePreset] = useState<RevenuePreset>('this_month');
   const [exporting, setExporting] = useState<string | null>(null);
@@ -324,8 +331,22 @@ export default function ReportsScreen() {
 
       {revenueSummary ? (
         <SoftSurface variant="panel" style={styles.revenueSummary}>
-          <Text style={styles.revenuePeriod}>{periodLabel}</Text>
-          <Text latin display style={metricDisplayStyle(styles.revenueTotal)}>
+          <Text
+            style={appTextStyle(language, {
+              ...styles.revenuePeriod,
+              ...(language === 'am' ? { textTransform: 'none', letterSpacing: 0 } : null),
+            })}
+          >
+            {periodLabel}
+          </Text>
+          <Text
+            latin
+            display
+            style={[
+              metricDisplayStyle(styles.revenueTotal),
+              isTablet ? metricDisplayStyle(styles.revenueTotalLg) : null,
+            ]}
+          >
             {formatEtb(Number(revenueSummary.total || 0), { forceCompact: false })}
           </Text>
           <Text style={styles.revenueMeta}>
