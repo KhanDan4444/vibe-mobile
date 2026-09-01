@@ -86,6 +86,13 @@ function buildStyles(colors: ReturnType<typeof useTheme>['colors']) {
       color: colors.text,
       textAlign: 'center' as const,
     },
+    hint: {
+      marginTop: 8,
+      fontSize: 12,
+      lineHeight: 18,
+      color: colors.muted,
+      textAlign: 'center' as const,
+    },
     urlRow: {
       marginTop: 10,
       flexDirection: 'row' as const,
@@ -287,7 +294,8 @@ export function EnrollTelegramPrompt({ memberId, memberName }: Props) {
       <Pressable style={styles.brandLink} onPress={closePanel}>
         <Text style={styles.brandLinkText}>← {t('enroll.telegramEnrollLater')}</Text>
       </Pressable>
-      <Text style={styles.title}>{t('checkIn.telegramLink')}</Text>
+      <Text style={styles.title}>{t('checkIn.telegramLinkDeskTitle')}</Text>
+      <Text style={styles.hint}>{t('checkIn.telegramLinkDeskHint')}</Text>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 

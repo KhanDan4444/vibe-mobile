@@ -428,6 +428,32 @@ export function ListFooterSkeleton() {
   );
 }
 
+/** Visit rules sheet — weekly cap chips + self check-in row */
+export function CheckInVisitRulesSkeleton() {
+  return (
+    <View style={{ gap: 16 }} accessibilityLabel="Loading" accessibilityRole="progressbar">
+      <View style={{ gap: 10 }}>
+        <SkeletonBone width={88} height={12} />
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          {Array.from({ length: 4 }, (_, i) => (
+            <SkeletonBone key={i} width={104} height={36} radius={999} />
+          ))}
+        </View>
+      </View>
+      <SkeletonBone width="100%" height={StyleSheet.hairlineWidth} />
+      <View style={{ flexDirection: 'row', gap: 14, alignItems: 'flex-start' }}>
+        <SkeletonBone width={44} height={44} radius={16} />
+        <View style={{ flex: 1, gap: 8 }}>
+          <SkeletonBone width={120} height={14} />
+          <SkeletonBone width="92%" height={12} />
+          <SkeletonBone width={100} height={12} />
+        </View>
+        <SkeletonBone width={52} height={32} radius={999} />
+      </View>
+    </View>
+  );
+}
+
 /** Check-in search results — ring + identity + right CTA (matches CheckInMemberCard). */
 export function CheckInSearchSkeleton({
   count = 2,

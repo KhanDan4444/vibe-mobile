@@ -25,6 +25,8 @@ import { dismissKeyboard } from '@/src/utils/dismissKeyboard';
 import { runInBackground } from '@/src/utils/runInBackground';
 import { todayString } from '@/src/utils/date';
 import { validateRequiredEthiopianPhone } from '@/src/utils/phone';
+import { resolveMemberMutationError } from '@/src/utils/apiErrorMessage';
+import { formatApiError } from '@/src/utils/paymentValidation';
 import { PAYMENT_METHODS } from '@/src/constants/payments';
 import type { UpdateMemberPayload } from '@/src/types/api';
 import { useTranslation } from 'react-i18next';
@@ -164,7 +166,11 @@ export default function EditMemberScreen() {
         ])
       );
     },
-    onError: (e: Error) => setError(e.message),
+    onError: (e: Error) => {
+      const next = resolveMemberMutationError(e, t, formatApiError);
+      setError(next.banner);
+      setPhoneError(next.phoneError);
+    },
   });
 
   const buildPayload = (): UpdateMemberPayload => {

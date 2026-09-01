@@ -1,5 +1,5 @@
 import '@/src/i18n';
-import { Stack } from 'expo-router';
+import { Stack, useSegments } from 'expo-router';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -76,6 +76,8 @@ export default function RootLayout() {
 
 function RootNavigator() {
   const { loading, subscription, user } = useAuth();
+  const segments = useSegments();
+  const isPublicCheckIn = (segments as string[]).includes('check-in');
   const { colors: c } = useTheme();
   const { language } = usePreferences();
   const { t } = useTranslation();
@@ -84,17 +86,22 @@ function RootNavigator() {
 
   // Logged-in cold start: tabs never hit login's onHeroReady — dismiss once auth is ready.
   useEffect(() => {
+    if (isPublicCheckIn) {
+      dismissBootSplash();
+      return;
+    }
     if (!loading && user) dismissBootSplash();
-  }, [loading, user, dismissBootSplash]);
+  }, [loading, user, dismissBootSplash, isPublicCheckIn]);
 
   useEffect(() => {
+    if (isPublicCheckIn) return;
     if (
       !loading &&
       (subscription?.accessDenied || subscription?.locked || subscription?.status === 'expired')
     ) {
       dismissBootSplash();
     }
-  }, [loading, subscription, dismissBootSplash]);
+  }, [loading, subscription, dismissBootSplash, isPublicCheckIn]);
 
   const stackScreen = {
     headerShown: true as const,
@@ -114,7 +121,10 @@ function RootNavigator() {
     return <AppBootSplash />;
   }
 
-  if (subscription?.accessDenied || subscription?.locked || subscription?.status === 'expired') {
+  if (
+    !isPublicCheckIn &&
+    (subscription?.accessDenied || subscription?.locked || subscription?.status === 'expired')
+  ) {
     return (
       <>
         <SystemChrome />
@@ -137,6 +147,7 @@ function RootNavigator() {
         >
           <Stack.Screen name="index" />
           <Stack.Screen name="login" />
+          <Stack.Screen name="check-in" />
           <Stack.Screen name="forgot-password" />
           <Stack.Screen name="register-gym" />
           <Stack.Screen name="(tabs)" />

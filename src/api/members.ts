@@ -159,3 +159,10 @@ export function createMemberTelegramLink(token: string, id: number) {
     token,
   });
 }
+
+export function unlinkMemberTelegram(token: string, id: number) {
+  return apiRequest<{ ok: boolean; member_id: number }>(`/members/${id}/telegram`, {
+    method: 'DELETE',
+    token,
+  });
+}

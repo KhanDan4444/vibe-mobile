@@ -59,6 +59,7 @@ import {
 import { formatEtb } from '@/src/utils/formatMoney';
 import { formatPlanDisplayName } from '@/src/utils/formatPlanDisplayName';
 import { formatApiError } from '@/src/utils/paymentValidation';
+import { resolveMemberMutationError } from '@/src/utils/apiErrorMessage';
 import { flashHaptic, selectionHaptic } from '@/src/utils/flashHaptic';
 import { validateRequiredEthiopianPhone } from '@/src/utils/phone';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
@@ -547,7 +548,11 @@ export default function EnrollScreen() {
           : undefined,
       });
     },
-    onError: (e: Error) => setError(formatApiError(e.message)),
+    onError: (e: Error) => {
+      const next = resolveMemberMutationError(e, t, formatApiError);
+      setError(next.banner);
+      setPhoneError(next.phoneError);
+    },
   });
 
   const enrollSteps = useMemo(

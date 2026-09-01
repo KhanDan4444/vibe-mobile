@@ -5,6 +5,7 @@ export type AttendanceSettings = {
   week_starts_on: 'monday' | 'sunday';
   one_checkin_per_day: boolean;
   over_limit_policy: 'block' | 'warn_allow';
+  station_self_checkin?: boolean;
 };
 
 export type CheckInMember = {
@@ -74,7 +75,12 @@ export function fetchAttendanceSettings(token: string) {
 
 export function updateAttendanceSettings(
   token: string,
-  payload: Partial<Pick<AttendanceSettings, 'visits_per_week' | 'week_starts_on' | 'one_checkin_per_day' | 'over_limit_policy'>>
+  payload: Partial<
+    Pick<
+      AttendanceSettings,
+      'visits_per_week' | 'week_starts_on' | 'one_checkin_per_day' | 'over_limit_policy' | 'station_self_checkin'
+    >
+  >
 ) {
   return apiRequest<{ settings: AttendanceSettings }>('/check-ins/settings', {
     token,

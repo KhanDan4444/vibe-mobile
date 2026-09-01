@@ -47,3 +47,33 @@ export function userFacingApiMessage(
   }
   return fallback;
 }
+
+type MemberMutationErrors = {
+  banner: string;
+  phoneError: string;
+};
+
+/** Map enroll/edit API errors — phone field vs banner (e.g. PHONE_ALREADY_USED). */
+export function resolveMemberMutationError(
+  error: unknown,
+  t: (key: string, params?: Record<string, string>) => string,
+  formatMessage: (message: string) => string = (m) => m
+): MemberMutationErrors {
+  if (error instanceof ApiError && error.code === 'PHONE_ALREADY_USED') {
+    const rawName = error.details?.member_name;
+    const name = typeof rawName === 'string' && rawName.trim() ? rawName.trim() : 'another member';
+    return {
+      banner: '',
+      phoneError: t('validation.phoneAlreadyUsed', { name }),
+    };
+  }
+  if (error instanceof ApiError && error.field === 'phone') {
+    return {
+      banner: '',
+      phoneError: formatMessage(error.message),
+    };
+  }
+  const message =
+    error instanceof Error ? formatMessage(error.message) : formatMessage('Request failed');
+  return { banner: message, phoneError: '' };
+}

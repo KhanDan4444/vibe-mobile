@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
   RefreshControl,
   StyleSheet,
+  Switch,
   unstable_batchedUpdates,
   View,
 } from 'react-native';
@@ -24,10 +24,11 @@ import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { EmptyState } from '@/src/components/EmptyState';
 import { LoadError } from '@/src/components/LoadError';
 import { MemberPhoto } from '@/src/components/MemberPhoto';
+import { GymQrSheet } from '@/src/components/GymQrSheet';
 import { ScanQrDockButton, SCAN_QR_DOCK_BOTTOM } from '@/src/components/ScanQrDockButton';
 import { ScanMemberQrSheet } from '@/src/components/ScanMemberQrSheet';
 import { SearchField } from '@/src/components/SearchField';
-import { CheckInSearchSkeleton, PageSkeleton } from '@/src/components/Skeleton';
+import { CheckInSearchSkeleton, CheckInVisitRulesSkeleton, PageSkeleton, SkeletonBone } from '@/src/components/Skeleton';
 import { TabScreenFrame } from '@/src/components/TabScreenFrame';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -149,7 +150,7 @@ export default function CheckInScreen() {
   const isLight = theme === 'light';
   const { showFlash } = useFlash();
   const { readOnly } = useGymReadOnly();
-  const { selectedBranchId, showBranchFilter } = useBranchScope();
+  const { selectedBranchId, showBranchFilter, activeBranches } = useBranchScope();
   const { pagePadding, listColumns, listColumnItemStyle } = useResponsiveLayout();
   const tabOverlayInset = useTabBarOverlayInset();
   const queryClient = useQueryClient();
@@ -171,6 +172,8 @@ export default function CheckInScreen() {
   } | null>(null);
   const [scanOpen, setScanOpen] = useState(false);
   const [scanBusy, setScanBusy] = useState(false);
+  const [stationOpen, setStationOpen] = useState(false);
+  const [visitRulesLoading, setVisitRulesLoading] = useState(false);
   const router = useRouter();
 
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
@@ -239,8 +242,33 @@ export default function CheckInScreen() {
     enabled: Boolean(token) && debounced.length > 0,
   });
 
-  const settings = settingsQuery.data?.settings ?? searchQuery.data?.settings ?? null;
   const canManage = Boolean(settingsQuery.data?.canManage && owner);
+
+  const settings = useMemo((): AttendanceSettings | null => {
+    const fromSettings = settingsQuery.data?.settings;
+    const fromSearch = searchQuery.data?.settings;
+    if (!fromSettings && !fromSearch) return null;
+    return { ...fromSearch, ...fromSettings } as AttendanceSettings;
+  }, [settingsQuery.data?.settings, searchQuery.data?.settings]);
+
+  useEffect(() => {
+    if (!settingsOpen || !canManage || !token) return;
+    let cancelled = false;
+    setVisitRulesLoading(true);
+    void settingsQuery.refetch().finally(() => {
+      if (!cancelled) setVisitRulesLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [settingsOpen, canManage, token]);
+
+  const stationBranchId = useMemo(() => {
+    if (selectedBranchId !== 'all') return selectedBranchId;
+    const def = activeBranches.find((b) => b.is_default);
+    return def?.id ?? activeBranches[0]?.id ?? null;
+  }, [selectedBranchId, activeBranches]);
+
   const members = searchQuery.data?.members ?? [];
   const todayRows = todaySnapQuery.data?.checkIns ?? [];
   const listTodayTotal = todaySnapQuery.data?.total;
@@ -406,6 +434,49 @@ export default function CheckInScreen() {
       });
     },
   });
+
+  const toggleSelfCheckInMutation = useMutation({
+    mutationFn: (station_self_checkin: boolean) =>
+      updateAttendanceSettings(token!, { station_self_checkin }),
+    onMutate: async (next) => {
+      await queryClient.cancelQueries({ queryKey: ['check-in-settings'] });
+      const previous = queryClient.getQueryData<{
+        settings: AttendanceSettings;
+        canManage: boolean;
+      }>(['check-in-settings']);
+      if (previous) {
+        queryClient.setQueryData(['check-in-settings'], {
+          ...previous,
+          settings: { ...previous.settings, station_self_checkin: next },
+        });
+      }
+      return { previous };
+    },
+    onSuccess: (data, next) => {
+      queryClient.setQueryData(['check-in-settings'], {
+        settings: data.settings,
+        canManage: true,
+      });
+      showFlash({
+        title: next
+          ? t('checkIn.stationEnabledToast')
+          : t('checkIn.stationDisabledToast'),
+        variant: 'success',
+      });
+    },
+    onError: (err, _next, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['check-in-settings'], context.previous);
+      }
+      showFlash({
+        title: userFacingApiMessage(err, t('checkIn.settingsFailed'), t('checkIn.settingsFailed')),
+        variant: 'danger',
+      });
+    },
+  });
+
+  const visitRulesBusy =
+    visitRulesLoading || saveCapMutation.isPending || toggleSelfCheckInMutation.isPending;
 
   const runCheckIn = (member: CheckInMember, force = false) => {
     if (readOnly || isExpiredStatus(member.status)) return;
@@ -727,6 +798,67 @@ export default function CheckInScreen() {
     },
     idleWrap: { paddingHorizontal: 8, paddingTop: 4, paddingBottom: 12 },
     sheetBody: { fontSize: 13, lineHeight: 19, color: theme.muted, marginBottom: 10 },
+    gymQrBtn: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: isLight ? 'rgba(15,118,110,0.22)' : 'rgba(153,246,228,0.2)',
+      backgroundColor: isLight ? 'rgba(15,118,110,0.08)' : 'rgba(15,118,110,0.14)',
+    },
+    gymQrBtnLabel: {
+      fontSize: 11,
+      fontWeight: '600' as const,
+      color: isLight ? '#0f766e' : '#99f6e4',
+    },
+    chipRow: {
+      flexDirection: 'row' as const,
+      flexWrap: 'wrap' as const,
+      alignItems: 'center' as const,
+      gap: 8,
+      marginTop: 2,
+    },
+    selfCheckRow: {
+      flexDirection: 'row' as const,
+      alignItems: 'flex-start' as const,
+      gap: 12,
+      marginTop: 8,
+      paddingTop: 16,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: isLight ? 'rgba(15,23,42,0.08)' : 'rgba(228,231,238,0.1)',
+    },
+    selfCheckIcon: {
+      width: 44,
+      height: 44,
+      borderRadius: 16,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      backgroundColor: isLight ? 'rgba(15,118,110,0.12)' : 'rgba(15,118,110,0.2)',
+    },
+    selfCheckTitleRow: {
+      flexDirection: 'row' as const,
+      flexWrap: 'wrap' as const,
+      alignItems: 'center' as const,
+      gap: 6,
+    },
+    selfCheckTitle: { fontSize: 14, fontWeight: '600' as const, color: theme.text },
+    selfCheckBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 999,
+    },
+    selfCheckBadgeOn: {
+      backgroundColor: isLight ? 'rgba(15,118,110,0.14)' : 'rgba(15,118,110,0.24)',
+    },
+    selfCheckBadgeOff: {
+      backgroundColor: isLight ? 'rgba(15,23,42,0.06)' : 'rgba(228,231,238,0.08)',
+    },
+    selfCheckBadgeText: { fontSize: 10, fontWeight: '700' as const, letterSpacing: 0.6, textTransform: 'uppercase' as const },
+    selfCheckHint: { marginTop: 4, fontSize: 13, lineHeight: 18, color: theme.muted },
+    viewQrLink: { marginTop: 8, fontSize: 13, fontWeight: '600' as const, color: isLight ? '#0f766e' : '#99f6e4' },
   }));
 
   if (!token) return null;
@@ -780,38 +912,63 @@ export default function CheckInScreen() {
                 <View style={styles.heroTop}>
                   <View style={styles.deskCol}>
                     <Text style={styles.deskLabel}>{t('checkIn.deskLabel')}</Text>
-                    {capChipLabel ? (
-                      <Pressable
-                        disabled={!canManage || readOnly}
-                        onPress={() => canManage && setSettingsOpen(true)}
-                        hitSlop={6}
-                        accessibilityRole={canManage && !readOnly ? 'button' : undefined}
-                        accessibilityLabel={
-                          canManage && !readOnly ? t('checkIn.visitRulesTitle') : capChipLabel
-                        }
-                        style={({ pressed }) => [
-                          styles.capChip,
-                          canManage && !readOnly ? styles.capChipAction : styles.capChipIdle,
-                          pressed && canManage && !readOnly ? { opacity: 0.75 } : null,
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.capChipText,
-                            canManage && !readOnly ? styles.capChipTextAction : null,
+                    <View style={styles.chipRow}>
+                      {settingsQuery.isLoading && !settings ? (
+                        <SkeletonBone width={92} height={22} radius={999} />
+                      ) : capChipLabel ? (
+                        <Pressable
+                          disabled={!canManage || readOnly}
+                          onPress={() => canManage && setSettingsOpen(true)}
+                          hitSlop={6}
+                          accessibilityRole={canManage && !readOnly ? 'button' : undefined}
+                          accessibilityLabel={
+                            canManage && !readOnly ? t('checkIn.visitRulesTitle') : capChipLabel
+                          }
+                          style={({ pressed }) => [
+                            styles.capChip,
+                            canManage && !readOnly ? styles.capChipAction : styles.capChipIdle,
+                            pressed && canManage && !readOnly ? { opacity: 0.75 } : null,
                           ]}
                         >
-                          {capChipLabel}
-                        </Text>
-                        {canManage && !readOnly ? (
+                          <Text
+                            style={[
+                              styles.capChipText,
+                              canManage && !readOnly ? styles.capChipTextAction : null,
+                            ]}
+                          >
+                            {capChipLabel}
+                          </Text>
+                          {canManage && !readOnly ? (
+                            <Ionicons
+                              name="chevron-down"
+                              size={12}
+                              color={isLight ? '#0f766e' : '#99f6e4'}
+                            />
+                          ) : null}
+                        </Pressable>
+                      ) : null}
+                      {!readOnly ? (
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel={t('checkIn.stationAction')}
+                          onPress={() => {
+                            void Haptics.selectionAsync().catch(() => undefined);
+                            setStationOpen(true);
+                          }}
+                          style={({ pressed }) => [
+                            styles.gymQrBtn,
+                            { opacity: pressed ? 0.75 : 1 },
+                          ]}
+                        >
                           <Ionicons
-                            name="chevron-down"
-                            size={12}
+                            name="qr-code-outline"
+                            size={13}
                             color={isLight ? '#0f766e' : '#99f6e4'}
                           />
-                        ) : null}
-                      </Pressable>
-                    ) : null}
+                          <Text style={styles.gymQrBtnLabel}>{t('checkIn.stationAction')}</Text>
+                        </Pressable>
+                      ) : null}
+                    </View>
                   </View>
                   <Text latin display style={metricDisplayStyle(styles.todayCount)}>
                     {todaySnapQuery.isLoading ? '—' : todayTotal}
@@ -1014,24 +1171,83 @@ export default function CheckInScreen() {
         showCloseButton
       >
         <Text style={styles.sheetBody}>{t('checkIn.visitRulesBody')}</Text>
-        {CAP_OPTIONS.map((opt) => {
-          const active =
-            effectiveVisitsPerWeek(settings?.visits_per_week) === opt.value;
-          return (
-            <SheetOption
-              key={String(opt.value)}
-              label={t(opt.labelKey, { count: opt.value })}
-              selected={active}
-              onPress={() => {
-                if (readOnly || saveCapMutation.isPending) return;
-                saveCapMutation.mutate(opt.value);
-              }}
-            />
-          );
-        })}
-        {saveCapMutation.isPending ? (
-          <ActivityIndicator color={c.accent} style={{ marginTop: 8 }} />
-        ) : null}
+        {visitRulesBusy ? (
+          <CheckInVisitRulesSkeleton />
+        ) : (
+          <>
+            {CAP_OPTIONS.map((opt) => {
+              const active = effectiveVisitsPerWeek(settings?.visits_per_week) === opt.value;
+              return (
+                <SheetOption
+                  key={String(opt.value)}
+                  label={t(opt.labelKey, { count: opt.value })}
+                  selected={active}
+                  onPress={() => {
+                    if (readOnly || saveCapMutation.isPending) return;
+                    saveCapMutation.mutate(opt.value);
+                  }}
+                />
+              );
+            })}
+            <View style={styles.selfCheckRow}>
+              <View style={styles.selfCheckIcon}>
+                <Ionicons name="qr-code-outline" size={20} color={isLight ? '#0f766e' : '#99f6e4'} />
+              </View>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <View style={styles.selfCheckTitleRow}>
+                  <Text style={styles.selfCheckTitle}>{t('checkIn.stationSelfCheckIn')}</Text>
+                  <View
+                    style={[
+                      styles.selfCheckBadge,
+                      settings?.station_self_checkin
+                        ? styles.selfCheckBadgeOn
+                        : styles.selfCheckBadgeOff,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.selfCheckBadgeText,
+                        {
+                          color: settings?.station_self_checkin
+                            ? isLight
+                              ? '#0f766e'
+                              : '#99f6e4'
+                            : c.muted,
+                        },
+                      ]}
+                    >
+                      {settings?.station_self_checkin
+                        ? t('checkIn.stationSelfCheckInOn')
+                        : t('checkIn.stationSelfCheckInOff')}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.selfCheckHint}>{t('checkIn.stationSelfCheckInHint')}</Text>
+                {settings?.station_self_checkin ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => {
+                      setSettingsOpen(false);
+                      setStationOpen(true);
+                    }}
+                  >
+                    <Text style={styles.viewQrLink}>{t('checkIn.stationViewQr')}</Text>
+                  </Pressable>
+                ) : null}
+              </View>
+              <Switch
+                value={Boolean(settings?.station_self_checkin)}
+                onValueChange={(next) => {
+                  if (readOnly || toggleSelfCheckInMutation.isPending) return;
+                  toggleSelfCheckInMutation.mutate(next);
+                }}
+                disabled={readOnly || toggleSelfCheckInMutation.isPending}
+                trackColor={{ false: c.border, true: c.accent }}
+                thumbColor="#ffffff"
+              />
+            </View>
+          </>
+        )}
       </BottomSheet>
 
       <ConfirmDialog
@@ -1064,6 +1280,16 @@ export default function CheckInScreen() {
           if (!scanBusy) setScanOpen(false);
         }}
         onScan={(token) => runCheckInFromPass(token)}
+      />
+
+      <GymQrSheet
+        visible={stationOpen}
+        onClose={() => setStationOpen(false)}
+        token={token}
+        branches={activeBranches}
+        initialBranchId={stationBranchId}
+        canRegenerate={owner && canManage}
+        selfCheckInEnabled={Boolean(settings?.station_self_checkin)}
       />
 
       {!readOnly ? (

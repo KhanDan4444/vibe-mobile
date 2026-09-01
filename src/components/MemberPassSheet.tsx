@@ -14,6 +14,7 @@ import {
   fetchMemberPass,
   regenerateMemberPass,
   sendMemberPassSms,
+  unlinkMemberTelegram,
   type MemberPassResponse,
 } from '@/src/api/members';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -33,47 +34,8 @@ function passToast(toast: Omit<FlashToast, 'durationMs'>) {
   return { durationMs: FLASH_SHEET_ACTION_MS, ...toast };
 }
 
-function PassActionButton({
-  label,
-  onPress,
-  disabled,
-  loading,
-}: {
-  label: string;
-  onPress: () => void;
-  disabled?: boolean;
-  loading?: boolean;
-}) {
-  const { colors: c } = useTheme();
-  const idle = Boolean(disabled && !loading);
-  return (
-    <Pressable
-      accessibilityRole="button"
-      disabled={disabled || loading}
-      onPress={onPress}
-      style={({ pressed }) => ({
-        minHeight: 32,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: c.border,
-        backgroundColor: pressed && !idle ? c.inputBg : c.card,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        opacity: idle ? 0.5 : 1,
-      })}
-    >
-      {loading ? (
-        <ActivityIndicator color={c.muted} size="small" />
-      ) : (
-        <Text style={{ fontSize: 13, fontWeight: '500', color: c.text }} numberOfLines={1}>
-          {label}
-        </Text>
-      )}
-    </Pressable>
-  );
-}
+import { QrSheetActionButton } from '@/src/components/QrSheetActionButton';
+import { TelegramLinkStatusRow } from '@/src/components/TelegramLinkStatusRow';
 
 export function MemberPassSheet({
   visible,
@@ -167,13 +129,6 @@ export function MemberPassSheet({
       paddingHorizontal: 8,
     },
     regenText: { fontSize: 13, fontWeight: '600' as const, color: colors.accentText },
-    telegramLinked: {
-      marginTop: 10,
-      fontSize: 12,
-      fontWeight: '600' as const,
-      color: colors.link,
-      textAlign: 'center' as const,
-    },
     linkTelegramBtn: {
       marginTop: 10,
       alignSelf: 'center' as const,
@@ -286,6 +241,8 @@ export function MemberPassSheet({
   const [printing, setPrinting] = useState(false);
   const [smsSending, setSmsSending] = useState(false);
   const [telegramLinking, setTelegramLinking] = useState(false);
+  const [telegramUnlinking, setTelegramUnlinking] = useState(false);
+  const [confirmTelegramUnlink, setConfirmTelegramUnlink] = useState(false);
   const [telegramLink, setTelegramLink] = useState<{
     link: string;
     qr_data_url?: string | null;
@@ -347,6 +304,7 @@ export function MemberPassSheet({
   );
 
   const handleTelegramUnlinked = useCallback(() => {
+    setLiveTelegramChatId(null);
     setTelegramLink(null);
     setShowTelegramSetup(false);
     setTelegramSetupFromSendPass(false);
@@ -356,6 +314,23 @@ export function MemberPassSheet({
       variant: 'success',
     }));
   }, [onTelegramLinked, showFlash, t]);
+
+  const onTelegramUnlink = async () => {
+    if (!token || telegramUnlinking || !telegramLinked) return;
+    setTelegramUnlinking(true);
+    try {
+      await unlinkMemberTelegram(token, memberId);
+      setConfirmTelegramUnlink(false);
+      handleTelegramUnlinked();
+    } catch (err) {
+      showFlash(passToast({
+        title: userFacingApiMessage(err, t('auth.connectionFailed'), t('checkIn.telegramUnlinkFailed')),
+        variant: 'danger',
+      }));
+    } finally {
+      setTelegramUnlinking(false);
+    }
+  };
 
   const load = useCallback(async () => {
     if (!token || !memberId) return;
@@ -540,7 +515,7 @@ export function MemberPassSheet({
     }
   };
 
-  const busy = loading || regenerating || printing || smsSending || telegramLinking;
+  const busy = loading || regenerating || printing || smsSending || telegramLinking || telegramUnlinking;
 
   const passCard = (
     <SoftSurface variant="quiet" style={styles.card}>
@@ -588,7 +563,7 @@ export function MemberPassSheet({
   const passActions = (
     <View style={styles.actions}>
       <View style={styles.actionCol}>
-        <PassActionButton
+        <QrSheetActionButton
           label={printing ? t('common.processing') : t('checkIn.printPass')}
           onPress={() => void onPrint()}
           disabled={busy || !pass?.qr_data_url}
@@ -596,7 +571,7 @@ export function MemberPassSheet({
         />
       </View>
       <View style={styles.actionCol}>
-        <PassActionButton
+        <QrSheetActionButton
           label={smsSending ? t('common.processing') : t('checkIn.smsPass')}
           onPress={() => void onSms()}
           disabled={smsSending}
@@ -686,8 +661,17 @@ export function MemberPassSheet({
           <>
             {passCard}
             {passActions}
+            {!telegramLinked ? (
+              <Text style={[styles.telegramHint, { marginTop: 10, textAlign: 'center' }]}>
+                {t('checkIn.passNoTelegram')}
+              </Text>
+            ) : null}
             {telegramLinked ? (
-              <Text style={styles.telegramLinked}>{t('checkIn.telegramLinked')}</Text>
+              <TelegramLinkStatusRow
+                variant="panel"
+                disabled={busy}
+                onUnlink={() => setConfirmTelegramUnlink(true)}
+              />
             ) : (
               <Pressable
                 style={styles.linkTelegramBtn}
@@ -731,6 +715,17 @@ export function MemberPassSheet({
         destructive={false}
         onCancel={() => setConfirmRegen(false)}
         onConfirm={() => void onRegenerate()}
+      />
+
+      <ConfirmDialog
+        visible={confirmTelegramUnlink}
+        title={t('checkIn.telegramUnlink')}
+        message={t('checkIn.telegramUnlinkConfirm', { name: memberName })}
+        confirmLabel={t('checkIn.telegramUnlink')}
+        destructive
+        confirmLoading={telegramUnlinking}
+        onCancel={() => setConfirmTelegramUnlink(false)}
+        onConfirm={() => void onTelegramUnlink()}
       />
     </>
   );

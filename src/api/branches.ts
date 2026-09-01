@@ -31,3 +31,24 @@ export function updateBranch(token: string, id: number, payload: UpdateBranchPay
     body: JSON.stringify(payload),
   });
 }
+
+export type BranchStationPassResponse = {
+  station_version: number;
+  station_token: string;
+  check_in_url: string;
+  qr_data_url: string;
+  gym_name: string;
+  branch_name: string;
+  station_self_checkin: boolean;
+};
+
+export function fetchBranchStationPass(token: string, branchId: number) {
+  return apiRequest<BranchStationPassResponse>(`/gym/branches/${branchId}/station-pass`, { token });
+}
+
+export function regenerateBranchStationPass(token: string, branchId: number) {
+  return apiRequest<BranchStationPassResponse>(`/gym/branches/${branchId}/station-pass/regenerate`, {
+    method: 'POST',
+    token,
+  });
+}
