@@ -25,8 +25,8 @@ export const colors = {
   card: '#1e293b',
   border: '#334155',
   text: '#f8fafc',
-  muted: '#94a3b8',
-  dim: '#64748b',
+  muted: '#334155',
+  dim: '#475569',
   accent: '#0f766e',
   error: '#fda4af',
   errorBg: 'rgba(244,63,94,0.15)',
@@ -103,7 +103,7 @@ export function Label({ children, required }: { children: string; required?: boo
     <Text
       style={[
         formStyles.label,
-        { color: authSurface ? AUTH.textMuted : c.muted },
+        { color: authSurface ? AUTH.textMuted : c.text },
         authSurface ? { letterSpacing: 0.2, fontWeight: '500' } : null,
       ]}
     >

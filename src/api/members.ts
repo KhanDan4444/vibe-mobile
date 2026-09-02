@@ -46,6 +46,21 @@ export function fetchMemberPayments(token: string, id: number) {
   return apiRequest<PaymentRow[]>(`/members/${id}/payments`, { token });
 }
 
+export function checkMemberPhoneAvailable(
+  token: string,
+  phone: string,
+  excludeMemberId?: number
+) {
+  const qs = new URLSearchParams({ phone: phone.trim() });
+  if (excludeMemberId != null) qs.set('exclude_member_id', String(excludeMemberId));
+  return apiRequest<{
+    available: boolean;
+    code?: string;
+    member_id?: number;
+    member_name?: string;
+  }>(`/members/phone-check?${qs}`, { token });
+}
+
 export function enrollMember(token: string, payload: EnrollPayload) {
   return apiRequest<{
     member: MemberRow;

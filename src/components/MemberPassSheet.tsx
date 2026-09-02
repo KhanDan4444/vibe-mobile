@@ -7,6 +7,7 @@ import * as Sharing from 'expo-sharing';
 import { AppText as Text } from '@/src/components/AppText';
 import { BottomSheet } from '@/src/components/BottomSheet';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
+import { TelegramLinkShareRow } from '@/src/components/TelegramLinkShareRow';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import {
   createMemberTelegramLink,
@@ -187,27 +188,6 @@ export function MemberPassSheet({
       backgroundColor: '#fff',
       marginTop: 12,
       alignSelf: 'center' as const,
-    },
-    telegramUrlRow: {
-      marginTop: 10,
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
-      gap: 6,
-      paddingHorizontal: 8,
-    },
-    telegramUrl: {
-      flex: 1,
-      fontSize: 11,
-      lineHeight: 16,
-      color: colors.muted,
-    },
-    telegramShareBtn: {
-      width: 44,
-      height: 44,
-      borderRadius: 10,
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
-      backgroundColor: `${colors.link}14`,
     },
     telegramWaitingRow: {
       marginTop: 12,
@@ -427,9 +407,9 @@ export function MemberPassSheet({
           .bar{height:18px;background:#0f766e;border-radius:14px 14px 0 0}
           .inner{padding:18px 16px 0}
           .gym{font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:#0f766e;font-weight:700;line-height:1.25;margin:0 0 6px}
-          .sub{font-size:12px;color:#64748b;font-weight:600;margin:0 0 12px}
+          .sub{font-size:12px;color:#475569;font-weight:600;margin:0 0 12px}
           .name{font-size:20px;font-weight:700;letter-spacing:-0.2px;color:#0f172a;margin:0}
-          .phone{font-size:13px;color:#64748b;margin-top:6px}
+          .phone{font-size:13px;color:#475569;margin-top:6px}
           .qr-wrap{margin:16px auto 0;width:180px;height:180px;padding:6px;background:#fff;box-sizing:border-box}
           .qr{width:100%;height:100%;display:block}
         </style></head><body>
@@ -609,20 +589,11 @@ export function MemberPassSheet({
       ) : null}
       {telegramLink?.link ? (
         <>
-          <View style={styles.telegramUrlRow}>
-            <Text latin style={styles.telegramUrl} selectable numberOfLines={3}>
-              {telegramLink.link}
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('checkIn.telegramLinkShare')}
-              hitSlop={8}
-              style={({ pressed }) => [styles.telegramShareBtn, pressed ? { opacity: 0.75 } : null]}
-              onPress={() => void onShareTelegramLink()}
-            >
-              <Ionicons name="share-outline" size={18} color={c.link} />
-            </Pressable>
-          </View>
+          <TelegramLinkShareRow
+            link={telegramLink.link}
+            shareLabel={t('checkIn.telegramLinkShare')}
+            onShare={() => void onShareTelegramLink()}
+          />
           {telegramLink.expires_in_seconds ? (
             <Text style={[styles.telegramHint, { marginTop: 8 }]}>
               {t('checkIn.telegramLinkExpires', {

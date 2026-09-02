@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTheme } from '@/src/context/PreferencesContext';
 
@@ -8,39 +8,66 @@ export function QrSheetActionButton({
   onPress,
   disabled,
   loading,
+  style,
 }: {
   label: string;
   onPress: () => void;
   disabled?: boolean;
   loading?: boolean;
+  style?: StyleProp<ViewStyle>;
 }) {
   const { colors: c } = useTheme();
-  const idle = Boolean(disabled && !loading);
+  const isDisabled = Boolean(disabled || loading);
+
   return (
     <Pressable
       accessibilityRole="button"
-      disabled={disabled || loading}
+      accessibilityState={{ disabled: isDisabled, busy: loading }}
+      disabled={isDisabled}
       onPress={onPress}
-      style={({ pressed }) => ({
-        minHeight: 32,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: c.border,
-        backgroundColor: pressed && !idle ? c.inputBg : c.card,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        opacity: idle ? 0.5 : 1,
-      })}
+      style={({ pressed }) => [
+        styles.button,
+        {
+          borderColor: c.border,
+          backgroundColor: pressed && !isDisabled ? c.inputBg : c.card,
+          opacity: disabled && !loading ? 0.5 : 1,
+        },
+        style,
+      ]}
     >
-      {loading ? (
-        <ActivityIndicator color={c.muted} size="small" />
-      ) : (
-        <Text style={{ fontSize: 13, fontWeight: '500', color: c.text }} numberOfLines={2}>
+      <View style={styles.content}>
+        {loading ? <ActivityIndicator color={c.accentText} size="small" /> : null}
+        <Text style={[styles.label, { color: c.text }]} numberOfLines={2}>
           {label}
         </Text>
-      )}
+      </View>
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  button: {
+    width: '100%',
+    minHeight: 44,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    width: '100%',
+  },
+  label: {
+    flexShrink: 1,
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+});

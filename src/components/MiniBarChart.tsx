@@ -4,6 +4,7 @@ import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import type { DashboardChartPoint } from '@/src/types/api';
+import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import {
   aggregateChartByWeek,
@@ -517,6 +518,7 @@ function PieChartView({
   styles: ReturnType<typeof useChartStyles>;
 }) {
   const { t } = useTranslation();
+  const { colors: c } = useTheme();
   const otherLabel = t('dashboard.chartOther');
   const amounts = data.map((d) => Number(d.amount) || 0);
   const total = amounts.reduce((sum, amount) => sum + amount, 0);
@@ -543,7 +545,7 @@ function PieChartView({
       cursor = endAngle + padAngle;
       const palette =
         point.date === CHART_OTHER_KEY
-          ? { base: '#94a3b8', light: '#cbd5e1' }
+          ? { base: c.dim, light: c.muted }
           : PIE_PALETTE[index % PIE_PALETTE.length];
       const isSelected = index === selectedIndex;
       return {
@@ -562,7 +564,7 @@ function PieChartView({
             : '',
       };
     });
-  }, [data, total, cx, cy, outerR, innerR, padAngle, drawable, selectedIndex]);
+  }, [data, total, cx, cy, outerR, innerR, padAngle, drawable, selectedIndex, c.dim, c.muted]);
 
   const selectedSlice = selectedIndex != null ? slices[selectedIndex] : null;
 
@@ -723,13 +725,13 @@ function useChartStyles() {
     labelsCenter: { flex: 1, alignItems: 'center' as const, paddingHorizontal: 8 },
     labelEnd: { textAlign: 'right' as const },
     footerBlock: { marginTop: 8 },
-    footerCaption: { fontSize: 10, color: c.dim, textTransform: 'uppercase' as const, letterSpacing: 0.4 },
+    footerCaption: { fontSize: 10, color: c.muted, textTransform: 'uppercase' as const, letterSpacing: 0.4 },
     footerAmount: { marginTop: 2, fontSize: 16 },
     footerAmountHero: { letterSpacing: -0.4 },
     amountText: { color: c.text },
-    label: { fontSize: 11, color: c.dim },
+    label: { fontSize: 11, color: c.muted },
     muted: { color: c.muted },
-    empty: { fontSize: 14, color: c.dim, marginTop: 8 },
+    empty: { fontSize: 14, color: c.muted, marginTop: 8 },
     accent: { color: c.statusActive },
     chartLine: { color: c.statusActive },
     barMid: { color: c.statusActive },

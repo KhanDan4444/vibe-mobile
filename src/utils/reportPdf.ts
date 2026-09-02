@@ -5,12 +5,13 @@ import type { MemberRow, PaymentListRow } from '@/src/types/api';
 import { formatPlanDisplayName } from '@/src/utils/formatPlanDisplayName';
 import { formatDisplayDate, formatDisplayDateTime } from '@/src/utils/date';
 import { membersToCsv, revenueToCsv } from '@/src/utils/reportExport';
+import { lightChartNeutral, lightMetaColor } from '@/src/theme/tokens';
 
 function escapeHtml(s: string) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-const METHOD_BAR_COLORS = ['#14b8a6', '#f59e0b', '#38bdf8', '#94a3b8', '#fb7185'];
+const METHOD_BAR_COLORS = ['#14b8a6', '#f59e0b', '#38bdf8', lightChartNeutral, '#fb7185'];
 
 const PDF_STYLES = `
   * { box-sizing: border-box; }
@@ -33,7 +34,7 @@ const PDF_STYLES = `
     margin: 0 0 6px;
     font-size: 15px;
     font-weight: 600;
-    color: #64748b;
+    color: ${lightMetaColor};
     letter-spacing: -0.01em;
   }
   .report-title {
@@ -45,7 +46,7 @@ const PDF_STYLES = `
     line-height: 1.15;
   }
   .meta {
-    color: #64748b;
+    color: ${lightMetaColor};
     margin: 8px 0 18px;
     font-size: 12px;
     line-height: 1.55;
@@ -84,7 +85,7 @@ const PDF_STYLES = `
   }
   tbody tr:nth-child(even) td { background: #f8fafc; }
   th.col-no, td.col-no { width: 36px; text-align: center; color: inherit; }
-  td.col-no { color: #64748b; }
+  td.col-no { color: ${lightMetaColor}; }
   td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .status { font-weight: 700; }
   .status-active { color: #10b981; }
@@ -102,7 +103,7 @@ const PDF_STYLES = `
     border-radius: 8px;
     min-width: 88px;
   }
-  .stat label { display: block; font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; }
+  .stat label { display: block; font-size: 10px; color: ${lightMetaColor}; text-transform: uppercase; letter-spacing: 0.04em; }
   .stat strong { font-size: 17px; color: #0f172a; }
   .method-rows { margin: 4px 0 14px; }
   .method-row {
@@ -124,7 +125,7 @@ const PDF_STYLES = `
   .method-amt {
     width: 140px;
     text-align: right;
-    color: #64748b;
+    color: ${lightMetaColor};
     font-size: 11px;
     font-variant-numeric: tabular-nums;
   }
@@ -142,7 +143,7 @@ const PDF_STYLES = `
     padding-top: 10px;
     border-top: 1px solid #e2e8f0;
     font-size: 10px;
-    color: #64748b;
+    color: ${lightMetaColor};
   }
 `;
 

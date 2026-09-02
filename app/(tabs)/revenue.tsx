@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, View, type TextStyle } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
@@ -413,6 +413,17 @@ export default function RevenueScreen() {
     getNextPageParam: (last) => (last.page < last.totalPages ? last.page + 1 : undefined),
     enabled: Boolean(token) && (!useCustomRange || customRangeReady),
   });
+
+  // Tab stays mounted — refetch when returning after enroll/renew/payment flows.
+  useFocusEffect(
+    useCallback(() => {
+      void queryClient.refetchQueries({
+        queryKey: ['payments', queryParams, branchKey],
+        type: 'active',
+        stale: true,
+      });
+    }, [queryClient, queryParams, branchKey]),
+  );
 
   const screenLoading = useQueryScreenLoading(query.isLoading, Boolean(query.data), query.isPending);
 

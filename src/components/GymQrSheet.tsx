@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, Share, View } from 'react-native';
-import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import * as Print from 'expo-print';
@@ -21,7 +20,6 @@ import { FLASH_SHEET_ACTION_MS, type FlashToast } from '@/src/components/FlashBa
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
-import { parseStationToken } from '@/src/utils/stationToken';
 import { radiusLg } from '@/src/theme/tokens';
 import type { BranchRow } from '@/src/types/api';
 
@@ -132,7 +130,7 @@ export function GymQrSheet({
           .bar{height:22px;background:#0f766e}
           .inner{padding:22px 20px 0}
           .gym{font-size:18px;letter-spacing:0.08em;text-transform:uppercase;color:#0f766e;font-weight:700;margin:0 0 4px}
-          .branch{font-size:13px;color:#64748b;margin:0 0 10px}
+          .branch{font-size:13px;color:#475569;margin:0 0 10px}
           .title{font-size:16px;font-weight:700;color:#0f172a;margin:0 0 16px}
           .qr-wrap{margin:0 auto;width:220px;height:220px;padding:8px;background:#fff}
           .qr{width:100%;height:100%;display:block}
@@ -185,15 +183,6 @@ export function GymQrSheet({
     } catch {
       /* dismissed */
     }
-  };
-
-  const onTestScan = () => {
-    const token =
-      payload?.station_token ||
-      parseStationToken(payload?.check_in_url || '');
-    if (!token) return;
-    onClose();
-    router.push({ pathname: '/check-in' as never, params: { station: token } });
   };
 
   const onRegenerate = async () => {
@@ -285,7 +274,7 @@ export function GymQrSheet({
     },
     stepBadgeText: { fontSize: 12, fontWeight: '700', color: colors.accentText },
     stepText: { flex: 1, fontSize: 14, color: colors.muted, lineHeight: 20, paddingTop: 2 },
-    actions: { flexDirection: 'row' as const, gap: 8, marginTop: 12 },
+    actions: { flexDirection: 'row' as const, gap: 8, marginTop: 12, alignItems: 'stretch' as const },
     actionCol: { flex: 1, minWidth: 0 },
     regenLink: {
       alignSelf: 'center' as const,
@@ -298,7 +287,9 @@ export function GymQrSheet({
   }));
 
   const showBranchPicker = activeBranches.length > 1;
-  const busy = loading || downloading || regenerating;
+  const actionsLocked = loading || regenerating;
+  const canDownload = Boolean(payload?.qr_data_url) && !actionsLocked && !downloading;
+  const canShare = Boolean(payload?.check_in_url) && !actionsLocked && !downloading;
 
   return (
     <>
@@ -391,9 +382,11 @@ export function GymQrSheet({
         <View style={styles.actions}>
           <View style={styles.actionCol}>
             <QrSheetActionButton
-              label={downloading ? t('common.processing') : t('checkIn.stationDownloadPoster')}
+              label={
+                downloading ? t('common.processing') : t('checkIn.stationDownloadPoster')
+              }
               onPress={() => void onDownload()}
-              disabled={busy || !payload?.qr_data_url}
+              disabled={!canDownload && !downloading}
               loading={downloading}
             />
           </View>
@@ -401,16 +394,7 @@ export function GymQrSheet({
             <QrSheetActionButton
               label={t('checkIn.stationShareLink')}
               onPress={() => void onShareLink()}
-              disabled={busy || !payload?.check_in_url}
-            />
-          </View>
-        </View>
-        <View style={styles.actions}>
-          <View style={styles.actionCol}>
-            <QrSheetActionButton
-              label={t('checkIn.stationTestScan')}
-              onPress={onTestScan}
-              disabled={busy || !selfCheckInEnabled || !payload?.check_in_url}
+              disabled={!canShare}
             />
           </View>
         </View>
@@ -418,7 +402,7 @@ export function GymQrSheet({
         {canRegenerate ? (
           <Pressable
             style={styles.regenLink}
-            disabled={busy || !resolvedBranchId}
+            disabled={actionsLocked || downloading || !resolvedBranchId}
             onPress={() => setConfirmRegen(true)}
           >
             <Text style={styles.regenText}>

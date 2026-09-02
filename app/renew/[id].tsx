@@ -26,6 +26,7 @@ import { useLoadRetry } from '@/src/hooks/useLoadRetry';
 import { PAYMENT_METHODS } from '@/src/constants/payments';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { isOfflineQueued } from '@/src/offline/types';
+import { invalidateRevenueQueries } from '@/src/query/invalidateRevenue';
 import { daysUntilDate, formatDisplayDate, isDateRangeValid, todayString } from '@/src/utils/date';
 import { formatPlanDisplayName } from '@/src/utils/formatPlanDisplayName';
 import { defaultRenewStartDate, canRenewMember } from '@/src/utils/memberRenew';
@@ -185,6 +186,7 @@ export default function RenewScreen() {
       queryClient.invalidateQueries({ queryKey: ['member', memberId] });
       queryClient.invalidateQueries({ queryKey: ['member-payments', memberId] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      invalidateRevenueQueries(queryClient);
       if (data.sms_sent === false && Boolean(member?.phone?.trim())) {
         showFlash({
           title: t('flash.renewedSmsFailed.title'),

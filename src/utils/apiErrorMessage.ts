@@ -60,11 +60,9 @@ export function resolveMemberMutationError(
   formatMessage: (message: string) => string = (m) => m
 ): MemberMutationErrors {
   if (error instanceof ApiError && error.code === 'PHONE_ALREADY_USED') {
-    const rawName = error.details?.member_name;
-    const name = typeof rawName === 'string' && rawName.trim() ? rawName.trim() : 'another member';
     return {
       banner: '',
-      phoneError: t('validation.phoneAlreadyUsed', { name }),
+      phoneError: t('validation.phoneAlreadyUsed'),
     };
   }
   if (error instanceof ApiError && error.field === 'phone') {

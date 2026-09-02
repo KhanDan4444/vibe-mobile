@@ -18,6 +18,7 @@ import { useOfflineFlash, useSaveFlash } from '@/src/hooks/useSaveFlash';
 import { PAYMENT_METHODS } from '@/src/constants/payments';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { isOfflineQueued } from '@/src/offline/types';
+import { invalidateRevenueQueries } from '@/src/query/invalidateRevenue';
 import { todayString } from '@/src/utils/date';
 import { boundsForPaymentOnTerm } from '@/src/utils/datePickerBounds';
 import { hasGymPortalAccess } from '@/src/utils/roles';
@@ -85,6 +86,7 @@ export default function PaymentScreen() {
       queryClient.invalidateQueries({ queryKey: ['member', memberId] });
       queryClient.invalidateQueries({ queryKey: ['member-payments', memberId] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      invalidateRevenueQueries(queryClient);
       flashSaved('flash.paymentRecorded');
       router.replace(`/member/${memberId}`);
     },

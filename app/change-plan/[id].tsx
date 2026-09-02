@@ -24,6 +24,7 @@ import { useLoadRetry } from '@/src/hooks/useLoadRetry';
 import { PAYMENT_METHODS } from '@/src/constants/payments';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { isOfflineQueued } from '@/src/offline/types';
+import { invalidateRevenueQueries } from '@/src/query/invalidateRevenue';
 import { formatDisplayDate, todayString, toDateString } from '@/src/utils/date';
 import { previewMemberTermEnd, suggestChangePlanAmount } from '@/src/utils/changePlan';
 import {
@@ -236,6 +237,7 @@ export default function ChangePlanScreen() {
       queryClient.invalidateQueries({ queryKey: ['member', memberId] });
       queryClient.invalidateQueries({ queryKey: ['member-payments', memberId] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      invalidateRevenueQueries(queryClient);
       flashSaved('flash.planChanged');
       router.replace(`/member/${memberId}`);
     },

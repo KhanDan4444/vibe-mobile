@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, Share, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { AppText as Text } from '@/src/components/AppText';
 import { createMemberTelegramLink, fetchMember } from '@/src/api/members';
@@ -9,6 +8,7 @@ import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { radiusLg } from '@/src/theme/tokens';
+import { TelegramLinkShareRow } from '@/src/components/TelegramLinkShareRow';
 
 type Props = {
   memberId: number;
@@ -93,13 +93,6 @@ function buildStyles(colors: ReturnType<typeof useTheme>['colors']) {
       color: colors.muted,
       textAlign: 'center' as const,
     },
-    urlRow: {
-      marginTop: 10,
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
-      gap: 6,
-      paddingHorizontal: 8,
-    },
     error: {
       marginTop: 12,
       fontSize: 12,
@@ -120,20 +113,6 @@ function buildStyles(colors: ReturnType<typeof useTheme>['colors']) {
       backgroundColor: '#fff',
       marginTop: 12,
       alignSelf: 'center' as const,
-    },
-    url: {
-      flex: 1,
-      fontSize: 11,
-      lineHeight: 16,
-      color: colors.muted,
-    },
-    shareBtn: {
-      width: 44,
-      height: 44,
-      borderRadius: 10,
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
-      backgroundColor: `${colors.link}14`,
     },
     expires: {
       marginTop: 10,
@@ -315,20 +294,11 @@ export function EnrollTelegramPrompt({ memberId, memberName }: Props) {
             />
           ) : null}
 
-          <View style={styles.urlRow}>
-            <Text latin style={styles.url} selectable numberOfLines={3}>
-              {telegramLink.link}
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('checkIn.telegramLinkShare')}
-              hitSlop={8}
-              style={({ pressed }) => [styles.shareBtn, pressed ? { opacity: 0.75 } : null]}
-              onPress={() => void handleShare()}
-            >
-              <Ionicons name="share-outline" size={18} color={c.link} />
-            </Pressable>
-          </View>
+          <TelegramLinkShareRow
+            link={telegramLink.link}
+            shareLabel={t('checkIn.telegramLinkShare')}
+            onShare={() => void handleShare()}
+          />
 
           {telegramLink.expires_in_seconds ? (
             <Text style={styles.expires}>

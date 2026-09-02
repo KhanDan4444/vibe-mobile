@@ -21,7 +21,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
 import { fetchBranches } from '@/src/api/branches';
-import { enrollMember } from '@/src/api/members';
+import { checkMemberPhoneAvailable, enrollMember } from '@/src/api/members';
 import { fetchPlans } from '@/src/api/plans';
 import { fetchTrainers } from '@/src/api/trainers';
 import { BranchPicker } from '@/src/components/BranchPicker';
@@ -47,6 +47,7 @@ import { PAYMENT_METHODS, paymentMethodLabelKey } from '@/src/constants/payments
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
 import { useNetwork } from '@/src/offline/NetworkProvider';
 import { isOfflineQueued } from '@/src/offline/types';
+import { invalidateRevenueQueries } from '@/src/query/invalidateRevenue';
 import { bumpMemberPhotoCache } from '@/src/utils/memberPhotoCache';
 import { calculateEndDate } from '@/src/utils/changePlan';
 import { formatDisplayDate, todayString } from '@/src/utils/date';
@@ -59,7 +60,7 @@ import {
 import { formatEtb } from '@/src/utils/formatMoney';
 import { formatPlanDisplayName } from '@/src/utils/formatPlanDisplayName';
 import { formatApiError } from '@/src/utils/paymentValidation';
-import { resolveMemberMutationError } from '@/src/utils/apiErrorMessage';
+import { resolveMemberMutationError, userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { flashHaptic, selectionHaptic } from '@/src/utils/flashHaptic';
 import { validateRequiredEthiopianPhone } from '@/src/utils/phone';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
@@ -113,6 +114,7 @@ export default function EnrollScreen() {
   const [error, setError] = useState('');
   const [nameError, setNameError] = useState('');
   const [phoneError, setPhoneError] = useState('');
+  const [phoneChecking, setPhoneChecking] = useState(false);
   const [planError, setPlanError] = useState('');
   const [startDateError, setStartDateError] = useState('');
   const [enrollStep, setEnrollStep] = useState(1);
@@ -125,12 +127,13 @@ export default function EnrollScreen() {
   const { t } = useTranslation();
   const styles = useThemedStyles((colors) => ({
     sectionTitle: {
-      color: colors.muted,
+      color: colors.text,
       fontSize: 15,
       fontWeight: '600' as const,
       letterSpacing: -0.15,
       marginBottom: 12,
       marginTop: 2,
+      opacity: 0.92,
     },
     hint: { color: colors.dim, fontSize: 14, marginTop: 4 },
     lockedValue: {
@@ -467,12 +470,35 @@ export default function EnrollScreen() {
       setPhoneError('');
       return;
     }
-    ensurePhoneValid(trimmed);
+    const result = validateRequiredEthiopianPhone(value);
+    setPhoneError(result.ok ? '' : t(result.key));
   };
 
   const handlePhoneBlur = () => {
     ensurePhoneValid();
   };
+
+  const ensurePhoneAvailable = useCallback(
+    async (value = phone) => {
+      if (!token) return false;
+      setPhoneChecking(true);
+      try {
+        const data = await checkMemberPhoneAvailable(token, value.trim());
+        if (data.available) {
+          setPhoneError('');
+          return true;
+        }
+        setPhoneError(t('validation.phoneAlreadyUsed'));
+        return false;
+      } catch (err) {
+        setError(userFacingApiMessage(err, t('auth.connectionFailed'), t('auth.connectionFailed')));
+        return false;
+      } finally {
+        setPhoneChecking(false);
+      }
+    },
+    [token, phone, t]
+  );
 
   const buildPayload = (): EnrollPayload => {
     if (!planId) throw new Error('Select a plan.');
@@ -520,6 +546,7 @@ export default function EnrollScreen() {
       }
       queryClient.invalidateQueries({ queryKey: ['members'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      invalidateRevenueQueries(queryClient);
       if (data.member.photo_url) {
         bumpMemberPhotoCache(queryClient, data.member.id);
       }
@@ -552,6 +579,9 @@ export default function EnrollScreen() {
       const next = resolveMemberMutationError(e, t, formatApiError);
       setError(next.banner);
       setPhoneError(next.phoneError);
+      if (next.phoneError) {
+        setEnrollStep(1);
+      }
     },
   });
 
@@ -620,11 +650,12 @@ export default function EnrollScreen() {
     return true;
   };
 
-  const goNext = () => {
+  const goNext = async () => {
     dismissKeyboard();
     setError('');
     if (enrollStep === 1) {
       if (!validateStep(1)) return;
+      if (!(await ensurePhoneAvailable())) return;
       void selectionHaptic();
       goToStep(2);
       return;
@@ -644,12 +675,13 @@ export default function EnrollScreen() {
     setEnrollStep(enrollStep - 1);
   };
 
-  const selectEnrollStep = (n: number) => {
+  const selectEnrollStep = async (n: number) => {
     if (n < 1 || n > enrollMaxStep || n === enrollStep) return;
     dismissKeyboard();
     if (n > enrollStep) {
       for (let s = enrollStep; s < n; s += 1) {
         if (!validateStep(s)) return;
+        if (s === 1 && !(await ensurePhoneAvailable())) return;
       }
     }
     setError('');
@@ -895,7 +927,6 @@ export default function EnrollScreen() {
                   }}
                 />
                 <FieldError message={phoneError} />
-                <Text style={styles.hint}>{t('enroll.phoneHint')}</Text>
 
                 {showBranchPicker ? (
                   <BranchPicker branches={branches} value={branchId} onChange={setBranchId} />
@@ -1054,11 +1085,13 @@ export default function EnrollScreen() {
               {enrollStep < 3 ? (
                 <PrimaryButton
                   label={t('common.continue')}
-                  onPress={goNext}
+                  onPress={() => void goNext()}
+                  loading={enrollStep === 1 && phoneChecking}
                   disabled={
-                    enrollStep === 1
+                    phoneChecking ||
+                    (enrollStep === 1
                       ? !name.trim() || !phone.trim() || Boolean(phoneError) || (showBranchPicker && !branchId)
-                      : plans.length === 0 || !planId || !/^\d{4}-\d{2}-\d{2}$/.test(startDate)
+                      : plans.length === 0 || !planId || !/^\d{4}-\d{2}-\d{2}$/.test(startDate))
                   }
                   style={styles.stickyBtn}
                 />

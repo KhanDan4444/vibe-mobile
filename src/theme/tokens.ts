@@ -68,9 +68,9 @@ export const darkTheme: ThemeColors = {
   card: '#1e222a',
   border: '#2c323c',
   cardEdge: '#323844',
-  text: '#e8eaf0',
-  muted: '#9199a8',
-  dim: '#6b7385',
+  text: '#e0e4ec',
+  muted: '#9aa3b2',
+  dim: '#7d8696',
   accent: '#0f766e',
   accentSoft: 'rgba(45,212,191,0.16)',
   accentText: '#2dd4bf',
@@ -107,8 +107,10 @@ export const lightTheme: ThemeColors = {
   border: '#e4e7ec',
   cardEdge: '#e8eaef',
   text: '#111827',
-  muted: '#6b7280',
-  dim: '#9ca3af',
+  /** Secondary labels, subtitles, inactive chips — readable on white. */
+  muted: '#334155',
+  /** Meta, hints, list sublines, placeholders — still AA on light surfaces. */
+  dim: '#475569',
   accent: '#0f766e',
   accentSoft: 'rgba(15,118,110,0.1)',
   accentText: '#0f766e',
@@ -133,11 +135,23 @@ export const lightTheme: ThemeColors = {
   statusDueSoon: '#0284c7',
   statusExpired: '#e11d48',
   statusUnpaid: '#ea580c',
-  statusNeutral: '#64748b',
-  statusFormer: '#78716c',
-  statusNew: '#8f877c',
+  statusNeutral: '#475569',
+  statusFormer: '#57534e',
+  statusNew: '#6b7280',
 };
 
 export function colorsForTheme(theme: AppTheme): ThemeColors {
   return theme === 'dark' ? darkTheme : lightTheme;
 }
+
+/** Meta / secondary on light print & exports — keep in sync with lightTheme.dim. */
+export const lightMetaColor = lightTheme.dim;
+
+/** Neutral chart slice on light reports — keep in sync with lightTheme.statusNeutral. */
+export const lightChartNeutral = lightTheme.statusNeutral;
+
+/** Meta / placeholders on dark surfaces — keep in sync with darkTheme.dim. */
+export const darkMetaColor = darkTheme.dim;
+
+/** Neutral chart slice on dark reports — keep in sync with darkTheme.statusNeutral. */
+export const darkChartNeutral = darkTheme.statusNeutral;
