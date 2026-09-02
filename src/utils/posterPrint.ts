@@ -21,17 +21,12 @@ export function sanitizeFilenamePart(value: string, maxLen = 32) {
     .slice(0, maxLen);
 }
 
-function dataUrlToBase64(dataUrl: string) {
-  const comma = dataUrl.indexOf(',');
-  return comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl;
-}
-
-/** Persist a QR data URL as a PNG in cache; returns a file:// URI for print HTML. */
-export function cacheQrDataUrl(dataUrl: string, prefix = 'qr') {
-  const file = new File(Paths.cache, `${prefix}-${Date.now()}.png`);
-  file.create();
-  file.write(dataUrlToBase64(dataUrl), { encoding: 'base64' });
-  return file.uri;
+/** expo-print cannot load file:// images in HTML — inline data URLs are required. */
+export function qrImageSrcForPrint(dataUrl: string) {
+  const trimmed = String(dataUrl || '').trim();
+  if (!trimmed) return '';
+  if (trimmed.startsWith('data:')) return trimmed;
+  return `data:image/png;base64,${trimmed}`;
 }
 
 type DownloadPdfOptions = {

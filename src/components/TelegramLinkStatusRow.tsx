@@ -4,27 +4,23 @@ import { AppText as Text } from '@/src/components/AppText';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 
 type Props = {
-  onUnlink: () => void;
+  /** When set, shows unlink under the linked label (e.g. pass sheet). Omit on member detail. */
+  onUnlink?: () => void;
   disabled?: boolean;
-  /** Inline row for member detail; panel for pass sheet. */
+  /** Status-only on member detail; stacked linked + unlink on pass sheet. */
   variant?: 'compact' | 'panel';
 };
 
 export function TelegramLinkStatusRow({ onUnlink, disabled, variant = 'panel' }: Props) {
   const { t } = useTranslation();
   const compact = variant === 'compact';
+  const canUnlink = typeof onUnlink === 'function';
 
   const styles = useThemedStyles((c) => ({
-    panel: {
-      marginTop: 12,
-      paddingVertical: 12,
-      paddingHorizontal: 14,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: `${c.link}30`,
-      backgroundColor: `${c.link}0A`,
-      alignItems: 'center' as const,
-      gap: 6,
+    wrap: {
+      marginTop: compact ? 6 : 12,
+      alignItems: compact ? ('flex-start' as const) : ('center' as const),
+      gap: 4,
     },
     row: {
       flexDirection: 'row' as const,
@@ -40,28 +36,30 @@ export function TelegramLinkStatusRow({ onUnlink, disabled, variant = 'panel' }:
       backgroundColor: c.linkDot,
     },
     linked: {
-      fontSize: compact ? 12 : 13,
+      fontSize: compact ? 13 : 14,
       fontWeight: '600' as const,
       color: c.link,
       letterSpacing: 0.1,
     },
     unlinkBtn: {
-      paddingVertical: compact ? 2 : 4,
+      paddingVertical: 4,
       paddingHorizontal: 4,
     },
     unlink: {
-      fontSize: 12,
+      fontSize: 13,
       fontWeight: '600' as const,
       color: c.error,
       letterSpacing: 0.1,
     },
   }));
 
-  const linkedRow = (
-    <View style={styles.row}>
-      <View style={styles.dot} />
-      <Text style={styles.linked}>{t('checkIn.telegramLinked')}</Text>
-      {compact ? (
+  return (
+    <View style={styles.wrap}>
+      <View style={styles.row}>
+        <View style={styles.dot} />
+        <Text style={styles.linked}>{t('checkIn.telegramLinked')}</Text>
+      </View>
+      {canUnlink ? (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t('checkIn.telegramUnlink')}
@@ -73,25 +71,6 @@ export function TelegramLinkStatusRow({ onUnlink, disabled, variant = 'panel' }:
           <Text style={[styles.unlink, disabled ? { opacity: 0.5 } : null]}>{t('checkIn.telegramUnlink')}</Text>
         </Pressable>
       ) : null}
-    </View>
-  );
-
-  if (compact) {
-    return <View style={{ marginTop: 6 }}>{linkedRow}</View>;
-  }
-
-  return (
-    <View style={styles.panel}>
-      {linkedRow}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={t('checkIn.telegramUnlink')}
-        disabled={disabled}
-        onPress={onUnlink}
-        style={({ pressed }) => [styles.unlinkBtn, pressed && !disabled ? { opacity: 0.72 } : null]}
-      >
-        <Text style={[styles.unlink, disabled ? { opacity: 0.5 } : null]}>{t('checkIn.telegramUnlink')}</Text>
-      </Pressable>
     </View>
   );
 }

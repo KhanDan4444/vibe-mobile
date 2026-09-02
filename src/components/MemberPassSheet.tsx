@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, Share, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import {
-  cacheQrDataUrl,
   downloadHtmlAsPdf,
   escapeHtml,
   memberPassFilename,
+  qrImageSrcForPrint,
 } from '@/src/utils/posterPrint';
 import { AppText as Text } from '@/src/components/AppText';
 import { BottomSheet } from '@/src/components/BottomSheet';
@@ -85,31 +84,31 @@ export function MemberPassSheet({
     },
     body: { paddingHorizontal: 16, paddingVertical: 18, alignItems: 'center' as const },
     gym: {
-      fontSize: 11,
+      fontSize: 13,
       fontWeight: '700' as const,
-      letterSpacing: 1.4,
+      letterSpacing: 1.2,
       textTransform: 'uppercase' as const,
       color: colors.accentText,
       textAlign: 'center' as const,
       marginBottom: 6,
     },
     passSubtitle: {
-      fontSize: 12,
+      fontSize: 13,
       fontWeight: '600' as const,
       color: colors.muted,
       textAlign: 'center' as const,
       marginBottom: 10,
     },
     name: {
-      fontSize: 17,
+      fontSize: 20,
       fontWeight: '600' as const,
       color: colors.text,
       letterSpacing: -0.2,
       textAlign: 'center' as const,
     },
     phone: {
-      marginTop: 4,
-      fontSize: 13,
+      marginTop: 6,
+      fontSize: 15,
       color: colors.muted,
       fontVariant: ['tabular-nums' as const],
       textAlign: 'center' as const,
@@ -136,57 +135,52 @@ export function MemberPassSheet({
       paddingVertical: 4,
       paddingHorizontal: 6,
     },
-    linkTelegramText: { fontSize: 12, fontWeight: '600' as const, color: colors.link },
+    linkTelegramText: { fontSize: 13, fontWeight: '600' as const, color: colors.link },
     backToPass: {
       alignSelf: 'flex-start' as const,
       marginBottom: 10,
       paddingVertical: 4,
       paddingHorizontal: 2,
     },
-    backToPassText: { fontSize: 12, fontWeight: '600' as const, color: colors.accentText },
+    backToPassText: { fontSize: 13, fontWeight: '600' as const, color: colors.accentText },
     telegramBanner: {
       marginBottom: 10,
       borderRadius: 10,
-      borderWidth: 1,
-      borderColor: `${colors.link}40`,
       backgroundColor: `${colors.link}14`,
       paddingHorizontal: 12,
       paddingVertical: 10,
     },
     telegramBannerText: {
-      fontSize: 12,
-      lineHeight: 17,
+      fontSize: 13,
+      lineHeight: 18,
       color: colors.link,
       textAlign: 'center' as const,
     },
     telegramPanel: {
       marginTop: 4,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
-      backgroundColor: colors.card,
-      paddingHorizontal: 14,
-      paddingVertical: 14,
+      paddingHorizontal: 4,
+      paddingVertical: 8,
     },
     telegramTitle: {
-      fontSize: 14,
+      fontSize: 17,
       fontWeight: '600' as const,
       color: colors.text,
       textAlign: 'center' as const,
+      letterSpacing: -0.2,
     },
     telegramHint: {
-      marginTop: 4,
-      fontSize: 12,
-      lineHeight: 17,
+      marginTop: 6,
+      fontSize: 13,
+      lineHeight: 18,
       color: colors.muted,
       textAlign: 'center' as const,
     },
     telegramQr: {
-      width: 180,
-      height: 180,
+      width: 200,
+      height: 200,
       borderRadius: radiusLg,
       backgroundColor: '#fff',
-      marginTop: 12,
+      marginTop: 14,
       alignSelf: 'center' as const,
     },
     telegramWaitingRow: {
@@ -199,8 +193,8 @@ export function MemberPassSheet({
     },
     telegramWaitingText: {
       flexShrink: 1,
-      fontSize: 12,
-      lineHeight: 17,
+      fontSize: 13,
+      lineHeight: 18,
       color: colors.muted,
       textAlign: 'center' as const,
     },
@@ -210,7 +204,7 @@ export function MemberPassSheet({
       paddingVertical: 6,
       paddingHorizontal: 8,
     },
-    telegramRefreshText: { fontSize: 12, fontWeight: '600' as const, color: colors.accentText },
+    telegramRefreshText: { fontSize: 13, fontWeight: '600' as const, color: colors.accentText },
   }));
 
   const [loading, setLoading] = useState(false);
@@ -397,10 +391,9 @@ export function MemberPassSheet({
   const onPrint = async () => {
     if (!pass?.qr_data_url || printing) return;
     setPrinting(true);
-    let qrUri = '';
     try {
       const gym = pass.gym_name || '';
-      qrUri = cacheQrDataUrl(pass.qr_data_url, 'member-pass-qr');
+      const qrSrc = qrImageSrcForPrint(pass.qr_data_url);
       const html = `<!DOCTYPE html><html><head><meta charset="utf-8" />
         <style>
           @page{margin:12mm}
@@ -422,7 +415,7 @@ export function MemberPassSheet({
             <div class="sub">${escapeHtml(t('checkIn.memberPassTitle'))}</div>
             <div class="name">${escapeHtml(memberName)}</div>
             ${memberPhone ? `<div class="phone">${escapeHtml(memberPhone)}</div>` : ''}
-            <div class="qr-wrap"><img class="qr" src="${qrUri}" /></div>
+            <div class="qr-wrap"><img class="qr" src="${qrSrc}" /></div>
           </div>
         </div></body></html>`;
       await downloadHtmlAsPdf(html, memberPassFilename(memberName), {

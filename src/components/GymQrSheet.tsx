@@ -2,12 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, Share, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import {
-  cacheQrDataUrl,
-  downloadHtmlAsPdf,
-  escapeHtml,
-  gymQrPosterFilename,
-} from '@/src/utils/posterPrint';
+import { downloadHtmlAsPdf, escapeHtml, gymQrPosterFilename, qrImageSrcForPrint } from '@/src/utils/posterPrint';
 import { AppText as Text } from '@/src/components/AppText';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
@@ -121,9 +116,8 @@ export function GymQrSheet({
     setDownloading(true);
     const branch = payload.branch_name || '';
     const gym = payload.gym_name || '';
-    let qrUri = '';
     try {
-      qrUri = cacheQrDataUrl(payload.qr_data_url, 'gym-station-qr');
+      const qrSrc = qrImageSrcForPrint(payload.qr_data_url);
       const html = `<!DOCTYPE html><html><head><meta charset="utf-8" />
         <style>
           @page{margin:12mm}
@@ -136,8 +130,10 @@ export function GymQrSheet({
           .title{font-size:16px;font-weight:700;color:#0f172a;margin:0 0 16px}
           .qr-wrap{margin:0 auto;width:220px;height:220px;padding:8px;background:#fff}
           .qr{width:100%;height:100%;display:block}
-          .steps{text-align:left;margin:18px auto 0;max-width:280px;padding:0 8px}
-          .step{font-size:12px;color:#0f172a;margin:0 0 8px;line-height:1.45}
+          .steps{text-align:left;margin:18px auto 0;max-width:280px;padding:0 8px;display:flex;flex-direction:column;gap:10px}
+          .step{display:flex;align-items:flex-start;gap:10px;margin:0}
+          .badge{flex:0 0 24px;width:24px;height:24px;border-radius:999px;background:#ccfbf1;color:#0f766e;font-size:12px;font-weight:700;line-height:24px;text-align:center}
+          .step-text{flex:1;font-size:12px;color:#0f172a;line-height:1.45;padding-top:3px}
         </style></head><body>
         <div class="card">
           <div class="bar"></div>
@@ -145,11 +141,11 @@ export function GymQrSheet({
             ${gym ? `<div class="gym">${escapeHtml(gym)}</div>` : ''}
             ${branch ? `<div class="branch">${escapeHtml(branch)}</div>` : ''}
             <div class="title">${escapeHtml(t('checkIn.stationPosterTitle'))}</div>
-            <div class="qr-wrap"><img class="qr" src="${qrUri}" /></div>
+            <div class="qr-wrap"><img class="qr" src="${qrSrc}" /></div>
             <div class="steps">
-              <p class="step">${escapeHtml(t('checkIn.stationStep1'))}</p>
-              <p class="step">${escapeHtml(t('checkIn.stationStep2'))}</p>
-              <p class="step">${escapeHtml(t('checkIn.stationStep3'))}</p>
+              <div class="step"><span class="badge">1</span><span class="step-text">${escapeHtml(t('checkIn.stationStep1'))}</span></div>
+              <div class="step"><span class="badge">2</span><span class="step-text">${escapeHtml(t('checkIn.stationStep2'))}</span></div>
+              <div class="step"><span class="badge">3</span><span class="step-text">${escapeHtml(t('checkIn.stationStep3'))}</span></div>
             </div>
           </div>
         </div></body></html>`;
@@ -229,23 +225,23 @@ export function GymQrSheet({
     brandBar: { height: 6, backgroundColor: colors.accent },
     cardBody: { paddingHorizontal: 16, paddingVertical: 18, alignItems: 'center' as const },
     gym: {
-      fontSize: 11,
+      fontSize: 13,
       fontWeight: '700',
-      letterSpacing: 1.4,
+      letterSpacing: 1.2,
       textTransform: 'uppercase' as const,
       color: colors.accentText,
       textAlign: 'center' as const,
       marginBottom: 6,
     },
     branchName: {
-      fontSize: 12,
+      fontSize: 13,
       fontWeight: '600' as const,
       color: colors.muted,
       textAlign: 'center' as const,
       marginBottom: 10,
     },
     posterTitle: {
-      fontSize: 17,
+      fontSize: 20,
       fontWeight: '600' as const,
       color: colors.text,
       letterSpacing: -0.2,
@@ -269,7 +265,7 @@ export function GymQrSheet({
       backgroundColor: colors.accentSoft,
     },
     stepBadgeText: { fontSize: 12, fontWeight: '700', color: colors.accentText },
-    stepText: { flex: 1, fontSize: 14, color: colors.muted, lineHeight: 20, paddingTop: 2 },
+    stepText: { flex: 1, fontSize: 15, color: colors.muted, lineHeight: 21, paddingTop: 2 },
     actions: { flexDirection: 'row' as const, gap: 8, marginTop: 12, alignItems: 'stretch' as const },
     actionCol: { flex: 1, minWidth: 0 },
     regenLink: {

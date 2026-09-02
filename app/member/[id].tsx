@@ -8,7 +8,7 @@ import { PageSkeleton, SkeletonBone } from '@/src/components/Skeleton';
 import { LoadError } from '@/src/components/LoadError';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
-import { deleteMember, fetchMember, fetchMemberPayments, restoreMember, unlinkMemberTelegram } from '@/src/api/members';
+import { deleteMember, fetchMember, fetchMemberPayments, restoreMember } from '@/src/api/members';
 import { fetchMemberVisitSummary, listCheckIns } from '@/src/api/checkIns';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
 import { MemberPhoto } from '@/src/components/MemberPhoto';
@@ -239,8 +239,6 @@ export default function MemberDetailScreen() {
   const [visitHistoryOpen, setVisitHistoryOpen] = useState(false);
   const [recentVisitsOpen, setRecentVisitsOpen] = useState(false);
   const [errorNotice, setErrorNotice] = useState('');
-  const [confirmTelegramUnlink, setConfirmTelegramUnlink] = useState(false);
-  const [telegramUnlinking, setTelegramUnlinking] = useState(false);
 
   const memberQuery = useQuery({
     queryKey: ['member', memberId],
@@ -325,26 +323,6 @@ export default function MemberDetailScreen() {
         memberId: String(member.id),
       },
     });
-  };
-
-  const runTelegramUnlink = async () => {
-    if (!token || telegramUnlinking || !telegramLinked) return;
-    setTelegramUnlinking(true);
-    try {
-      await unlinkMemberTelegram(token, member.id);
-      setConfirmTelegramUnlink(false);
-      await queryClient.invalidateQueries({ queryKey: ['member', memberId] });
-      showFlash({
-        title: t('checkIn.telegramUnlinked'),
-        variant: 'success',
-      });
-    } catch (err) {
-      setErrorNotice(
-        userFacingApiMessage(err, t('auth.connectionFailed'), t('checkIn.telegramUnlinkFailed'))
-      );
-    } finally {
-      setTelegramUnlinking(false);
-    }
   };
 
   const confirmDeleteMember = () => setDeleteOpen(true);
@@ -463,13 +441,7 @@ export default function MemberDetailScreen() {
                     limit: effectiveVisitsLimit(visitSummary.visits_limit),
                   })}
                 </Text>
-                {telegramLinked ? (
-                  <TelegramLinkStatusRow
-                    variant="compact"
-                    disabled={telegramUnlinking}
-                    onUnlink={() => setConfirmTelegramUnlink(true)}
-                  />
-                ) : null}
+                {telegramLinked ? <TelegramLinkStatusRow variant="compact" /> : null}
               </View>
             </Pressable>
             <Pressable
@@ -645,16 +617,6 @@ export default function MemberDetailScreen() {
       confirmLoading={false}
       onCancel={() => setDeleteOpen(false)}
       onConfirm={() => void runDeleteMember()}
-    />
-    <ConfirmDialog
-      visible={confirmTelegramUnlink}
-      title={t('checkIn.telegramUnlink')}
-      message={t('checkIn.telegramUnlinkConfirm', { name: member.name })}
-      confirmLabel={t('checkIn.telegramUnlink')}
-      destructive
-      confirmLoading={telegramUnlinking}
-      onCancel={() => setConfirmTelegramUnlink(false)}
-      onConfirm={() => void runTelegramUnlink()}
     />
     <ConfirmDialog
       visible={Boolean(errorNotice)}

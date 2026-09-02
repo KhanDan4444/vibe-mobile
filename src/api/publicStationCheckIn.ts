@@ -1,6 +1,10 @@
 import { API_BASE_URL } from '@/src/config/api';
 import { fetchWithTimeout } from '@/src/api/fetchWithTimeout';
-import { getStationDeviceToken, setStationDeviceToken } from '@/src/storage/stationDevice';
+import {
+  clearStationDeviceToken,
+  getStationDeviceToken,
+  setStationDeviceToken,
+} from '@/src/storage/stationDevice';
 
 const STATION_DEVICE_HEADER = 'X-Station-Device-Token';
 const JSON_HEADERS = { 'Content-Type': 'application/json', Accept: 'application/json' };
@@ -97,5 +101,8 @@ export async function trustedStationCheckIn(stationToken: string) {
     body: JSON.stringify({ station: stationToken }),
   });
   const data = await parseJson(res);
+  if (!res.ok && data.code === 'DEVICE_NOT_TRUSTED') {
+    await clearStationDeviceToken();
+  }
   return { res, data };
 }
