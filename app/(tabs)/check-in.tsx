@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   FlatList,
+  Platform,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -143,6 +144,62 @@ function isExpiredStatus(status: string) {
   return (status || '').toLowerCase() === 'expired';
 }
 
+type DeskMetaChipStyles = {
+  capChip: object;
+  capChipAction: object;
+  capChipIdle: object;
+  capChipText: object;
+  capChipTextAction: object;
+  capChipIcon: object;
+  capChipLabel: object;
+};
+
+function DeskMetaChip({
+  label,
+  onPress,
+  disabled = false,
+  variant,
+  accessibilityLabel,
+  leadingIcon,
+  trailingIcon,
+  styles,
+}: {
+  label: string;
+  onPress?: () => void;
+  disabled?: boolean;
+  variant: 'action' | 'idle';
+  accessibilityLabel?: string;
+  leadingIcon?: ReactNode;
+  trailingIcon?: ReactNode;
+  styles: DeskMetaChipStyles;
+}) {
+  const interactive = Boolean(onPress) && !disabled;
+  const tone = variant === 'action' ? styles.capChipTextAction : null;
+
+  return (
+    <Pressable
+      disabled={!interactive}
+      onPress={onPress}
+      hitSlop={interactive ? 6 : undefined}
+      accessibilityRole={interactive ? 'button' : undefined}
+      accessibilityLabel={accessibilityLabel ?? label}
+      style={({ pressed }) => [
+        styles.capChip,
+        variant === 'action' ? styles.capChipAction : styles.capChipIdle,
+        pressed && interactive ? { opacity: 0.75 } : null,
+      ]}
+    >
+      {leadingIcon ? <View style={styles.capChipIcon}>{leadingIcon}</View> : null}
+      <View style={styles.capChipLabel}>
+        <Text style={[styles.capChipText, tone]} numberOfLines={1}>
+          {label}
+        </Text>
+      </View>
+      {trailingIcon ? <View style={styles.capChipIcon}>{trailingIcon}</View> : null}
+    </Pressable>
+  );
+}
+
 export default function CheckInScreen() {
   const { t, i18n } = useTranslation();
   const { token, user } = useAuth();
@@ -250,6 +307,8 @@ export default function CheckInScreen() {
     if (!fromSettings && !fromSearch) return null;
     return { ...fromSearch, ...fromSettings } as AttendanceSettings;
   }, [settingsQuery.data?.settings, searchQuery.data?.settings]);
+
+  const selfCheckInEnabled = Boolean(settings?.station_self_checkin);
 
   useEffect(() => {
     if (!settingsOpen || !canManage || !token) return;
@@ -450,6 +509,7 @@ export default function CheckInScreen() {
           settings: { ...previous.settings, station_self_checkin: next },
         });
       }
+      if (!next) setStationOpen(false);
       return { previous };
     },
     onSuccess: (data, next) => {
@@ -639,11 +699,11 @@ export default function CheckInScreen() {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       gap: 4,
-      marginTop: 2,
+      height: 28,
       paddingHorizontal: 10,
-      paddingVertical: 5,
       borderRadius: 999,
       borderWidth: StyleSheet.hairlineWidth,
+      overflow: 'hidden' as const,
     },
     capChipAction: {
       borderColor: isLight ? 'rgba(15,118,110,0.22)' : 'rgba(45,212,191,0.28)',
@@ -657,7 +717,23 @@ export default function CheckInScreen() {
       fontSize: 11,
       fontWeight: '600' as const,
       letterSpacing: 0.15,
+      lineHeight: 13,
+      ...(Platform.OS === 'android'
+        ? { includeFontPadding: false, textAlignVertical: 'center' as const }
+        : null),
       color: theme.muted,
+    },
+    capChipIcon: {
+      width: 12,
+      height: 12,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      flexShrink: 0,
+    },
+    capChipLabel: {
+      height: 13,
+      justifyContent: 'center' as const,
+      flexShrink: 1,
     },
     capChipTextAction: {
       color: isLight ? '#0f766e' : '#99f6e4',
@@ -798,28 +874,13 @@ export default function CheckInScreen() {
     },
     idleWrap: { paddingHorizontal: 8, paddingTop: 4, paddingBottom: 12 },
     sheetBody: { fontSize: 13, lineHeight: 19, color: theme.muted, marginBottom: 10 },
-    gymQrBtn: {
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
-      gap: 4,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 999,
-      borderWidth: 1,
-      borderColor: isLight ? 'rgba(15,118,110,0.22)' : 'rgba(153,246,228,0.2)',
-      backgroundColor: isLight ? 'rgba(15,118,110,0.08)' : 'rgba(15,118,110,0.14)',
-    },
-    gymQrBtnLabel: {
-      fontSize: 11,
-      fontWeight: '600' as const,
-      color: isLight ? '#0f766e' : '#99f6e4',
-    },
     chipRow: {
       flexDirection: 'row' as const,
       flexWrap: 'wrap' as const,
-      alignItems: 'center' as const,
+      alignItems: 'flex-start' as const,
       gap: 8,
       marginTop: 2,
+      minHeight: 28,
     },
     selfCheckRow: {
       flexDirection: 'row' as const,
@@ -914,59 +975,48 @@ export default function CheckInScreen() {
                     <Text style={styles.deskLabel}>{t('checkIn.deskLabel')}</Text>
                     <View style={styles.chipRow}>
                       {settingsQuery.isLoading && !settings ? (
-                        <SkeletonBone width={92} height={22} radius={999} />
+                        <SkeletonBone width={92} height={28} radius={999} />
                       ) : capChipLabel ? (
-                        <Pressable
+                        <DeskMetaChip
+                          label={capChipLabel}
+                          variant={canManage && !readOnly ? 'action' : 'idle'}
                           disabled={!canManage || readOnly}
-                          onPress={() => canManage && setSettingsOpen(true)}
-                          hitSlop={6}
-                          accessibilityRole={canManage && !readOnly ? 'button' : undefined}
+                          onPress={
+                            canManage && !readOnly ? () => setSettingsOpen(true) : undefined
+                          }
                           accessibilityLabel={
                             canManage && !readOnly ? t('checkIn.visitRulesTitle') : capChipLabel
                           }
-                          style={({ pressed }) => [
-                            styles.capChip,
-                            canManage && !readOnly ? styles.capChipAction : styles.capChipIdle,
-                            pressed && canManage && !readOnly ? { opacity: 0.75 } : null,
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.capChipText,
-                              canManage && !readOnly ? styles.capChipTextAction : null,
-                            ]}
-                          >
-                            {capChipLabel}
-                          </Text>
-                          {canManage && !readOnly ? (
-                            <Ionicons
-                              name="chevron-down"
-                              size={12}
-                              color={isLight ? '#0f766e' : '#99f6e4'}
-                            />
-                          ) : null}
-                        </Pressable>
+                          trailingIcon={
+                            canManage && !readOnly ? (
+                              <Ionicons
+                                name="chevron-down"
+                                size={12}
+                                color={isLight ? '#0f766e' : '#99f6e4'}
+                              />
+                            ) : undefined
+                          }
+                          styles={styles}
+                        />
                       ) : null}
-                      {!readOnly ? (
-                        <Pressable
-                          accessibilityRole="button"
+                      {!readOnly && selfCheckInEnabled ? (
+                        <DeskMetaChip
+                          label={t('checkIn.stationAction')}
+                          variant="action"
                           accessibilityLabel={t('checkIn.stationAction')}
                           onPress={() => {
                             void Haptics.selectionAsync().catch(() => undefined);
                             setStationOpen(true);
                           }}
-                          style={({ pressed }) => [
-                            styles.gymQrBtn,
-                            { opacity: pressed ? 0.75 : 1 },
-                          ]}
-                        >
-                          <Ionicons
-                            name="qr-code-outline"
-                            size={13}
-                            color={isLight ? '#0f766e' : '#99f6e4'}
-                          />
-                          <Text style={styles.gymQrBtnLabel}>{t('checkIn.stationAction')}</Text>
-                        </Pressable>
+                          leadingIcon={
+                            <Ionicons
+                              name="qr-code-outline"
+                              size={12}
+                              color={isLight ? '#0f766e' : '#99f6e4'}
+                            />
+                          }
+                          styles={styles}
+                        />
                       ) : null}
                     </View>
                   </View>
@@ -1223,7 +1273,7 @@ export default function CheckInScreen() {
                   </View>
                 </View>
                 <Text style={styles.selfCheckHint}>{t('checkIn.stationSelfCheckInHint')}</Text>
-                {settings?.station_self_checkin ? (
+                {selfCheckInEnabled ? (
                   <Pressable
                     accessibilityRole="button"
                     onPress={() => {
@@ -1289,7 +1339,7 @@ export default function CheckInScreen() {
         branches={activeBranches}
         initialBranchId={stationBranchId}
         canRegenerate={owner && canManage}
-        selfCheckInEnabled={Boolean(settings?.station_self_checkin)}
+        selfCheckInEnabled={selfCheckInEnabled}
       />
 
       {!readOnly ? (

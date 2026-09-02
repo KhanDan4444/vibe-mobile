@@ -458,6 +458,7 @@
     "historyEmpty": "Guyyoonni daawwannaa qaban asitti mul'atu.",
     "historyEmptyLastTitle": "Torbeen darbe nagaadha",
     "historyEmptyLast": "Torbee sanatti wanni hin galmeessine.",
+    "historyEmptyPastTitle": "Torbee sana keessatti daawwannoon hin jiru",
     "dayVisitCount_one": "Daawwannaa {{count}}",
     "dayVisitCount_other": "Daawwannoo {{count}}",
     "recentVisits": "Daawwannoo dhihoo",

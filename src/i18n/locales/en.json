@@ -458,6 +458,7 @@
     "historyEmpty": "Days with visits will show up here.",
     "historyEmptyLastTitle": "Quiet last week",
     "historyEmptyLast": "Nothing was recorded in that week.",
+    "historyEmptyPastTitle": "No visits that week",
     "dayVisitCount_one": "{{count}} visit",
     "dayVisitCount_other": "{{count}} visits",
     "recentVisits": "Recent visits",

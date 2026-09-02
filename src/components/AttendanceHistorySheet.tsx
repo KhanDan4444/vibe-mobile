@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   Pressable,
+  ScrollView,
   StyleSheet,
   TextInput,
   View,
@@ -18,8 +19,10 @@ import { AttendanceDaySkeleton, CheckInTodayRowSkeleton } from '@/src/components
 import { listCheckIns, type CheckInRow } from '@/src/api/checkIns';
 import { usePreferences, useTheme } from '@/src/context/PreferencesContext';
 import {
+  ATTENDANCE_HISTORY_WEEK_COUNT,
   attendanceDayRelative,
-  attendanceWeekRange,
+  attendanceHistoryWeekLabel,
+  attendanceWeekRangeByOffset,
   formatAttendanceDayLabel,
   formatAttendanceWeekRangeLabel,
   formatDisplayTime,
@@ -56,17 +59,41 @@ export function AttendanceHistorySheet({
   const { language } = usePreferences();
   const { colors: c, theme } = useTheme();
   const isLight = theme === 'light';
-  const [weekScope, setWeekScope] = useState<'this' | 'last'>('this');
+  const lang = language || i18n.language;
+  const [weeksBack, setWeeksBack] = useState(0);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [dayQuery, setDayQuery] = useState('');
 
   const weekRange = useMemo(
-    () => attendanceWeekRange(weekScope, weekStartsOn),
-    [weekScope, weekStartsOn]
+    () => attendanceWeekRangeByOffset(weeksBack, weekStartsOn),
+    [weeksBack, weekStartsOn]
+  );
+
+  const weekOptions = useMemo(
+    () =>
+      Array.from({ length: ATTENDANCE_HISTORY_WEEK_COUNT }, (_, offset) => {
+        const range = attendanceWeekRangeByOffset(offset, weekStartsOn);
+        return {
+          weeksBack: offset,
+          range,
+          label: attendanceHistoryWeekLabel(offset, weekStartsOn, lang, {
+            thisWeek: t('checkIn.weekThis'),
+            lastWeek: t('checkIn.weekLast'),
+          }),
+        };
+      }),
+    [weekStartsOn, lang, t]
+  );
+
+  const selectedWeekLabel = useMemo(
+    () =>
+      weekOptions.find((option) => option.weeksBack === weeksBack)?.label ??
+      formatAttendanceWeekRangeLabel(weekRange.from, weekRange.to, lang),
+    [weekOptions, weeksBack, weekRange.from, weekRange.to, lang]
   );
 
   const historyQuery = useQuery({
-    queryKey: ['check-ins', 'history-sheet', branchId, weekScope, weekRange.from, weekRange.to],
+    queryKey: ['check-ins', 'history-sheet', branchId, weeksBack, weekRange.from, weekRange.to],
     queryFn: () =>
       listCheckIns(token, {
         from: weekRange.from,
@@ -81,7 +108,7 @@ export function AttendanceHistorySheet({
     if (!visible) {
       setSelectedDay(null);
       setDayQuery('');
-      setWeekScope('this');
+      setWeeksBack(0);
     }
   }, [visible]);
 
@@ -105,7 +132,6 @@ export function AttendanceHistorySheet({
     });
   }, [selectedRows, dayQuery]);
 
-  const lang = language || i18n.language;
   const title = selectedDay ? dayLabel(selectedDay, lang, t) : t('checkIn.historyTitle');
   const weekRangeLabel = formatAttendanceWeekRangeLabel(weekRange.from, weekRange.to, lang);
 
@@ -154,19 +180,23 @@ export function AttendanceHistorySheet({
         <View style={styles.weekHeader}>
           <Text style={[styles.weekBody, { color: c.muted }]}>{t('checkIn.historyBody')}</Text>
           <Text style={[styles.weekSubtitle, { color: c.muted }]}>{weekRangeLabel}</Text>
-          <View style={styles.weekChipRow}>
-            {(['this', 'last'] as const).map((scope) => {
-              const active = weekScope === scope;
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.weekChipRow}
+          >
+            {weekOptions.map((option) => {
+              const active = weeksBack === option.weeksBack;
               return (
                 <Pressable
-                  key={scope}
+                  key={option.weeksBack}
                   accessibilityRole="button"
                   accessibilityState={{ selected: active }}
                   onPress={() => {
-                    if (scope !== weekScope) {
+                    if (option.weeksBack !== weeksBack) {
                       void Haptics.selectionAsync().catch(() => undefined);
                     }
-                    setWeekScope(scope);
+                    setWeeksBack(option.weeksBack);
                   }}
                   style={({ pressed }) => [
                     styles.weekChip,
@@ -188,12 +218,12 @@ export function AttendanceHistorySheet({
                       color: active ? (isLight ? '#0f766e' : c.accentText) : c.muted,
                     }}
                   >
-                    {scope === 'this' ? t('checkIn.weekThis') : t('checkIn.weekLast')}
+                    {option.label}
                   </Text>
                 </Pressable>
               );
             })}
-          </View>
+          </ScrollView>
         </View>
       ) : null}
 
@@ -216,7 +246,7 @@ export function AttendanceHistorySheet({
           <Text style={[styles.dayMeta, { color: c.dim }]}>
             {t('checkIn.dayVisitCount', { count: selectedRows.length })}
             {' · '}
-            {weekScope === 'this' ? t('checkIn.weekThis') : t('checkIn.weekLast')}
+            {selectedWeekLabel}
           </Text>
           <View
             style={[
@@ -292,17 +322,21 @@ export function AttendanceHistorySheet({
             compact
             icon="time-outline"
             title={
-              weekScope === 'last'
-                ? t('checkIn.historyEmptyLastTitle')
-                : t('checkIn.historyEmptyTitle')
+              weeksBack === 0
+                ? t('checkIn.historyEmptyTitle')
+                : weeksBack === 1
+                  ? t('checkIn.historyEmptyLastTitle')
+                  : t('checkIn.historyEmptyPastTitle')
             }
             body={
-              weekScope === 'last' ? t('checkIn.historyEmptyLast') : t('checkIn.historyEmpty')
+              weeksBack === 0
+                ? t('checkIn.historyEmpty')
+                : t('checkIn.historyEmptyLast')
             }
           />
         </Animated.View>
       ) : (
-        <Animated.View key={`days-${weekScope}`} entering={FadeIn.duration(200)} style={{ gap: 6 }}>
+        <Animated.View key={`days-${weeksBack}`} entering={FadeIn.duration(200)} style={{ gap: 6 }}>
           {byDay.map(([day, rows], index) => (
             <Animated.View
               key={day}
@@ -380,6 +414,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     marginTop: 6,
+    paddingRight: 4,
   },
   weekChip: {
     minHeight: 32,

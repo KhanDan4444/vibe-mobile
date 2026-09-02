@@ -179,19 +179,42 @@ export function startOfAttendanceWeek(
   return d;
 }
 
+/** Inclusive from/to ISO dates for an attendance week N weeks before the current week. */
+export function attendanceWeekRangeByOffset(
+  weeksBack: number,
+  weekStartsOn: 'monday' | 'sunday' = 'monday'
+): { from: string; to: string } {
+  const start = startOfAttendanceWeek(new Date(), weekStartsOn);
+  if (weeksBack > 0) {
+    start.setDate(start.getDate() - weeksBack * 7);
+  }
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+  return { from: dateToIso(start), to: dateToIso(end) };
+}
+
+/** Number of rolling attendance weeks shown in check-in History. */
+export const ATTENDANCE_HISTORY_WEEK_COUNT = 4;
+
 /** Inclusive from/to ISO dates for this or last attendance week. */
 export function attendanceWeekRange(
   which: 'this' | 'last',
   weekStartsOn: 'monday' | 'sunday' = 'monday'
 ): { from: string; to: string } {
-  let start = startOfAttendanceWeek(new Date(), weekStartsOn);
-  if (which === 'last') {
-    start = new Date(start);
-    start.setDate(start.getDate() - 7);
-  }
-  const end = new Date(start);
-  end.setDate(end.getDate() + 6);
-  return { from: dateToIso(start), to: dateToIso(end) };
+  return attendanceWeekRangeByOffset(which === 'last' ? 1 : 0, weekStartsOn);
+}
+
+/** Pill label for History week picker: words for recent weeks, date range for older ones. */
+export function attendanceHistoryWeekLabel(
+  weeksBack: number,
+  weekStartsOn: 'monday' | 'sunday',
+  language: string,
+  labels: { thisWeek: string; lastWeek: string }
+): string {
+  if (weeksBack === 0) return labels.thisWeek;
+  if (weeksBack === 1) return labels.lastWeek;
+  const range = attendanceWeekRangeByOffset(weeksBack, weekStartsOn);
+  return formatAttendanceWeekRangeLabel(range.from, range.to, language);
 }
 
 /** Local calendar day relative to today: 'today' | 'yesterday' | null. */

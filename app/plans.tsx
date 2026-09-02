@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Redirect, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText as Text } from '@/src/components/AppText';
 import { PageSkeleton } from '@/src/components/Skeleton';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -242,7 +243,6 @@ export default function PlansScreen() {
     sortRow: { alignItems: 'flex-start' as const },
     fab: {
       position: 'absolute' as const,
-      bottom: 24,
       width: 48,
       height: 48,
       borderRadius: 14,
@@ -255,6 +255,8 @@ export default function PlansScreen() {
 
   const { readOnly } = useGymReadOnly();
   const flashDeleted = useDeleteFlash();
+  const insets = useSafeAreaInsets();
+  const fabBottom = 24 + insets.bottom;
   const { pagePadding, fabRight, fabSize, fabRadius, fabFontSize, listColumnItemStyle } = useResponsiveLayout();
   const listColumns = 1;
   const owner = isGymOwner(user?.role);
@@ -413,7 +415,13 @@ export default function PlansScreen() {
             style={[
               styles.fab,
               fabElevation(theme),
-              { right: fabRight, width: fabSize, height: fabSize, borderRadius: fabRadius },
+              {
+                right: fabRight,
+                bottom: fabBottom,
+                width: fabSize,
+                height: fabSize,
+                borderRadius: fabRadius,
+              },
             ]}
             onPress={() => router.push('/plan/new')}
           >

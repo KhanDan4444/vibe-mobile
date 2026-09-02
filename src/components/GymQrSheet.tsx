@@ -2,8 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, Share, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
+import {
+  cacheQrDataUrl,
+  downloadHtmlAsPdf,
+  escapeHtml,
+  gymQrPosterFilename,
+} from '@/src/utils/posterPrint';
 import { AppText as Text } from '@/src/components/AppText';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
@@ -22,10 +26,6 @@ import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { radiusLg } from '@/src/theme/tokens';
 import type { BranchRow } from '@/src/types/api';
-
-function escapeHtml(s: string) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
 
 function stationToast(toast: Omit<FlashToast, 'durationMs'>) {
   return { durationMs: FLASH_SHEET_ACTION_MS, ...toast };
@@ -119,9 +119,11 @@ export function GymQrSheet({
   const onDownload = async () => {
     if (!payload?.qr_data_url || downloading) return;
     setDownloading(true);
+    const branch = payload.branch_name || '';
+    const gym = payload.gym_name || '';
+    let qrUri = '';
     try {
-      const gym = payload.gym_name || '';
-      const branch = payload.branch_name || '';
+      qrUri = cacheQrDataUrl(payload.qr_data_url, 'gym-station-qr');
       const html = `<!DOCTYPE html><html><head><meta charset="utf-8" />
         <style>
           @page{margin:12mm}
@@ -143,7 +145,7 @@ export function GymQrSheet({
             ${gym ? `<div class="gym">${escapeHtml(gym)}</div>` : ''}
             ${branch ? `<div class="branch">${escapeHtml(branch)}</div>` : ''}
             <div class="title">${escapeHtml(t('checkIn.stationPosterTitle'))}</div>
-            <div class="qr-wrap"><img class="qr" src="${payload.qr_data_url}" /></div>
+            <div class="qr-wrap"><img class="qr" src="${qrUri}" /></div>
             <div class="steps">
               <p class="step">${escapeHtml(t('checkIn.stationStep1'))}</p>
               <p class="step">${escapeHtml(t('checkIn.stationStep2'))}</p>
@@ -151,15 +153,9 @@ export function GymQrSheet({
             </div>
           </div>
         </div></body></html>`;
-      const file = await Print.printToFileAsync({ html });
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(file.uri, {
-          mimeType: 'application/pdf',
-          dialogTitle: t('checkIn.stationDownloadPoster'),
-        });
-      } else {
-        await Print.printAsync({ html });
-      }
+      await downloadHtmlAsPdf(html, gymQrPosterFilename(gym, branch), {
+        onPdfReady: () => setDownloading(false),
+      });
       flash({
         title: t('checkIn.stationPosterDownloadedTitle'),
         subtitle: t('checkIn.stationPosterDownloadedSub', { branch: branch || gym }),

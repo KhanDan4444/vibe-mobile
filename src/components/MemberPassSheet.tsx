@@ -2,8 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, Share, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
+import {
+  cacheQrDataUrl,
+  downloadHtmlAsPdf,
+  escapeHtml,
+  memberPassFilename,
+} from '@/src/utils/posterPrint';
 import { AppText as Text } from '@/src/components/AppText';
 import { BottomSheet } from '@/src/components/BottomSheet';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
@@ -26,10 +30,6 @@ import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { isGymOwner } from '@/src/utils/roles';
 import { radiusLg } from '@/src/theme/tokens';
-
-function escapeHtml(s: string) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
 
 function passToast(toast: Omit<FlashToast, 'durationMs'>) {
   return { durationMs: FLASH_SHEET_ACTION_MS, ...toast };
@@ -397,8 +397,10 @@ export function MemberPassSheet({
   const onPrint = async () => {
     if (!pass?.qr_data_url || printing) return;
     setPrinting(true);
+    let qrUri = '';
     try {
       const gym = pass.gym_name || '';
+      qrUri = cacheQrDataUrl(pass.qr_data_url, 'member-pass-qr');
       const html = `<!DOCTYPE html><html><head><meta charset="utf-8" />
         <style>
           @page{margin:12mm}
@@ -420,18 +422,12 @@ export function MemberPassSheet({
             <div class="sub">${escapeHtml(t('checkIn.memberPassTitle'))}</div>
             <div class="name">${escapeHtml(memberName)}</div>
             ${memberPhone ? `<div class="phone">${escapeHtml(memberPhone)}</div>` : ''}
-            <div class="qr-wrap"><img class="qr" src="${pass.qr_data_url}" /></div>
+            <div class="qr-wrap"><img class="qr" src="${qrUri}" /></div>
           </div>
         </div></body></html>`;
-      const file = await Print.printToFileAsync({ html });
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(file.uri, {
-          mimeType: 'application/pdf',
-          dialogTitle: t('checkIn.printPass'),
-        });
-      } else {
-        await Print.printAsync({ html });
-      }
+      await downloadHtmlAsPdf(html, memberPassFilename(memberName), {
+        onPdfReady: () => setPrinting(false),
+      });
       showFlash(passToast({
         title: t('checkIn.passPrintedTitle'),
         subtitle: t('checkIn.passPrintedSub', { name: memberName }),

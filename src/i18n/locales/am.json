@@ -458,6 +458,7 @@
     "historyEmpty": "ጉብኝት ያላቸው ቀናት እዚህ ይታያሉ።",
     "historyEmptyLastTitle": "ያለፈው ሳምንት ጸጥ ነበር",
     "historyEmptyLast": "በዚያ ሳምንት ምንም አልተመዘገበም።",
+    "historyEmptyPastTitle": "በዚያ ሳምንት ጉብኝት የለም",
     "dayVisitCount_one": "{{count}} ጉብኝት",
     "dayVisitCount_other": "{{count}} ጉብኝቶች",
     "recentVisits": "የቅርብ ጊዜ ጉብኝቶች",
