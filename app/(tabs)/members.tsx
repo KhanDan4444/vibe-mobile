@@ -165,6 +165,7 @@ function MemberRowItem({
   showBranch,
   token,
   multiColumn,
+  dense,
   colors,
   columnStyle,
   canRestore,
@@ -180,6 +181,7 @@ function MemberRowItem({
   showBranch?: boolean;
   token: string;
   multiColumn?: boolean;
+  dense?: boolean;
   colors: ThemeColors;
   columnStyle?: object;
   canRestore?: boolean;
@@ -224,7 +226,14 @@ function MemberRowItem({
   return (
     <SoftSurface
       onPress={onPress}
-      style={[styles.row, multiColumn && styles.rowColumn, multiColumn && columnStyle, multiColumn && styles.rowStacked]}
+      style={[
+        styles.row,
+        dense && styles.rowDense,
+        multiColumn && styles.rowColumn,
+        multiColumn && columnStyle,
+        multiColumn && styles.rowStacked,
+        multiColumn && dense && styles.rowStackedDense,
+      ]}
     >
       <View style={styles.rowTop}>
         <MemberPhoto
@@ -334,10 +343,11 @@ export default function MembersScreen() {
   const { colors: c, theme } = useTheme();
   const { t } = useTranslation();
   const styles = useThemedStyles(createStyles);
-  const { pagePadding, isTablet, fabRight, fabSize, fabRadius, fabFontSize, listColumnItemStyle } = useResponsiveLayout();
+  const { pagePadding, isTablet, isLandscape, fabRight, fabSize, fabRadius, fabFontSize, listColumnItemStyle } =
+    useResponsiveLayout();
   const tabOverlayInset = useTabBarOverlayInset();
-  // Members read better as a full-width list (photo + status row), not a 2-col grid.
-  const listColumns = 1;
+  // Portrait: full-width rows. Landscape tablet: 2-col so cards aren't stretched thin.
+  const listColumns = isTablet && isLandscape ? 2 : 1;
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -598,32 +608,48 @@ export default function MembersScreen() {
     <View style={styles.container}>
       <BranchFilterBar horizontalPadding={pagePadding} />
       <View style={[styles.toolbar, { paddingHorizontal: pagePadding }]}>
-        <SearchField
-          value={search}
-          onChangeText={setSearch}
-          placeholder={showingFormer ? t('members.searchFormer') : t('members.search')}
-        />
-
         {isTablet ? (
-          <View style={[styles.filters, styles.filtersWrap]}>
-            {statusChips}
+          <View style={styles.searchSortRow}>
+            <View style={styles.searchFlex}>
+              <SearchField
+                value={search}
+                onChangeText={setSearch}
+                placeholder={showingFormer ? t('members.searchFormer') : t('members.search')}
+              />
+            </View>
+            {!showingFormer ? (
+              <View style={styles.sortInline}>
+                <SortPicker
+                  label={t('members.sort')}
+                  options={MEMBER_SORT_OPTIONS}
+                  value={sort}
+                  onChange={setSort}
+                />
+              </View>
+            ) : null}
           </View>
         ) : (
-          <ScrollView
-            ref={filterScrollRef}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={[styles.filterScroll, { marginHorizontal: -pagePadding }]}
-            contentContainerStyle={[styles.filters, { paddingHorizontal: pagePadding }]}
-          >
-            {statusChips}
-          </ScrollView>
+          <SearchField
+            value={search}
+            onChangeText={setSearch}
+            placeholder={showingFormer ? t('members.searchFormer') : t('members.search')}
+          />
         )}
 
-        {!showingFormer ? (
-        <View style={styles.sortRow}>
-          <SortPicker label={t('members.sort')} options={MEMBER_SORT_OPTIONS} value={sort} onChange={setSort} />
-        </View>
+        <ScrollView
+          ref={filterScrollRef}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={[styles.filterScroll, { marginHorizontal: -pagePadding }]}
+          contentContainerStyle={[styles.filters, { paddingHorizontal: pagePadding }]}
+        >
+          {statusChips}
+        </ScrollView>
+
+        {!isTablet && !showingFormer ? (
+          <View style={styles.sortRow}>
+            <SortPicker label={t('members.sort')} options={MEMBER_SORT_OPTIONS} value={sort} onChange={setSort} />
+          </View>
         ) : null}
       </View>
 
@@ -645,6 +671,7 @@ export default function MembersScreen() {
               showBranch={showBranchColumn}
               token={token!}
               multiColumn={listColumns > 1}
+              dense={isTablet}
               columnStyle={listColumnItemStyle}
               colors={c}
               readOnly={readOnly}
@@ -727,6 +754,13 @@ function createStyles(c: ThemeColors) {
       paddingBottom: 8,
       gap: 8,
     },
+    searchSortRow: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 10,
+    },
+    searchFlex: { flex: 1, minWidth: 0 },
+    sortInline: { flexShrink: 0 },
     filterScroll: {
       flexGrow: 0,
       marginHorizontal: -16,
@@ -737,7 +771,6 @@ function createStyles(c: ThemeColors) {
       paddingRight: 32,
       gap: 6,
     },
-    filtersWrap: { flexWrap: 'wrap' as const, rowGap: 6 },
     chipDivider: {
       width: StyleSheet.hairlineWidth,
       alignSelf: 'center' as const,
@@ -757,6 +790,10 @@ function createStyles(c: ThemeColors) {
       marginBottom: 10,
       gap: 10,
     },
+    rowDense: {
+      paddingVertical: 10,
+      marginBottom: 8,
+    },
     rowColumn: {
       marginBottom: 0,
     },
@@ -764,6 +801,11 @@ function createStyles(c: ThemeColors) {
       flexDirection: 'column' as const,
       alignItems: 'stretch' as const,
       gap: 10,
+    },
+    rowStackedDense: {
+      gap: 8,
+      paddingVertical: 10,
+      paddingHorizontal: 12,
     },
     rowTop: {
       flexDirection: 'row' as const,

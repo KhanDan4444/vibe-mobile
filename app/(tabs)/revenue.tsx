@@ -101,6 +101,7 @@ function PaymentRowItem({
   owner,
   readOnly,
   multiColumn,
+  dense,
   columnStyle,
   onOpenMember,
   onEdit,
@@ -111,6 +112,7 @@ function PaymentRowItem({
   owner: boolean;
   readOnly: boolean;
   multiColumn?: boolean;
+  dense?: boolean;
   columnStyle?: object;
   onOpenMember: () => void;
   onEdit: () => void;
@@ -126,6 +128,10 @@ function PaymentRowItem({
       paddingVertical: 12,
       paddingHorizontal: 12,
       marginBottom: 10,
+    },
+    rowDense: {
+      paddingVertical: 10,
+      marginBottom: 8,
     },
     rowColumn: { marginBottom: 0 },
     avatar: { marginRight: 10 },
@@ -178,14 +184,19 @@ function PaymentRowItem({
   return (
     <SoftSurface
       onPress={onOpenMember}
-      style={[styles.row, multiColumn && styles.rowColumn, multiColumn && columnStyle]}
+      style={[
+        styles.row,
+        dense && styles.rowDense,
+        multiColumn && styles.rowColumn,
+        multiColumn && columnStyle,
+      ]}
     >
       <View style={styles.avatar}>
         <MemberPhoto
           memberId={payment.member_id}
           name={payment.member_name || 'Member'}
           token={token}
-          size={42}
+          size={dense ? 40 : 42}
           hasPhoto={Boolean(payment.member_photo_url)}
         />
       </View>
@@ -300,6 +311,10 @@ export default function RevenueScreen() {
       paddingHorizontal: 16,
       overflow: 'hidden' as const,
     },
+    heroLandscape: {
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+    },
     heroContent: { zIndex: 1 },
     heroLabel: {
       fontSize: 11,
@@ -333,7 +348,11 @@ export default function RevenueScreen() {
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: colors.border,
     },
-    periodRow: { gap: 6, paddingTop: 10, paddingBottom: 8 },
+    methodStatsLandscape: {
+      marginTop: 6,
+      paddingTop: 6,
+    },
+    periodRow: { gap: 6, paddingTop: 10, paddingBottom: 8, alignItems: 'center' as const },
     searchRow: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 10, marginBottom: 8 },
     searchWrap: { flex: 1 },
     filterBtn: {
@@ -370,9 +389,10 @@ export default function RevenueScreen() {
   }));
   const owner = isGymOwner(user?.role);
   const { readOnly } = useGymReadOnly();
-  const { pagePadding, listColumnItemStyle, isTablet } = useResponsiveLayout();
+  const { pagePadding, listColumnItemStyle, isTablet, isLandscape } = useResponsiveLayout();
   const tabOverlayInset = useTabBarOverlayInset();
-  const listColumns = 1;
+  // Portrait: full-width rows. Landscape tablet: 2-col so rows aren't stretched thin.
+  const listColumns = isTablet && isLandscape ? 2 : 1;
   const { selectedBranchId, showBranchFilter } = useBranchScope();
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
 
@@ -485,7 +505,10 @@ export default function RevenueScreen() {
 
   const listHeader = (
     <View style={styles.headerBlock}>
-      <SoftSurface variant="panel" style={styles.hero}>
+      <SoftSurface
+        variant="panel"
+        style={[styles.hero, isTablet && isLandscape && styles.heroLandscape]}
+      >
         <RevenueHeroAtmosphere isLight={isLight} />
         <View style={styles.heroContent}>
           <Text style={appTextStyle(language, styles.heroLabel)}>
@@ -507,7 +530,7 @@ export default function RevenueScreen() {
             </Text>
           </View>
           {methodEntries.length > 0 ? (
-            <View style={styles.methodStats}>
+            <View style={[styles.methodStats, isTablet && isLandscape && styles.methodStatsLandscape]}>
               {methodEntries.map((m, index) => (
                 <MethodStat
                   key={m}
@@ -602,6 +625,7 @@ export default function RevenueScreen() {
 
       {/* Always FlatList — swapping View↔FlatList remounted the header and felt like a shake. */}
       <FlatList
+        key={`revenue-cols-${listColumns}`}
         data={screenLoading || (query.isError && !query.data) ? [] : payments}
         numColumns={listColumns}
         columnWrapperStyle={listColumns > 1 ? { gap: 10 } : undefined}
@@ -614,6 +638,7 @@ export default function RevenueScreen() {
             owner={owner}
             readOnly={readOnly}
             multiColumn={listColumns > 1}
+            dense={isTablet}
             columnStyle={listColumnItemStyle}
             onOpenMember={() => router.push(`/member/${item.member_id}`)}
             onEdit={() => openEdit(item)}

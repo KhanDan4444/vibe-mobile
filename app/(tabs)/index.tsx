@@ -125,7 +125,7 @@ export default function DashboardScreen() {
   const owner = isGymOwner(user?.role);
   const staffUser = isGymStaff(user?.role);
   const { readOnly } = useGymReadOnly();
-  const { statCardLayoutStyle, isTablet, pagePadding, chartHeight, width } = useResponsiveLayout();
+  const { statCardLayoutStyle, isTablet, isLandscape, pagePadding, chartHeight, width } = useResponsiveLayout();
   const heroMetricSm = width >= 640;
   const tabOverlayInset = useTabBarOverlayInset();
   const staffBranchLabel = staffUser
@@ -198,7 +198,10 @@ export default function DashboardScreen() {
   const attentionHasContent = allAlertMembers.length > 0;
 
   const summaryBlock = data ? (
-    <SoftSurface variant="panel" style={styles.summary}>
+    <SoftSurface
+      variant="panel"
+      style={[styles.summary, isTablet && isLandscape && styles.summaryLandscape]}
+    >
       <View style={styles.heroHeader}>
         <Pressable
           onPress={() => router.push('/(tabs)/revenue')}
@@ -405,7 +408,7 @@ export default function DashboardScreen() {
               />
             </View>
           </SoftSurface>
-          <View style={styles.grid}>
+          <View style={[styles.grid, isTablet && styles.gridTablet]}>
             <MetricStatCard
               label={t('dashboard.dueSoon')}
               value={data.dueSoonMembers ?? 0}
@@ -475,6 +478,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md, marginTop: space.md },
+  gridTablet: { flexWrap: 'nowrap' },
   heroMetricCard: {
     marginTop: space.sm,
     padding: space.lg,
@@ -529,6 +533,10 @@ const styles = StyleSheet.create({
   summary: {
     marginTop: space.md,
     padding: space.lg,
+  },
+  summaryLandscape: {
+    paddingVertical: space.md,
+    paddingHorizontal: space.lg,
   },
   summaryTitle: { fontSize: 11, fontWeight: '600', letterSpacing: 0.4, textTransform: 'uppercase' },
   summaryTitleRow: {

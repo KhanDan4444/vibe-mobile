@@ -74,7 +74,7 @@ const TODAY_PREVIEW = 10;
 const EMPTY_LIST: never[] = [];
 
 /** Match web desk hero — brand→raised (light) / brand→surface (dark). */
-function DeskHeroAtmosphere({ isLight }: { isLight: boolean }) {
+function DeskHeroAtmosphere({ isLight, wide = false }: { isLight: boolean; wide?: boolean }) {
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
@@ -84,6 +84,12 @@ function DeskHeroAtmosphere({ isLight }: { isLight: boolean }) {
               <Stop offset="0%" stopColor="#D8E9E8" />
               <Stop offset="42%" stopColor="#F3F8F8" />
               <Stop offset="100%" stopColor="#FFFFFF" />
+            </LinearGradient>
+          ) : wide ? (
+            <LinearGradient id="deskHeroFill" x1="0%" y1="0%" x2="100%" y2="100%">
+              <Stop offset="0%" stopColor="#1B2C32" />
+              <Stop offset="45%" stopColor="#1A2228" />
+              <Stop offset="100%" stopColor="#1A1E26" />
             </LinearGradient>
           ) : (
             <LinearGradient id="deskHeroFill" x1="0%" y1="0%" x2="85%" y2="100%">
@@ -99,9 +105,17 @@ function DeskHeroAtmosphere({ isLight }: { isLight: boolean }) {
         style={[
           stylesAtmosphere.orbPrimary,
           isLight ? stylesAtmosphere.orbPrimaryLight : stylesAtmosphere.orbPrimaryDark,
+          wide && (isLight ? stylesAtmosphere.orbPrimaryLightWide : stylesAtmosphere.orbPrimaryDarkWide),
         ]}
       />
-      {isLight ? <View style={stylesAtmosphere.orbSecondaryLight} /> : null}
+      {isLight ? (
+        <View
+          style={[
+            stylesAtmosphere.orbSecondaryLight,
+            wide && stylesAtmosphere.orbSecondaryLightWide,
+          ]}
+        />
+      ) : null}
     </View>
   );
 }
@@ -125,6 +139,21 @@ const stylesAtmosphere = StyleSheet.create({
     height: 192,
     backgroundColor: 'rgba(45,212,191,0.05)',
   },
+  /** Keep more of the arc inside wide landscape cards (less hard clip). */
+  orbPrimaryLightWide: {
+    top: -36,
+    right: -24,
+    width: 300,
+    height: 300,
+    backgroundColor: 'rgba(15,118,110,0.14)',
+  },
+  orbPrimaryDarkWide: {
+    top: -28,
+    right: -16,
+    width: 280,
+    height: 280,
+    backgroundColor: 'rgba(45,212,191,0.08)',
+  },
   orbSecondaryLight: {
     position: 'absolute',
     bottom: -40,
@@ -133,6 +162,12 @@ const stylesAtmosphere = StyleSheet.create({
     height: 144,
     borderRadius: 999,
     backgroundColor: 'rgba(15,118,110,0.07)',
+  },
+  orbSecondaryLightWide: {
+    bottom: -28,
+    left: -24,
+    width: 180,
+    height: 180,
   },
 });
 
@@ -208,8 +243,11 @@ export default function CheckInScreen() {
   const { showFlash } = useFlash();
   const { readOnly } = useGymReadOnly();
   const { selectedBranchId, showBranchFilter, activeBranches } = useBranchScope();
-  const { pagePadding, listColumns, listColumnItemStyle } = useResponsiveLayout();
+  const { pagePadding, isTablet, isLandscape, listColumnItemStyle } = useResponsiveLayout();
   const tabOverlayInset = useTabBarOverlayInset();
+  // Portrait: full-width rows. Landscape tablet: 2-col for search + today's list.
+  const listColumns = isTablet && isLandscape ? 2 : 1;
+  const wideHero = isTablet && isLandscape;
   const queryClient = useQueryClient();
   const owner = isGymOwner(user?.role);
   const seedParams = useLocalSearchParams<{ q?: string; memberId?: string }>();
@@ -675,12 +713,19 @@ export default function CheckInScreen() {
       overflow: 'hidden' as const,
       backgroundColor: 'transparent',
     },
+    heroLandscape: {
+      paddingTop: 12,
+      paddingBottom: 10,
+    },
     heroTop: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       justifyContent: 'space-between' as const,
       gap: 12,
       marginBottom: 14,
+    },
+    heroTopLandscape: {
+      marginBottom: 10,
     },
     deskCol: {
       flex: 1,
@@ -752,6 +797,9 @@ export default function CheckInScreen() {
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: isLight ? 'rgba(15,118,110,0.14)' : theme.border,
     },
+    deskToolsLandscape: {
+      paddingTop: 10,
+    },
     deskSearch: {
       flex: 1,
       minWidth: 0,
@@ -809,12 +857,27 @@ export default function CheckInScreen() {
       paddingHorizontal: 0,
       overflow: 'hidden' as const,
     },
+    todayGrid: {
+      flexDirection: 'row' as const,
+      flexWrap: 'wrap' as const,
+      gap: 10,
+    },
+    todayCardItem: {
+      paddingVertical: 2,
+      paddingHorizontal: 0,
+      marginBottom: 0,
+      overflow: 'hidden' as const,
+    },
     todayRow: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       gap: 12,
       paddingVertical: 11,
       paddingHorizontal: 14,
+    },
+    todayRowDense: {
+      paddingVertical: 9,
+      gap: 10,
     },
     todayRowDivider: {
       borderTopWidth: StyleSheet.hairlineWidth,
@@ -968,9 +1031,13 @@ export default function CheckInScreen() {
             <BranchFilterBar horizontalPadding={0} />
 
             <Animated.View entering={FadeIn.duration(280)}>
-              <SoftSurface variant="panel" flat style={styles.hero}>
-                <DeskHeroAtmosphere isLight={isLight} />
-                <View style={styles.heroTop}>
+              <SoftSurface
+                variant="panel"
+                flat
+                style={[styles.hero, wideHero && styles.heroLandscape]}
+              >
+                <DeskHeroAtmosphere isLight={isLight} wide={wideHero} />
+                <View style={[styles.heroTop, wideHero && styles.heroTopLandscape]}>
                   <View style={styles.deskCol}>
                     <Text style={styles.deskLabel}>{t('checkIn.deskLabel')}</Text>
                     <View style={styles.chipRow}>
@@ -1024,7 +1091,7 @@ export default function CheckInScreen() {
                     {todaySnapQuery.isLoading ? '—' : todayTotal}
                   </Text>
                 </View>
-                <View style={styles.deskTools}>
+                <View style={[styles.deskTools, wideHero && styles.deskToolsLandscape]}>
                   <SearchField
                     value={query}
                     onChangeText={setQuery}
@@ -1133,6 +1200,82 @@ export default function CheckInScreen() {
             ) : null}
 
             {todayRows.length > 0 ? (
+              listColumns > 1 ? (
+                <View style={styles.todayGrid}>
+                  {visibleTodayRows.map((row) => (
+                    <SoftSurface
+                      key={row.id}
+                      variant="panel"
+                      style={[styles.todayCardItem, listColumnItemStyle]}
+                    >
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={row.member_name || undefined}
+                        onPress={() => {
+                          void Haptics.selectionAsync().catch(() => undefined);
+                          router.push(`/member/${row.member_id}` as never);
+                        }}
+                        style={({ pressed }) => [
+                          styles.todayRow,
+                          styles.todayRowDense,
+                          { opacity: pressed ? 0.72 : 1 },
+                        ]}
+                      >
+                        <MemberPhoto
+                          memberId={row.member_id}
+                          name={row.member_name || '?'}
+                          token={token}
+                          size={34}
+                          hasPhoto={Boolean(row.member_photo_url)}
+                        />
+                        <View style={{ flex: 1, minWidth: 0 }}>
+                          <Text listRow style={styles.todayName} numberOfLines={1}>
+                            {row.member_name || '—'}
+                          </Text>
+                          {showBranchOnToday && row.branch_name ? (
+                            <Text style={styles.todayBranch} numberOfLines={1}>
+                              {row.branch_name}
+                            </Text>
+                          ) : null}
+                        </View>
+                        <Text latin display style={metricDisplayStyle(styles.todayTime)}>
+                          {formatDisplayTime(row.checked_in_at, i18n.language)}
+                        </Text>
+                      </Pressable>
+                    </SoftSurface>
+                  ))}
+                  {todayHasMore ? (
+                    <View style={[styles.showMoreWrap, { width: '100%' }]}>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={
+                          todayExpanded ? t('checkIn.showLess') : t('checkIn.showMore')
+                        }
+                        onPress={() => {
+                          void Haptics.selectionAsync().catch(() => undefined);
+                          setTodayExpanded((v) => !v);
+                        }}
+                        style={({ pressed }) => [styles.showMoreBtn, { opacity: pressed ? 0.82 : 1 }]}
+                      >
+                        <Text style={styles.showMoreLabel}>
+                          {todayExpanded ? t('checkIn.showLess') : t('checkIn.showMore')}
+                        </Text>
+                        <Ionicons
+                          name={todayExpanded ? 'chevron-up' : 'chevron-down'}
+                          size={16}
+                          color={c.muted}
+                        />
+                      </Pressable>
+                      <Text style={styles.showMoreMeta}>
+                        {t('checkIn.showingOf', {
+                          shown: visibleTodayRows.length,
+                          total: todayRows.length,
+                        })}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+              ) : (
                 <SoftSurface variant="panel" style={styles.todayCard}>
                   {visibleTodayRows.map((row, index) => (
                     <View key={row.id}>
@@ -1200,6 +1343,7 @@ export default function CheckInScreen() {
                     </View>
                   ) : null}
                 </SoftSurface>
+              )
             ) : null}
           </View>
         }

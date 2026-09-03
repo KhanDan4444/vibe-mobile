@@ -14,7 +14,6 @@ import {
   View,
   type TextInput,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
@@ -37,10 +36,8 @@ import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { SkeletonBone } from '@/src/components/Skeleton';
 import { FIELD_MIN_HEIGHT, FIELD_RADIUS } from '@/src/theme/fieldChrome';
 import { useTheme } from '@/src/context/PreferencesContext';
-import { elevationStyle } from '@/src/theme/elevation';
 import { useOfflineFlash } from '@/src/hooks/useSaveFlash';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
-import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { looksLikeMetricValue, metricDisplayStyle } from '@/src/theme/typography';
 import { PAYMENT_METHODS, paymentMethodLabelKey } from '@/src/constants/payments';
@@ -91,8 +88,6 @@ export default function EnrollScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const headerHeight = useHeaderHeight();
-  const insets = useSafeAreaInsets();
-  const { pagePadding, formMaxWidth } = useResponsiveLayout();
   const queryClient = useQueryClient();
   const { token, user } = useAuth();
 
@@ -123,7 +118,7 @@ export default function EnrollScreen() {
   const [reduceMotion, setReduceMotion] = useState(false);
   const phoneRef = useRef<TextInput>(null);
   const checkScale = useRef(new Animated.Value(1)).current;
-  const { colors: c, theme } = useTheme();
+  const { colors: c } = useTheme();
   const { t } = useTranslation();
   const styles = useThemedStyles((colors) => ({
     sectionTitle: {
@@ -241,22 +236,19 @@ export default function EnrollScreen() {
       gap: 10,
     },
     actionBtn: { flex: 1, marginTop: 0, marginBottom: 0 },
-    stickyFooter: {
-      backgroundColor: colors.bg,
+    formFooter: {
+      marginTop: 20,
       paddingTop: 12,
-      alignItems: 'center' as const,
+      width: '100%' as const,
+      gap: 10,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: colors.cardEdge,
     },
-    stickyInner: {
-      width: '100%' as const,
-      gap: 10,
-    },
-    stickyRow: {
+    formFooterRow: {
       flexDirection: 'row' as const,
       gap: 10,
     },
-    stickyBtn: { flex: 1, marginTop: 0, marginBottom: 0 },
+    formFooterBtn: { flex: 1, marginTop: 0, marginBottom: 0 },
     warningBox: {
       marginTop: 12,
       flexDirection: 'row' as const,
@@ -867,16 +859,14 @@ export default function EnrollScreen() {
     );
   }
 
-  const stickyPadBottom = Math.max(insets.bottom, 10) + 8;
-
   return (
-    <Screen flushBottom>
+    <Screen>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}
       >
-        <FormScroll contentContainerStyle={{ paddingBottom: 24 }}>
+        <FormScroll contentContainerStyle={{ paddingBottom: 16 }}>
           <EnrollStepProgress
             steps={enrollSteps}
             current={enrollStep}
@@ -1064,22 +1054,14 @@ export default function EnrollScreen() {
               </>
             ) : null}
           </View>
-        </FormScroll>
 
-        <View
-          style={[
-            styles.stickyFooter,
-            elevationStyle('raised', theme),
-            { paddingBottom: stickyPadBottom, paddingHorizontal: pagePadding },
-          ]}
-        >
-          <View style={[styles.stickyInner, { maxWidth: formMaxWidth }]}>
-            <View style={styles.stickyRow}>
+          <View style={styles.formFooter}>
+            <View style={styles.formFooterRow}>
               {enrollStep > 1 ? (
                 <SecondaryButton
                   label={t('common.back')}
                   onPress={goBack}
-                  style={styles.stickyBtn}
+                  style={styles.formFooterBtn}
                 />
               ) : null}
               {enrollStep < 3 ? (
@@ -1093,7 +1075,7 @@ export default function EnrollScreen() {
                       ? !name.trim() || !phone.trim() || Boolean(phoneError) || (showBranchPicker && !branchId)
                       : plans.length === 0 || !planId || !/^\d{4}-\d{2}-\d{2}$/.test(startDate))
                   }
-                  style={styles.stickyBtn}
+                  style={styles.formFooterBtn}
                 />
               ) : (
                 <PrimaryButton
@@ -1101,12 +1083,12 @@ export default function EnrollScreen() {
                   onPress={submitEnroll}
                   loading={mutation.isPending || photoProcessing}
                   disabled={!canSubmit || photoProcessing}
-                  style={styles.stickyBtn}
+                  style={styles.formFooterBtn}
                 />
               )}
             </View>
           </View>
-        </View>
+        </FormScroll>
       </KeyboardAvoidingView>
     </Screen>
   );

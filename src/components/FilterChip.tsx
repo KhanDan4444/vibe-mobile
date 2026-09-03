@@ -49,8 +49,8 @@ export function FilterChip({
       borderRadius: pill ? 999 : radiusMd,
       minHeight: chipMinHeight,
       backgroundColor: 'transparent',
-      flexShrink: 1,
-      maxWidth: '100%' as const,
+      // Keep natural width in horizontal chip rows — shrink truncates labels like "This week".
+      flexShrink: 0,
     },
     chipActive: {
       backgroundColor: colors.accentSoft,
@@ -123,9 +123,7 @@ export function FilterChip({
           ...(solidSelected ? styles.labelActiveSolid : {}),
           ...(softCustom ? { color: selectedColor } : {}),
         })}
-        numberOfLines={2}
-        adjustsFontSizeToFit
-        minimumFontScale={0.85}
+        numberOfLines={1}
       >
         {label}
       </Text>

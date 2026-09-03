@@ -40,6 +40,8 @@ function TabBarButton(props: ComponentProps<typeof PlatformPressable>) {
   return (
     <PlatformPressable
       {...props}
+      // Keep icon above label even on wide tablet landscape (RN defaults to beside-icon).
+      style={[props.style, styles.tabBarButton]}
       pressOpacity={0.72}
       onPressIn={(e) => {
         void Haptics.selectionAsync();
@@ -48,6 +50,14 @@ function TabBarButton(props: ComponentProps<typeof PlatformPressable>) {
     />
   );
 }
+
+const styles = StyleSheet.create({
+  tabBarButton: {
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
+});
 
 export default function TabLayout() {
   const { user, loading } = useAuth();
@@ -119,6 +129,7 @@ export default function TabLayout() {
             tabBarActiveTintColor: c.accentText,
             tabBarInactiveTintColor: c.dim,
             tabBarHideOnKeyboard: true,
+            tabBarLabelPosition: 'below-icon',
             tabBarButton: TabBarButton,
             tabBarStyle: {
               backgroundColor: c.tabBarBg,

@@ -10,8 +10,17 @@ export function useResponsiveLayout() {
   const isTablet = width >= TABLET_MIN_WIDTH;
   const isLargeTablet = width >= LARGE_TABLET_MIN_WIDTH;
   const isPhone = !isTablet;
+  const isLandscape = width > height;
 
-  const contentMaxWidth = isLargeTablet ? 980 : isTablet ? 760 : width;
+  // Landscape tablets: use most of the width so content isn't a phone column.
+  // Portrait keeps a readable centered column.
+  const contentMaxWidth = !isTablet
+    ? width
+    : isLandscape
+      ? Math.min(Math.round(width * 0.92), 1200)
+      : isLargeTablet
+        ? 980
+        : 760;
   const pagePadding = isTablet ? 24 : 16;
   const listColumns = isTablet ? 2 : 1;
   const statColumns = isTablet ? 4 : 2;
@@ -22,7 +31,7 @@ export function useResponsiveLayout() {
    */
   const statCardLayoutStyle =
     statColumns === 4
-      ? ({ flexGrow: 1, flexBasis: '21%', minWidth: '21%' } as const)
+      ? ({ flex: 1, flexBasis: 0, minWidth: 0 } as const)
       : ({ flexGrow: 1, flexBasis: '40%', minWidth: '40%' } as const);
   /** @deprecated Prefer statCardLayoutStyle — kept for older call sites. */
   const statCardWidthPercent = statColumns === 4 ? '23.5%' : '47%';
@@ -40,7 +49,8 @@ export function useResponsiveLayout() {
   const fabSize = isTablet ? 60 : 48;
   const fabRadius = isTablet ? 18 : 14;
   const fabFontSize = isTablet ? 32 : 26;
-  const chartHeight = isTablet ? 168 : 132;
+  /** Shorter chart in landscape so This month fits better above the fold. */
+  const chartHeight = isTablet ? (isLandscape ? 120 : 168) : 132;
 
   /**
    * FlatList 2-col item: keeps a lone last card at half width instead of stretching full row.
@@ -56,6 +66,7 @@ export function useResponsiveLayout() {
     isPhone,
     isTablet,
     isLargeTablet,
+    isLandscape,
     contentMaxWidth,
     pagePadding,
     listColumns,

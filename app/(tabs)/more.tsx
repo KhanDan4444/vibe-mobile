@@ -150,9 +150,10 @@ export default function MoreScreen() {
   const { user } = useAuth();
   const { colors: c } = useTheme();
   const { t } = useTranslation();
-  const { pagePadding } = useResponsiveLayout();
+  const { pagePadding, isTablet, isLandscape } = useResponsiveLayout();
   const tabOverlayInset = useTabBarOverlayInset();
   const owner = isGymOwner(user?.role);
+  const sideBySide = isTablet && isLandscape;
 
   const { gymItems, insightItems } = useMemo(() => {
     const visible = MENU.filter((item) => !item.ownerOnly || owner);
@@ -169,9 +170,13 @@ export default function MoreScreen() {
         contentContainerStyle={[styles.content, { paddingBottom: 40 + tabOverlayInset }]}
       >
         <ResponsiveContent style={{ paddingHorizontal: pagePadding }}>
-          <View style={styles.sections}>
-            <MenuSection title={t('more.sectionGym')} items={gymItems} delay={40} />
-            <MenuSection title={t('more.sectionInsights')} items={insightItems} delay={100} />
+          <View style={[styles.sections, sideBySide && styles.sectionsLandscape]}>
+            <View style={sideBySide ? styles.sectionCol : undefined}>
+              <MenuSection title={t('more.sectionGym')} items={gymItems} delay={40} />
+            </View>
+            <View style={sideBySide ? styles.sectionCol : undefined}>
+              <MenuSection title={t('more.sectionInsights')} items={insightItems} delay={100} />
+            </View>
           </View>
         </ResponsiveContent>
       </ScrollView>
@@ -183,6 +188,15 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { paddingBottom: 40, flexGrow: 1 },
   sections: { gap: 22 },
+  sectionsLandscape: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 16,
+  },
+  sectionCol: {
+    flex: 1,
+    minWidth: 0,
+  },
   sectionLabel: {
     fontSize: 12,
     fontWeight: '600',
