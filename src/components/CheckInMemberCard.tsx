@@ -183,7 +183,7 @@ export function CheckInMemberCard({
     },
     actionCol: {
       flexShrink: 0,
-      maxWidth: 100,
+      maxWidth: 122,
       alignItems: 'flex-end' as const,
       justifyContent: 'center' as const,
     },
@@ -201,21 +201,21 @@ export function CheckInMemberCard({
   let action: ReactNode;
   if (expired) {
     action = (
-      <Text maxFontSizeMultiplier={1.2} style={styles.statusText}>
+      <Text maxFontSizeMultiplier={1.2} style={styles.statusText} numberOfLines={1}>
         {t('checkIn.blockedExpired')}
       </Text>
     );
   } else if (checkedIn) {
     action = (
       <Animated.View entering={FadeInRight.duration(180)}>
-        <Text maxFontSizeMultiplier={1.2} style={styles.statusText}>
+        <Text maxFontSizeMultiplier={1.2} style={styles.statusText} numberOfLines={1}>
           {t('checkIn.alreadyTodayShort')}
         </Text>
       </Animated.View>
     );
   } else if (cardError?.code === 'WEEKLY_LIMIT') {
     action = (
-      <Text maxFontSizeMultiplier={1.2} style={styles.statusText}>
+      <Text maxFontSizeMultiplier={1.2} style={styles.statusText} numberOfLines={1}>
         {t('checkIn.weeklyLimitShort')}
       </Text>
     );

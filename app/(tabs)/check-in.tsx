@@ -75,47 +75,71 @@ const EMPTY_LIST: never[] = [];
 
 /** Match web desk hero — brand→raised (light) / brand→surface (dark). */
 function DeskHeroAtmosphere({ isLight, wide = false }: { isLight: boolean; wide?: boolean }) {
+  const [box, setBox] = useState({ width: 0, height: 0 });
+  const orbSize = wide && box.width > 0 ? Math.min(box.width * 0.38, box.height * 2.4) : 0;
+
   return (
-    <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
-        <Defs>
-          {isLight ? (
-            <LinearGradient id="deskHeroFill" x1="0%" y1="0%" x2="100%" y2="100%">
-              <Stop offset="0%" stopColor="#D8E9E8" />
-              <Stop offset="42%" stopColor="#F3F8F8" />
-              <Stop offset="100%" stopColor="#FFFFFF" />
-            </LinearGradient>
-          ) : wide ? (
-            <LinearGradient id="deskHeroFill" x1="0%" y1="0%" x2="100%" y2="100%">
-              <Stop offset="0%" stopColor="#1B2C32" />
-              <Stop offset="45%" stopColor="#1A2228" />
-              <Stop offset="100%" stopColor="#1A1E26" />
-            </LinearGradient>
-          ) : (
-            <LinearGradient id="deskHeroFill" x1="0%" y1="0%" x2="85%" y2="100%">
-              <Stop offset="0%" stopColor="#1B2C32" />
-              <Stop offset="55%" stopColor="#1A1E26" />
-              <Stop offset="100%" stopColor="#1A1E26" />
-            </LinearGradient>
-          )}
-        </Defs>
-        <Rect x="0" y="0" width="100%" height="100%" fill="url(#deskHeroFill)" />
-      </Svg>
+    <View
+      pointerEvents="none"
+      style={StyleSheet.absoluteFill}
+      onLayout={(e) => {
+        const { width, height } = e.nativeEvent.layout;
+        if (width !== box.width || height !== box.height) {
+          setBox({ width, height });
+        }
+      }}
+    >
+      {/* Solid base fill — SVG % rects can leave a seam on wide Android tablets. */}
       <View
         style={[
-          stylesAtmosphere.orbPrimary,
-          isLight ? stylesAtmosphere.orbPrimaryLight : stylesAtmosphere.orbPrimaryDark,
-          wide && (isLight ? stylesAtmosphere.orbPrimaryLightWide : stylesAtmosphere.orbPrimaryDarkWide),
+          StyleSheet.absoluteFill,
+          { backgroundColor: isLight ? '#F3F8F8' : '#1A1E26' },
         ]}
       />
-      {isLight ? (
-        <View
-          style={[
-            stylesAtmosphere.orbSecondaryLight,
-            wide && stylesAtmosphere.orbSecondaryLightWide,
-          ]}
-        />
-      ) : null}
+      {wide ? (
+        orbSize > 0 ? (
+          <View
+            style={{
+              position: 'absolute',
+              width: orbSize,
+              height: orbSize,
+              borderRadius: orbSize / 2,
+              backgroundColor: isLight ? 'rgba(15,118,110,0.12)' : 'rgba(45,212,191,0.1)',
+              // Keep most of the circle inside the card so overflow clip isn’t a hard mid-arc cut.
+              right: Math.max(8, box.width * 0.04),
+              top: Math.max(-orbSize * 0.22, -box.height * 0.35),
+            }}
+          />
+        ) : null
+      ) : (
+        <>
+          <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
+            <Defs>
+              {isLight ? (
+                <LinearGradient id="deskHeroFill" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <Stop offset="0%" stopColor="#D8E9E8" />
+                  <Stop offset="42%" stopColor="#F3F8F8" />
+                  <Stop offset="100%" stopColor="#FFFFFF" />
+                </LinearGradient>
+              ) : (
+                <LinearGradient id="deskHeroFill" x1="0%" y1="0%" x2="85%" y2="100%">
+                  <Stop offset="0%" stopColor="#1B2C32" />
+                  <Stop offset="55%" stopColor="#1A1E26" />
+                  <Stop offset="100%" stopColor="#1A1E26" />
+                </LinearGradient>
+              )}
+            </Defs>
+            <Rect x="0" y="0" width="100%" height="100%" fill="url(#deskHeroFill)" />
+          </Svg>
+          <View
+            style={[
+              stylesAtmosphere.orbPrimary,
+              isLight ? stylesAtmosphere.orbPrimaryLight : stylesAtmosphere.orbPrimaryDark,
+            ]}
+          />
+          {isLight ? <View style={stylesAtmosphere.orbSecondaryLight} /> : null}
+        </>
+      )}
     </View>
   );
 }
@@ -139,21 +163,6 @@ const stylesAtmosphere = StyleSheet.create({
     height: 192,
     backgroundColor: 'rgba(45,212,191,0.05)',
   },
-  /** Keep more of the arc inside wide landscape cards (less hard clip). */
-  orbPrimaryLightWide: {
-    top: -36,
-    right: -24,
-    width: 300,
-    height: 300,
-    backgroundColor: 'rgba(15,118,110,0.14)',
-  },
-  orbPrimaryDarkWide: {
-    top: -28,
-    right: -16,
-    width: 280,
-    height: 280,
-    backgroundColor: 'rgba(45,212,191,0.08)',
-  },
   orbSecondaryLight: {
     position: 'absolute',
     bottom: -40,
@@ -162,12 +171,6 @@ const stylesAtmosphere = StyleSheet.create({
     height: 144,
     borderRadius: 999,
     backgroundColor: 'rgba(15,118,110,0.07)',
-  },
-  orbSecondaryLightWide: {
-    bottom: -28,
-    left: -24,
-    width: 180,
-    height: 180,
   },
 });
 
