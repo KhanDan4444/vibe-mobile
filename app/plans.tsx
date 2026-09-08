@@ -107,7 +107,7 @@ function PlanCard({
       paddingTop: 2,
     },
     wrapColumn: {
-      marginBottom: 0,
+      marginBottom: 10,
     },
     card: {
       padding: 16,

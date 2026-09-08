@@ -795,7 +795,7 @@ function createStyles(c: ThemeColors) {
       marginBottom: 8,
     },
     rowColumn: {
-      marginBottom: 0,
+      marginBottom: 10,
     },
     rowStacked: {
       flexDirection: 'column' as const,

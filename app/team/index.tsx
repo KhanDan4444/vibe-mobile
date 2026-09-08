@@ -34,12 +34,14 @@ import type { StaffRow, TrainerRow } from '@/src/types/api';
 function StaffCard({
   member,
   multiColumn,
+  dense,
   columnStyle,
   onEdit,
   onToggle,
 }: {
   member: StaffRow;
   multiColumn?: boolean;
+  dense?: boolean;
   columnStyle?: object;
   onEdit: () => void;
   onToggle: () => void;
@@ -50,7 +52,10 @@ function StaffCard({
       padding: 16,
       marginBottom: 12,
     },
-    cardColumn: { marginBottom: 0 },
+    cardDense: {
+      padding: 12,
+    },
+    cardColumn: { marginBottom: 10 },
     headerRow: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 12 },
     cardMain: { flex: 1, marginBottom: 0, minWidth: 0 },
     titleRow: {
@@ -92,9 +97,17 @@ function StaffCard({
   ];
 
   return (
-    <SoftSurface variant="panel" style={[styles.card, multiColumn && styles.cardColumn, multiColumn && columnStyle]}>
+    <SoftSurface
+      variant="panel"
+      style={[
+        styles.card,
+        dense && styles.cardDense,
+        multiColumn && columnStyle,
+        multiColumn ? styles.cardColumn : dense ? { marginBottom: 8 } : null,
+      ]}
+    >
       <View style={styles.headerRow}>
-        <InitialsAvatar name={member.name} size={44} />
+        <InitialsAvatar name={member.name} size={dense ? 40 : 44} />
         <View style={styles.cardMain}>
           <View style={styles.titleRow}>
             <Text listRow {...listPrimaryTextProps} style={styles.name}>
@@ -117,12 +130,18 @@ function StaffCard({
 function TrainerCard({
   trainer,
   former,
+  multiColumn,
+  dense,
+  columnStyle,
   onEdit,
   onArchive,
   onRestore,
 }: {
   trainer: TrainerRow;
   former: boolean;
+  multiColumn?: boolean;
+  dense?: boolean;
+  columnStyle?: object;
   onEdit: () => void;
   onArchive: () => void;
   onRestore: () => void;
@@ -131,6 +150,8 @@ function TrainerCard({
   const { colors: c } = useTheme();
   const styles = useThemedStyles((colors) => ({
     card: { padding: 16, marginBottom: 12 },
+    cardDense: { padding: 12 },
+    cardColumn: { marginBottom: 10 },
     headerRow: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 12 },
     cardMain: { flex: 1, minWidth: 0 },
     name: { fontSize: 16, fontWeight: '700' as const, color: colors.text },
@@ -148,12 +169,19 @@ function TrainerCard({
     multiBranch ? branchDisplayName(trainer.branch_name || defaultBranch) : null,
   ].filter(Boolean);
   const detailLine = detailParts.join(' · ');
+  const cardStyle = [
+    styles.card,
+    dense && styles.cardDense,
+    multiColumn && columnStyle,
+    multiColumn ? styles.cardColumn : dense ? { marginBottom: 8 } : null,
+  ];
+  const avatarSize = dense ? 40 : 44;
 
   if (former) {
     return (
-      <SoftSurface variant="panel" style={styles.card}>
+      <SoftSurface variant="panel" style={cardStyle}>
         <View style={styles.headerRow}>
-          <InitialsAvatar name={trainer.name} size={44} />
+          <InitialsAvatar name={trainer.name} size={avatarSize} />
           <View style={styles.cardMain}>
             <Text listRow {...listPrimaryTextProps} style={styles.name}>
               {trainer.name}
@@ -190,9 +218,9 @@ function TrainerCard({
   ];
 
   return (
-    <SoftSurface variant="panel" style={styles.card}>
+    <SoftSurface variant="panel" style={cardStyle}>
       <View style={styles.headerRow}>
-        <InitialsAvatar name={trainer.name} size={44} />
+        <InitialsAvatar name={trainer.name} size={avatarSize} />
         <View style={styles.cardMain}>
           <Text listRow {...listPrimaryTextProps} style={styles.name}>
             {trainer.name}
@@ -224,8 +252,10 @@ export default function TeamScreen() {
   const { colors: c, theme } = useTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { pagePadding, fabRight, fabSize, fabRadius, fabFontSize, listColumnItemStyle } = useResponsiveLayout();
-  const listColumns = 1;
+  const { pagePadding, isTablet, isLandscape, fabRight, fabSize, fabRadius, fabFontSize, listColumnItemStyle } =
+    useResponsiveLayout();
+  // Portrait: full-width cards. Landscape tablet: 2-col so rows aren't stretched thin.
+  const listColumns = isTablet && isLandscape ? 2 : 1;
   const fabBottom = 24 + insets.bottom;
   const styles = useThemedStyles((colors) => ({
     container: { flex: 1, backgroundColor: colors.bg },
@@ -525,6 +555,7 @@ export default function TeamScreen() {
             <StaffCard
               member={item}
               multiColumn={listColumns > 1}
+              dense={isTablet}
               columnStyle={listColumnItemStyle}
               onEdit={() => router.push(`/team/${item.id}/edit`)}
               onToggle={() => requestToggle(item)}
@@ -540,12 +571,18 @@ export default function TeamScreen() {
         />
       ) : (
         <FlatList
+          key={`team-trainers-cols-${listColumns}`}
           data={displayedTrainers}
+          numColumns={listColumns}
+          columnWrapperStyle={listColumns > 1 ? styles.columnWrap : undefined}
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => (
             <TrainerCard
               trainer={item}
               former={formerTrainers}
+              multiColumn={listColumns > 1}
+              dense={isTablet}
+              columnStyle={listColumnItemStyle}
               onEdit={() => router.push(`/team/trainers/${item.id}/edit` as Href)}
               onArchive={() => setArchiveTarget(item)}
               onRestore={() => restoreMutation.mutate(item.id)}

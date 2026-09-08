@@ -133,7 +133,7 @@ function PaymentRowItem({
       paddingVertical: 10,
       marginBottom: 8,
     },
-    rowColumn: { marginBottom: 0 },
+    rowColumn: { marginBottom: 10 },
     avatar: { marginRight: 10 },
     rowBody: { flex: 1, minWidth: 0, marginRight: 8 },
     memberName: { fontSize: 15, fontWeight: '600' as const, color: colors.text },

@@ -41,7 +41,7 @@ function BranchCard({
       padding: 16,
       marginBottom: 12,
     },
-    cardColumn: { marginBottom: 0 },
+    cardColumn: { marginBottom: 10 },
     headerRow: { flexDirection: 'row' as const, alignItems: 'flex-start' as const, gap: 8 },
     cardMain: { flex: 1, minWidth: 0 },
     nameRow: {

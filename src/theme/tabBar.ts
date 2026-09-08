@@ -13,7 +13,7 @@ export function useTabBarOverlayInset() {
 
 /** Tab bar icon + label stack (excludes home-indicator / nav-bar padding). */
 export const TAB_BAR_BODY_PHONE = 52;
-export const TAB_BAR_BODY_TABLET = 62;
+export const TAB_BAR_BODY_TABLET = 68;
 
 /** Floor when `insets.bottom` is 0 (common on Android 3-button nav). */
 const TAB_BAR_MIN_BOTTOM_PHONE = Platform.OS === 'android' ? 12 : 10;

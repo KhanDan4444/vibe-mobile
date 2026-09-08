@@ -42,22 +42,22 @@ export function useResponsiveLayout() {
   const reportStatWidthPercent = isTablet ? '31.5%' : '47%';
 
   const formMaxWidth = isTablet ? 440 : width;
-  const tabIconSize = isTablet ? 26 : 22;
+  const tabIconSize = isTablet ? 28 : 22;
   /** FABs sit inside TabScreenFrame — inset from the framed content edge, not the screen. */
   const fabRight = isTablet ? pagePadding : 20;
   /** Larger FAB on tablet so it doesn't look lost on the bigger canvas. */
   const fabSize = isTablet ? 60 : 48;
   const fabRadius = isTablet ? 18 : 14;
   const fabFontSize = isTablet ? 32 : 26;
-  /** Shorter chart in landscape so This month fits better above the fold. */
-  const chartHeight = isTablet ? (isLandscape ? 120 : 168) : 132;
+  /** Taller on portrait tablet; shorter in landscape (esp. when paired beside Needs attention). */
+  const chartHeight = isTablet ? (isLandscape ? 140 : 220) : 132;
 
   /**
    * FlatList 2-col item: keeps a lone last card at half width instead of stretching full row.
    * Pair with `columnWrapperStyle={{ gap: 10 }}`.
    */
   const listColumnItemStyle = listColumns > 1
-    ? ({ flexGrow: 1, flexBasis: 0, maxWidth: '48.5%', marginBottom: 0 } as const)
+    ? ({ flexGrow: 1, flexBasis: 0, maxWidth: '48.5%', marginBottom: 10 } as const)
     : ({ flex: 1, marginBottom: 0 } as const);
 
   return {

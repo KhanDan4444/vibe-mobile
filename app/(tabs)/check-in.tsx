@@ -865,7 +865,7 @@ export default function CheckInScreen() {
     todayCardItem: {
       paddingVertical: 2,
       paddingHorizontal: 0,
-      marginBottom: 0,
+      marginBottom: 10,
       overflow: 'hidden' as const,
     },
     todayRow: {
@@ -933,7 +933,7 @@ export default function CheckInScreen() {
       gap: 10,
     },
     resultItem: {
-      marginBottom: 0,
+      marginBottom: 10,
     },
     idleWrap: { paddingHorizontal: 8, paddingTop: 4, paddingBottom: 12 },
     sheetBody: { fontSize: 13, lineHeight: 19, color: theme.muted, marginBottom: 10 },

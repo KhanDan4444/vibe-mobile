@@ -196,23 +196,25 @@ export default function DashboardScreen() {
     : allAlertMembers.slice(0, ATTENTION_PREVIEW);
   const attentionHasMore = allAlertMembers.length > ATTENTION_PREVIEW;
   const attentionHasContent = allAlertMembers.length > 0;
+  const pairRevenueAttention = Boolean(isTablet && isLandscape && owner && data && attentionHasContent);
 
   const summaryBlock = data ? (
     <SoftSurface
       variant="panel"
-      style={[styles.summary, isTablet && isLandscape && styles.summaryLandscape]}
+      onPress={() => router.push('/(tabs)/revenue')}
+      accessibilityRole="link"
+      accessibilityLabel={t('dashboard.thisMonth')}
+      style={[
+        styles.summary,
+        isTablet && isLandscape && styles.summaryLandscape,
+        pairRevenueAttention && styles.summaryInPair,
+      ]}
     >
       <View style={styles.heroHeader}>
-        <Pressable
-          onPress={() => router.push('/(tabs)/revenue')}
-          hitSlop={8}
-          accessibilityRole="link"
-          accessibilityLabel={t('dashboard.thisMonth')}
-          style={styles.summaryTitleRow}
-        >
+        <View style={styles.summaryTitleRow}>
           <Text style={[styles.summaryTitle, { color: c.muted }]}>{t('dashboard.thisMonth')}</Text>
           <Text style={[styles.summaryTitleChevron, { color: c.muted }]}>›</Text>
-        </Pressable>
+        </View>
         <Ionicons
           name={
             trendLabel
@@ -251,7 +253,10 @@ export default function DashboardScreen() {
 
   const attentionBlock =
     data && owner && attentionHasContent ? (
-      <SoftSurface variant="panel" style={styles.alertCard}>
+      <SoftSurface
+        variant="panel"
+        style={[styles.alertCard, pairRevenueAttention && styles.alertInPair]}
+      >
         <View style={styles.sectionHeader}>
           <Text display style={[styles.sectionTitle, { color: c.text }]}>{t('dashboard.attentionTitle')}</Text>
           <Pressable onPress={() => goMembers('expired')}>
@@ -450,8 +455,17 @@ export default function DashboardScreen() {
               onPress={() => router.push('/(tabs)/check-in' as never)}
             />
           </View>
-          {summaryBlock}
-          {owner ? attentionBlock : null}
+          {pairRevenueAttention ? (
+            <View style={styles.landscapePair}>
+              {summaryBlock}
+              {attentionBlock}
+            </View>
+          ) : (
+            <>
+              {summaryBlock}
+              {owner ? attentionBlock : null}
+            </>
+          )}
         </Animated.View>
       ) : null}
       </ResponsiveContent>
@@ -538,6 +552,17 @@ const styles = StyleSheet.create({
     paddingVertical: space.md,
     paddingHorizontal: space.lg,
   },
+  summaryInPair: {
+    flex: 1,
+    marginTop: 0,
+    minWidth: 0,
+  },
+  landscapePair: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: space.md,
+    marginTop: space.md,
+  },
   summaryTitle: { fontSize: 11, fontWeight: '600', letterSpacing: 0.4, textTransform: 'uppercase' },
   summaryTitleRow: {
     flexDirection: 'row',
@@ -560,6 +585,11 @@ const styles = StyleSheet.create({
     marginTop: space.lg,
     padding: space.lg,
   },
+  alertInPair: {
+    flex: 1,
+    marginTop: 0,
+    minWidth: 0,
+  },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
   sectionTitle: { fontSize: 16, fontWeight: '600', letterSpacing: -0.2 },
   viewAll: { fontSize: 15, fontWeight: '600' },
@@ -573,7 +603,7 @@ const styles = StyleSheet.create({
   alertBody: { flex: 1, minWidth: 0, marginRight: 6 },
   alertName: { fontSize: 14, fontWeight: '600' },
   alertMeta: { marginTop: 2, fontSize: 12, lineHeight: 16 },
-  alertExpires: { marginTop: 1, fontSize: 12, lineHeight: 16 },
+  alertExpires: { marginTop: 2, fontSize: 12, lineHeight: 16 },
   alertRight: { alignItems: 'flex-end', gap: 6 },
   showMoreWrap: {
     borderTopWidth: StyleSheet.hairlineWidth,
