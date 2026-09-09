@@ -10,7 +10,6 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { fetchDashboard } from '@/src/api/dashboard';
 import { fetchGymProfile } from '@/src/api/profile';
 import { BranchFilterBar } from '@/src/components/BranchFilterBar';
-import { TrialBanner } from '@/src/components/TrialBanner';
 import { MemberPhoto } from '@/src/components/MemberPhoto';
 import { MiniBarChart } from '@/src/components/MiniBarChart';
 import { PageSkeleton } from '@/src/components/Skeleton';
@@ -114,7 +113,7 @@ function AlertMemberRow({
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const { token, user, gymName: cachedGymName, subscription } = useAuth();
+  const { token, user, gymName: cachedGymName } = useAuth();
   const { selectedBranchId } = useBranchScope();
   const { colors: c, theme } = useTheme();
   const isLight = theme === 'light';
@@ -146,13 +145,6 @@ export default function DashboardScreen() {
     enabled: Boolean(token),
   });
   const screenLoading = useQueryScreenLoading(isLoading, Boolean(data), isPending);
-  const trialDaysLeft = data?.trialDaysLeft ?? subscription?.trialDaysLeft;
-  const showTrialBanner =
-    owner &&
-    Boolean(data?.isTrial ?? subscription?.isTrial) &&
-    !readOnly &&
-    trialDaysLeft != null &&
-    trialDaysLeft >= 0;
 
   useFocusEffect(
     useCallback(() => {
@@ -340,14 +332,6 @@ export default function DashboardScreen() {
 
       <BranchFilterBar horizontalPadding={0} />
 
-      {showTrialBanner ? (
-        <TrialBanner
-          isTrial={data?.isTrial ?? subscription?.isTrial}
-          trialDaysLeft={trialDaysLeft}
-          trialEndDate={data?.trialEndDate ?? subscription?.trialEndDate}
-        />
-      ) : null}
-
       {screenLoading ? (
         <PageSkeleton variant="dashboard" padded={false} />
       ) : isError ? (
@@ -357,7 +341,7 @@ export default function DashboardScreen() {
           <SoftSurface
             variant="panel"
             onPress={() => goMembers('active')}
-            style={[styles.heroMetricCard, showTrialBanner ? styles.heroMetricCardAfterTrial : null]}
+            style={styles.heroMetricCard}
             accessibilityRole="button"
             accessibilityLabel={`${t('dashboard.activeMembersLabel')}: ${data.activeMembers ?? 0} / ${data.totalMembers ?? 0}`}
           >
@@ -496,9 +480,6 @@ const styles = StyleSheet.create({
   heroMetricCard: {
     marginTop: space.sm,
     padding: space.lg,
-  },
-  heroMetricCardAfterTrial: {
-    marginTop: 0,
   },
   heroHeader: {
     flexDirection: 'row',

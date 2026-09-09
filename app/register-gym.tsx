@@ -17,7 +17,6 @@ import { useResponsiveLayout } from '@/src/hooks/useResponsiveLayout';
 import { AUTH, authSubtitle, authTitle } from '@/src/theme/authChrome';
 import { formatDisplayDate } from '@/src/utils/date';
 import {
-  SIGNUP_TRIAL_DAYS,
   validateGymSignupAccountStep,
   validateGymSignupGymStep,
   type GymSignupFieldErrors,
@@ -36,8 +35,8 @@ type RegisterDone = {
   location?: string;
   phone?: string;
   email?: string;
-  trialEndDate?: string;
-  trialDays: number;
+  planName?: string;
+  endDate?: string;
 };
 
 function formatSignupLocation(city: string, address: string) {
@@ -46,35 +45,6 @@ function formatSignupLocation(city: string, address: string) {
   if (cityLabel && addressLabel) return `${cityLabel}, ${addressLabel}`;
   return cityLabel || addressLabel || undefined;
 }
-
-function SignupTrialNote({ days }: { days: number }) {
-  const { t } = useTranslation();
-  const [expanded, setExpanded] = useState(false);
-
-  return (
-    <View style={trialNoteStyles.wrap}>
-      <Text style={[trialNoteStyles.text, { color: AUTH.textDim }]}>
-        {expanded ? t('signup.trialNote', { days }) : t('signup.trialNoteShort', { days })}
-      </Text>
-      <Pressable
-        onPress={() => setExpanded((open) => !open)}
-        hitSlop={8}
-        accessibilityRole="button"
-        accessibilityState={{ expanded }}
-      >
-        <Text style={[trialNoteStyles.toggle, { color: AUTH.link }]}>
-          {expanded ? t('signup.trialShowLess') : t('signup.trialLearnMore')}
-        </Text>
-      </Pressable>
-    </View>
-  );
-}
-
-const trialNoteStyles = StyleSheet.create({
-  wrap: { gap: 4 },
-  text: { fontSize: 12, lineHeight: 18, letterSpacing: 0.1 },
-  toggle: { fontSize: 12, fontWeight: '600', letterSpacing: 0.1 },
-});
 
 export default function RegisterGymScreen() {
   const { t } = useTranslation();
@@ -241,7 +211,6 @@ export default function RegisterGymScreen() {
         ...(trimmedEmail ? { email: trimmedEmail } : {}),
         ...(trimmedAddress ? { address: trimmedAddress } : {}),
       });
-      const trialDays = data.subscription?.trial_days ?? SIGNUP_TRIAL_DAYS;
       setRegisterDone({
         gymName: gymName.trim(),
         username: cleanUsername,
@@ -249,8 +218,8 @@ export default function RegisterGymScreen() {
         location: formatSignupLocation(city, address),
         phone: verifiedPhone || phone.trim() || undefined,
         email: trimmedEmail || undefined,
-        trialEndDate: data.subscription?.end_date,
-        trialDays,
+        planName: data.subscription?.plan_name || undefined,
+        endDate: data.subscription?.end_date || undefined,
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : t('signup.completeFailed'));
@@ -266,10 +235,11 @@ export default function RegisterGymScreen() {
       registerDone.phone ? { label: t('signup.phoneLabel'), value: registerDone.phone } : null,
       registerDone.email ? { label: t('signup.emailLabel'), value: registerDone.email } : null,
       registerDone.location ? { label: t('signup.locationLabel'), value: registerDone.location } : null,
-      registerDone.trialEndDate
+      registerDone.planName ? { label: t('signup.planLabel'), value: registerDone.planName } : null,
+      registerDone.endDate
         ? {
-            label: t('signup.trialEndsLabel'),
-            value: formatDisplayDate(registerDone.trialEndDate),
+            label: t('signup.accessUntilLabel'),
+            value: formatDisplayDate(registerDone.endDate),
           }
         : null,
     ].filter(Boolean) as { label: string; value: string }[];
@@ -286,7 +256,7 @@ export default function RegisterGymScreen() {
                 ...row,
                 latin: row.label !== t('signup.ownerNameLabel'),
               }))}
-              hint={t('signup.successHint', { days: registerDone.trialDays })}
+              hint={t('signup.successHint')}
               ctaLabel={t('auth.signIn')}
               onCta={() => router.replace('/login')}
             />
@@ -511,7 +481,6 @@ export default function RegisterGymScreen() {
             ]}
           >
             <View style={{ width: '100%', maxWidth: formMaxWidth, alignSelf: 'center' }}>
-              <SignupTrialNote days={SIGNUP_TRIAL_DAYS} />
               <PrimaryButton
                 label={t('signup.createAccount')}
                 onPress={submitSignup}

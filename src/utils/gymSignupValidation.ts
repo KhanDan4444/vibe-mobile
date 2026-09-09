@@ -4,7 +4,6 @@ import {
   type PasswordPairErrors,
 } from '@/src/utils/passwordValidation';
 
-export const SIGNUP_TRIAL_DAYS = 30;
 export const MAX_GYM_CITY_LENGTH = 100;
 export const MAX_GYM_ADDRESS_LENGTH = 500;
 
