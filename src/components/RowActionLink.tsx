@@ -1,4 +1,4 @@
-import { Pressable } from 'react-native';
+import { Pressable, type StyleProp, type ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
 import { AppText as Text } from '@/src/components/AppText';
@@ -13,6 +13,7 @@ export function RowActionLink({
   busy,
   onPress,
   emphasized,
+  style,
 }: {
   label: string;
   icon: IonName;
@@ -21,6 +22,7 @@ export function RowActionLink({
   onPress: () => void;
   /** Slightly heavier type + icon (dashboard Renew). */
   emphasized?: boolean;
+  style?: StyleProp<ViewStyle>;
 }) {
   return (
     <Pressable
@@ -45,6 +47,7 @@ export function RowActionLink({
           gap: 5,
           opacity: busy ? 0.55 : pressed ? 0.7 : 1,
         },
+        style,
       ]}
     >
       <Ionicons name={icon} size={emphasized ? 19 : 18} color={color} />
