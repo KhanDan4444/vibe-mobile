@@ -207,6 +207,7 @@ function MemberRowItem({
         icon="refresh"
         color={colors.accentCta}
         emphasized
+        style={{ marginRight: 2 }}
         onPress={onRenew}
       />
     ) : null;
@@ -567,15 +568,6 @@ export default function MembersScreen() {
         router.setParams({ filter: option });
       }}
       dotColor={filterDotColor(c, option)}
-      selectedColor={
-        option === 'former'
-          ? c.statusFormer
-          : option === 'new'
-            ? c.statusNew
-            : option === 'inactive_week'
-              ? c.statusNeutral
-              : undefined
-      }
       count={filterCounts[option]}
     />
   );
@@ -832,6 +824,7 @@ function createStyles(c: ThemeColors) {
     },
     daysLeftUnderBadge: {
       marginTop: 2,
+      marginRight: 1,
       fontSize: 12,
       fontWeight: '600' as const,
       color: c.muted,

@@ -103,7 +103,7 @@ function AlertMemberRow({
             icon="refresh"
             color={actionColor}
             emphasized
-            style={{ marginRight: -3 }}
+            style={{ marginRight: 2 }}
             onPress={onAction}
           />
         ) : null}
