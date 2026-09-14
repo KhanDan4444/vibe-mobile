@@ -39,8 +39,7 @@ export function BottomSheet({
   const insets = useSafeAreaInsets();
   const { language } = usePreferences();
   const { colors: c, theme } = useTheme();
-  const { isTablet, formMaxWidth } = useResponsiveLayout();
-  const sheetMaxWidth = formMaxWidth + 40;
+  const { isTablet, sheetMaxWidth } = useResponsiveLayout();
   const closeLabel = t('common.cancel');
 
   useEffect(() => {
@@ -54,12 +53,8 @@ export function BottomSheet({
       backgroundColor: colors.card,
       borderTopLeftRadius: radiusXl,
       borderTopRightRadius: radiusXl,
-      paddingHorizontal: 20,
-      paddingBottom: Math.max(insets.bottom, compact ? 8 : 16) + (compact ? 2 : 8),
-      maxHeight: '85%' as const,
       width: '100%' as const,
       alignSelf: 'center' as const,
-      ...(isTablet ? { maxWidth: sheetMaxWidth } : {}),
     },
     handle: {
       alignSelf: 'center' as const,
@@ -108,7 +103,18 @@ export function BottomSheet({
           accessibilityRole="button"
           accessibilityLabel={closeLabel}
         />
-        <View style={[styles.sheet, elevationStyle('sheet', theme)]}>
+        <View
+          style={[
+            styles.sheet,
+            elevationStyle('sheet', theme),
+            {
+              paddingHorizontal: isTablet ? 24 : 20,
+              paddingBottom: Math.max(insets.bottom, compact ? 8 : 16) + (compact ? 2 : 8),
+              maxHeight: isTablet ? '90%' : '85%',
+              ...(isTablet ? { maxWidth: sheetMaxWidth } : null),
+            },
+          ]}
+        >
           <View style={styles.handle} />
           {aboveTitle ? <View style={styles.aboveTitle}>{aboveTitle}</View> : null}
           <View style={styles.titleRow}>

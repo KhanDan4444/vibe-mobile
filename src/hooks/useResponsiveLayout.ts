@@ -42,6 +42,12 @@ export function useResponsiveLayout() {
   const reportStatWidthPercent = isTablet ? '31.5%' : '47%';
 
   const formMaxWidth = isTablet ? 440 : width;
+  /** Bottom sheets / pickers — wider than forms so Sort & Notifications aren't a phone card on tablet. */
+  const sheetMaxWidth = !isTablet
+    ? width
+    : isLandscape
+      ? Math.min(Math.round(width * 0.62), 640)
+      : Math.min(Math.round(width * 0.94), contentMaxWidth);
   const tabIconSize = isTablet ? 28 : 22;
   /** FABs sit inside TabScreenFrame — inset from the framed content edge, not the screen. */
   const fabRight = isTablet ? pagePadding : 20;
@@ -76,6 +82,7 @@ export function useResponsiveLayout() {
     reportStatLayoutStyle,
     reportStatWidthPercent,
     formMaxWidth,
+    sheetMaxWidth,
     tabIconSize,
     fabRight,
     fabSize,
