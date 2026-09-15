@@ -52,9 +52,9 @@ export function useResponsiveLayout() {
   /** FABs sit inside TabScreenFrame — inset from the framed content edge, not the screen. */
   const fabRight = isTablet ? pagePadding : 20;
   /** Primary add FAB — near Material default on phone; larger on tablet canvas. */
-  const fabSize = isTablet ? 68 : 54;
-  const fabRadius = isTablet ? 20 : 16;
-  const fabFontSize = isTablet ? 36 : 29;
+  const fabSize = isTablet ? 68 : 56;
+  const fabRadius = isTablet ? 20 : 17;
+  const fabFontSize = isTablet ? 36 : 30;
   /** Taller on portrait tablet; shorter in landscape (esp. when paired beside Needs attention). */
   const chartHeight = isTablet ? (isLandscape ? 140 : 220) : 132;
 
