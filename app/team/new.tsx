@@ -118,6 +118,8 @@ export default function NewStaffScreen() {
               clearField('name');
             }}
             autoCapitalize="words"
+            textContentType="name"
+            autoComplete="name"
             error={Boolean(fieldErrors.name)}
           />
           <FieldError message={fieldErrors.name ? t(fieldErrors.name) : undefined} />
@@ -143,6 +145,8 @@ export default function NewStaffScreen() {
               clearField('username');
             }}
             autoCapitalize="none"
+            textContentType="username"
+            autoComplete="username"
             error={Boolean(fieldErrors.username)}
           />
           <FieldError message={fieldErrors.username ? t(fieldErrors.username) : undefined} />
@@ -156,6 +160,8 @@ export default function NewStaffScreen() {
             }}
             autoCapitalize="none"
             keyboardType="email-address"
+            textContentType="emailAddress"
+            autoComplete="email"
             error={Boolean(fieldErrors.email)}
           />
           <FieldError message={fieldErrors.email ? t(fieldErrors.email) : undefined} />
@@ -172,6 +178,8 @@ export default function NewStaffScreen() {
             }}
             secureTextEntry
             autoCapitalize="none"
+            textContentType="newPassword"
+            autoComplete="password-new"
             error={Boolean(fieldErrors.password)}
           />
           <PasswordRule
@@ -192,6 +200,8 @@ export default function NewStaffScreen() {
             }}
             secureTextEntry
             autoCapitalize="none"
+            textContentType="newPassword"
+            autoComplete="password-new"
             error={Boolean(fieldErrors.confirmPassword)}
           />
           <PasswordRule

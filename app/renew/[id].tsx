@@ -1,6 +1,6 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText as Text } from '@/src/components/AppText';
@@ -38,6 +38,7 @@ import {
   type DateBounds,
 } from '@/src/utils/datePickerBounds';
 import { hasGymPortalAccess } from '@/src/utils/roles';
+import { clearRenewDraft, useRenewDraft, type RenewDraft } from '@/src/utils/useRenewDraft';
 import type { MemberRow, PlanRow, RenewPayload } from '@/src/types/api';
 import type { TFunction } from 'i18next';
 
@@ -64,10 +65,11 @@ export default function RenewScreen() {
   const { token, user } = useAuth();
   const { colors: c } = useTheme();
 
+  const todayIso = todayString();
   const [planId, setPlanId] = useState<number | null>(null);
-  const [startDate, setStartDate] = useState(todayString());
+  const [startDate, setStartDate] = useState(todayIso);
   const [amount, setAmount] = useState('');
-  const [paymentDate, setPaymentDate] = useState(todayString());
+  const [paymentDate, setPaymentDate] = useState(todayIso);
   const [method, setMethod] = useState<(typeof PAYMENT_METHODS)[number]>('Cash');
   const [error, setError] = useState('');
   const flashSaved = useSaveFlash();
@@ -75,6 +77,33 @@ export default function RenewScreen() {
   const { showFlash } = useFlash();
   const { t } = useTranslation();
   const canRenew = Boolean(user && hasGymPortalAccess(user.role));
+  const memberSeeded = useRef(false);
+  const skipPlanAmountSync = useRef(false);
+
+  const renewDraftValue = useMemo<RenewDraft>(
+    () => ({ planId, startDate, amount, paymentDate, method }),
+    [planId, startDate, amount, paymentDate, method]
+  );
+  const renewDefaults = useMemo(
+    () => ({ startDate: todayIso, paymentDate: todayIso }),
+    [todayIso]
+  );
+  const applyRenewDraft = useCallback((next: RenewDraft) => {
+    skipPlanAmountSync.current = true;
+    memberSeeded.current = true;
+    setPlanId(next.planId);
+    setStartDate(next.startDate);
+    setAmount(next.amount);
+    setPaymentDate(next.paymentDate);
+    setMethod(next.method);
+  }, []);
+  const { clearDraft: clearRenewFormDraft, hydrated: renewDraftHydrated } = useRenewDraft({
+    memberId: Number.isFinite(memberId) ? memberId : null,
+    enabled: canRenew,
+    draft: renewDraftValue,
+    defaults: renewDefaults,
+    apply: applyRenewDraft,
+  });
   const styles = useThemedStyles((colors) => ({
     center: { flex: 1, alignItems: 'center' as const, justifyContent: 'center' as const },
     memberChip: {
@@ -135,24 +164,29 @@ export default function RenewScreen() {
   const renewStartBounds: DateBounds = member ? boundsForRenewStart(member) : {};
   const paymentBounds = boundsForRenewPaymentOnTerm(startDate);
   const paymentRangeValid = isDateRangeValid(paymentBounds.minimumDate, paymentBounds.maximumDate);
-  const today = todayString();
+  const today = todayIso;
   const prepaidRenew = Boolean(startDate && startDate > today);
   const minStartIso = member ? defaultRenewStartDate(member) : today;
   const canSetStartToToday = !paymentRangeValid && today >= minStartIso;
 
   useEffect(() => {
-    if (member) {
-      const nextStart = defaultRenewStartDate(member);
-      setStartDate(nextStart);
-      setPaymentDate(paymentDateForRenewTermStart(nextStart));
-      if (member.plan_id) setPlanId(member.plan_id);
-    }
-  }, [member]);
+    if (!member || !renewDraftHydrated || memberSeeded.current) return;
+    memberSeeded.current = true;
+    const nextStart = defaultRenewStartDate(member);
+    setStartDate(nextStart);
+    setPaymentDate(paymentDateForRenewTermStart(nextStart));
+    if (member.plan_id) setPlanId(member.plan_id);
+  }, [member, renewDraftHydrated]);
 
   const selectedPlan = plans.find((p) => p.id === planId) ?? null;
 
   useEffect(() => {
-    if (selectedPlan) setAmount(String(planPrice(selectedPlan)));
+    if (!selectedPlan) return;
+    if (skipPlanAmountSync.current) {
+      skipPlanAmountSync.current = false;
+      return;
+    }
+    setAmount(String(planPrice(selectedPlan)));
   }, [selectedPlan]);
 
   const memberMeta = useMemo(() => {
@@ -177,6 +211,8 @@ export default function RenewScreen() {
     memberId: memberId,
     mutationFn: (payload: RenewPayload) => renewMember(token!, memberId, payload),
     onSuccess: (data) => {
+      void clearRenewDraft(memberId);
+      clearRenewFormDraft();
       if (isOfflineQueued(data)) {
         flashOffline();
         router.replace(`/member/${memberId}`);

@@ -2,6 +2,8 @@
 
 Expo (React Native) app for **gym owners and front-desk staff** — dashboard, members, enroll, renew, payments, and offline support.
 
+**Agent / project memory (conventions, decisions, session log):** see [`../vibe-frontend/docs/project-log.md`](../vibe-frontend/docs/project-log.md) (pointer: [`docs/PROJECT_LOG.md`](docs/PROJECT_LOG.md)).
+
 ## Prerequisites
 
 - Node 20+

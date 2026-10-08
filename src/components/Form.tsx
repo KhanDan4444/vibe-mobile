@@ -1,5 +1,14 @@
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  type StyleProp,
+  type TextInputProps,
+  type TextStyle,
+  type ViewStyle,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -148,6 +157,11 @@ export const Field = React.forwardRef<
     secureTextEntry?: boolean;
     keyboardType?: 'default' | 'numeric' | 'phone-pad' | 'decimal-pad' | 'email-address';
     autoCapitalize?: 'none' | 'sentences' | 'words';
+    /** iOS password-manager / Contacts autofill hint */
+    textContentType?: TextInputProps['textContentType'];
+    /** Android / cross-platform autofill hint */
+    autoComplete?: TextInputProps['autoComplete'];
+    importantForAutofill?: TextInputProps['importantForAutofill'];
     onBlur?: () => void;
     onFocus?: () => void;
     onSubmitEditing?: () => void;
@@ -167,6 +181,9 @@ export const Field = React.forwardRef<
     secureTextEntry,
     keyboardType,
     autoCapitalize,
+    textContentType,
+    autoComplete,
+    importantForAutofill,
     onBlur,
     onFocus,
     onSubmitEditing,
@@ -241,6 +258,9 @@ export const Field = React.forwardRef<
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize ?? 'sentences'}
         autoCorrect={false}
+        textContentType={textContentType}
+        autoComplete={autoComplete}
+        importantForAutofill={importantForAutofill ?? (autoComplete || textContentType ? 'yes' : undefined)}
         editable={!disabled}
         onFocus={() => {
           if (disabled) return;

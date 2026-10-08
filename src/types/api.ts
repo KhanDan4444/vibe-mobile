@@ -26,6 +26,8 @@ export interface GymSubscription {
   isTrial?: boolean;
   trialDaysLeft?: number | null;
   trialEndDate?: string | null;
+  licensePlanName?: string | null;
+  licenseEndDate?: string | null;
 }
 
 export interface PublicSaasPlan {

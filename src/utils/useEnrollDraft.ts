@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PAYMENT_METHODS } from '@/src/constants/payments';
+import { clearAsyncStorageDraft, useAsyncStorageDraft } from '@/src/utils/useAsyncStorageDraft';
 
 const DRAFT_KEY = 'niku.enroll.draft';
-const SAVE_MS = 400;
+const DRAFT_KEY_LEGACY_MIGRATED = 'vibe.draft.enroll';
 
 export type EnrollDraft = {
   name: string;
@@ -58,7 +58,10 @@ export function enrollDraftIsDirty(draft: EnrollDraft, today: string) {
 }
 
 export function clearEnrollDraft() {
-  return AsyncStorage.removeItem(DRAFT_KEY);
+  return Promise.all([
+    clearAsyncStorageDraft(DRAFT_KEY),
+    clearAsyncStorageDraft(DRAFT_KEY_LEGACY_MIGRATED),
+  ]).then(() => undefined);
 }
 
 /** Persist enroll fields when the user leaves mid-flow (no photo — too large). */
@@ -73,50 +76,21 @@ export function useEnrollDraft({
   draft: EnrollDraft;
   apply: (next: EnrollDraft) => void;
 }) {
-  const ready = useRef(false);
-  const applyRef = useRef(apply);
-  applyRef.current = apply;
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  return useAsyncStorageDraft<EnrollDraft>({
+    key: DRAFT_KEY,
+    enabled,
+    value: draft,
+    isDirty: (v) => enrollDraftIsDirty(v, today),
+    isValid: isDraft,
+    apply,
+  });
+}
 
-  useEffect(() => {
-    if (!enabled) return;
-    let alive = true;
-    void AsyncStorage.getItem(DRAFT_KEY).then((raw) => {
-      if (!alive) return;
-      if (raw) {
-        try {
-          const parsed = JSON.parse(raw) as unknown;
-          if (isDraft(parsed) && enrollDraftIsDirty(parsed, today)) applyRef.current(parsed);
-        } catch {
-          /* ignore corrupt draft */
-        }
-      }
-      ready.current = true;
-    });
-    return () => {
-      alive = false;
-    };
-  }, [enabled, today]);
-
-  useEffect(() => {
-    if (!enabled || !ready.current) return;
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => {
-      if (!enrollDraftIsDirty(draft, today)) {
-        void AsyncStorage.removeItem(DRAFT_KEY);
-        return;
-      }
-      void AsyncStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-    }, SAVE_MS);
-    return () => {
-      if (timer.current) clearTimeout(timer.current);
-    };
-  }, [draft, enabled, today]);
-
-  const clearDraft = useCallback(() => {
-    ready.current = true;
-    void clearEnrollDraft();
-  }, []);
-
-  return { clearDraft };
+/** @internal migrate helper for tests / one-off */
+export async function migrateEnrollDraftKeyIfNeeded() {
+  const next = await AsyncStorage.getItem(DRAFT_KEY_LEGACY_MIGRATED);
+  if (!next) return;
+  const prev = await AsyncStorage.getItem(DRAFT_KEY);
+  if (!prev) await AsyncStorage.setItem(DRAFT_KEY, next);
+  await AsyncStorage.removeItem(DRAFT_KEY_LEGACY_MIGRATED);
 }

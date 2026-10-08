@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { readStoredString, writeStoredString } from '@/src/utils/usePersistedUiState';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -36,6 +37,8 @@ import { API_BASE_URL } from '@/src/config/api';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
+const LAST_IDENTIFIER_KEY = 'vibe.login.lastIdentifier';
+
 type Field = 'identifier' | 'password';
 
 export default function LoginScreen() {
@@ -71,6 +74,16 @@ export default function LoginScreen() {
     return () => clearTimeout(timer);
   }, [dismissBootSplash]);
 
+  useEffect(() => {
+    let alive = true;
+    void readStoredString(LAST_IDENTIFIER_KEY).then((saved) => {
+      if (alive && saved) setIdentifier(saved);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   const buttonAnim = useAnimatedStyle(() => ({
     transform: [{ scale: 1 - pressed.value * 0.02 }],
   }));
@@ -84,6 +97,7 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       const user = await login(identifier, password, rememberMe);
+      void writeStoredString(LAST_IDENTIFIER_KEY, identifier.trim());
       if (isPlatformAdmin(user.role)) {
         await logout();
         setError(t('auth.adminBlocked'));
@@ -154,6 +168,8 @@ export default function LoginScreen() {
                     autoCapitalize="none"
                     autoCorrect={false}
                     autoComplete="username"
+                    textContentType="username"
+                    importantForAutofill="yes"
                     keyboardType="default"
                     returnKeyType="next"
                     value={identifier}
@@ -190,6 +206,8 @@ export default function LoginScreen() {
                     secureTextEntry={!showPassword}
                     autoCapitalize="none"
                     autoComplete="password"
+                    textContentType="password"
+                    importantForAutofill="yes"
                     returnKeyType="go"
                     value={password}
                     onChangeText={setPassword}

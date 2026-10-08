@@ -30,10 +30,11 @@ import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { appTextStyle, metricDisplayStyle } from '@/src/theme/typography';
 import { formatDisplayDate } from '@/src/utils/date';
 import { formatEtb } from '@/src/utils/formatMoney';
-import { DEFAULT_REVENUE_SORT, type RevenueSortId } from '@/src/utils/listSort';
+import { DEFAULT_REVENUE_SORT, REVENUE_SORT_OPTIONS, type RevenueSortId } from '@/src/utils/listSort';
 import { paymentSourceKey } from '@/src/utils/termPayments';
 import { isGymOwner } from '@/src/utils/roles';
 import { scheduleDeleteWithUndo } from '@/src/utils/scheduleWithUndo';
+import { usePersistedUiState } from '@/src/utils/usePersistedUiState';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { FilterChip } from '@/src/components/FilterChip';
 import { SearchField } from '@/src/components/SearchField';
@@ -90,6 +91,52 @@ const MORE_PERIODS: { value: PaymentPreset; labelKey: string }[] = [
 ];
 
 type MethodFilter = 'All methods' | (typeof PAYMENT_METHODS)[number];
+
+type RevenueListUi = {
+  preset: PaymentPreset;
+  methodFilter: MethodFilter;
+  sort: RevenueSortId;
+  search: string;
+  useCustomRange: boolean;
+  customFrom: string;
+  customTo: string;
+};
+
+const REVENUE_UI_KEY = 'vibe.revenue.listUi';
+const REVENUE_SORT_IDS = new Set(REVENUE_SORT_OPTIONS.map((o) => o.id));
+const REVENUE_PRESETS = new Set<PaymentPreset>([
+  'today',
+  'this_week',
+  'this_month',
+  'last_month',
+  'last_30_days',
+  'this_year',
+]);
+const REVENUE_METHODS = new Set<MethodFilter>(['All methods', ...PAYMENT_METHODS]);
+
+const DEFAULT_REVENUE_UI: RevenueListUi = {
+  preset: 'this_month',
+  methodFilter: 'All methods',
+  sort: DEFAULT_REVENUE_SORT,
+  search: '',
+  useCustomRange: false,
+  customFrom: '',
+  customTo: '',
+};
+
+function isRevenueListUi(raw: unknown): raw is RevenueListUi {
+  if (!raw || typeof raw !== 'object') return false;
+  const v = raw as RevenueListUi;
+  return (
+    REVENUE_PRESETS.has(v.preset) &&
+    REVENUE_METHODS.has(v.methodFilter) &&
+    REVENUE_SORT_IDS.has(v.sort) &&
+    typeof v.search === 'string' &&
+    typeof v.useCustomRange === 'boolean' &&
+    typeof v.customFrom === 'string' &&
+    typeof v.customTo === 'string'
+  );
+}
 
 function isValidDate(s: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(s);
@@ -396,14 +443,39 @@ export default function RevenueScreen() {
   const { selectedBranchId, showBranchFilter } = useBranchScope();
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
 
-  const [preset, setPreset] = useState<PaymentPreset>('this_month');
-  const [useCustomRange, setUseCustomRange] = useState(false);
-  const [customFrom, setCustomFrom] = useState('');
-  const [customTo, setCustomTo] = useState('');
-  const [search, setSearch] = useState('');
+  const [listUi, setListUi] = usePersistedUiState<RevenueListUi>(REVENUE_UI_KEY, DEFAULT_REVENUE_UI, {
+    isValid: isRevenueListUi,
+  });
+  const { preset, methodFilter, sort, search, useCustomRange, customFrom, customTo } = listUi;
+  const setPreset = useCallback(
+    (next: PaymentPreset) => setListUi((prev) => ({ ...prev, preset: next, useCustomRange: false })),
+    [setListUi]
+  );
+  const setMethodFilter = useCallback(
+    (next: MethodFilter) => setListUi((prev) => ({ ...prev, methodFilter: next })),
+    [setListUi]
+  );
+  const setSort = useCallback(
+    (next: RevenueSortId) => setListUi((prev) => ({ ...prev, sort: next })),
+    [setListUi]
+  );
+  const setSearch = useCallback(
+    (next: string) => setListUi((prev) => ({ ...prev, search: next })),
+    [setListUi]
+  );
+  const setUseCustomRange = useCallback(
+    (next: boolean) => setListUi((prev) => ({ ...prev, useCustomRange: next })),
+    [setListUi]
+  );
+  const setCustomFrom = useCallback(
+    (next: string) => setListUi((prev) => ({ ...prev, customFrom: next })),
+    [setListUi]
+  );
+  const setCustomTo = useCallback(
+    (next: string) => setListUi((prev) => ({ ...prev, customTo: next })),
+    [setListUi]
+  );
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [methodFilter, setMethodFilter] = useState<MethodFilter>('All methods');
-  const [sort, setSort] = useState<RevenueSortId>(DEFAULT_REVENUE_SORT);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [morePeriodsOpen, setMorePeriodsOpen] = useState(false);
 

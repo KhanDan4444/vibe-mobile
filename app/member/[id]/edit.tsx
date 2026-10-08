@@ -220,7 +220,13 @@ export default function EditMemberScreen() {
           />
 
           <Label>{t('enroll.fullName')}</Label>
-          <Field value={name} onChangeText={setName} autoCapitalize="words" />
+          <Field
+            value={name}
+            onChangeText={setName}
+            autoCapitalize="words"
+            textContentType="name"
+            autoComplete="name"
+          />
 
           <Label>{t('forms.phone')}</Label>
           <Field
@@ -229,6 +235,8 @@ export default function EditMemberScreen() {
             onChangeText={handlePhoneChange}
             keyboardType="phone-pad"
             autoCapitalize="none"
+            textContentType="telephoneNumber"
+            autoComplete="tel"
             returnKeyType="done"
             blurOnSubmit
             error={Boolean(phoneError)}

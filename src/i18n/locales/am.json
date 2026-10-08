@@ -398,7 +398,8 @@
     "loginSection": "መግቢያ",
     "roleOwner": "የጂም ባለቤት",
     "roleStaff": "የፊት ዴስክ",
-    "roleAccount": "መለያ"
+    "roleAccount": "መለያ",
+    "planBadgeFreeTrial": "ነፃ ሙከራ"
   },
   "roles": {
     "frontDesk": "የፊት ዴስክ"

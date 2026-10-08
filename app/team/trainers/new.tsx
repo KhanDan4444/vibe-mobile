@@ -99,6 +99,8 @@ export default function NewTrainerScreen() {
               if (fieldErrors.name) setFieldErrors((p) => ({ ...p, name: undefined }));
             }}
             autoCapitalize="words"
+            textContentType="name"
+            autoComplete="name"
             error={Boolean(fieldErrors.name)}
           />
           <FieldError message={fieldErrors.name ? t(fieldErrors.name) : ''} />
@@ -111,6 +113,8 @@ export default function NewTrainerScreen() {
               if (fieldErrors.phone) setFieldErrors((p) => ({ ...p, phone: undefined }));
             }}
             keyboardType="phone-pad"
+            textContentType="telephoneNumber"
+            autoComplete="tel"
             error={Boolean(fieldErrors.phone)}
           />
           <FieldError message={fieldErrors.phone ? t(fieldErrors.phone) : ''} />

@@ -1,5 +1,6 @@
 import { Redirect, useNavigation, useRouter, type Href } from 'expo-router';
-import { useLayoutEffect, useMemo, useState } from 'react';
+import { useCallback, useLayoutEffect, useMemo, useState } from 'react';
+import { usePersistedUiState } from '@/src/utils/usePersistedUiState';
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '@/src/components/AppText';
 import { PageSkeleton } from '@/src/components/Skeleton';
@@ -306,9 +307,44 @@ export default function TeamScreen() {
 
   const readOnly = Boolean(subscription?.readOnly);
   const canManageTeam = Boolean(user && isGymOwner(user.role));
-  const [tab, setTab] = useState<'staff' | 'trainers'>('staff');
-  const [formerTrainers, setFormerTrainers] = useState(false);
-  const [search, setSearch] = useState('');
+  type TeamListUi = { tab: 'staff' | 'trainers'; formerTrainers: boolean; search: string };
+  const [teamUi, setTeamUi] = usePersistedUiState<TeamListUi>(
+    'vibe.team.listUi',
+    { tab: 'staff', formerTrainers: false, search: '' },
+    {
+      isValid: (raw): raw is TeamListUi =>
+        Boolean(
+          raw &&
+            typeof raw === 'object' &&
+            ((raw as TeamListUi).tab === 'staff' || (raw as TeamListUi).tab === 'trainers') &&
+            typeof (raw as TeamListUi).formerTrainers === 'boolean' &&
+            typeof (raw as TeamListUi).search === 'string'
+        ),
+    }
+  );
+  const { tab, formerTrainers, search } = teamUi;
+  const setTab = useCallback(
+    (next: 'staff' | 'trainers') =>
+      setTeamUi((prev) => ({
+        ...prev,
+        tab: next,
+        formerTrainers: next === 'staff' ? false : prev.formerTrainers,
+      })),
+    [setTeamUi]
+  );
+  const setFormerTrainers = useCallback(
+    (next: boolean) =>
+      setTeamUi((prev) => ({
+        ...prev,
+        formerTrainers: next,
+        tab: next ? 'trainers' : prev.tab,
+      })),
+    [setTeamUi]
+  );
+  const setSearch = useCallback(
+    (next: string) => setTeamUi((prev) => ({ ...prev, search: next })),
+    [setTeamUi]
+  );
   const [toggleTarget, setToggleTarget] = useState<StaffRow | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<TrainerRow | null>(null);
   const [errorNotice, setErrorNotice] = useState('');
@@ -462,7 +498,7 @@ export default function TeamScreen() {
               count={archivedTrainerTotal}
               selectedColor={c.statusFormer}
               onPress={() => {
-                setFormerTrainers((current) => !current);
+                setFormerTrainers(!formerTrainers);
                 setSearch('');
               }}
             />

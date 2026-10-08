@@ -54,6 +54,9 @@ const FILTER_OPTIONS: MemberFilter[] = [
   'former',
 ];
 const MEMBER_FILTER_STORAGE_KEY = 'vibe.members.statusFilter';
+const MEMBER_SORT_STORAGE_KEY = 'vibe.members.sort';
+const MEMBER_SEARCH_STORAGE_KEY = 'vibe.members.search';
+const MEMBER_SORT_IDS = new Set(MEMBER_SORT_OPTIONS.map((o) => o.id));
 
 function dueSoonMeta(
   member: Pick<MemberRow, 'status' | 'end_date'>,
@@ -352,10 +355,12 @@ export default function MembersScreen() {
   const branchKey = selectedBranchId === 'all' ? 'all' : selectedBranchId;
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [searchReady, setSearchReady] = useState(false);
   const paramFilter = Array.isArray(params.filter) ? params.filter[0] : params.filter;
   const [filter, setFilter] = useState<MemberFilter>(() => parseFilter(paramFilter));
   const [filterReady, setFilterReady] = useState(() => Boolean(paramFilter));
   const [sort, setSort] = useState<MemberSortId>(DEFAULT_MEMBER_SORT);
+  const [sortReady, setSortReady] = useState(false);
   const [archivedTotal, setArchivedTotal] = useState(0);
   const [pendingRestoreIds, setPendingRestoreIds] = useState<Set<number>>(() => new Set());
   const filterScrollRef = useRef<ScrollView>(null);
@@ -379,6 +384,44 @@ export default function MembersScreen() {
       cancelled = true;
     };
   }, [paramFilter, params.focus]);
+
+  useEffect(() => {
+    let cancelled = false;
+    AsyncStorage.getItem(MEMBER_SORT_STORAGE_KEY)
+      .then((saved) => {
+        if (!cancelled && saved && MEMBER_SORT_IDS.has(saved as MemberSortId)) {
+          setSort(saved as MemberSortId);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setSortReady(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (params.focus) {
+      setSearch('');
+      setDebouncedSearch('');
+      setSearchReady(true);
+      return;
+    }
+    let cancelled = false;
+    AsyncStorage.getItem(MEMBER_SEARCH_STORAGE_KEY)
+      .then((saved) => {
+        if (!cancelled && typeof saved === 'string' && saved) setSearch(saved);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setSearchReady(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [params.focus]);
 
   // Tab screens stay mounted — re-apply deep-link filter whenever we land here.
   useFocusEffect(
@@ -406,10 +449,19 @@ export default function MembersScreen() {
   }, [filter, filterReady]);
 
   useEffect(() => {
-    if (!params.focus) return;
-    setSearch('');
-    setDebouncedSearch('');
-  }, [params.focus]);
+    if (!sortReady) return;
+    AsyncStorage.setItem(MEMBER_SORT_STORAGE_KEY, sort).catch(() => {});
+  }, [sort, sortReady]);
+
+  useEffect(() => {
+    if (!searchReady || params.focus) return;
+    const trimmed = search.trim();
+    if (!trimmed) {
+      AsyncStorage.removeItem(MEMBER_SEARCH_STORAGE_KEY).catch(() => {});
+      return;
+    }
+    AsyncStorage.setItem(MEMBER_SEARCH_STORAGE_KEY, trimmed).catch(() => {});
+  }, [search, searchReady, params.focus]);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search.trim()), 300);

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText as Text } from '@/src/components/AppText';
@@ -23,6 +23,11 @@ import {
 } from '@/src/utils/gymSignupValidation';
 import { isValidEthiopianPhone, normalizeEthiopianPhone } from '@/src/utils/phone';
 import { MIN_PASSWORD_LENGTH } from '@/src/utils/passwordValidation';
+import {
+  clearRegisterGymDraft,
+  useRegisterGymDraft,
+  type RegisterGymDraft,
+} from '@/src/utils/useRegisterGymDraft';
 
 const STEPS = ['phone', 'gym', 'account'] as const;
 type SignupStep = (typeof STEPS)[number];
@@ -75,6 +80,55 @@ export default function RegisterGymScreen() {
   const [otpVerified, setOtpVerified] = useState(false);
   const { cooldown, startCooldown, canResend } = useOtpResendCooldown();
   const otpRequestInFlight = useRef(false);
+
+  const registerDraft = useMemo<RegisterGymDraft>(
+    () => ({
+      step,
+      phone,
+      verifiedPhone,
+      sessionId,
+      otpVerified,
+      gymName,
+      city,
+      address,
+      ownerName,
+      username,
+      email,
+    }),
+    [
+      step,
+      phone,
+      verifiedPhone,
+      sessionId,
+      otpVerified,
+      gymName,
+      city,
+      address,
+      ownerName,
+      username,
+      email,
+    ]
+  );
+
+  const applyRegisterDraft = useCallback((next: RegisterGymDraft) => {
+    setStep(next.step);
+    setPhone(next.phone);
+    setVerifiedPhone(next.verifiedPhone);
+    setSessionId(next.sessionId);
+    setOtpVerified(next.otpVerified);
+    setGymName(next.gymName);
+    setCity(next.city);
+    setAddress(next.address);
+    setOwnerName(next.ownerName);
+    setUsername(next.username);
+    setEmail(next.email);
+  }, []);
+
+  useRegisterGymDraft({
+    enabled: !registerDone,
+    draft: registerDraft,
+    apply: applyRegisterDraft,
+  });
 
   const stepIndex = STEPS.indexOf(step);
   const signupStepLabels = SIGNUP_STEP_DOT_KEYS.map((key) => t(key));
@@ -211,6 +265,7 @@ export default function RegisterGymScreen() {
         ...(trimmedEmail ? { email: trimmedEmail } : {}),
         ...(trimmedAddress ? { address: trimmedAddress } : {}),
       });
+      void clearRegisterGymDraft();
       setRegisterDone({
         gymName: gymName.trim(),
         username: cleanUsername,
@@ -305,6 +360,8 @@ export default function RegisterGymScreen() {
                   keyboardType="phone-pad"
                   autoCapitalize="none"
                   latin
+                  textContentType="telephoneNumber"
+                  autoComplete="tel"
                   placeholder={t('signup.phonePlaceholder')}
                 />
                 <Text style={[styles.hint, { color: AUTH.textDim }]}>{t('signup.phoneHint')}</Text>
@@ -341,6 +398,8 @@ export default function RegisterGymScreen() {
                     setGymName(v);
                     setFieldErrors((prev) => ({ ...prev, gymName: undefined }));
                   }}
+                  textContentType="organizationName"
+                  autoComplete="organization"
                   placeholder={t('signup.gymNamePlaceholder')}
                   error={Boolean(fieldErrors.gymName)}
                 />
@@ -354,6 +413,8 @@ export default function RegisterGymScreen() {
                     setFieldErrors((prev) => ({ ...prev, city: undefined }));
                   }}
                   autoCapitalize="words"
+                  textContentType="addressCity"
+                  autoComplete="postal-address"
                   placeholder={t('signup.cityPlaceholder')}
                   error={Boolean(fieldErrors.city)}
                 />
@@ -367,6 +428,8 @@ export default function RegisterGymScreen() {
                     setFieldErrors((prev) => ({ ...prev, address: undefined }));
                   }}
                   autoCapitalize="words"
+                  textContentType="fullStreetAddress"
+                  autoComplete="street-address"
                   placeholder={t('signup.addressPlaceholder')}
                   error={Boolean(fieldErrors.address)}
                 />
@@ -386,6 +449,8 @@ export default function RegisterGymScreen() {
                     setFieldErrors((prev) => ({ ...prev, ownerName: undefined }));
                   }}
                   autoCapitalize="words"
+                  textContentType="name"
+                  autoComplete="name"
                   placeholder={t('signup.ownerNamePlaceholder')}
                   error={Boolean(fieldErrors.ownerName)}
                 />
@@ -400,6 +465,8 @@ export default function RegisterGymScreen() {
                   }}
                   autoCapitalize="none"
                   latin
+                  textContentType="username"
+                  autoComplete="username"
                   placeholder={t('signup.usernamePlaceholder')}
                   error={Boolean(fieldErrors.username)}
                 />
@@ -416,6 +483,8 @@ export default function RegisterGymScreen() {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   latin
+                  textContentType="emailAddress"
+                  autoComplete="email"
                   error={Boolean(fieldErrors.email)}
                 />
                 {fieldErrors.email ? <FieldError message={resolveError(fieldErrors.email)} /> : null}
@@ -433,6 +502,8 @@ export default function RegisterGymScreen() {
                   secureTextEntry
                   autoCapitalize="none"
                   latin
+                  textContentType="newPassword"
+                  autoComplete="password-new"
                   error={Boolean(fieldErrors.password)}
                 />
                 <PasswordRule
@@ -454,6 +525,8 @@ export default function RegisterGymScreen() {
                   secureTextEntry
                   autoCapitalize="none"
                   latin
+                  textContentType="newPassword"
+                  autoComplete="password-new"
                   error={Boolean(fieldErrors.confirmPassword)}
                 />
                 <PasswordRule

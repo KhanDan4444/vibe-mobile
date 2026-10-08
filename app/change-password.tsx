@@ -134,6 +134,8 @@ export default function ChangePasswordScreen() {
                 }}
                 secureTextEntry
                 autoCapitalize="none"
+                textContentType="password"
+                autoComplete="password"
                 error={Boolean(fieldErrors.currentPassword)}
                 returnKeyType="next"
               />
@@ -156,6 +158,8 @@ export default function ChangePasswordScreen() {
                 }}
                 secureTextEntry
                 autoCapitalize="none"
+                textContentType="newPassword"
+                autoComplete="password-new"
                 error={Boolean(fieldErrors.newPassword)}
                 returnKeyType="next"
               />
@@ -182,6 +186,8 @@ export default function ChangePasswordScreen() {
                 }}
                 secureTextEntry
                 autoCapitalize="none"
+                textContentType="newPassword"
+                autoComplete="password-new"
                 error={Boolean(fieldErrors.confirmPassword)}
                 returnKeyType="done"
                 onSubmitEditing={handleSubmit}

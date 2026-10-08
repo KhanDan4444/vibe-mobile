@@ -895,6 +895,8 @@ export default function EnrollScreen() {
                   }}
                   placeholder={t('enroll.fullNamePlaceholder')}
                   autoCapitalize="words"
+                  textContentType="name"
+                  autoComplete="name"
                   error={Boolean(nameError)}
                   onBlur={() => ensureNameValid()}
                 />
@@ -908,6 +910,8 @@ export default function EnrollScreen() {
                   placeholder={t('forms.phonePlaceholder')}
                   keyboardType="phone-pad"
                   autoCapitalize="none"
+                  textContentType="telephoneNumber"
+                  autoComplete="tel"
                   returnKeyType="done"
                   blurOnSubmit
                   error={Boolean(phoneError)}

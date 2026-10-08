@@ -25,6 +25,7 @@ import { radiusMd, radiusSm, type AppTheme } from '@/src/theme/tokens';
 import { listPrimaryTextProps, scaleMinHeight, avatarTextProps } from '@/src/theme/typography';
 import { initialsFrom, roleSubtitleKey } from '@/src/utils/userDisplay';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
+import { statusWashOpaque } from '@/src/utils/statusWash';
 
 const THEME_SEGMENT_PAD = 3;
 const THEME_SEGMENT_GAP = 2;
@@ -271,9 +272,18 @@ function AppearanceRow({ last }: { last?: boolean }) {
   );
 }
 
+function planBadgeLabel(
+  subscription: { isTrial?: boolean; licensePlanName?: string | null } | null | undefined,
+  t: (key: string) => string
+) {
+  if (subscription?.isTrial) return t('profile.planBadgeFreeTrial');
+  const name = (subscription?.licensePlanName || '').trim();
+  return name || null;
+}
+
 export default function AccountScreen() {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, subscription } = useAuth();
   const { colors: c } = useTheme();
   const { language, setLanguage } = usePreferences();
   const { t } = useTranslation();
@@ -286,6 +296,7 @@ export default function AccountScreen() {
   }
 
   const displayName = user.name || user.email || user.username || 'User';
+  const planBadge = planBadgeLabel(subscription, t);
   const langLabel = t(LANGUAGE_LABEL_KEYS[language]);
 
   const pickLanguage = (lng: AppLanguage) => {
@@ -366,6 +377,18 @@ export default function AccountScreen() {
               </Text>
               <Text style={[styles.role, { color: c.dim }]}>{t(roleSubtitleKey(user.role))}</Text>
             </View>
+            {planBadge ? (
+              <View
+                style={[
+                  styles.planBadge,
+                  { backgroundColor: statusWashOpaque(c.accent, c.card, 0.16) },
+                ]}
+              >
+                <Text latin numberOfLines={2} style={[styles.planBadgeText, { color: c.accent }]}>
+                  {planBadge}
+                </Text>
+              </View>
+            ) : null}
           </SoftSurface>
 
           <View style={[styles.menuGrid, isTablet && styles.menuGridTablet]}>
@@ -412,10 +435,23 @@ const styles = StyleSheet.create({
     marginRight: 14,
   },
   avatarText: { color: '#fff', fontSize: 18, fontWeight: '700' },
-  profileText: { flex: 1 },
+  profileText: { flex: 1, minWidth: 0, marginRight: 10 },
   name: { fontSize: 18, fontWeight: '600', letterSpacing: -0.2 },
   meta: { marginTop: 3, fontSize: 13 },
   role: { marginTop: 4, fontSize: 12, fontWeight: '500' },
+  planBadge: {
+    maxWidth: 108,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+    alignSelf: 'flex-start',
+  },
+  planBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+    textAlign: 'center',
+  },
   section: { marginTop: 14, marginBottom: 8, paddingHorizontal: 4, fontSize: 13, fontWeight: '600' },
   group: {
     overflow: 'hidden',

@@ -332,6 +332,8 @@ export default function StationCheckInScreen() {
                     setError('');
                   }}
                   keyboardType="phone-pad"
+                  textContentType="telephoneNumber"
+                  autoComplete="tel"
                   placeholder={t('publicStationCheckIn.phonePlaceholder')}
                   error={Boolean(fieldErrors.phone)}
                   latin

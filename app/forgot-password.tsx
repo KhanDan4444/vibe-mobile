@@ -186,6 +186,8 @@ export default function ForgotPasswordScreen() {
                   autoCapitalize="none"
                   keyboardType="default"
                   latin
+                  textContentType="username"
+                  autoComplete="username"
                   placeholder={t('forgot.identifierPlaceholder')}
                 />
                 <Text style={[styles.hint, { color: AUTH.textDim }]}>{t('forgot.identifierHint')}</Text>
@@ -226,6 +228,8 @@ export default function ForgotPasswordScreen() {
                   secureTextEntry
                   autoCapitalize="none"
                   latin
+                  textContentType="newPassword"
+                  autoComplete="password-new"
                   error={Boolean(fieldErrors.password)}
                 />
                 <PasswordRule
@@ -247,6 +251,8 @@ export default function ForgotPasswordScreen() {
                   secureTextEntry
                   autoCapitalize="none"
                   latin
+                  textContentType="newPassword"
+                  autoComplete="password-new"
                   error={Boolean(fieldErrors.confirmPassword)}
                 />
                 <PasswordRule

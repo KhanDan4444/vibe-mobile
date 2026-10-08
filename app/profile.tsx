@@ -163,20 +163,51 @@ export default function ProfileScreen() {
 
               <Text style={[styles.section, { color: c.muted }]}>{t('profile.gymSection')}</Text>
               <Label>{t('forms.gymName')}</Label>
-              <Field value={gymName} onChangeText={setGymName} autoCapitalize="words" />
+              <Field
+                value={gymName}
+                onChangeText={setGymName}
+                autoCapitalize="words"
+                textContentType="organizationName"
+                autoComplete="organization"
+              />
 
               <Label>{t('forms.ownerName')}</Label>
-              <Field value={ownerName} onChangeText={setOwnerName} autoCapitalize="words" />
+              <Field
+                value={ownerName}
+                onChangeText={setOwnerName}
+                autoCapitalize="words"
+                textContentType="name"
+                autoComplete="name"
+              />
 
               <Label>{t('forms.phone')}</Label>
-              <Field value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+              <Field
+                value={phone}
+                onChangeText={setPhone}
+                keyboardType="phone-pad"
+                textContentType="telephoneNumber"
+                autoComplete="tel"
+              />
 
               <Text style={[styles.section, { color: c.muted }]}>{t('profile.loginSection')}</Text>
               <Label>{t('forms.email')}</Label>
-              <Field value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
+              <Field
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                textContentType="emailAddress"
+                autoComplete="email"
+              />
 
               <Label>{t('forms.username')}</Label>
-              <Field value={username} onChangeText={setUsername} autoCapitalize="none" />
+              <Field
+                value={username}
+                onChangeText={setUsername}
+                autoCapitalize="none"
+                textContentType="username"
+                autoComplete="username"
+              />
 
               <PrimaryButton
                 label={t('common.save')}
