@@ -26,6 +26,8 @@ import { listPrimaryTextProps, scaleMinHeight, avatarTextProps } from '@/src/the
 import { initialsFrom, roleSubtitleKey } from '@/src/utils/userDisplay';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
 import { statusWashOpaque } from '@/src/utils/statusWash';
+import { formatLicensePlanBadge } from '@/src/utils/formatLicensePlanBadge';
+import { TRIAL_DAYS_LEFT_URGENCY } from '@/src/utils/trialProgress';
 
 const THEME_SEGMENT_PAD = 3;
 const THEME_SEGMENT_GAP = 2;
@@ -272,15 +274,6 @@ function AppearanceRow({ last }: { last?: boolean }) {
   );
 }
 
-function planBadgeLabel(
-  subscription: { isTrial?: boolean; licensePlanName?: string | null } | null | undefined,
-  t: (key: string) => string
-) {
-  if (subscription?.isTrial) return t('profile.planBadgeFreeTrial');
-  const name = (subscription?.licensePlanName || '').trim();
-  return name || null;
-}
-
 export default function AccountScreen() {
   const router = useRouter();
   const { user, logout, subscription } = useAuth();
@@ -296,7 +289,24 @@ export default function AccountScreen() {
   }
 
   const displayName = user.name || user.email || user.username || 'User';
-  const planBadge = planBadgeLabel(subscription, t);
+  const planBadge = formatLicensePlanBadge(
+    subscription?.licensePlanName,
+    {
+      isTrial: subscription?.isTrial,
+      durationMonths: subscription?.licensePlanDuration,
+    },
+    t
+  );
+  const trialDaysLeft = subscription?.isTrial ? subscription?.trialDaysLeft : null;
+  const showTrialDaysLeft =
+    Boolean(subscription?.isTrial) && trialDaysLeft != null && trialDaysLeft >= 0;
+  const trialDaysUrgent =
+    showTrialDaysLeft && Number(trialDaysLeft) <= TRIAL_DAYS_LEFT_URGENCY;
+  const trialDaysLeftLabel = showTrialDaysLeft
+    ? trialDaysLeft === 0
+      ? t('profile.planBadgeEndsToday')
+      : t('profile.planBadgeDaysLeft', { count: trialDaysLeft })
+    : null;
   const langLabel = t(LANGUAGE_LABEL_KEYS[language]);
 
   const pickLanguage = (lng: AppLanguage) => {
@@ -378,15 +388,29 @@ export default function AccountScreen() {
               <Text style={[styles.role, { color: c.dim }]}>{t(roleSubtitleKey(user.role))}</Text>
             </View>
             {planBadge ? (
-              <View
-                style={[
-                  styles.planBadge,
-                  { backgroundColor: statusWashOpaque(c.accent, c.card, 0.16) },
-                ]}
-              >
-                <Text latin numberOfLines={2} style={[styles.planBadgeText, { color: c.accent }]}>
-                  {planBadge}
-                </Text>
+              <View style={styles.planBadgeCol}>
+                <View
+                  style={[
+                    styles.planBadge,
+                    { backgroundColor: statusWashOpaque(c.accent, c.card, 0.16) },
+                  ]}
+                >
+                  <Text latin numberOfLines={2} style={[styles.planBadgeText, { color: c.accent }]}>
+                    {planBadge}
+                  </Text>
+                </View>
+                {trialDaysLeftLabel ? (
+                  <Text
+                    latin
+                    numberOfLines={2}
+                    style={[
+                      styles.planBadgeDaysLeft,
+                      { color: trialDaysUrgent ? c.accent : c.muted },
+                    ]}
+                  >
+                    {trialDaysLeftLabel}
+                  </Text>
+                ) : null}
               </View>
             ) : null}
           </SoftSurface>
@@ -439,18 +463,29 @@ const styles = StyleSheet.create({
   name: { fontSize: 18, fontWeight: '600', letterSpacing: -0.2 },
   meta: { marginTop: 3, fontSize: 13 },
   role: { marginTop: 4, fontSize: 12, fontWeight: '500' },
+  planBadgeCol: {
+    alignItems: 'flex-end',
+    maxWidth: 120,
+    gap: 4,
+  },
   planBadge: {
-    maxWidth: 108,
+    maxWidth: 120,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 999,
-    alignSelf: 'flex-start',
+    alignSelf: 'flex-end',
   },
   planBadgeText: {
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0.2,
     textAlign: 'center',
+  },
+  planBadgeDaysLeft: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.1,
+    textAlign: 'right',
   },
   section: { marginTop: 14, marginBottom: 8, paddingHorizontal: 4, fontSize: 13, fontWeight: '600' },
   group: {

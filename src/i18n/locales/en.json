@@ -399,7 +399,15 @@
     "roleOwner": "Gym owner",
     "roleStaff": "Front Desk",
     "roleAccount": "Account",
-    "planBadgeFreeTrial": "Free Trial"
+    "planBadgeFreeTrial": "Free Trial",
+    "planBadgeMonthly": "Monthly Plan",
+    "planBadgeQuarterly": "Quarterly Plan",
+    "planBadgeSixMonth": "6-Month Plan",
+    "planBadgeYearly": "Yearly Plan",
+    "planBadgeMonths": "{{count}}-Month Plan",
+    "planBadgeNamed": "{{name}} Plan",
+    "planBadgeDaysLeft": "{{count}} days left",
+    "planBadgeEndsToday": "Ends today"
   },
   "roles": {
     "frontDesk": "Front Desk"

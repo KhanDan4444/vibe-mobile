@@ -25,8 +25,13 @@ export interface GymSubscription {
   accessDenied?: boolean;
   isTrial?: boolean;
   trialDaysLeft?: number | null;
+  trialDaysUsed?: number | null;
+  trialTotalDays?: number | null;
+  trialStartDate?: string | null;
   trialEndDate?: string | null;
   licensePlanName?: string | null;
+  licensePlanDuration?: number | null;
+  licenseStartDate?: string | null;
   licenseEndDate?: string | null;
 }
 

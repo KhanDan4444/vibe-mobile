@@ -399,7 +399,15 @@
     "roleOwner": "Abbaa jimii",
     "roleStaff": "Deskii Fuulduraa",
     "roleAccount": "Akkaawuntii",
-    "planBadgeFreeTrial": "Fayyaa Bilisaa"
+    "planBadgeFreeTrial": "Fayyaa Bilisaa",
+    "planBadgeMonthly": "Karoora Ji'aa",
+    "planBadgeQuarterly": "Karoora Rubaa",
+    "planBadgeSixMonth": "Karoora Ji'a 6",
+    "planBadgeYearly": "Karoora Waggaa",
+    "planBadgeMonths": "Karoora Ji'a {{count}}",
+    "planBadgeNamed": "Karoora {{name}}",
+    "planBadgeDaysLeft": "Guyyaa {{count}} hafe",
+    "planBadgeEndsToday": "Har'a xumura"
   },
   "roles": {
     "frontDesk": "Deskii Fuulduraa"

@@ -399,7 +399,15 @@
     "roleOwner": "የጂም ባለቤት",
     "roleStaff": "የፊት ዴስክ",
     "roleAccount": "መለያ",
-    "planBadgeFreeTrial": "ነፃ ሙከራ"
+    "planBadgeFreeTrial": "ነፃ ሙከራ",
+    "planBadgeMonthly": "ወርሃዊ ዕቅድ",
+    "planBadgeQuarterly": "የሩብ ዓመት ዕቅድ",
+    "planBadgeSixMonth": "የ6 ወር ዕቅድ",
+    "planBadgeYearly": "ዓመታዊ ዕቅድ",
+    "planBadgeMonths": "የ{{count}} ወር ዕቅድ",
+    "planBadgeNamed": "{{name}} ዕቅድ",
+    "planBadgeDaysLeft": "{{count}} ቀን ቀርቷል",
+    "planBadgeEndsToday": "ዛሬ ያልቃል"
   },
   "roles": {
     "frontDesk": "የፊት ዴስክ"
