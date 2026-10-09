@@ -297,6 +297,8 @@ export default function AccountScreen() {
     },
     t
   );
+  const isTrialBadge = Boolean(subscription?.isTrial);
+  const planBadgeColor = isTrialBadge ? c.warning : c.accent;
   const trialDaysLeft = subscription?.isTrial ? subscription?.trialDaysLeft : null;
   const showTrialDaysLeft =
     Boolean(subscription?.isTrial) && trialDaysLeft != null && trialDaysLeft >= 0;
@@ -392,10 +394,14 @@ export default function AccountScreen() {
                 <View
                   style={[
                     styles.planBadge,
-                    { backgroundColor: statusWashOpaque(c.accent, c.card, 0.16) },
+                    { backgroundColor: statusWashOpaque(planBadgeColor, c.card, 0.16) },
                   ]}
                 >
-                  <Text latin numberOfLines={2} style={[styles.planBadgeText, { color: c.accent }]}>
+                  <Text
+                    latin
+                    numberOfLines={2}
+                    style={[styles.planBadgeText, { color: planBadgeColor }]}
+                  >
                     {planBadge}
                   </Text>
                 </View>
@@ -405,7 +411,7 @@ export default function AccountScreen() {
                     numberOfLines={2}
                     style={[
                       styles.planBadgeDaysLeft,
-                      { color: trialDaysUrgent ? c.accent : c.muted },
+                      { color: trialDaysUrgent ? c.warning : c.muted },
                     ]}
                   >
                     {trialDaysLeftLabel}
@@ -476,13 +482,13 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
   },
   planBadgeText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.2,
     textAlign: 'center',
   },
   planBadgeDaysLeft: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.1,
     textAlign: 'right',

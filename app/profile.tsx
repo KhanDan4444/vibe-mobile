@@ -161,7 +161,9 @@ export default function ProfileScreen() {
             <View style={{ width: '100%', maxWidth: formMaxWidth }}>
               <ErrorBanner message={error} />
 
-              <Text style={[styles.section, { color: c.muted }]}>{t('profile.gymSection')}</Text>
+              <Text style={[styles.section, styles.sectionFirst, { color: c.muted }]}>
+                {t('profile.gymSection')}
+              </Text>
               <Label>{t('forms.gymName')}</Label>
               <Field
                 value={gymName}
@@ -233,13 +235,15 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingVertical: 16, paddingBottom: 40 },
+  // TabScreenFrame already insets under the nav header — avoid stacking extra top pad.
+  content: { paddingTop: 0, paddingBottom: 40 },
   section: {
-    marginTop: 16,
+    marginTop: 20,
     marginBottom: 4,
     fontSize: 13,
     fontWeight: '700',
     textTransform: 'uppercase',
   },
+  sectionFirst: { marginTop: 0 },
   readOnly: { padding: 16, fontSize: 15, lineHeight: 22 },
 });

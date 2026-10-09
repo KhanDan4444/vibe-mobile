@@ -75,6 +75,9 @@ function AlertMemberRow({
     return t('dashboard.daysLeft', { count: days });
   })();
 
+  const branchLabel = branchDisplayName(member.branch_name);
+  const metaLine = [member.phone, branchLabel].filter(Boolean).join(' · ');
+
   return (
     <Pressable style={[styles.alertRow, { borderColor: colors.border }]} onPress={onOpen}>
       <MemberPhoto
@@ -88,10 +91,14 @@ function AlertMemberRow({
         <Text listRow style={[styles.alertName, { color: colors.text }]} numberOfLines={1}>
           {member.name}
         </Text>
-        <Text style={[styles.alertMeta, { color: colors.dim }]} numberOfLines={1}>
-          {formatPlanDisplayName(member.plan_name) || t('members.noPlan')}
-        </Text>
+        {metaLine ? (
+          <Text latin style={[styles.alertMeta, { color: colors.dim }]} numberOfLines={1}>
+            {metaLine}
+          </Text>
+        ) : null}
         <Text style={[styles.alertExpires, { color: colors.dim }]} numberOfLines={1}>
+          {formatPlanDisplayName(member.plan_name) || t('members.noPlan')}
+          {' · '}
           {endLabel}
         </Text>
       </View>

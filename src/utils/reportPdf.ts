@@ -276,8 +276,9 @@ export function memberStatusCounts(members: MemberRow[]) {
       former += 1;
       continue;
     }
-    const start = String(m.start_date || '').split('T')[0];
-    if (start && start.slice(0, 7) === monthPrefix) newMembers += 1;
+    // Registration month — never use renew-updated start_date.
+    const registered = String(m.created_at || '').split('T')[0];
+    if (registered && registered.slice(0, 7) === monthPrefix) newMembers += 1;
     const s = (m.status || '').toLowerCase();
     if (m.is_unpaid) unpaid += 1;
     if (s === 'active' && !m.is_unpaid) active += 1;

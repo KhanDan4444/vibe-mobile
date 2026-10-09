@@ -85,6 +85,8 @@ export interface MemberRow {
   plan_name: string | null;
   start_date: string;
   end_date: string;
+  /** Registration timestamp — renew must not change this. */
+  created_at?: string | null;
   status: string;
   is_unpaid: boolean;
   branch_id?: number | null;
@@ -205,11 +207,14 @@ export interface DashboardNotification {
 export interface DashboardAlertMember {
   id: number;
   name: string;
+  phone?: string | null;
   plan_id?: number | null;
   plan_name?: string | null;
   end_date: string;
   status: string;
   photo_url?: string | null;
+  branch_id?: number | null;
+  branch_name?: string | null;
 }
 
 export interface DashboardChartPoint {
