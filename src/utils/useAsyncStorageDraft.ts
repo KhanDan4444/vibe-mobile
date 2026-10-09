@@ -3,8 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SAVE_MS = 400;
 
-/** Unfinished form drafts expire after 1 minute of no save. */
-export const DRAFT_TTL_MS = 60 * 1000;
+/** Unfinished form drafts expire after 5 minutes of no save. */
+export const DRAFT_TTL_MS = 5 * 60 * 1000;
 
 const DRAFT_META = '_savedAt';
 
