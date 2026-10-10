@@ -17,13 +17,15 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://vibe-api-production-5ab1.up.railway.app"
+        "EXPO_PUBLIC_API_URL": "https://vibe-api-production-5ab1.up.railway.app",
+        "EXPO_PUBLIC_SENTRY_ENVIRONMENT": "preview"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://vibe-api-production-5ab1.up.railway.app"
+        "EXPO_PUBLIC_API_URL": "https://vibe-api-production-5ab1.up.railway.app",
+        "EXPO_PUBLIC_SENTRY_ENVIRONMENT": "production"
       }
     }
   },

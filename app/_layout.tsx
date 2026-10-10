@@ -21,6 +21,7 @@ import { AppBootSplash, BOOT_SPLASH_BG_DARK, bootSplashExiting } from '@/src/com
 import { AppHeaderTitle } from '@/src/components/AppHeaderTitle';
 import { SubscriptionLockout } from '@/src/components/SubscriptionLockout';
 import { PERSISTED_QUERY_KEYS, queryClient, QUERY_CACHE_STORAGE_KEY } from '@/src/query/client';
+import { Sentry } from '@/src/sentry';
 import { SystemChrome } from '@/src/theme/SystemChrome';
 import { NOTO_ETHIOPIC, SPACE_GROTESK_SEMI, scaleLineHeight } from '@/src/theme/typography';
 import { useAppFonts } from '@/src/theme/useAppFonts';
@@ -36,7 +37,7 @@ const persister = createAsyncStoragePersister({ storage: AsyncStorage, key: QUER
 
 export { ErrorBoundary } from 'expo-router';
 
-export default function RootLayout() {
+function RootLayout() {
   const { loaded: fontsLoaded } = useAppFonts();
 
   if (!fontsLoaded) return <AppBootSplash />;
@@ -200,3 +201,5 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
 });
+
+export default Sentry.wrap(RootLayout);
