@@ -9,6 +9,7 @@ import { fetchTrainers, updateTrainer } from '@/src/api/trainers';
 import { fetchBranches } from '@/src/api/branches';
 import { BranchPicker } from '@/src/components/BranchPicker';
 import { CertAttachmentField } from '@/src/components/CertAttachmentField';
+import { EthiopianPhoneField } from '@/src/components/EthiopianPhoneField';
 import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { PageSkeleton } from '@/src/components/Skeleton';
 import { LoadError } from '@/src/components/LoadError';
@@ -156,13 +157,12 @@ export default function EditTrainerScreen() {
           <FieldError message={fieldErrors.name ? t(fieldErrors.name) : ''} />
 
           <Label required>{t('forms.phone')}</Label>
-          <Field
+          <EthiopianPhoneField
             value={phone}
             onChangeText={(v) => {
               setPhone(v);
               if (fieldErrors.phone) setFieldErrors((p) => ({ ...p, phone: undefined }));
             }}
-            keyboardType="phone-pad"
             error={Boolean(fieldErrors.phone)}
           />
           <FieldError message={fieldErrors.phone ? t(fieldErrors.phone) : ''} />

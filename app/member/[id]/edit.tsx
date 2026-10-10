@@ -11,6 +11,7 @@ import { BranchPicker } from '@/src/components/BranchPicker';
 import { OptionPickerField } from '@/src/components/OptionPickerField';
 import { PhotoPickerField } from '@/src/components/PhotoPickerField';
 import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
+import { EthiopianPhoneField } from '@/src/components/EthiopianPhoneField';
 import { ErrorBanner, Field, FieldError, FormScroll, Label, MoneyAmountField, PrimaryButton, Screen } from '@/src/components/Form';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { useTheme } from '@/src/context/PreferencesContext';
@@ -229,14 +230,10 @@ export default function EditMemberScreen() {
           />
 
           <Label>{t('forms.phone')}</Label>
-          <Field
+          <EthiopianPhoneField
             ref={phoneRef}
             value={phone}
             onChangeText={handlePhoneChange}
-            keyboardType="phone-pad"
-            autoCapitalize="none"
-            textContentType="telephoneNumber"
-            autoComplete="tel"
             returnKeyType="done"
             blurOnSubmit
             error={Boolean(phoneError)}

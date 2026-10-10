@@ -166,6 +166,9 @@ export interface GymProfile {
   name: string;
   owner_name: string;
   phone: string | null;
+  telegram_chat_id?: string | number | null;
+  telegram_linked_at?: string | null;
+  telegram_linked?: boolean;
 }
 
 export interface ProfileUser {
@@ -178,6 +181,16 @@ export interface ProfileUser {
 export interface GymProfileResponse {
   gym: GymProfile;
   user: ProfileUser;
+  telegram_configured?: boolean;
+}
+
+export interface GymTelegramLinkResponse {
+  already_linked?: boolean;
+  telegram_linked?: boolean;
+  token?: string;
+  link?: string | null;
+  expires_at?: string;
+  expires_in_seconds?: number;
 }
 
 export interface UpdateProfilePayload {

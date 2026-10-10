@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { AppText as Text } from '@/src/components/AppText';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
+import { SupportContactLine } from '@/src/components/SupportContactLine';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { timings } from '@/src/theme/motion';
@@ -172,6 +173,7 @@ export function TrialBanner({ isTrial, trialDaysLeft, trialEndDate }: TrialBanne
           <Text style={styles.body}>
             {t('alerts.trialBody', { date: endLabel })}
           </Text>
+          <SupportContactLine />
         </View>
         <View
           style={[

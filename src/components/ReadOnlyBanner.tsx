@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { AppText as Text } from '@/src/components/AppText';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
+import { SupportContactLine } from '@/src/components/SupportContactLine';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useGymReadOnly } from '@/src/hooks/useGymReadOnly';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
@@ -126,6 +127,7 @@ export function ReadOnlyBanner() {
         ) : null}
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.body}>{body}</Text>
+        {!isBranchOnly ? <SupportContactLine variant="banner" /> : null}
       </View>
     </SoftSurface>
   );

@@ -246,10 +246,10 @@
     "stepProgress": "Galmeen jimii, tarkaanfii {{current}} irraa {{total}}",
     "sectionGym": "Bal'ina jimii",
     "ownerPhone": "Bilbila abbaa jimii",
-    "phonePlaceholder": "0912345678",
+    "phonePlaceholder": "",
     "phoneHint": "Koodii mirkaneessaa lakkoofsa kanaaf ni ergina.",
     "phoneRequired": "Lakkoofsa bilbilaa keessan galchaa.",
-    "phoneInvalid": "Lakkoofsi bilbilaa Mobaalaa Itoophiyaa sirrii galchaa.",
+    "phoneInvalid": "Lakkoofsa bilbilaa Itoophiyaa sirrii galchi — 9 ykn 7 n jalqabu (+251 9… ykn +251 7…).",
     "sendOtp": "Koodii mirkaneessaa ergi",
     "otpSent": "Koodiin mirkaneessaa bilbila keessanitti ergameera.",
     "otpFailed": "Koodii mirkaneessaa erguu hin dandeenye.",
@@ -407,7 +407,15 @@
     "planBadgeMonths": "Karoora Ji'a {{count}}",
     "planBadgeNamed": "Karoora {{name}}",
     "planBadgeDaysLeft": "Guyyaa {{count}} hafe",
-    "planBadgeEndsToday": "Har'a xumura"
+    "planBadgeEndsToday": "Har'a xumura",
+    "telegramSection": "Beeksisa hayyamaa (Telegram)",
+    "telegramHint": "Telegram walqabsiisi beeksisa hayyamaatiif. SMS koodii seensaa qofaaf.",
+    "telegramLinked": "Telegram walqabateera",
+    "telegramUnlink": "Telegram addaan baasi",
+    "telegramGetLink": "Linkii Telegram argadhu",
+    "telegramLinkFailed": "Linkii Telegram uumuu hin dandeenye.",
+    "telegramUnlinkFailed": "Telegram addaan baasuu hin dandeenye.",
+    "telegramNotConfigured": "Telegram hin qindaa'amne."
   },
   "roles": {
     "frontDesk": "Deskii Fuulduraa"
@@ -886,7 +894,7 @@
     "pickPlan": "Karoora filadhu",
     "termStartDate": "Guyyaa jalqabaa yeroo",
     "memberName": "Maqaa miseensaa",
-    "phonePlaceholder": "09xxxxxxxx",
+    "phonePlaceholder": "",
     "datePlaceholder": "Guyyaa filadhu",
     "enrollWithoutPayment": "Kaffaltii malee galmeessi",
     "loadingPlans": "Karoorri fe'amaa jiru…",
@@ -996,7 +1004,7 @@
     "paymentDateFuture": "Guyyaan kaffaltii fuuldura ta'uu hin danda'u.",
     "changePlanDuplicate": "Kaffaltiin jijjiirama karooraa guyyaa kana irratti kanaan dura galmeeffameera. Galii keessatti gulaali ykn guyyaa biraa filadhu.",
     "phoneRequired": "SMS yaadachiisaaf lakkoofsi bilbilaa barbaachisaadha.",
-    "phoneInvalid": "Lakkoofsa bilbilaa Itoophiyaa sirrii galchi (09… ykn +251…).",
+    "phoneInvalid": "Lakkoofsa bilbilaa Itoophiyaa sirrii galchi — 9 ykn 7 n jalqabu (+251 9… ykn +251 7…).",
     "phoneAlreadyUsed": "Lakkoofsi bilbilaa kun duraan itti fayyadamamaa jira.",
     "otpInvalid": "Koodii dijiitii 6 galchi.",
     "planNotSelected": "Karoora hin filatamne.",
@@ -1251,7 +1259,7 @@
     "selfCheckinDisabled": "Galchi ofiin jiimii kana irratti cufameera. Desk gaafadhu.",
     "phoneBody": "Lakkoofsa bilbila miseensummaa kee galchi. Koodii gara Telegram keetti ni ergina.",
     "phoneLabel": "Lakkoofsa bilbila",
-    "phonePlaceholder": "09xxxxxxxx",
+    "phonePlaceholder": "",
     "sendCode": "Koodii gara Telegram ergi",
     "sendingCode": "Erguu jira…",
     "otpDestination": "Telegram kee",
@@ -1277,5 +1285,11 @@
     "title": "Dhugaa!",
     "body": "Fuulli kun hin jiru.",
     "goHome": "Gara fuula jalqabaatti deemi!"
+  },
+  "support": {
+    "sectionTitle": "Deeggarsa",
+    "needHelp": "Gargaarsa barbaadda?",
+    "callPhone": "Bilbilaa {{phone}}",
+    "telegram": "Telegram @{{handle}}"
   }
 }

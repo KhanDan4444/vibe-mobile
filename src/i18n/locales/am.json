@@ -246,10 +246,10 @@
     "stepProgress": "የጂም ምዝገባ፣ እርምጃ {{current}} ከ{{total}}",
     "sectionGym": "የጂም ዝርዝር",
     "ownerPhone": "የባለቤት ስልክ *",
-    "phonePlaceholder": "0912345678",
+    "phonePlaceholder": "",
     "phoneHint": "የማረጋገጫ ኮድ ወደዚህ ቁጥር እንልካለን።",
     "phoneRequired": "ስልክ ቁጥር ያስገቡ።",
-    "phoneInvalid": "ትክክለኛ የኢትዮጵያ ሞባይል ቁጥር ያስገቡ።",
+    "phoneInvalid": "ትክክለኛ የኢትዮጵያ ሞባይል ቁጥር ያስገቡ — በ9 ወይም በ7 የሚጀምር (+251 9… ወይም +251 7…)።",
     "sendOtp": "የማረጋገጫ ኮድ ላክ",
     "otpSent": "የማረጋገጫ ኮድ ወደ ስልክዎ ተልኳል።",
     "otpFailed": "የማረጋገጫ ኮድ ማስላክ አልተሳካም።",
@@ -407,7 +407,15 @@
     "planBadgeMonths": "የ{{count}} ወር ዕቅድ",
     "planBadgeNamed": "{{name}} ዕቅድ",
     "planBadgeDaysLeft": "{{count}} ቀን ቀርቷል",
-    "planBadgeEndsToday": "ዛሬ ያልቃል"
+    "planBadgeEndsToday": "ዛሬ ያልቃል",
+    "telegramSection": "የፈቃድ ማስታወቂያ (Telegram)",
+    "telegramHint": "የመድረክ ፈቃድና የሙከራ ማስታወቂያ ለማግኛት Telegram ያገናኙ። SMS ለመግቢያ ኮድ ብቻ ነው።",
+    "telegramLinked": "Telegram ተገናኝቷል",
+    "telegramUnlink": "Telegram አትሰናክል",
+    "telegramGetLink": "የTelegram አገናኝ ያግኙ",
+    "telegramLinkFailed": "የTelegram አገናኝ መፍጠር አልተቻለም።",
+    "telegramUnlinkFailed": "Telegramን ማ቉ረጥ አልተቻለም።",
+    "telegramNotConfigured": "Telegram አልተዋቀረም።"
   },
   "roles": {
     "frontDesk": "የፊት ዴስክ"
@@ -886,7 +894,7 @@
     "pickPlan": "ዕቅድ ይምረጡ",
     "termStartDate": "የጊዜ መጀመሪያ ቀን",
     "memberName": "የአባል ስም",
-    "phonePlaceholder": "09xxxxxxxx",
+    "phonePlaceholder": "",
     "datePlaceholder": "ቀን ይምረጡ",
     "enrollWithoutPayment": "ያለ ክፍያ መዝግብ",
     "loadingPlans": "ዕቅዶች በመጫን ላይ…",
@@ -996,7 +1004,7 @@
     "paymentDateFuture": "የክፍያ ቀን በወደፊት መሆን አይችልም።",
     "changePlanDuplicate": "በዚህ ቀን የዕቅድ ለውጥ ክፍያ ቀድሞ ተመዝግቧል። በገቢ ውስጥ ያርትዑ ወይም ሌላ ቀን ይምረጡ።",
     "phoneRequired": "ለSMS ማስታወሻ የስልክ ቁጥር ያስፈልጋል።",
-    "phoneInvalid": "ትክክለኛ የኢትዮጵያ ሞባይል ቁጥር ያስገቡ (09… ወይም +251…)።",
+    "phoneInvalid": "ትክክለኛ የኢትዮጵያ ሞባይል ቁጥር ያስገቡ — በ9 ወይም በ7 የሚጀምር (+251 9… ወይም +251 7…)።",
     "phoneAlreadyUsed": "ይህ ስልክ ቁጥር አስቀድሞ ጥቅም ላይ ውሏል።",
     "otpInvalid": "6-አሃዝ ኮድ ያስገቡ።",
     "planNotSelected": "ዕቅድ አልተመረጠም።",
@@ -1251,7 +1259,7 @@
     "selfCheckinDisabled": "በዚህ ጂም ራስ-ሰር መግቢያ ጠፍቷል። በዴስክ ይጠይቁ።",
     "phoneBody": "በአባልነትዎ ላይ ያለውን ስልክ ያስገቡ። ኮድ ወደ ቴሌግራምዎ እንልካለን።",
     "phoneLabel": "ስልክ ቁጥር",
-    "phonePlaceholder": "09xxxxxxxx",
+    "phonePlaceholder": "",
     "sendCode": "ኮድ ወደ ቴሌግራም ላክ",
     "sendingCode": "በመላክ ላይ…",
     "otpDestination": "ቴሌግራምዎ",
@@ -1277,5 +1285,11 @@
     "title": "ውይ!",
     "body": "ይህ ማያ አልተገኘም።",
     "goHome": "ወደ መነሻ ገጽ ሂድ!"
+  },
+  "support": {
+    "sectionTitle": "ድጋፍ",
+    "needHelp": "እርዳታ ይፈልጋል?",
+    "callPhone": "{{phone}} ይደውሉ",
+    "telegram": "Telegram @{{handle}}"
   }
 }

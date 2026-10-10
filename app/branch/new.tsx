@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
 import { createBranch, type BranchPayload } from '@/src/api/branches';
+import { EthiopianPhoneField } from '@/src/components/EthiopianPhoneField';
 import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { useTheme } from '@/src/context/PreferencesContext';
 import { useOfflineMutation } from '@/src/offline/useOfflineMutation';
@@ -93,13 +94,12 @@ export default function NewBranchScreen() {
           <FieldError message={fieldErrors.name ? t(fieldErrors.name) : undefined} />
 
           <Label>{t('branchEdit.phone')}</Label>
-          <Field
+          <EthiopianPhoneField
             value={phone}
             onChangeText={(v) => {
               setPhone(v);
               clearField('phone');
             }}
-            keyboardType="phone-pad"
             error={Boolean(fieldErrors.phone)}
           />
           <FieldError message={fieldErrors.phone ? t(fieldErrors.phone) : undefined} />

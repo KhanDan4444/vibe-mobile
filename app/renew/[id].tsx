@@ -2,7 +2,6 @@ import { Redirect, useRouter } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { AppText as Text } from '@/src/components/AppText';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/src/auth/AuthContext';
@@ -307,7 +306,6 @@ export default function RenewScreen() {
                 </View>
                 <View style={styles.memberRight}>
                   <StatusBadge status={member.status} />
-                  <Ionicons name="chevron-forward" size={16} color={c.dim} />
                 </View>
               </View>
             </SoftSurface>

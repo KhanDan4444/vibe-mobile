@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/src/auth/AuthContext';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
+import { SupportContactLine } from '@/src/components/SupportContactLine';
 import { PrimaryButton } from '@/src/components/ui/Button';
 import { useTheme } from '@/src/context/PreferencesContext';
 
@@ -24,6 +25,9 @@ export function SubscriptionLockout() {
         </Text>
         {displayName ? <Text style={[styles.gym, { color: c.muted }]}>{displayName}</Text> : null}
         <Text style={[styles.body, { color: c.dim }]}>{t('lockout.body')}</Text>
+        <View style={styles.support}>
+          <SupportContactLine />
+        </View>
         <PrimaryButton label={t('lockout.signOut')} onPress={() => void logout()} style={styles.button} />
       </SoftSurface>
     </View>
@@ -53,6 +57,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 20, fontWeight: '600', textAlign: 'center', letterSpacing: -0.3 },
   gym: { marginTop: 8, fontSize: 15, fontWeight: '600', textAlign: 'center' },
   body: { marginTop: 10, fontSize: 14, lineHeight: 21, textAlign: 'center' },
+  support: { marginTop: 12, alignSelf: 'stretch', alignItems: 'center' },
   button: {
     marginTop: 24,
     alignSelf: 'stretch',

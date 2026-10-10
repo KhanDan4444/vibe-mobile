@@ -1,3 +1,15 @@
+/** Ethio Telecom (9…) and Safaricom (7…) mobile national numbers. */
+const NATIONAL_MOBILE_RE = /^[79]\d{8}$/;
+
+/** Digits after +251 / leading 0 — max 9 for the split phone field. */
+export function ethiopianNationalDigits(input: string | null | undefined): string {
+  if (input == null || input === '') return '';
+  let digits = String(input).replace(/\D/g, '');
+  if (digits.startsWith('251')) digits = digits.slice(3);
+  if (digits.startsWith('0')) digits = digits.slice(1);
+  return digits.slice(0, 9);
+}
+
 export function normalizeEthiopianPhone(input: string | null | undefined): string | null {
   if (input == null || input === '') return null;
 
@@ -13,6 +25,8 @@ export function normalizeEthiopianPhone(input: string | null | undefined): strin
   }
 
   if (digits.length !== 12) return null;
+  const national = digits.slice(3);
+  if (!NATIONAL_MOBILE_RE.test(national)) return null;
   return `+${digits}`;
 }
 

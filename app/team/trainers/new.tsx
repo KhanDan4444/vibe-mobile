@@ -9,6 +9,7 @@ import { createTrainer } from '@/src/api/trainers';
 import { fetchBranches } from '@/src/api/branches';
 import { BranchPicker } from '@/src/components/BranchPicker';
 import { CertAttachmentField } from '@/src/components/CertAttachmentField';
+import { EthiopianPhoneField } from '@/src/components/EthiopianPhoneField';
 import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { hasFieldErrors, validateTrainerFields, type FieldErrorMap } from '@/src/utils/formValidation';
@@ -106,15 +107,12 @@ export default function NewTrainerScreen() {
           <FieldError message={fieldErrors.name ? t(fieldErrors.name) : ''} />
 
           <Label required>{t('forms.phone')}</Label>
-          <Field
+          <EthiopianPhoneField
             value={phone}
             onChangeText={(v) => {
               setPhone(v);
               if (fieldErrors.phone) setFieldErrors((p) => ({ ...p, phone: undefined }));
             }}
-            keyboardType="phone-pad"
-            textContentType="telephoneNumber"
-            autoComplete="tel"
             error={Boolean(fieldErrors.phone)}
           />
           <FieldError message={fieldErrors.phone ? t(fieldErrors.phone) : ''} />

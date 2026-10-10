@@ -10,6 +10,7 @@ import { AuthOtpBlock } from '@/src/components/AuthOtpBlock';
 import { AuthScreen } from '@/src/components/AuthScreen';
 import { AuthStepDots } from '@/src/components/AuthStepDots';
 import { AuthSuccessPanel } from '@/src/components/AuthSuccessPanel';
+import { EthiopianPhoneField } from '@/src/components/EthiopianPhoneField';
 import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton } from '@/src/components/Form';
 import { PasswordRule } from '@/src/components/PasswordRule';
 import { useOtpResendCooldown } from '@/src/hooks/useOtpResendCooldown';
@@ -354,16 +355,7 @@ export default function RegisterGymScreen() {
             {step === 'phone' ? (
               <>
                 <Label>{t('signup.ownerPhone')}</Label>
-                <Field
-                  value={phone}
-                  onChangeText={setPhone}
-                  keyboardType="phone-pad"
-                  autoCapitalize="none"
-                  latin
-                  textContentType="telephoneNumber"
-                  autoComplete="tel"
-                  placeholder={t('signup.phonePlaceholder')}
-                />
+                <EthiopianPhoneField value={phone} onChangeText={setPhone} />
                 <Text style={[styles.hint, { color: AUTH.textDim }]}>{t('signup.phoneHint')}</Text>
                 <PrimaryButton label={t('signup.sendOtp')} onPress={requestOtp} loading={loading} />
               </>

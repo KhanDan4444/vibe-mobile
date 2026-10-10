@@ -31,6 +31,7 @@ import { PhotoPickerField } from '@/src/components/PhotoPickerField';
 import { PlanPickerField } from '@/src/components/PlanPickerField';
 import { PaymentMethodPicker } from '@/src/components/PaymentMethodPicker';
 import { OptionPickerField } from '@/src/components/OptionPickerField';
+import { EthiopianPhoneField } from '@/src/components/EthiopianPhoneField';
 import { ErrorBanner, Field, FieldError, FormScroll, Label, MoneyAmountField, PrimaryButton, Screen, SecondaryButton } from '@/src/components/Form';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { SkeletonBone } from '@/src/components/Skeleton';
@@ -903,15 +904,10 @@ export default function EnrollScreen() {
                 <FieldError message={nameError} />
 
                 <Label>{t('forms.phone')}</Label>
-                <Field
+                <EthiopianPhoneField
                   ref={phoneRef}
                   value={phone}
                   onChangeText={handlePhoneChange}
-                  placeholder={t('forms.phonePlaceholder')}
-                  keyboardType="phone-pad"
-                  autoCapitalize="none"
-                  textContentType="telephoneNumber"
-                  autoComplete="tel"
                   returnKeyType="done"
                   blurOnSubmit
                   error={Boolean(phoneError)}

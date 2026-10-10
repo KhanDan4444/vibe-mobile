@@ -11,6 +11,7 @@ import { AuthStepDots } from '@/src/components/AuthStepDots';
 import { AuthSuccessPanel } from '@/src/components/AuthSuccessPanel';
 import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton } from '@/src/components/Form';
 import { PasswordRule } from '@/src/components/PasswordRule';
+import { SupportContactLine } from '@/src/components/SupportContactLine';
 import { useOtpResendCooldown } from '@/src/hooks/useOtpResendCooldown';
 import { AUTH, authSubtitle, authTitle } from '@/src/theme/authChrome';
 import { isValidEthiopianPhone, normalizeEthiopianPhone } from '@/src/utils/phone';
@@ -272,6 +273,7 @@ export default function ForgotPasswordScreen() {
               <View style={styles.supportCard}>
                 <Text style={[styles.supportTitle, { color: AUTH.text }]}>{t('forgot.supportTitle')}</Text>
                 <Text style={[styles.supportBody, { color: AUTH.textMuted }]}>{t('forgot.supportBody')}</Text>
+                <SupportContactLine variant="auth" />
                 <Text style={[styles.supportBody, { color: AUTH.textMuted }]}>{t('forgot.supportAfterReset')}</Text>
                 <Text style={[styles.supportAdmin, { color: AUTH.textDim }]}>{t('forgot.adminHint')}</Text>
                 <Pressable style={styles.secondary} onPress={() => setShowSupportOption(false)}>

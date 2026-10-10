@@ -15,6 +15,7 @@ import { AuthFormEnter } from '@/src/components/AuthFormEnter';
 import { AuthOtpBlock } from '@/src/components/AuthOtpBlock';
 import { AuthScreen } from '@/src/components/AuthScreen';
 import { AuthSuccessPanel } from '@/src/components/AuthSuccessPanel';
+import { EthiopianPhoneField } from '@/src/components/EthiopianPhoneField';
 import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton } from '@/src/components/Form';
 import {
   fetchStationSession,
@@ -324,19 +325,14 @@ export default function StationCheckInScreen() {
             {step === STEPS.PHONE ? (
               <View style={styles.stateCard}>
                 <Label>{t('publicStationCheckIn.phoneLabel')}</Label>
-                <Field
+                <EthiopianPhoneField
                   value={phone}
                   onChangeText={(value) => {
                     setPhone(value);
                     setFieldErrors({});
                     setError('');
                   }}
-                  keyboardType="phone-pad"
-                  textContentType="telephoneNumber"
-                  autoComplete="tel"
-                  placeholder={t('publicStationCheckIn.phonePlaceholder')}
                   error={Boolean(fieldErrors.phone)}
-                  latin
                 />
                 <FieldError message={fieldErrors.phone ? t(fieldErrors.phone) : undefined} />
                 {genericNotice ? (

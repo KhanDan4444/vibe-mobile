@@ -246,10 +246,10 @@
     "stepProgress": "Gym signup, step {{current}} of {{total}}",
     "sectionGym": "Gym details",
     "ownerPhone": "Owner phone *",
-    "phonePlaceholder": "0912345678",
+    "phonePlaceholder": "",
     "phoneHint": "We will send a verification code to this number.",
     "phoneRequired": "Enter your phone number.",
-    "phoneInvalid": "Enter a valid Ethiopian mobile number.",
+    "phoneInvalid": "Enter a valid Ethiopian mobile number starting with 9 or 7 (+251 9… or +251 7…).",
     "sendOtp": "Send verification code",
     "otpSent": "Verification code sent to your phone.",
     "otpFailed": "Could not send verification code.",
@@ -407,7 +407,15 @@
     "planBadgeMonths": "{{count}}-Month Plan",
     "planBadgeNamed": "{{name}} Plan",
     "planBadgeDaysLeft": "{{count}} days left",
-    "planBadgeEndsToday": "Ends today"
+    "planBadgeEndsToday": "Ends today",
+    "telegramSection": "License alerts (Telegram)",
+    "telegramHint": "Link Telegram for platform license and trial reminders. SMS is only for login codes.",
+    "telegramLinked": "Telegram linked",
+    "telegramUnlink": "Unlink Telegram",
+    "telegramGetLink": "Get Telegram link",
+    "telegramLinkFailed": "Could not create Telegram link.",
+    "telegramUnlinkFailed": "Could not unlink Telegram.",
+    "telegramNotConfigured": "Telegram is not configured yet."
   },
   "roles": {
     "frontDesk": "Front Desk"
@@ -890,7 +898,7 @@
     "pickPlan": "Select plan",
     "termStartDate": "Term start date",
     "memberName": "Member name",
-    "phonePlaceholder": "09xxxxxxxx",
+    "phonePlaceholder": "",
     "datePlaceholder": "Pick a date",
     "enrollWithoutPayment": "Enroll without payment",
     "loadingPlans": "Loading plans…",
@@ -1001,7 +1009,7 @@
     "paymentDateFuture": "Payment date cannot be in the future.",
     "changePlanDuplicate": "A plan-change payment is already recorded on this date. Edit it in Revenue or pick another date.",
     "phoneRequired": "Phone number is required for SMS reminders.",
-    "phoneInvalid": "Enter a valid Ethiopian mobile number (09… or +251…).",
+    "phoneInvalid": "Enter a valid Ethiopian mobile number starting with 9 or 7 (+251 9… or +251 7…).",
     "phoneAlreadyUsed": "This phone number is already in use.",
     "otpInvalid": "Enter the 6-digit code.",
     "planNotSelected": "Plan is not selected.",
@@ -1064,7 +1072,7 @@
     "shareReport": "Share report",
     "shareReportSub": "Export members ({{memberFilter}}) and revenue ({{period}})",
     "shareTitle": "Report",
-    "vibeReport": "Vibe report",
+    "vibeReport": "Niku report",
     "membersReport": "Members report",
     "revenueReport": "Revenue report",
     "fullGymReport": "Full gym report"
@@ -1260,7 +1268,7 @@
     "selfCheckinDisabled": "Self check-in is turned off at this gym. Ask staff at the desk.",
     "phoneBody": "Enter the phone number on your membership. We'll send a code to your linked Telegram.",
     "phoneLabel": "Phone number",
-    "phonePlaceholder": "09xxxxxxxx",
+    "phonePlaceholder": "",
     "sendCode": "Send code to Telegram",
     "sendingCode": "Sending…",
     "otpDestination": "your Telegram",
@@ -1286,5 +1294,11 @@
     "title": "Oops!",
     "body": "This screen doesn't exist.",
     "goHome": "Go to home screen!"
+  },
+  "support": {
+    "sectionTitle": "Support",
+    "needHelp": "Need help?",
+    "callPhone": "Call {{phone}}",
+    "telegram": "Telegram @{{handle}}"
   }
 }
