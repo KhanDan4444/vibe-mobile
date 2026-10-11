@@ -895,7 +895,7 @@ function createStyles(c: ThemeColors) {
     status: { fontSize: 12, fontWeight: '700' as const, textTransform: 'capitalize' as const },
     plan: { marginTop: 4, fontSize: 12, color: c.dim },
     planStacked: { marginTop: 0 },
-    unpaid: { marginTop: 4, fontSize: 11, fontWeight: '700' as const, color: c.statusUnpaid },
+    unpaid: { marginTop: 4, marginRight: 1, fontSize: 13, fontWeight: '700' as const, color: c.statusUnpaid },
     removed: { marginTop: 2, fontSize: 12, color: c.dim },
     empty: { textAlign: 'center' as const, color: c.dim, marginTop: 40, fontSize: 15, alignSelf: 'center' as const, maxWidth: 360 },
     fab: {

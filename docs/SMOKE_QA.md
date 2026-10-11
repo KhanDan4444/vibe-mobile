@@ -1,6 +1,6 @@
 # Smoke QA — tablet + date pickers + session
 
-Install the latest **preview** APK (`eas build --profile preview --platform android`) on a phone and a tablet. Confirm web at https://vibe-frontend-coral.vercel.app.
+Install the latest **preview** APK (`eas build --profile preview --platform android`) on a phone and a tablet. Confirm web at https://niku-saas.vercel.app.
 
 ## Build / deploy (Phase 0)
 

@@ -76,7 +76,9 @@ function AlertMemberRow({
   })();
 
   const planLabel = formatPlanDisplayName(member.plan_name) || t('members.noPlan');
-  const metaLine = [member.phone, planLabel].filter(Boolean).join(' · ');
+  const branchLabel = branchDisplayName(member.branch_name);
+  const lead = branchLabel || member.phone || '';
+  const metaLine = [lead, planLabel].filter(Boolean).join(' · ');
 
   return (
     <Pressable style={[styles.alertRow, { borderColor: colors.border }]} onPress={onOpen}>
