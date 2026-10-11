@@ -1,12 +1,12 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText as Text } from '@/src/components/AppText';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { completeGymSignup, requestGymSignupOtp, verifyGymSignupOtp } from '@/src/api/auth';
 import { AuthFormEnter } from '@/src/components/AuthFormEnter';
 import { AuthOtpBlock } from '@/src/components/AuthOtpBlock';
+import { AuthPrivacyConsent } from '@/src/components/AuthPrivacyNotice';
 import { AuthScreen } from '@/src/components/AuthScreen';
 import { AuthStepDots } from '@/src/components/AuthStepDots';
 import { AuthSuccessPanel } from '@/src/components/AuthSuccessPanel';
@@ -54,9 +54,8 @@ function formatSignupLocation(city: string, address: string) {
 
 export default function RegisterGymScreen() {
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets();
   const { pagePadding, formMaxWidth } = useResponsiveLayout();
-  const stickyPadBottom = Math.max(insets.bottom, 10) + 8;
+  const stickyPadBottom = 12;
 
   const [step, setStep] = useState<SignupStep>('phone');
   const [sessionId, setSessionId] = useState('');
@@ -358,6 +357,7 @@ export default function RegisterGymScreen() {
                 <EthiopianPhoneField value={phone} onChangeText={setPhone} />
                 <Text style={[styles.hint, { color: AUTH.textDim }]}>{t('signup.phoneHint')}</Text>
                 <PrimaryButton label={t('signup.sendOtp')} onPress={requestOtp} loading={loading} />
+                <AuthPrivacyConsent />
               </>
             ) : null}
 
@@ -428,6 +428,7 @@ export default function RegisterGymScreen() {
                 {fieldErrors.address ? <FieldError message={resolveError(fieldErrors.address)} /> : null}
 
                 <PrimaryButton label={t('common.continue')} onPress={continueGym} loading={loading} />
+                <AuthPrivacyConsent />
               </>
             ) : null}
 
@@ -552,6 +553,7 @@ export default function RegisterGymScreen() {
                 loading={loading}
                 style={styles.stickyBtn}
               />
+              <AuthPrivacyConsent />
               <Pressable
                 style={styles.secondary}
                 onPress={() => {

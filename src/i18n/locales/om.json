@@ -29,7 +29,9 @@
     "connectionFailed": "Sarvarii wajjin walqunnamuu hin dandeenye. Intarneetii keessan sakatta'aa fi irra deebi'ii yaali.",
     "rememberMe": "Na yaadadhu",
     "newGymOwner": "Abbaa jimii haaraa?",
-    "registerGym": "Jimii keessan galmeessaa"
+    "registerGym": "Jimii keessan galmeessaa",
+    "privacyPolicy": "Imaammata Dhuunfaa",
+    "privacyAgreePrefix": "Itti fufuun keessan waliigaltee"
   },
   "dashboard": {
     "loading": "Safartuu fe'amaa jira…",

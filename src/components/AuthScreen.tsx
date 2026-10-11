@@ -5,6 +5,7 @@ import { AuthThemeProvider } from '@/src/context/AuthThemeContext';
 import { colorsForTheme } from '@/src/theme/tokens';
 import { AuthHeroBackground } from './AuthHeroBackground';
 import { AuthLanguageButton, AUTH_LANG_BTN_SIZE } from './AuthLanguageButton';
+import { AuthPrivacyFooter } from './AuthPrivacyNotice';
 
 type Props = {
   children: React.ReactNode;
@@ -20,6 +21,8 @@ type Props = {
   headerCenter?: ReactNode;
   /** When true, body omits bottom inset — use for screens with a sticky footer. */
   flushBottom?: boolean;
+  /** Muted Privacy Policy footer. Off for flows that are not account entry. */
+  showPrivacyFooter?: boolean;
 };
 
 /**
@@ -33,9 +36,12 @@ export function AuthScreen({
   showLanguage = true,
   headerCenter,
   flushBottom = false,
+  showPrivacyFooter = true,
 }: Props) {
   const insets = useSafeAreaInsets();
-  const pad = { paddingBottom: flushBottom ? 0 : Math.max(insets.bottom, 8) + 20 };
+  const pad = {
+    paddingBottom: flushBottom || showPrivacyFooter ? 0 : Math.max(insets.bottom, 8) + 20,
+  };
   const showTopBar = showLanguage || Boolean(headerCenter);
 
   const topBar = showTopBar ? (
@@ -60,15 +66,19 @@ export function AuthScreen({
     </View>
   ) : null;
 
+  const privacyFooter = showPrivacyFooter ? <AuthPrivacyFooter insetBottom={insets.bottom} /> : null;
+
   const body = hero ? (
     <AuthHeroBackground onReady={onHeroReady}>
       {topBar}
       <View style={[styles.flex, pad]}>{children}</View>
+      {privacyFooter}
     </AuthHeroBackground>
   ) : (
-    <View style={[styles.flex, { backgroundColor: colorsForTheme('dark').bg }, pad]}>
+    <View style={[styles.flex, { backgroundColor: colorsForTheme('dark').bg }]}>
       {topBar}
-      <View style={styles.flex}>{children}</View>
+      <View style={[styles.flex, pad]}>{children}</View>
+      {privacyFooter}
     </View>
   );
 

@@ -29,7 +29,9 @@
     "connectionFailed": "ከሰርቨር ጋር መገናኘት አልተሳካም። ኢንተርኔትዎን ይፈትሹና እንደገና ይሞክሩ።",
     "rememberMe": "አስታውሰኝ",
     "newGymOwner": "አዲስ የጂም ባለቤት?",
-    "registerGym": "ጂምዎን ይመዝግቡ"
+    "registerGym": "ጂምዎን ይመዝግቡ",
+    "privacyPolicy": "የግላዊነት ፖሊሲ",
+    "privacyAgreePrefix": "በመቀጠል የእኛን"
   },
   "dashboard": {
     "loading": "መለኪያዎች በመጫን ላይ…",

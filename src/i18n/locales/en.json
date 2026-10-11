@@ -29,7 +29,9 @@
     "connectionFailed": "Could not connect to the server. Check your internet and try again.",
     "rememberMe": "Remember me",
     "newGymOwner": "New Gym Owner?",
-    "registerGym": "Register your Gym"
+    "registerGym": "Register your Gym",
+    "privacyPolicy": "Privacy Policy",
+    "privacyAgreePrefix": "By continuing you agree to our"
   },
   "dashboard": {
     "loading": "Loading metrics…",
