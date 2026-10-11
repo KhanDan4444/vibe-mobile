@@ -603,7 +603,7 @@
     "telegramLinkOpenHere": "Open on this device",
     "telegramLinkRefresh": "Generate new link",
     "telegramLinkExpires": "Link expires in {{minutes}} min",
-    "telegramLinkCopied": "Link copied.",
+    "telegramLinkCopied": "Link Copied",
     "telegramLinkCopyFailed": "Could not copy link.",
     "telegramLinkFailed": "Could not create Telegram link."
   },

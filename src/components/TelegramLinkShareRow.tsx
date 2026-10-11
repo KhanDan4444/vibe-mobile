@@ -1,5 +1,6 @@
-import { useCallback } from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -17,7 +18,10 @@ type Props = {
 export function TelegramLinkShareRow({ link, shareLabel, onShare }: Props) {
   const { t } = useTranslation();
   const { showFlash } = useFlash();
+  const [copied, setCopied] = useState(false);
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { colors: c } = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = useThemedStyles((colors) => ({
     row: {
       marginTop: 10,
@@ -47,6 +51,29 @@ export function TelegramLinkShareRow({ link, shareLabel, onShare }: Props) {
       fontWeight: '500' as const,
       color: colors.text,
     },
+    copiedMark: {
+      width: 22,
+      height: 22,
+      borderRadius: 11,
+      borderWidth: 3,
+      borderColor: colors.statusActive,
+    },
+    copiedLabel: {
+      fontSize: 15,
+      lineHeight: 20,
+      fontWeight: '700' as const,
+      color: colors.statusActive,
+    },
+    copiedDock: {
+      flex: 1,
+      justifyContent: 'flex-end' as const,
+      alignItems: 'center' as const,
+    },
+    copiedChip: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 8,
+    },
     shareBtn: {
       width: 48,
       height: 48,
@@ -58,10 +85,16 @@ export function TelegramLinkShareRow({ link, shareLabel, onShare }: Props) {
     },
   }));
 
+  useEffect(() => () => {
+    if (copiedTimer.current) clearTimeout(copiedTimer.current);
+  }, []);
+
   const handleCopy = useCallback(async () => {
     try {
       await Clipboard.setStringAsync(link);
-      showFlash({ title: t('checkIn.telegramLinkCopied'), variant: 'success' });
+      setCopied(true);
+      if (copiedTimer.current) clearTimeout(copiedTimer.current);
+      copiedTimer.current = setTimeout(() => setCopied(false), 2000);
     } catch {
       showFlash({ title: t('checkIn.telegramLinkCopyFailed'), variant: 'danger' });
     }
@@ -93,6 +126,14 @@ export function TelegramLinkShareRow({ link, shareLabel, onShare }: Props) {
           color={c.link}
         />
       </Pressable>
+      <Modal visible={copied} transparent animationType="fade" statusBarTranslucent onRequestClose={() => {}}>
+        <View pointerEvents="none" style={[styles.copiedDock, { paddingBottom: Math.max(insets.bottom, 12) + 20 }]}>
+          <View style={styles.copiedChip} accessibilityLiveRegion="polite">
+            <View style={styles.copiedMark} />
+            <Text style={styles.copiedLabel}>{t('checkIn.telegramLinkCopied')}</Text>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

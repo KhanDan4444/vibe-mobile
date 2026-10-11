@@ -336,17 +336,6 @@ export default function ProfileScreen() {
               <Label>{t('forms.phone')}</Label>
               <EthiopianPhoneField value={phone} onChangeText={setPhone} />
 
-              {telegramSection}
-
-              <SupportContactLine withSection />
-              <Pressable
-                onPress={() => void Linking.openURL(PRIVACY_POLICY_URL)}
-                accessibilityRole="link"
-                style={styles.privacyLinkWrap}
-              >
-                <Text style={[styles.privacyLink, { color: c.link }]}>{t('profile.privacyPolicy')}</Text>
-              </Pressable>
-
               <Text style={[styles.section, { color: c.muted }]}>{t('profile.loginSection')}</Text>
               <Label>{t('forms.email')}</Label>
               <Field
@@ -382,6 +371,17 @@ export default function ProfileScreen() {
                 loading={mutation.isPending}
                 disabled={!canSubmit || mutation.isPending}
               />
+
+              {telegramSection}
+
+              <SupportContactLine withSection />
+              <Pressable
+                onPress={() => void Linking.openURL(PRIVACY_POLICY_URL)}
+                accessibilityRole="link"
+                style={styles.privacyLinkWrap}
+              >
+                <Text style={[styles.privacyLink, { color: c.link }]}>{t('profile.privacyPolicy')}</Text>
+              </Pressable>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>

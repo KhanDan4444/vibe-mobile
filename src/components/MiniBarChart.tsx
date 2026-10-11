@@ -52,23 +52,50 @@ function chartPointLabel(date: string, otherLabel: string) {
   return shortDate(date);
 }
 
+/** Monotone cubic through every point — same curve family as the web chart (`type="monotone"`). */
 function buildLinePath(points: ChartPoint[]) {
   if (!points.length) return '';
   if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
   if (points.length === 2) return `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
 
-  const commands = [`M ${points[0].x} ${points[0].y}`];
-  for (let i = 1; i < points.length - 1; i += 1) {
-    const current = points[i];
-    const next = points[i + 1];
-    const midX = (current.x + next.x) / 2;
-    const midY = (current.y + next.y) / 2;
-    commands.push(`Q ${current.x} ${current.y} ${midX} ${midY}`);
+  const n = points.length;
+  const slope = new Array<number>(n - 1);
+  for (let i = 0; i < n - 1; i += 1) {
+    const dx = points[i + 1].x - points[i].x;
+    slope[i] = dx === 0 ? 0 : (points[i + 1].y - points[i].y) / dx;
   }
 
-  const last = points[points.length - 1];
-  const previous = points[points.length - 2];
-  commands.push(`Q ${previous.x} ${previous.y} ${last.x} ${last.y}`);
+  const tangent = new Array<number>(n);
+  tangent[0] = slope[0];
+  tangent[n - 1] = slope[n - 2];
+  for (let i = 1; i < n - 1; i += 1) {
+    tangent[i] = slope[i - 1] * slope[i] <= 0 ? 0 : (slope[i - 1] + slope[i]) / 2;
+  }
+  for (let i = 0; i < n - 1; i += 1) {
+    if (slope[i] === 0) {
+      tangent[i] = 0;
+      tangent[i + 1] = 0;
+      continue;
+    }
+    const a = tangent[i] / slope[i];
+    const b = tangent[i + 1] / slope[i];
+    const size = a * a + b * b;
+    if (size > 9) {
+      const scale = 3 / Math.sqrt(size);
+      tangent[i] = scale * a * slope[i];
+      tangent[i + 1] = scale * b * slope[i];
+    }
+  }
+
+  const commands = [`M ${points[0].x} ${points[0].y}`];
+  for (let i = 0; i < n - 1; i += 1) {
+    const dx = (points[i + 1].x - points[i].x) / 3;
+    const c1y = points[i].y + tangent[i] * dx;
+    const c2y = points[i + 1].y - tangent[i + 1] * dx;
+    commands.push(
+      `C ${points[i].x + dx} ${c1y} ${points[i + 1].x - dx} ${c2y} ${points[i + 1].x} ${points[i + 1].y}`
+    );
+  }
   return commands.join(' ');
 }
 
@@ -256,6 +283,7 @@ function LineChartView({
             strokeWidth="1.75"
             strokeLinecap="round"
             strokeLinejoin="round"
+            strokeDasharray="0"
           />
           {selectedPoint ? (
             <>
