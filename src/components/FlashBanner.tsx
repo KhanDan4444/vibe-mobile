@@ -142,11 +142,29 @@ function FlashToastItem({
     [clearTimers, finishDismiss, opacity, progress, reduceMotion, translateY]
   );
 
+  const dismissRef = useRef(dismiss);
+  useEffect(() => {
+    dismissRef.current = dismiss;
+  }, [dismiss]);
+
+  const autoDismiss = useCallback(() => {
+    dismissRef.current(false);
+  }, []);
+
+  const runProgress = useCallback(
+    (ms: number) => {
+      progress.value = withTiming(0, { duration: Math.max(ms, 0), easing: Easing.linear }, (finished) => {
+        if (finished) runOnJS(autoDismiss)();
+      });
+    },
+    [autoDismiss, progress]
+  );
+
   const startProgress = useCallback(() => {
     cancelAnimation(progress);
     progress.value = 1;
-    progress.value = withTiming(0, { duration: durationMs, easing: Easing.linear });
-  }, [durationMs, progress]);
+    runProgress(durationMs);
+  }, [durationMs, progress, runProgress]);
 
   const pauseProgress = useCallback(() => {
     cancelAnimation(progress);
@@ -155,10 +173,12 @@ function FlashToastItem({
 
   const resumeProgress = useCallback(() => {
     const remaining = Math.max(progress.value * durationMs, 0);
-    if (remaining <= 0) return;
-    progress.value = withTiming(0, { duration: remaining, easing: Easing.linear });
-    dismissTimerRef.current = setTimeout(() => dismiss(false), remaining);
-  }, [dismiss, durationMs, progress]);
+    if (remaining <= 16) {
+      autoDismiss();
+      return;
+    }
+    runProgress(remaining);
+  }, [autoDismiss, durationMs, progress, runProgress]);
 
   useEffect(() => {
     dismissingRef.current = false;
@@ -166,26 +186,22 @@ function FlashToastItem({
     if (reduceMotion) {
       translateY.value = 0;
       opacity.value = 1;
+      progress.value = 1;
+      dismissTimerRef.current = setTimeout(() => dismissRef.current(false), durationMs);
     } else {
       // Near-instant with ring celebrate — don’t trail the check-in tick.
       translateY.value = 6;
       opacity.value = 0;
       translateY.value = withTiming(0, { duration: 90, easing: Easing.out(Easing.cubic) });
       opacity.value = withTiming(1, { duration: 80 });
+      startProgress();
     }
-    startProgress();
-    dismissTimerRef.current = setTimeout(() => dismiss(false), durationMs);
 
     return () => {
       clearTimers();
       cancelAnimation(progress);
     };
-  }, [toast.id, clearTimers, dismiss, durationMs, opacity, progress, reduceMotion, startProgress, translateX, translateY]);
-
-  const dismissRef = useRef(dismiss);
-  useEffect(() => {
-    dismissRef.current = dismiss;
-  }, [dismiss]);
+  }, [toast.id, clearTimers, durationMs, opacity, progress, reduceMotion, startProgress, translateX, translateY]);
 
   const hasAction = Boolean(toast.action?.label);
   const panResponder = useMemo(
@@ -222,6 +238,7 @@ function FlashToastItem({
   }));
 
   const progressStyle = useAnimatedStyle(() => ({
+    transformOrigin: 'left',
     transform: [{ scaleX: Math.max(progress.value, 0) }],
   }));
 
@@ -432,6 +449,5 @@ const styles = StyleSheet.create({
   progressFill: {
     height: '100%',
     width: '100%',
-    transformOrigin: 'left',
   },
 });

@@ -55,7 +55,7 @@ export function comparePaymentMethodOrder(a: string, b: string) {
   return aRank - bRank;
 }
 
-/** Quiet chip — lighter than the transaction card, not a dark inset. */
+/** Quiet chip — same fill as the transaction card, with the card edge as the outline. */
 export function paymentMethodBadgeStyle(_method: string, c: ThemeColors): MethodTone {
-  return { bg: c.cardEdge, text: c.muted, border: c.cardEdge };
+  return { bg: c.card, text: c.muted, border: c.cardEdge };
 }

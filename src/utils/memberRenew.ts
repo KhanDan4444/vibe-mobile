@@ -30,6 +30,9 @@ export function canCollectPayment(member: Pick<MemberRow, 'is_unpaid'>): boolean
   return Boolean(member.is_unpaid);
 }
 
-export function canChangePlan(member: Pick<MemberRow, 'status'>): boolean {
-  return (member.status || '').toLowerCase() === 'active';
+/** Active, or unpaid and still in the due-soon window (term has not ended). */
+export function canChangePlan(member: Pick<MemberRow, 'status' | 'is_unpaid'>): boolean {
+  const status = (member.status || '').toLowerCase();
+  if (status === 'active') return true;
+  return Boolean(member.is_unpaid) && status === 'due soon';
 }

@@ -58,7 +58,7 @@ import {
 import { formatEtb } from '@/src/utils/formatMoney';
 import { formatPlanDisplayName } from '@/src/utils/formatPlanDisplayName';
 import { formatApiError } from '@/src/utils/paymentValidation';
-import { resolveMemberMutationError, userFacingApiMessage } from '@/src/utils/apiErrorMessage';
+import { isNetworkApiError, resolveMemberMutationError, userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { flashHaptic, selectionHaptic } from '@/src/utils/flashHaptic';
 import { validateRequiredEthiopianPhone } from '@/src/utils/phone';
 import { hasGymPortalAccess, isGymOwner } from '@/src/utils/roles';
@@ -474,6 +474,8 @@ export default function EnrollScreen() {
   const ensurePhoneAvailable = useCallback(
     async (value = phone) => {
       if (!token) return false;
+      // Duplicate-phone check needs the server. Offline enroll still queues and syncs later.
+      if (!isOnline) return true;
       setPhoneChecking(true);
       try {
         const data = await checkMemberPhoneAvailable(token, value.trim());
@@ -484,13 +486,14 @@ export default function EnrollScreen() {
         setPhoneError(t('validation.phoneAlreadyUsed'));
         return false;
       } catch (err) {
+        if (isNetworkApiError(err)) return true;
         setError(userFacingApiMessage(err, t('auth.connectionFailed'), t('auth.connectionFailed')));
         return false;
       } finally {
         setPhoneChecking(false);
       }
     },
-    [token, phone, t]
+    [token, phone, t, isOnline]
   );
 
   const buildPayload = (): EnrollPayload => {
