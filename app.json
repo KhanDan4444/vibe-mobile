@@ -69,7 +69,15 @@
       ],
       "expo-localization",
       "@react-native-community/datetimepicker",
-      "@sentry/react-native"
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://de.sentry.io/",
+          "organization": "niku-gym-saas",
+          "project": "mobile-react-native",
+          "note": "Optional: set EAS secret SENTRY_AUTH_TOKEN to upload source maps. Until then SENTRY_DISABLE_AUTO_UPLOAD=true in eas.json."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

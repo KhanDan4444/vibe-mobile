@@ -390,10 +390,15 @@ export default function RevenueScreen() {
     methodStats: {
       flexDirection: 'row' as const,
       alignItems: 'flex-start' as const,
-      marginTop: 8,
-      paddingTop: 8,
+      // Solid strip so hero wash can’t tint Cash differently from Transfer / Telebirr.
+      marginTop: 10,
+      marginHorizontal: -16,
+      paddingHorizontal: 16,
+      paddingTop: 10,
+      paddingBottom: 2,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: colors.border,
+      backgroundColor: colors.card,
     },
     methodStatsLandscape: {
       marginTop: 6,

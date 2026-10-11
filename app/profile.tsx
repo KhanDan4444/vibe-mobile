@@ -3,7 +3,9 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
+  Linking,
   Platform,
+  Pressable,
   ScrollView,
   Share,
   StyleSheet,
@@ -38,6 +40,7 @@ import { runInBackground } from '@/src/utils/runInBackground';
 import { userFacingApiMessage } from '@/src/utils/apiErrorMessage';
 import { isGymOwner } from '@/src/utils/roles';
 import type { UpdateProfilePayload } from '@/src/types/api';
+import { PRIVACY_POLICY_URL } from '@/src/config/webApp';
 
 type ProfileDone = {
   gymName: string;
@@ -284,6 +287,13 @@ export default function ProfileScreen() {
               <Text style={[styles.readOnly, { color: c.muted }]}>{t('common.readOnly')}</Text>
               {telegramSection}
               <SupportContactLine withSection />
+              <Pressable
+                onPress={() => void Linking.openURL(PRIVACY_POLICY_URL)}
+                accessibilityRole="link"
+                style={styles.privacyLinkWrap}
+              >
+                <Text style={[styles.privacyLink, { color: c.link }]}>{t('profile.privacyPolicy')}</Text>
+              </Pressable>
             </View>
           </ScrollView>
         </TabScreenFrame>
@@ -329,6 +339,13 @@ export default function ProfileScreen() {
               {telegramSection}
 
               <SupportContactLine withSection />
+              <Pressable
+                onPress={() => void Linking.openURL(PRIVACY_POLICY_URL)}
+                accessibilityRole="link"
+                style={styles.privacyLinkWrap}
+              >
+                <Text style={[styles.privacyLink, { color: c.link }]}>{t('profile.privacyPolicy')}</Text>
+              </Pressable>
 
               <Text style={[styles.section, { color: c.muted }]}>{t('profile.loginSection')}</Text>
               <Label>{t('forms.email')}</Label>
@@ -386,5 +403,7 @@ const styles = StyleSheet.create({
   sectionFirst: { marginTop: 0 },
   hint: { fontSize: 13, lineHeight: 18, marginBottom: 4 },
   telegramBlock: { marginTop: 20 },
+  privacyLinkWrap: { marginTop: 14, alignSelf: 'flex-start' },
+  privacyLink: { fontSize: 14, fontWeight: '600' },
   readOnly: { paddingBottom: 12, fontSize: 15, lineHeight: 22 },
 });

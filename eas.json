@@ -18,14 +18,16 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://vibe-api-production-5ab1.up.railway.app",
-        "EXPO_PUBLIC_SENTRY_ENVIRONMENT": "preview"
+        "EXPO_PUBLIC_SENTRY_ENVIRONMENT": "preview",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_API_URL": "https://vibe-api-production-5ab1.up.railway.app",
-        "EXPO_PUBLIC_SENTRY_ENVIRONMENT": "production"
+        "EXPO_PUBLIC_SENTRY_ENVIRONMENT": "production",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     }
   },

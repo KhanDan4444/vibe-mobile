@@ -415,7 +415,8 @@
     "telegramGetLink": "Get Telegram link",
     "telegramLinkFailed": "Could not create Telegram link.",
     "telegramUnlinkFailed": "Could not unlink Telegram.",
-    "telegramNotConfigured": "Telegram is not configured yet."
+    "telegramNotConfigured": "Telegram is not configured yet.",
+    "privacyPolicy": "Privacy Policy"
   },
   "roles": {
     "frontDesk": "Front Desk"

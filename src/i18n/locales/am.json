@@ -415,7 +415,8 @@
     "telegramGetLink": "የTelegram አገናኝ ያግኙ",
     "telegramLinkFailed": "የTelegram አገናኝ መፍጠር አልተቻለም።",
     "telegramUnlinkFailed": "Telegramን ማ቉ረጥ አልተቻለም።",
-    "telegramNotConfigured": "Telegram አልተዋቀረም።"
+    "telegramNotConfigured": "Telegram አልተዋቀረም።",
+    "privacyPolicy": "የግላዊነት ፖሊሲ"
   },
   "roles": {
     "frontDesk": "የፊት ዴስክ"

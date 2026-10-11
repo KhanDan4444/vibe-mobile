@@ -415,7 +415,8 @@
     "telegramGetLink": "Linkii Telegram argadhu",
     "telegramLinkFailed": "Linkii Telegram uumuu hin dandeenye.",
     "telegramUnlinkFailed": "Telegram addaan baasuu hin dandeenye.",
-    "telegramNotConfigured": "Telegram hin qindaa'amne."
+    "telegramNotConfigured": "Telegram hin qindaa'amne.",
+    "privacyPolicy": "Imaammata Dhuunfaa"
   },
   "roles": {
     "frontDesk": "Deskii Fuulduraa"
