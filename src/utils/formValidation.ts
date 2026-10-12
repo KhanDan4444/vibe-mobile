@@ -36,6 +36,7 @@ export function validateStaffFields(fields: {
   name: string;
   username: string;
   email?: string;
+  phone?: string;
   password?: string;
   confirmPassword?: string;
   branchId: number | null;
@@ -61,6 +62,10 @@ export function validateStaffFields(fields: {
   if (email && (!EMAIL_RE.test(email) || email.length > 255)) {
     errors.email = 'validation.emailInvalid';
   }
+
+  const phone = (fields.phone ?? '').trim();
+  if (!phone) errors.phone = 'validation.phoneRequired';
+  else if (!isValidEthiopianPhone(phone)) errors.phone = 'validation.phoneInvalid';
 
   const password = fields.password ?? '';
   const confirmPassword = fields.confirmPassword ?? '';

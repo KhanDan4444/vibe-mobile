@@ -1149,6 +1149,9 @@
     "typePassLink": "Liinkii paasii miseensaa",
     "previewPassLink": "Liinkii QR galchuu erga",
     "filterPassLink": "Liinkii paasii miseensaa",
+    "typeMissedYou": "Si dhabne",
+    "previewMissedYou": "Miseensa guyyaa 7 hin dhufneef akka isaan dhabne hima",
+    "filterMissedYou": "Si dhabne",
     "sentBadge": "Ergameera"
   },
   "team": {

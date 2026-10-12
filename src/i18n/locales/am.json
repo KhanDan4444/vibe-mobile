@@ -1149,6 +1149,9 @@
     "typePassLink": "የአባል ፓስ አገናኝ",
     "previewPassLink": "የመግቢያ QR አገናኝ ይልካል",
     "filterPassLink": "የአባል ፓስ አገናኝ",
+    "typeMissedYou": "እናመልጥሃለን",
+    "previewMissedYou": "ለ7 ቀናት ላልመጡ የተገናኙ አባላት እንደናመልጣቸው ይላካል",
+    "filterMissedYou": "እናመልጥሃለን",
     "sentBadge": "ተልኳል"
   },
   "team": {

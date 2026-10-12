@@ -441,7 +441,7 @@ export default function TeamScreen() {
   const displayedStaff = useMemo(() => {
     if (!searchNeedle) return staff;
     return staff.filter((member) =>
-      [member.name, member.email, member.username, member.branch_name]
+      [member.name, member.email, member.phone, member.username, member.branch_name]
         .some((value) => String(value || '').toLowerCase().includes(searchNeedle))
     );
   }, [staff, searchNeedle]);

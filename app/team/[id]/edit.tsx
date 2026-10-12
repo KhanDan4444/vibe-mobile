@@ -9,6 +9,7 @@ import { fetchTeam, resetStaffPassword, updateStaff } from '@/src/api/team';
 import { fetchBranches } from '@/src/api/branches';
 import { BranchPicker } from '@/src/components/BranchPicker';
 import { ConfirmDialog } from '@/src/components/ConfirmDialog';
+import { EthiopianPhoneField } from '@/src/components/EthiopianPhoneField';
 import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { PasswordRule } from '@/src/components/PasswordRule';
 import { PageSkeleton } from '@/src/components/Skeleton';
@@ -31,6 +32,7 @@ export default function EditStaffScreen() {
   const { token, user, subscription } = useAuth();
 
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [branchId, setBranchId] = useState<number | null>(null);
@@ -71,6 +73,7 @@ export default function EditStaffScreen() {
   useEffect(() => {
     if (!staff) return;
     setName(staff.name);
+    setPhone(staff.phone || '');
     setEmail(staff.email || '');
     setUsername(staff.username || '');
     setBranchId(staff.branch_id);
@@ -81,6 +84,7 @@ export default function EditStaffScreen() {
       updateStaff(token!, staffId, {
         name: name.trim(),
         email: email.trim() || null,
+        phone: phone.trim(),
         username: username.trim(),
         branch_id: branchId!,
       }),
@@ -115,6 +119,7 @@ export default function EditStaffScreen() {
       name,
       username,
       email,
+      phone,
       branchId,
       requireBranch,
       isEdit: true,
@@ -189,6 +194,32 @@ export default function EditStaffScreen() {
           />
           <FieldError message={fieldErrors.name ? t(fieldErrors.name) : undefined} />
 
+          <Label>{t('forms.emailOptional')}</Label>
+          <Field
+            value={email}
+            onChangeText={(v) => {
+              setEmail(v);
+              clearField('email');
+            }}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            textContentType="emailAddress"
+            autoComplete="email"
+            error={Boolean(fieldErrors.email)}
+          />
+          <FieldError message={fieldErrors.email ? t(fieldErrors.email) : undefined} />
+
+          <Label required>{t('forms.phone')}</Label>
+          <EthiopianPhoneField
+            value={phone}
+            onChangeText={(v) => {
+              setPhone(v);
+              clearField('phone');
+            }}
+            error={Boolean(fieldErrors.phone)}
+          />
+          <FieldError message={fieldErrors.phone ? t(fieldErrors.phone) : undefined} />
+
           <Label required>{t('forms.username')}</Label>
           <Field
             value={username}
@@ -200,18 +231,6 @@ export default function EditStaffScreen() {
             error={Boolean(fieldErrors.username)}
           />
           <FieldError message={fieldErrors.username ? t(fieldErrors.username) : undefined} />
-
-          <Label>{t('forms.emailOptional')}</Label>
-          <Field
-            value={email}
-            onChangeText={(v) => {
-              setEmail(v);
-              clearField('email');
-            }}
-            autoCapitalize="none"
-            error={Boolean(fieldErrors.email)}
-          />
-          <FieldError message={fieldErrors.email ? t(fieldErrors.email) : undefined} />
 
           <BranchPicker
             branches={branches}

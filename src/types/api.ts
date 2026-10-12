@@ -114,6 +114,7 @@ export interface StaffRow {
   id: number;
   name: string;
   email: string | null;
+  phone?: string | null;
   username: string | null;
   staff_role: string;
   branch_id: number;

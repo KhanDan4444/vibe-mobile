@@ -1158,6 +1158,9 @@
     "typePassLink": "Member pass link",
     "previewPassLink": "Sends a link to show their check-in QR",
     "filterPassLink": "Member pass link",
+    "typeMissedYou": "We missed you",
+    "previewMissedYou": "Tells a linked member we missed them after 7 days away",
+    "filterMissedYou": "We missed you",
     "sentBadge": "Sent"
   },
   "team": {

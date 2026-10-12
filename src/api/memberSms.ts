@@ -11,7 +11,8 @@ export interface MemberSmsParams {
     | 'member_expired'
     | 'member_enrolled'
     | 'member_renewed'
-    | 'member_pass_link';
+    | 'member_pass_link'
+    | 'member_missed_you';
   branch_id?: number | string;
   channel?: 'all' | 'sms' | 'telegram';
 }

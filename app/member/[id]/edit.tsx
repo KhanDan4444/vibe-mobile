@@ -84,6 +84,20 @@ export default function EditMemberScreen() {
   const branches = branchesQuery.data?.branches ?? [];
   const trainers = trainersQuery.data?.trainers ?? [];
   const showBranchPicker = owner && branches.filter((b) => b.is_active !== false).length > 1;
+  const branchTrainers = useMemo(() => {
+    if (!showBranchPicker) return trainers;
+    if (branchId == null) return [];
+    return trainers.filter((tr) => Number(tr.branch_id) === Number(branchId));
+  }, [trainers, showBranchPicker, branchId]);
+
+  useEffect(() => {
+    if (!showBranchPicker || branchId == null || !trainersQuery.isSuccess || trainerId == null) return;
+    const selected = trainers.find((tr) => tr.id === trainerId);
+    if (selected && Number(selected.branch_id) !== Number(branchId)) {
+      setTrainerId(null);
+      setTrainerFee('');
+    }
+  }, [showBranchPicker, branchId, trainersQuery.isSuccess, trainerId, trainers]);
 
   useEffect(() => {
     const member = memberQuery.data;
@@ -268,7 +282,7 @@ export default function EditMemberScreen() {
               placeholder={t('enroll.noTrainer')}
               options={[
                 { value: '', label: t('enroll.noTrainer') },
-                ...trainers.map((tr) => ({
+                ...branchTrainers.map((tr) => ({
                   value: String(tr.id),
                   label: tr.specialty ? `${tr.name} · ${tr.specialty}` : tr.name,
                 })),

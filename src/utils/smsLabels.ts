@@ -12,6 +12,7 @@ const TYPE_KEYS: Record<string, string> = {
   member_expired: 'messages.typeExpired',
   member_renewed: 'messages.typeRenewed',
   member_pass_link: 'messages.typePassLink',
+  member_missed_you: 'messages.typeMissedYou',
 };
 
 const PREVIEW_KEYS: Record<string, string> = {
@@ -21,6 +22,7 @@ const PREVIEW_KEYS: Record<string, string> = {
   member_expired: 'messages.previewExpired',
   member_renewed: 'messages.previewRenewed',
   member_pass_link: 'messages.previewPassLink',
+  member_missed_you: 'messages.previewMissedYou',
 };
 
 export function formatSmsType(type: string, t: TFunction) {
@@ -65,6 +67,8 @@ export function smsTypeIcon(type: string): IonName {
       return 'sync-outline';
     case 'member_pass_link':
       return 'qr-code-outline';
+    case 'member_missed_you':
+      return 'heart-outline';
     default:
       return 'chatbubble-ellipses-outline';
   }
@@ -78,6 +82,7 @@ export const SMS_TYPE_FILTER_KEYS = [
   { value: 'member_expired' as const, labelKey: 'messages.filterExpired' },
   { value: 'member_renewed' as const, labelKey: 'messages.filterRenewed' },
   { value: 'member_pass_link' as const, labelKey: 'messages.filterPassLink' },
+  { value: 'member_missed_you' as const, labelKey: 'messages.filterMissedYou' },
 ] as const;
 
 export function formatMessageChannel(channel: string | null | undefined, t: TFunction) {

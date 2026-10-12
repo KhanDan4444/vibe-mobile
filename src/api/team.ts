@@ -4,6 +4,7 @@ import type { StaffRow, TeamResponse } from '@/src/types/api';
 export interface CreateStaffPayload {
   name: string;
   email?: string | null;
+  phone: string;
   username: string;
   password: string;
   staff_role?: string;
@@ -13,6 +14,7 @@ export interface CreateStaffPayload {
 export interface UpdateStaffPayload {
   name?: string;
   email?: string | null;
+  phone?: string;
   username?: string;
   password?: string;
   staff_role?: string;

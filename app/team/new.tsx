@@ -8,6 +8,7 @@ import { useAuth } from '@/src/auth/AuthContext';
 import { createStaff } from '@/src/api/team';
 import { fetchBranches } from '@/src/api/branches';
 import { BranchPicker } from '@/src/components/BranchPicker';
+import { EthiopianPhoneField } from '@/src/components/EthiopianPhoneField';
 import { ErrorBanner, Field, FieldError, FormScroll, Label, PrimaryButton, Screen } from '@/src/components/Form';
 import { PasswordRule } from '@/src/components/PasswordRule';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
@@ -22,6 +23,7 @@ export default function NewStaffScreen() {
   const { token, user, subscription } = useAuth();
 
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -59,6 +61,7 @@ export default function NewStaffScreen() {
       createStaff(token!, {
         name: name.trim(),
         email: email.trim() || null,
+        phone: phone.trim(),
         username: username.trim(),
         password,
         staff_role: staffRole,
@@ -81,6 +84,7 @@ export default function NewStaffScreen() {
       name,
       username,
       email,
+      phone,
       password,
       confirmPassword,
       branchId,
@@ -124,6 +128,32 @@ export default function NewStaffScreen() {
           />
           <FieldError message={fieldErrors.name ? t(fieldErrors.name) : undefined} />
 
+          <Label>{t('forms.emailOptional')}</Label>
+          <Field
+            value={email}
+            onChangeText={(v) => {
+              setEmail(v);
+              clearField('email');
+            }}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            textContentType="emailAddress"
+            autoComplete="email"
+            error={Boolean(fieldErrors.email)}
+          />
+          <FieldError message={fieldErrors.email ? t(fieldErrors.email) : undefined} />
+
+          <Label required>{t('forms.phone')}</Label>
+          <EthiopianPhoneField
+            value={phone}
+            onChangeText={(v) => {
+              setPhone(v);
+              clearField('phone');
+            }}
+            error={Boolean(fieldErrors.phone)}
+          />
+          <FieldError message={fieldErrors.phone ? t(fieldErrors.phone) : undefined} />
+
           <OptionPickerField
             label={t('forms.role')}
             placeholder={t('forms.pickRole')}
@@ -150,21 +180,6 @@ export default function NewStaffScreen() {
             error={Boolean(fieldErrors.username)}
           />
           <FieldError message={fieldErrors.username ? t(fieldErrors.username) : undefined} />
-
-          <Label>{t('forms.emailOptional')}</Label>
-          <Field
-            value={email}
-            onChangeText={(v) => {
-              setEmail(v);
-              clearField('email');
-            }}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            textContentType="emailAddress"
-            autoComplete="email"
-            error={Boolean(fieldErrors.email)}
-          />
-          <FieldError message={fieldErrors.email ? t(fieldErrors.email) : undefined} />
 
           <Label required>{t('forms.password')}</Label>
           <Field
