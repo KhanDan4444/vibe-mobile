@@ -376,7 +376,7 @@ export default function TeamScreen() {
   const formerTrainersQuery = useQuery({
     queryKey: ['trainers', true],
     queryFn: () => fetchTrainers(token!, true),
-    enabled: Boolean(token && canManageTeam && formerTrainers),
+    enabled: Boolean(token && canManageTeam),
   });
 
   const toggleMutation = useMutation({
@@ -437,6 +437,15 @@ export default function TeamScreen() {
   }, [formerTrainers, formerTrainersAll, liveTrainersAll, selectedBranchId]);
 
   const liveTrainerTotal = liveTrainers.length;
+  const formerInBranchCount = useMemo(
+    () => formerTrainersAll.filter((row) => matchesBranch(row.branch_id, selectedBranchId)).length,
+    [formerTrainersAll, selectedBranchId]
+  );
+  const formerCount = formerTrainersQuery.data
+    ? formerInBranchCount
+    : selectedBranchId === 'all'
+      ? archivedTrainerTotal
+      : formerInBranchCount;
   const searchNeedle = search.trim().toLowerCase();
   const displayedStaff = useMemo(() => {
     if (!searchNeedle) return staff;
@@ -460,7 +469,7 @@ export default function TeamScreen() {
   const requestToggle = (member: StaffRow) => setToggleTarget(member);
   const toggleNextActive = toggleTarget ? !toggleTarget.is_active : false;
 
-  const showFormerChip = tab === 'trainers' && (archivedTrainerTotal > 0 || formerTrainers);
+  const showFormerChip = tab === 'trainers' && (formerCount > 0 || formerTrainers);
 
   const toolbar = (
     <View style={[styles.toolbar, { paddingHorizontal: pagePadding }]}>
@@ -495,7 +504,7 @@ export default function TeamScreen() {
             <FilterChip
               label={t('team.formerTrainers')}
               selected={formerTrainers}
-              count={archivedTrainerTotal}
+              count={formerCount}
               selectedColor={c.statusFormer}
               onPress={() => {
                 setFormerTrainers(!formerTrainers);
