@@ -39,6 +39,7 @@ import { SoftSurface } from '@/src/components/ui/SoftSurface';
 import { FilterChip } from '@/src/components/FilterChip';
 import { SearchField } from '@/src/components/SearchField';
 import { fieldRingStyle } from '@/src/theme/fieldChrome';
+import { radiusMd } from '@/src/theme/tokens';
 import type { PaymentListRow } from '@/src/types/api';
 
 /** Soft teal wash for the revenue hero — presence without glow spam. */
@@ -288,12 +289,10 @@ function MethodStat({
   method,
   label,
   amount,
-  showDivider,
 }: {
   method: string;
   label: string;
   amount: number;
-  showDivider?: boolean;
 }) {
   const { language } = usePreferences();
   const { colors: c } = useTheme();
@@ -303,21 +302,24 @@ function MethodStat({
       flexBasis: 0,
       minWidth: 0,
       alignItems: 'center' as const,
-      justifyContent: 'flex-start' as const,
-      paddingHorizontal: 2,
-      borderLeftWidth: showDivider ? StyleSheet.hairlineWidth : 0,
-      borderLeftColor: colors.border,
+      justifyContent: 'center' as const,
+      paddingVertical: 10,
+      paddingHorizontal: 6,
+      borderRadius: radiusMd,
+      backgroundColor: colors.inputBg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
     },
-    methodStatIcon: { marginBottom: 2 },
+    methodStatIcon: { marginBottom: 4 },
     methodStatValue: {
-      fontSize: 11,
-      color: colors.muted,
+      fontSize: 14,
+      color: colors.text,
       letterSpacing: -0.4,
       maxWidth: '100%' as const,
     },
     methodStatLabel: {
-      marginTop: 0,
-      fontSize: 9,
+      marginTop: 2,
+      fontSize: 11,
       fontWeight: '500' as const,
       color: colors.dim,
       textAlign: 'center' as const,
@@ -329,11 +331,11 @@ function MethodStat({
   if (!amount) return null;
   return (
     <View style={styles.methodStat} accessibilityLabel={`${label} ${amount.toLocaleString()}`}>
-      <Ionicons name={paymentMethodIcon(method)} size={12} color={c.dim} style={styles.methodStatIcon} />
-      <Text display latin style={metricDisplayStyle(styles.methodStatValue)} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
+      <Ionicons name={paymentMethodIcon(method)} size={16} color={c.muted} style={styles.methodStatIcon} />
+      <Text display latin style={metricDisplayStyle(styles.methodStatValue)} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
         {amount.toLocaleString()}
       </Text>
-      <Text style={appTextStyle(language, styles.methodStatLabel)} numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.8}>
+      <Text style={appTextStyle(language, styles.methodStatLabel)} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
         {label}
       </Text>
     </View>
@@ -389,20 +391,12 @@ export default function RevenueScreen() {
     heroMetaText: { fontSize: 12, color: colors.dim },
     methodStats: {
       flexDirection: 'row' as const,
-      alignItems: 'flex-start' as const,
-      // Solid strip so hero wash can’t tint Cash differently from Transfer / Telebirr.
-      marginTop: 10,
-      marginHorizontal: -16,
-      paddingHorizontal: 16,
-      paddingTop: 10,
-      paddingBottom: 2,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: colors.border,
-      backgroundColor: colors.card,
+      alignItems: 'stretch' as const,
+      gap: 8,
+      marginTop: 14,
     },
     methodStatsLandscape: {
-      marginTop: 6,
-      paddingTop: 6,
+      marginTop: 8,
     },
     periodRow: { gap: 6, paddingTop: 10, paddingBottom: 8, alignItems: 'center' as const },
     searchRow: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 10, marginBottom: 8 },
@@ -608,13 +602,12 @@ export default function RevenueScreen() {
           </View>
           {methodEntries.length > 0 ? (
             <View style={[styles.methodStats, isTablet && isLandscape && styles.methodStatsLandscape]}>
-              {methodEntries.map((m, index) => (
+              {methodEntries.map((m) => (
                 <MethodStat
                   key={m}
                   method={m}
                   label={t(paymentMethodShortLabelKey(m)!)}
                   amount={Number(byMethod[m] || 0)}
-                  showDivider={index > 0}
                 />
               ))}
             </View>
