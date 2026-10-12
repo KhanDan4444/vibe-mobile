@@ -95,6 +95,8 @@ export interface MemberRow {
   deleted_at?: string | null;
   trainer_id?: number | null;
   trainer_name?: string | null;
+  /** Sum of trainer-fee payments recorded for this member. */
+  trainer_paid?: number | string | null;
   /** Calendar days since last check-in (or term start if never checked in). */
   days_without_visit?: number | null;
 }
@@ -108,6 +110,7 @@ export interface BranchRow {
   is_active?: boolean;
   member_count?: number;
   staff_count?: number;
+  trainer_count?: number;
 }
 
 export interface StaffRow {

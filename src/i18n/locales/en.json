@@ -876,6 +876,7 @@
     "editStaff": "Edit staff",
     "addTrainer": "Add Trainer",
     "editTrainer": "Edit trainer",
+    "trainerMembers": "Members",
     "branches": "Branches",
     "newBranch": "Add Branch",
     "editBranch": "Edit branch",
@@ -1214,6 +1215,9 @@
     "emptySearchBody": "Try a different name, or clear the search.",
     "assignedMembers": "{{count}} members",
     "assignedMembers_one": "1 member",
+    "trainerMembersEmptyTitle": "No members assigned",
+    "trainerMembersEmptyBody": "Members training with this trainer show up here.",
+    "trainerPaid": "Trainer fee",
     "staffSubtitle": "Desk logins.",
     "trainersSubtitle": "No login — assign to members.",
     "formerTrainersSubtitle": "Restore to assign again.",
@@ -1262,9 +1266,10 @@
     "emptyTitle": "No branches yet",
     "emptyBody": "Add your first location to organize members by branch.",
     "empty": "No branches found.",
-    "statusLine": "{{count}} branches · {{members}} members · {{staff}} staff",
+    "statusLine": "{{count}} branches · {{members}} members · {{staff}} staff · {{trainers}} trainers",
     "membersCount": "{{count}} members",
-    "staffCount": "{{count}} staff"
+    "staffCount": "{{count}} staff",
+    "trainersCount": "{{count}} trainers"
   },
   "publicStationCheckIn": {
     "title": "Check in",

@@ -872,6 +872,7 @@
     "team": "Garee",
     "addStaff": "Hojjetaa Galmeessi",
     "editStaff": "Hojjeetaa gulaali",
+    "trainerMembers": "Miseensota",
     "branches": "Dameewwan",
     "newBranch": "Damee Galmeessi",
     "editBranch": "Damee gulaali",
@@ -1205,6 +1206,9 @@
     "emptySearchBody": "Maqaa biraa yaali, ykn barbaacha haqi.",
     "assignedMembers": "Miseensota {{count}}",
     "assignedMembers_one": "Miseensa 1",
+    "trainerMembersEmptyTitle": "Miseensonni ramadaman hin jiran",
+    "trainerMembersEmptyBody": "Miseensonni leenjisticha waliin hojjetan asitti mul'atu.",
+    "trainerPaid": "Kaffaltii leenjistaa",
     "staffSubtitle": "Seensa deskii.",
     "trainersSubtitle": "Seensa hin qabu — miseensotaaf ramadi.",
     "formerTrainersSubtitle": "Deebisi akka deebi'anii ramadaman.",
@@ -1253,9 +1257,10 @@
     "emptyTitle": "Ammatti dameen hin jiru",
     "emptyBody": "Miseensota dameen gurmeessuuf bakka hojii kee isa jalqabaa dabali.",
     "empty": "Ammatti dameen hin jiru. Bakka hojii kee isa jalqabaa dabali.",
-    "statusLine": "Dameewwan {{count}} · miseensota {{members}} · hojjettoota {{staff}}",
+    "statusLine": "Dameewwan {{count}} · miseensota {{members}} · hojjettoota {{staff}} · leenjistoota {{trainers}}",
     "membersCount": "Miseensota {{count}}",
-    "staffCount": "Hojjettoota {{count}}"
+    "staffCount": "Hojjettoota {{count}}",
+    "trainersCount": "Leenjistoota {{count}}"
   },
   "publicStationCheckIn": {
     "title": "Galchi",

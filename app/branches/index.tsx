@@ -76,6 +76,7 @@ function BranchCard({
   const statsLine = [
     t('branches.membersCount', { count: branch.member_count ?? 0 }),
     t('branches.staffCount', { count: branch.staff_count ?? 0 }),
+    t('branches.trainersCount', { count: branch.trainer_count ?? 0 }),
   ].join(' · ');
 
   const menuItems = owner
@@ -175,12 +176,17 @@ export default function BranchesScreen() {
     () => branches.reduce((sum, b) => sum + (b.staff_count ?? 0), 0),
     [branches],
   );
+  const trainerTotal = useMemo(
+    () => branches.reduce((sum, b) => sum + (b.trainer_count ?? 0), 0),
+    [branches],
+  );
   const statusLine =
     branches.length > 0
       ? t('branches.statusLine', {
           count: branches.length,
           members: memberTotal,
           staff: staffTotal,
+          trainers: trainerTotal,
         })
       : null;
 

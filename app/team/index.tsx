@@ -134,6 +134,7 @@ function TrainerCard({
   multiColumn,
   dense,
   columnStyle,
+  onOpen,
   onEdit,
   onArchive,
   onRestore,
@@ -143,6 +144,7 @@ function TrainerCard({
   multiColumn?: boolean;
   dense?: boolean;
   columnStyle?: object;
+  onOpen: () => void;
   onEdit: () => void;
   onArchive: () => void;
   onRestore: () => void;
@@ -180,6 +182,7 @@ function TrainerCard({
 
   if (former) {
     return (
+      <Pressable onPress={onOpen} accessibilityRole="button">
       <SoftSurface variant="panel" style={cardStyle}>
         <View style={styles.headerRow}>
           <InitialsAvatar name={trainer.name} size={avatarSize} />
@@ -204,6 +207,7 @@ function TrainerCard({
           </View>
         </View>
       </SoftSurface>
+      </Pressable>
     );
   }
 
@@ -219,6 +223,7 @@ function TrainerCard({
   ];
 
   return (
+    <Pressable onPress={onOpen} accessibilityRole="button">
     <SoftSurface variant="panel" style={cardStyle}>
       <View style={styles.headerRow}>
         <InitialsAvatar name={trainer.name} size={avatarSize} />
@@ -236,6 +241,7 @@ function TrainerCard({
         <ActionOverflowMenu title={trainer.name} items={menuItems} />
       </View>
     </SoftSurface>
+    </Pressable>
   );
 }
 
@@ -628,6 +634,7 @@ export default function TeamScreen() {
               multiColumn={listColumns > 1}
               dense={isTablet}
               columnStyle={listColumnItemStyle}
+              onOpen={() => router.push(`/team/trainers/${item.id}/members` as Href)}
               onEdit={() => router.push(`/team/trainers/${item.id}/edit` as Href)}
               onArchive={() => setArchiveTarget(item)}
               onRestore={() => restoreMutation.mutate(item.id)}

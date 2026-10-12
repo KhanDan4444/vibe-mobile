@@ -1,5 +1,5 @@
 import { apiRequest } from '@/src/api/client';
-import type { TrainerRow, TrainersResponse } from '@/src/types/api';
+import type { MemberRow, TrainerRow, TrainersResponse } from '@/src/types/api';
 
 export interface TrainerPayload {
   name: string;
@@ -43,4 +43,11 @@ export function restoreTrainer(token: string, id: number) {
     method: 'POST',
     token,
   });
+}
+
+export function fetchTrainerMembers(token: string, id: number) {
+  return apiRequest<{ trainer: { id: number; name: string }; members: MemberRow[] }>(
+    `/gym/trainers/${id}/members`,
+    { token }
+  );
 }

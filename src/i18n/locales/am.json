@@ -872,6 +872,7 @@
     "team": "ቡድን",
     "addStaff": "ሰራተኛ መዝግብ",
     "editStaff": "ሰራተኛ አርትዕ",
+    "trainerMembers": "አባላት",
     "branches": "ቅርንጫፎች",
     "newBranch": "ቅርንጫፍ መዝግብ",
     "editBranch": "ቅርንጫፍ አርትዕ",
@@ -1205,6 +1206,9 @@
     "emptySearchBody": "ሌላ ስም ይሞክሩ፣ ወይም ፍለጋውን ያጽዱ።",
     "assignedMembers": "{{count}} አባላት",
     "assignedMembers_one": "1 አባል",
+    "trainerMembersEmptyTitle": "የተመደቡ አባላት የሉም",
+    "trainerMembersEmptyBody": "ከዚህ አሰልጣኝ ጋር የሚሰሩ አባላት እዚህ ይታያሉ።",
+    "trainerPaid": "የአሰልጣኝ ክፍያ",
     "staffSubtitle": "የዴስክ መግቢያ።",
     "trainersSubtitle": "መግቢያ የለም — ለአባላት ይመድቡ።",
     "formerTrainersSubtitle": "እንደገና ለመመደብ መልሱ።",
@@ -1253,9 +1257,10 @@
     "emptyTitle": "እስካሁን ቅርንጫፍ የለም",
     "emptyBody": "አባላትን በቅርንጫፍ ለማደራጀት የመጀመሪያ ቦታዎን ያክሉ።",
     "empty": "ቅርንጫፍ አልተገኘም።",
-    "statusLine": "{{count}} ቅርንጫፎች · {{members}} አባላት · {{staff}} ሰራተኞች",
+    "statusLine": "{{count}} ቅርንጫፎች · {{members}} አባላት · {{staff}} ሰራተኞች · {{trainers}} አሰልጣኞች",
     "membersCount": "{{count}} አባላት",
-    "staffCount": "{{count}} ሰራተኞች"
+    "staffCount": "{{count}} ሰራተኞች",
+    "trainersCount": "{{count}} አሰልጣኞች"
   },
   "publicStationCheckIn": {
     "title": "መግቢያ",
