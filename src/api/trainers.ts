@@ -46,7 +46,7 @@ export function restoreTrainer(token: string, id: number) {
 }
 
 export function fetchTrainerMembers(token: string, id: number) {
-  return apiRequest<{ trainer: { id: number; name: string }; members: MemberRow[] }>(
+  return apiRequest<{ trainer: { id: number; name: string; branch_name?: string | null }; members: MemberRow[] }>(
     `/gym/trainers/${id}/members`,
     { token }
   );

@@ -1,5 +1,5 @@
 import { Redirect, Stack, useLocalSearchParams, useNavigation, useRouter, type Href } from 'expo-router';
-import { useLayoutEffect } from 'react';
+import { useLayoutEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -10,6 +10,7 @@ import { EmptyState } from '@/src/components/EmptyState';
 import { Screen } from '@/src/components/Form';
 import { InitialsAvatar } from '@/src/components/InitialsAvatar';
 import { LoadError } from '@/src/components/LoadError';
+import { SearchField } from '@/src/components/SearchField';
 import { PageSkeleton } from '@/src/components/Skeleton';
 import StatusBadge from '@/src/components/StatusBadge';
 import { SoftSurface } from '@/src/components/ui/SoftSurface';
@@ -32,6 +33,7 @@ export default function TrainerMembersScreen() {
   const { activeBranches } = useBranchScope();
   const showBranch = activeBranches.length > 1;
   const canManage = Boolean(user && isGymOwner(user.role));
+  const [search, setSearch] = useState('');
 
   const query = useQuery({
     queryKey: ['trainer-members', trainerId],
@@ -45,11 +47,22 @@ export default function TrainerMembersScreen() {
     if (trainerName) navigation.setOptions({ title: trainerName });
   }, [navigation, trainerName]);
 
+  const members = query.data?.members ?? [];
+  const branchSource = query.data?.trainer?.branch_name || members.find((member) => member.branch_name)?.branch_name;
+  const branchName = branchSource ? branchDisplayName(branchSource) : '';
+  const needle = search.trim().toLowerCase();
+  const visibleMembers = useMemo(() => {
+    if (!needle) return members;
+    return members.filter((member) =>
+      [member.name, member.phone, member.plan_name, member.branch_name].some((value) =>
+        String(value || '').toLowerCase().includes(needle)
+      )
+    );
+  }, [members, needle]);
+
   if (!canManage) {
     return <Redirect href="/(tabs)/more" />;
   }
-
-  const members = query.data?.members ?? [];
 
   return (
     <Screen flushBottom>
@@ -64,28 +77,42 @@ export default function TrainerMembersScreen() {
         />
       ) : (
         <FlatList
-          data={members}
+          data={visibleMembers}
           keyExtractor={(item) => String(item.id)}
+          keyboardShouldPersistTaps="handled"
           contentContainerStyle={{
             paddingHorizontal: pagePadding,
             paddingTop: pagePadding,
             paddingBottom: 32,
-            flexGrow: members.length === 0 ? 1 : undefined,
+            flexGrow: visibleMembers.length === 0 ? 1 : undefined,
           }}
           ListHeaderComponent={
-            members.length > 0 ? <FeeColumnLabel label={t('team.trainerPaid')} /> : null
+            <View style={{ marginBottom: 8, gap: 12 }}>
+              <MemberCount
+                label={`${t('team.assignedMembers', { count: members.length })}${
+                  showBranch && branchName ? ` · ${branchName}` : ''
+                }`}
+              />
+              {members.length > 0 ? (
+                <SearchField
+                  value={search}
+                  onChangeText={setSearch}
+                  placeholder={t('checkIn.searchPlaceholder')}
+                />
+              ) : null}
+              {visibleMembers.length > 0 ? <FeeColumnLabel label={t('team.trainerPaid')} /> : null}
+            </View>
           }
           ListEmptyComponent={
             <EmptyState
               icon="barbell-outline"
-              title={t('team.trainerMembersEmptyTitle')}
-              body={t('team.trainerMembersEmptyBody')}
+              title={needle ? t('team.emptySearchTitle') : t('team.trainerMembersEmptyTitle')}
+              body={needle ? t('team.emptySearchBody') : t('team.trainerMembersEmptyBody')}
             />
           }
           renderItem={({ item }) => (
             <TrainerMemberRow
               member={item}
-              showBranch={showBranch}
               unpaidLabel={t('members.unpaidBadge')}
               onPress={() => router.push(`/member/${item.id}` as Href)}
             />
@@ -96,10 +123,16 @@ export default function TrainerMembersScreen() {
   );
 }
 
+function MemberCount({ label }: { label: string }) {
+  const styles = useThemedStyles((colors) => ({
+    label: { fontSize: 14, color: colors.muted },
+  }));
+  return <Text style={styles.label}>{label}</Text>;
+}
+
 function FeeColumnLabel({ label }: { label: string }) {
   const styles = useThemedStyles((colors) => ({
     label: {
-      marginBottom: 8,
       textAlign: 'right' as const,
       fontSize: 12,
       fontWeight: '600' as const,
@@ -111,12 +144,10 @@ function FeeColumnLabel({ label }: { label: string }) {
 
 function TrainerMemberRow({
   member,
-  showBranch,
   unpaidLabel,
   onPress,
 }: {
   member: MemberRow;
-  showBranch: boolean;
   unpaidLabel: string;
   onPress: () => void;
 }) {
@@ -135,7 +166,6 @@ function TrainerMemberRow({
   const detail = [
     member.phone || '—',
     member.plan_name || null,
-    showBranch && member.branch_name ? branchDisplayName(member.branch_name) : null,
   ]
     .filter(Boolean)
     .join(' · ');

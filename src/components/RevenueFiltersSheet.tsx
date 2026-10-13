@@ -1,9 +1,11 @@
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { AppText as Text } from '@/src/components/AppText';
 import { useTranslation } from 'react-i18next';
 import { BottomSheet, SheetOption } from '@/src/components/BottomSheet';
 import { DateField } from '@/src/components/DateField';
 import { PrimaryButton } from '@/src/components/ui/Button';
+import { useTheme } from '@/src/context/PreferencesContext';
 import { useThemedStyles } from '@/src/theme/useThemedStyles';
 import { boundsForCustomRangeFrom, boundsForCustomRangeTo } from '@/src/utils/datePickerBounds';
 import { PAYMENT_METHODS, paymentMethodLabelKey } from '@/src/constants/payments';
@@ -41,6 +43,7 @@ export function RevenueFiltersSheet({
   onUseCustomRange,
 }: Props) {
   const { t } = useTranslation();
+  const { colors } = useTheme();
   const fromBounds = boundsForCustomRangeFrom(customTo);
   const toBounds = boundsForCustomRangeTo(customFrom);
   const styles = useThemedStyles((c) => ({
@@ -54,7 +57,30 @@ export function RevenueFiltersSheet({
       marginTop: 8,
     },
     optionGroup: { marginBottom: 8 },
-    dateRow: { flexDirection: 'row' as const, gap: 10, marginBottom: 8, marginTop: 4 },
+    dateRow: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 8,
+      marginBottom: 8,
+      marginTop: 4,
+    },
+    dateField: { width: 132 },
+    toLabel: { fontSize: 14, color: c.muted },
+    rangeToggle: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 10,
+      minHeight: 48,
+      paddingHorizontal: 14,
+      borderRadius: 14,
+      borderWidth: 1,
+      marginBottom: 8,
+    },
+    rangeToggleLabel: {
+      flex: 1,
+      fontSize: 15,
+      fontWeight: '600' as const,
+    },
     doneBtn: { marginTop: 4 },
   }));
 
@@ -66,6 +92,50 @@ export function RevenueFiltersSheet({
       showCloseButton
       footer={<PrimaryButton label={t('common.done')} onPress={onClose} style={styles.doneBtn} />}
     >
+      <Text style={styles.sectionLabel}>{t('revenue.customDateRange')}</Text>
+      <Pressable
+        onPress={() => onUseCustomRange(!useCustomRange)}
+        style={[
+          styles.rangeToggle,
+          {
+            borderColor: useCustomRange ? colors.accentText : colors.border,
+            backgroundColor: useCustomRange ? colors.accentSoft : colors.card,
+          },
+        ]}
+        accessibilityRole="button"
+        accessibilityState={{ selected: useCustomRange }}
+      >
+        <Ionicons
+          name="calendar-outline"
+          size={18}
+          color={useCustomRange ? colors.accentText : colors.text}
+        />
+        <Text style={[styles.rangeToggleLabel, { color: useCustomRange ? colors.accentText : colors.text }]}>
+          {useCustomRange ? t('revenue.customRangeOn') : t('revenue.useCustomRange')}
+        </Text>
+        {useCustomRange ? <Ionicons name="checkmark" size={20} color={colors.accentText} /> : null}
+      </Pressable>
+      {useCustomRange ? (
+        <View style={styles.dateRow}>
+          <View style={styles.dateField}>
+            <DateField
+              value={customFrom}
+              onChange={onCustomFromChange}
+              maximumDate={fromBounds.maximumDate}
+            />
+          </View>
+          <Text style={styles.toLabel}>{t('common.to')}</Text>
+          <View style={styles.dateField}>
+            <DateField
+              value={customTo}
+              onChange={onCustomToChange}
+              minimumDate={toBounds.minimumDate}
+              maximumDate={toBounds.maximumDate}
+            />
+          </View>
+        </View>
+      ) : null}
+
       <Text style={styles.sectionLabel}>{t('revenue.sortLabel')}</Text>
       <View style={styles.optionGroup}>
         {REVENUE_SORT_OPTIONS.map((opt) => (
@@ -94,31 +164,6 @@ export function RevenueFiltersSheet({
         ))}
       </View>
 
-      <Text style={styles.sectionLabel}>{t('revenue.customDateRange')}</Text>
-      <SheetOption
-        label={useCustomRange ? t('revenue.customRangeOn') : t('revenue.useCustomRange')}
-        selected={useCustomRange}
-        onPress={() => onUseCustomRange(!useCustomRange)}
-      />
-      {useCustomRange ? (
-        <View style={styles.dateRow}>
-          <View style={{ flex: 1 }}>
-            <DateField
-              value={customFrom}
-              onChange={onCustomFromChange}
-              maximumDate={fromBounds.maximumDate}
-            />
-          </View>
-          <View style={{ flex: 1 }}>
-            <DateField
-              value={customTo}
-              onChange={onCustomToChange}
-              minimumDate={toBounds.minimumDate}
-              maximumDate={toBounds.maximumDate}
-            />
-          </View>
-        </View>
-      ) : null}
     </BottomSheet>
   );
 }
