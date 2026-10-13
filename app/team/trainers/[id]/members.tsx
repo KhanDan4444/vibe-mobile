@@ -155,20 +155,15 @@ function TrainerMemberRow({
   const styles = useThemedStyles((colors) => ({
     row: { padding: 14, marginBottom: 10 },
     rowMain: { flex: 1, minWidth: 0, flexDirection: 'row' as const, alignItems: 'center' as const, gap: 12 },
-    copy: { flex: 1, minWidth: 0 },
-    name: { fontSize: 16, fontWeight: '700' as const, color: colors.text },
-    meta: { marginTop: 2, fontSize: 13, color: colors.muted },
-    side: { alignItems: 'flex-end' as const, gap: 4 },
-    paid: { minWidth: 88, textAlign: 'right' as const, fontSize: 13, fontWeight: '700' as const, color: colors.text },
-    paidZero: { minWidth: 88, textAlign: 'right' as const, fontSize: 13, fontWeight: '500' as const, color: colors.muted },
+    copy: { flex: 1, minWidth: 0, gap: 2 },
+    top: { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 8 },
+    name: { flex: 1, minWidth: 0, fontSize: 16, fontWeight: '700' as const, color: colors.text },
+    meta: { fontSize: 13, color: colors.muted },
+    side: { alignItems: 'flex-end' as const, flexShrink: 0, gap: 4 },
+    paid: { minWidth: 88, flexShrink: 0, textAlign: 'right' as const, fontSize: 13, fontWeight: '700' as const, color: colors.text },
+    paidZero: { minWidth: 88, flexShrink: 0, textAlign: 'right' as const, fontSize: 13, fontWeight: '500' as const, color: colors.muted },
     unpaid: { fontSize: 12, fontWeight: '600' as const, color: colors.statusUnpaid },
   }));
-  const detail = [
-    member.phone || '—',
-    member.plan_name || null,
-  ]
-    .filter(Boolean)
-    .join(' · ');
 
   return (
     <Pressable onPress={onPress} accessibilityRole="button">
@@ -176,20 +171,27 @@ function TrainerMemberRow({
         <View style={styles.rowMain}>
           <InitialsAvatar name={member.name} size={40} />
           <View style={styles.copy}>
-            <Text listRow numberOfLines={1} style={styles.name}>
-              {member.name}
+            <View style={styles.top}>
+              <Text listRow numberOfLines={1} style={styles.name}>
+                {member.name}
+              </Text>
+              <View style={styles.side}>
+                <StatusBadge status={member.status} />
+                {member.is_unpaid ? <Text style={styles.unpaid}>{unpaidLabel}</Text> : null}
+              </View>
+              <Text style={paid ? styles.paid : styles.paidZero} numberOfLines={1}>
+                {formatEtb(Number(member.trainer_paid) || 0)}
+              </Text>
+            </View>
+            <Text numberOfLines={1} style={styles.meta}>
+              {member.phone || '—'}
             </Text>
-            <Text numberOfLines={2} style={styles.meta}>
-              {detail}
-            </Text>
+            {member.plan_name ? (
+              <Text numberOfLines={1} style={styles.meta}>
+                {member.plan_name}
+              </Text>
+            ) : null}
           </View>
-          <View style={styles.side}>
-            <StatusBadge status={member.status} />
-            {member.is_unpaid ? <Text style={styles.unpaid}>{unpaidLabel}</Text> : null}
-          </View>
-          <Text style={paid ? styles.paid : styles.paidZero} numberOfLines={1}>
-            {formatEtb(Number(member.trainer_paid) || 0)}
-          </Text>
         </View>
       </SoftSurface>
     </Pressable>
