@@ -360,7 +360,7 @@ export default function TeamScreen() {
     tab === 'trainers'
       ? formerTrainers
         ? t('team.formerTrainersSubtitle')
-        : t('team.trainersSubtitle')
+        : ''
       : t('team.staffSubtitle');
 
   useLayoutEffect(() => {
@@ -531,7 +531,7 @@ export default function TeamScreen() {
             : t('team.searchStaff')
         }
       />
-      <Text style={styles.subtitle}>{pageSubtitle}</Text>
+      {pageSubtitle ? <Text style={styles.subtitle}>{pageSubtitle}</Text> : null}
     </View>
   );
 

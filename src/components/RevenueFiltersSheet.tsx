@@ -72,7 +72,7 @@ export function RevenueFiltersSheet({
       gap: 10,
       minHeight: 48,
       paddingHorizontal: 14,
-      borderRadius: 14,
+      borderRadius: 12,
       borderWidth: 1,
       marginBottom: 8,
     },
@@ -98,8 +98,8 @@ export function RevenueFiltersSheet({
         style={[
           styles.rangeToggle,
           {
-            borderColor: useCustomRange ? colors.accentText : colors.border,
-            backgroundColor: useCustomRange ? colors.accentSoft : colors.card,
+            borderColor: useCustomRange ? 'transparent' : colors.border,
+            backgroundColor: useCustomRange ? colors.accentSoft : 'transparent',
           },
         ]}
         accessibilityRole="button"
