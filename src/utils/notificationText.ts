@@ -193,7 +193,7 @@ export function localizeNotification(notification: DashboardNotification, t: TFu
       kind,
       section,
       memberName,
-      eyebrow: t('notifications.kind.paymentRecorded'),
+      eyebrow: '',
       title: memberName,
       message: t('notifications.items.paymentRecorded.message', {
         amount: amount != null ? formatEtb(amount) : '',

@@ -43,13 +43,8 @@ function iconForKind(kind: NotificationKind, type: string): keyof typeof Ionicon
   return 'checkmark-circle';
 }
 
-function colorsForKind(kind: NotificationKind, type: string, c: ThemeColors) {
-  if (kind === 'unpaid') return { icon: c.statusUnpaid, bg: `${c.statusUnpaid}18` };
-  if (kind === 'due_soon') return { icon: c.statusDueSoon, bg: `${c.statusDueSoon}18` };
-  if (kind === 'expired') return { icon: c.statusExpired, bg: `${c.statusExpired}18` };
-  if (type === 'danger') return { icon: c.statusExpired, bg: `${c.statusExpired}18` };
-  if (type === 'warning') return { icon: c.warning, bg: `${c.warning}18` };
-  return { icon: c.accentText, bg: c.accentSoft };
+function iconPalette(c: ThemeColors) {
+  return { icon: c.muted, bg: `${c.muted}18` };
 }
 
 function branchLabel(item: DashboardNotification): string | undefined {
@@ -63,6 +58,7 @@ function NotificationRow({
   readOnly,
   showBranchBadge,
   nested,
+  highlightUnread,
   colors: c,
   onOpenMember,
   onAction,
@@ -72,6 +68,7 @@ function NotificationRow({
   readOnly: boolean;
   showBranchBadge: boolean;
   nested?: boolean;
+  highlightUnread: boolean;
   colors: ThemeColors;
   onOpenMember: () => void;
   onAction: () => void;
@@ -80,10 +77,11 @@ function NotificationRow({
   const resolved = notificationAction(item);
   const action = resolved && resolved !== 'view' && !readOnly ? resolved : null;
   const kind = notificationKind(item);
-  const palette = colorsForKind(kind, item.type, c);
+  const palette = iconPalette(c);
   const localized = localizeNotification(item, t);
   const branch = branchLabel(item);
   const actionColor = action === 'payment' ? c.statusUnpaid : c.accentText;
+  const showUnread = highlightUnread && !isRead;
 
   return (
     <View
@@ -93,7 +91,7 @@ function NotificationRow({
         { backgroundColor: c.card, paddingVertical: nested ? 8 : 13 },
       ]}
     >
-      {!isRead ? (
+      {showUnread ? (
         <View
           style={[
             styles.unreadBar,
@@ -159,12 +157,17 @@ function NotificationRow({
         ) : null}
       </View>
 
-      <View style={styles.metaCol}>
+      <Pressable
+        onPress={onOpenMember}
+        hitSlop={8}
+        accessibilityRole="button"
+        style={styles.metaCol}
+      >
         {!nested && localized.date ? (
           <Text style={[styles.dateText, { color: c.dim }]}>{localized.date}</Text>
         ) : null}
         {!action ? <Ionicons name="chevron-forward" size={16} color={c.dim} /> : null}
-      </View>
+      </Pressable>
     </View>
   );
 }
@@ -176,6 +179,7 @@ function KindStack({
   isRead,
   readOnly,
   showBranchBadge,
+  highlightUnread,
   colors: c,
   dismissLabel,
   onOpenMember,
@@ -188,6 +192,7 @@ function KindStack({
   isRead: (id: string) => boolean;
   readOnly: boolean;
   showBranchBadge: boolean;
+  highlightUnread: boolean;
   colors: ThemeColors;
   dismissLabel: string;
   onOpenMember: (item: DashboardNotification) => void;
@@ -205,6 +210,7 @@ function KindStack({
         isRead={isRead(item.id)}
         readOnly={readOnly}
         showBranchBadge={showBranchBadge}
+        highlightUnread={highlightUnread}
         colors={c}
         onOpenMember={() => onOpenMember(item)}
         onAction={() => onAction(item)}
@@ -214,8 +220,8 @@ function KindStack({
 
   if (!stacked) return rowFor(group.items[0]);
 
-  const palette = colorsForKind(group.kind, group.items[0].type, c);
-  const anyUnread = group.items.some((item) => !isRead(item.id));
+  const palette = iconPalette(c);
+  const anyUnread = highlightUnread && group.items.some((item) => !isRead(item.id));
 
   return (
     <View>
@@ -351,6 +357,7 @@ export function NotificationsSheet({ visible, onClose }: { visible: boolean; onC
                   isRead={isRead}
                   readOnly={readOnly}
                   showBranchBadge={showBranchBadge}
+                  highlightUnread={section.key === 'attention'}
                   colors={c}
                   dismissLabel={t('common.dismiss')}
                   onOpenMember={openMember}
