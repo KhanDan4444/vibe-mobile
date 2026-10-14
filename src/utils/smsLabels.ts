@@ -7,6 +7,7 @@ type IonName = ComponentProps<typeof Ionicons>['name'];
 
 const TYPE_KEYS: Record<string, string> = {
   member_enrolled: 'messages.typeEnrolled',
+  member_telegram_linked: 'messages.typeEnrolled',
   member_due_soon: 'messages.typeDueSoon',
   member_expires_today: 'messages.typeExpiresToday',
   member_expired: 'messages.typeExpired',
@@ -17,6 +18,7 @@ const TYPE_KEYS: Record<string, string> = {
 
 const PREVIEW_KEYS: Record<string, string> = {
   member_enrolled: 'messages.previewEnrolled',
+  member_telegram_linked: 'messages.previewEnrolled',
   member_due_soon: 'messages.previewDueSoon',
   member_expires_today: 'messages.previewExpiresToday',
   member_expired: 'messages.previewExpired',
@@ -39,6 +41,7 @@ export function formatSmsPreview(type: string, t: TFunction) {
 export function smsTypeAccent(type: string, c: ThemeColors): string {
   switch (type) {
     case 'member_enrolled':
+    case 'member_telegram_linked':
     case 'member_renewed':
     case 'member_pass_link':
       return c.statusActive;
@@ -56,6 +59,7 @@ export function smsTypeAccent(type: string, c: ThemeColors): string {
 export function smsTypeIcon(type: string): IonName {
   switch (type) {
     case 'member_enrolled':
+    case 'member_telegram_linked':
       return 'person-add-outline';
     case 'member_due_soon':
       return 'time-outline';
