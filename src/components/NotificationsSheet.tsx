@@ -43,8 +43,13 @@ function iconForKind(kind: NotificationKind, type: string): keyof typeof Ionicon
   return 'checkmark-circle';
 }
 
-function iconPalette(c: ThemeColors) {
-  return { icon: c.muted, bg: `${c.muted}18` };
+function colorsForKind(kind: NotificationKind, type: string, c: ThemeColors) {
+  if (kind === 'unpaid') return { icon: c.statusUnpaid, bg: `${c.statusUnpaid}18` };
+  if (kind === 'due_soon') return { icon: c.statusDueSoon, bg: `${c.statusDueSoon}18` };
+  if (kind === 'expired') return { icon: c.statusExpired, bg: `${c.statusExpired}18` };
+  if (type === 'danger') return { icon: c.statusExpired, bg: `${c.statusExpired}18` };
+  if (type === 'warning') return { icon: c.warning, bg: `${c.warning}18` };
+  return { icon: c.accentText, bg: c.accentSoft };
 }
 
 function branchLabel(item: DashboardNotification): string | undefined {
@@ -77,7 +82,7 @@ function NotificationRow({
   const resolved = notificationAction(item);
   const action = resolved && resolved !== 'view' && !readOnly ? resolved : null;
   const kind = notificationKind(item);
-  const palette = iconPalette(c);
+  const palette = colorsForKind(kind, item.type, c);
   const localized = localizeNotification(item, t);
   const branch = branchLabel(item);
   const actionColor = action === 'payment' ? c.statusUnpaid : c.accentText;
@@ -91,15 +96,6 @@ function NotificationRow({
         { backgroundColor: c.card, paddingVertical: nested ? 8 : 13 },
       ]}
     >
-      {showUnread ? (
-        <View
-          style={[
-            styles.unreadBar,
-            { backgroundColor: c.accentText, top: nested ? 8 : 14, bottom: nested ? 8 : 14 },
-          ]}
-        />
-      ) : null}
-
       {nested ? null : (
         <View style={[styles.iconWrap, { backgroundColor: palette.bg }]}>
           <Ionicons name={iconForKind(kind, item.type)} size={18} color={palette.icon} />
@@ -112,6 +108,9 @@ function NotificationRow({
             <Text style={[styles.eyebrow, { color: c.muted }]}>{localized.eyebrow}</Text>
           )}
           <View style={styles.titleLine}>
+            {showUnread ? (
+              <View style={[styles.unreadDot, { backgroundColor: c.accentText }]} />
+            ) : null}
             <Text
               style={[
                 styles.rowTitle,
@@ -220,7 +219,7 @@ function KindStack({
 
   if (!stacked) return rowFor(group.items[0]);
 
-  const palette = iconPalette(c);
+  const palette = colorsForKind(group.kind, group.items[0].type, c);
   const anyUnread = highlightUnread && group.items.some((item) => !isRead(item.id));
 
   return (
@@ -230,17 +229,19 @@ function KindStack({
         onDismiss={() => group.items.forEach((item) => onDismiss(item.id))}
       >
         <Pressable onPress={onToggle} style={[styles.row, { backgroundColor: c.card }]}>
-          {anyUnread ? <View style={[styles.unreadBar, { backgroundColor: c.accentText }]} /> : null}
           <View style={[styles.iconWrap, { backgroundColor: palette.bg }]}>
             <Ionicons name={iconForKind(group.kind, group.items[0].type)} size={18} color={palette.icon} />
           </View>
           <View style={styles.rowBody}>
-            <Text
-              style={[styles.rowTitle, { color: c.text }, anyUnread && styles.rowTitleUnread]}
-              numberOfLines={1}
-            >
-              {stackTitle(group.kind, group.items.length, t)}
-            </Text>
+            <View style={styles.titleLine}>
+              {anyUnread ? <View style={[styles.unreadDot, { backgroundColor: c.accentText }]} /> : null}
+              <Text
+                style={[styles.rowTitle, { color: c.text }, anyUnread && styles.rowTitleUnread]}
+                numberOfLines={1}
+              >
+                {stackTitle(group.kind, group.items.length, t)}
+              </Text>
+            </View>
             <Text style={[styles.rowMessage, { color: c.muted }]} numberOfLines={1}>
               {stackPreview(group.items, t)}
             </Text>
@@ -433,13 +434,10 @@ const styles = StyleSheet.create({
     paddingLeft: 56,
     gap: 10,
   },
-  unreadBar: {
-    position: 'absolute',
-    left: 0,
-    top: 14,
-    bottom: 14,
-    width: 2,
-    borderRadius: 1,
+  unreadDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   iconWrap: {
     width: 34,
@@ -459,7 +457,7 @@ const styles = StyleSheet.create({
   },
   titleLine: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'center',
     gap: 6,
   },
   rowTitle: { fontSize: 15, fontWeight: '600', flexShrink: 1 },
