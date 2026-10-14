@@ -266,6 +266,8 @@ export interface DashboardStats {
   newMembersTrendPercent?: number | string | null;
   inactiveMembersThisWeek?: number;
   notifications?: DashboardNotification[];
+  notificationReadIds?: string[];
+  notificationDismissedIds?: string[];
   alertMembers?: DashboardAlertMember[];
   revenueChart?: DashboardChartPoint[];
   readOnly?: boolean;
